@@ -1,6 +1,8 @@
+@import './global.scss';
+
 .nav-btn {
-	width: 20px;
-	height: 20px;
+	width: $nav-content-height;
+	height: $nav-content-height;
 	padding: 6px;
 	margin: 4px 0;
 	display: inline-block;
