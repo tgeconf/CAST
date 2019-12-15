@@ -1,23 +1,13 @@
-import './assets/style/style.scss'
-import LogoImg from './assets/img/logo.png'
-// import _ from 'lodash'
+import './assets/style/app.scss'
+import Nav from './components/nav'
 
-import printMe from './print'
-
-function component() {
+function app() {
     const ele = document.createElement('div');
-    // ele.innerHTML = _.join(['Hello', 'webpack', ' ']);
+    ele.className = 'outer-wrapper';
 
-    const logo = new Image();
-    logo.src = LogoImg;
-    ele.appendChild(logo);
-
-    const btn = document.createElement('button');
-    btn.innerHTML = 'print';
-    btn.onclick = printMe;
-    ele.appendChild(btn);
+    ele.appendChild(Nav.createNav());
 
     return ele;
 }
 
-document.body.appendChild(component());
+document.body.appendChild(app());

@@ -1,0 +1,56 @@
+::-webkit-scrollbar {
+	width: 8px;
+	margin-right: 2px;
+}
+
+::-webkit-scrollbar:horizontal {
+	height: 10px;
+	margin-bottom: 2px;
+}
+
+::-webkit-scrollbar-track {
+	border-radius: 10px;
+}
+
+::-webkit-scrollbar-track-piece {
+	background-color: #cdcdcd;
+	border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+	width: 6px;
+	border-radius: 5px;
+	background: #8f8f8f;
+	margin-right: 3px;
+}
+
+* {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+@font-face {
+	font-family: "geforce";
+	src: url("../font/geforce.ttf") format("ttf"), url("../font/geforce.woff") format("woff");
+}
+
+$bodyBg: #f2f2f2;
+.zero-margin-padding {
+	margin: 0;
+	padding: 0;
+}
+
+html,
+body {
+	@extend .zero-margin-padding;
+	background: $bodyBg;
+}
+
+.outer-wrapper {
+	@extend .zero-margin-padding;
+	width: 100%;
+    display: flex;
+    flex-direction: column;
+}
