@@ -1,5 +1,18 @@
-@import "./global";
 @import "./scroller.scss";
+
+@font-face {
+	font-family: "geforce";
+	src: url("../font/geforce.ttf") format("ttf"), url("../font/geforce.woff") format("woff");
+}
+
+:root {
+	--nav-content-height: 20px;
+    --geforce-font: "geforce";
+    --gray-l1: #f2f2f2;
+    --gray-l2: #e2e2e2;
+    --gray-l3: #383838;
+    --gray-l4: #484848;
+}
 
 * {
 	-webkit-user-select: none;
@@ -8,10 +21,15 @@
 	user-select: none;
 }
 
+.zero-margin-padding {
+	margin: 0;
+	padding: 0;
+}
+
 html,
 body {
 	@extend .zero-margin-padding;
-	background: #f2f2f2;
+	background: var(--gray-l1);
 }
 
 .outer-wrapper {

@@ -1,5 +1,3 @@
-@import './global.scss';
-
 .nav {
 	position: absolute;
 	float: left;
@@ -16,7 +14,7 @@
 }
 
 .logo-container {
-	height: $nav-content-height;
+	height: var(--nav-content-height);
 	padding: 10px 0px;
 	display: inline-block;
 	img {
@@ -28,11 +26,11 @@
 }
 
 .title {
-    height: $nav-content-height;
-    line-height: $nav-content-height;
+    height: var(--nav-content-height);
+    line-height: var(--nav-content-height);
     padding: 10px 15px;
     color: #a5a5a5;
-    font-family: 'geforce';
+    font-family: var(--geforce-font);
     font-size: 20px;
 }
 

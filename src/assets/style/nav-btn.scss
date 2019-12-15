@@ -1,19 +1,18 @@
-@import './global.scss';
-
 .nav-btn {
-	width: $nav-content-height;
-	height: $nav-content-height;
+	width: var(--nav-content-height);
+	height: var(--nav-content-height);
 	padding: 6px;
 	margin: 4px 0;
-	display: inline-block;
+    display: inline-block;
+    transition: background 0.2s cubic-bezier(0.445, 0.05, 0.55, 0.95);
 
 	&:hover {
-		background: #484848;
+		background: var(--gray-l4);
 		cursor: pointer;
 	}
 
 	&:active {
-		background: #383838;
+		background: var(--gray-l3);
 		cursor: pointer;
 	}
 
@@ -23,7 +22,7 @@
 		display: inline-block;
 		background-repeat: no-repeat;
 		background-size: 100%;
-		filter: invert(90%);
+        filter: invert(90%);
 	}
 
 	.new-icon {
