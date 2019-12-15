@@ -1,12 +1,12 @@
 import './assets/style/style.scss'
 import LogoImg from './assets/img/logo.png'
-import _ from 'lodash'
+// import _ from 'lodash'
 
-import printMe from './print.js'
+import printMe from './print'
 
 function component() {
     const ele = document.createElement('div');
-    ele.innerHTML = _.join(['Hello', 'webpack', ' ']);
+    // ele.innerHTML = _.join(['Hello', 'webpack', ' ']);
 
     const logo = new Image();
     logo.src = LogoImg;

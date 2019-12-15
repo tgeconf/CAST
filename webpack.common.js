@@ -4,8 +4,8 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = {
     entry: {
-        app: './src/index.js',
-        print: './src/print.js',
+        app: './src/index.ts',
+        print: './src/print.ts',
     },
     plugins: [
         new CleanWebpackPlugin(),//clean un-used files in /dist 
@@ -19,6 +19,11 @@ module.exports = {
     },
     module: {
         rules: [
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/,
+            },
             {
                 test: /\.(png|svg|jpg|gif)$/,
                 use: [
@@ -46,5 +51,8 @@ module.exports = {
                 ],
             },
         ],
+    },
+    resolve: {
+        extensions: ['.tsx', '.ts', '.js'],
     },
 };
