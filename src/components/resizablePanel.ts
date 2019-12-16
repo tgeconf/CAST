@@ -45,8 +45,10 @@ export default class ResizablePanel {
         this.panelNum++;
 
         if (verticle) {
+            panel.classList.add('v-panel');
             panel.style.height = 'calc(' + percent * 10 + '% - 0.5px)';
         } else {
+            panel.classList.add('h-panel');
             panel.style.width = 'calc(' + percent * 10 + '% - 0.5px)';
         }
 

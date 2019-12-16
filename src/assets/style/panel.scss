@@ -19,11 +19,19 @@
 	// height: 100%;
 	@extend .cover-size;
 	@extend .zero-margin-padding;
-	min-height: 300px;
-	min-width: 300px;
+	min-height: 30%;
+    min-width: 30%;
 	position: relative;
 	float: left;
 	z-index: 99;
+}
+
+.v-panel{
+    max-height: 70%;
+}
+
+.h-panel{
+    max-width: 70%;
 }
 
 .resizer {
