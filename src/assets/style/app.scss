@@ -7,11 +7,25 @@
 
 :root {
 	--nav-content-height: 20px;
-    --geforce-font: "geforce";
-    --gray-l1: #f2f2f2;
-    --gray-l2: #e2e2e2;
-    --gray-l3: #383838;
-    --gray-l4: #484848;
+	--geforce-font: "geforce";
+	--gray-l1: #f2f2f2;
+	--gray-l2: #e2e2e2;
+	--gray-l3: #dadada;
+	--gray-l4: #a5a5a5;
+	--gray-l5: #a3a3a3;
+	--gray-l6: #383838;
+    --gray-l7: #484848;
+    --gray-l8: #676767;
+}
+
+.zero-margin-padding {
+	margin: 0;
+	padding: 0;
+}
+
+.cover-size {
+	width: 100%;
+	height: 100%;
 }
 
 * {
@@ -21,20 +35,21 @@
 	user-select: none;
 }
 
-.zero-margin-padding {
-	margin: 0;
-	padding: 0;
-}
-
 html,
 body {
 	@extend .zero-margin-padding;
+	@extend .cover-size;
 	background: var(--gray-l1);
 }
 
 .outer-wrapper {
 	@extend .zero-margin-padding;
-	width: 100%;
+	@extend .cover-size;
 	display: flex;
 	flex-direction: column;
+}
+
+.inner-wrapper {
+	box-sizing: border-box;
+	flex: 1;
 }

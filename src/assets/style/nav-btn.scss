@@ -4,15 +4,15 @@
 	padding: 6px;
 	margin: 4px 0;
     display: inline-block;
-    transition: background 0.2s cubic-bezier(0.445, 0.05, 0.55, 0.95);
+    // transition: background 0.1s cubic-bezier(0.445, 0.05, 0.55, 0.95);
 
 	&:hover {
-		background: var(--gray-l4);
+		background: var(--gray-l7);
 		cursor: pointer;
 	}
 
 	&:active {
-		background: var(--gray-l3);
+		background: var(--gray-l6);
 		cursor: pointer;
 	}
 

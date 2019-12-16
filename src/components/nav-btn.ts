@@ -1,5 +1,5 @@
-import '../assets/style/nav-btn.scss';
-import Util from '../util/util';
+import '../assets/style/nav-btn.scss'
+import Util from '../util/util'
 
 export default class NavBtn {
     public static createNavBtn(classNameStr: string, type: string, eventListener: any) {

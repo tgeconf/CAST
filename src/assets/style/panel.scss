@@ -1,0 +1,79 @@
+.zero-margin-padding {
+	margin: 0;
+	padding: 0;
+}
+
+.cover-size {
+	width: 100%;
+	height: 100%;
+}
+
+.panel-wrapper {
+	@extend .zero-margin-padding;
+	@extend .cover-size;
+}
+
+.panel {
+	background: var(--gray-l2);
+	// width: 100%;
+	// height: 100%;
+	@extend .cover-size;
+	@extend .zero-margin-padding;
+	min-height: 300px;
+	min-width: 300px;
+	position: relative;
+	float: left;
+	z-index: 99;
+}
+
+.resizer {
+	position: relative;
+	float: left;
+	z-index: 999;
+	background: rgba(0, 0, 0, 0);
+}
+
+.resize-bar {
+	background: var(--gray-l5);
+	transition: all 0.03s linear;
+}
+
+.v-resizer {
+	@extend .resizer;
+	height: 6px;
+	margin-top: -3px;
+	width: 100%;
+	padding: 3px 0;
+	box-sizing: border-box;
+	cursor: ns-resize;
+	.resize-bar {
+		height: 1px;
+		width: 100%;
+	}
+	&:hover {
+		padding: 0;
+	}
+	&:hover .resize-bar {
+		height: 6px;
+	}
+}
+
+.h-resizer {
+	@extend .resizer;
+	width: 6px;
+	margin-left: -3px;
+	height: 100%;
+	padding: 0 3px;
+	box-sizing: border-box;
+	cursor: ew-resize;
+	.resize-bar {
+		width: 1px;
+		height: 100%;
+	}
+	&:hover {
+		padding: 0;
+	}
+	&:hover .resize-bar {
+		width: 6px;
+	}
+}

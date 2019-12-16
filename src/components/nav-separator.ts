@@ -1,4 +1,4 @@
-import '../assets/style/nav-separator.scss';
+import '../assets/style/nav-separator.scss'
 
 export default class Separator{
     public static createSeparator(){

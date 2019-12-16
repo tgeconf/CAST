@@ -1,7 +1,7 @@
-import '../assets/style/nav.scss';
-import LogoImg from '../assets/img/logo.png';
-import Separator from './nav-separator';
-import NavBtn from './nav-btn';
+import '../assets/style/nav.scss'
+import LogoImg from '../assets/img/logo.png'
+import Separator from './nav-separator'
+import NavBtn from './nav-btn'
 
 export default class Nav {
     public static createNav() {

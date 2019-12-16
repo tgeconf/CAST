@@ -1,13 +1,19 @@
 import './assets/style/app.scss'
 import Nav from './components/nav'
+import ResizablePanel from './components/resizablePanel'
 
 function app() {
-    const ele = document.createElement('div');
-    ele.className = 'outer-wrapper';
+    const outerWrapper = document.createElement('div');
+    outerWrapper.className = 'outer-wrapper';
+    outerWrapper.appendChild(Nav.createNav());
 
-    ele.appendChild(Nav.createNav());
+    const innerWrapper = document.createElement('div');
+    innerWrapper.className = 'inner-wrapper';
+    let rPanels = ResizablePanel.createRPanels(7, 3);
+    innerWrapper.appendChild(rPanels.wrapper);
+    outerWrapper.appendChild(innerWrapper);
 
-    return ele;
+    return outerWrapper;
 }
 
 document.body.appendChild(app());
