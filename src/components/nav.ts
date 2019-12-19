@@ -1,6 +1,5 @@
 import '../assets/style/nav.scss'
 import LogoImg from '../assets/img/logo.png'
-// import NavBtn from './navBtn'
 import Tool from '../util/tool'
 
 export default class Nav {
@@ -8,7 +7,7 @@ export default class Nav {
         const navContainer: HTMLDivElement = document.createElement('div');
         navContainer.className = 'nav';
 
-        //create logo contianer
+        // create logo contianer
         const logoContainer: HTMLSpanElement = document.createElement('span');
         logoContainer.className = 'logo-container';
         const logo: HTMLImageElement = new Image();
@@ -22,11 +21,11 @@ export default class Nav {
 
         navContainer.appendChild(this.createSeparator());
 
-        //create buttons
+        // create buttons
         navContainer.appendChild(new NavBtn().createNavFileBtn({
-            inputId: 'createNew', 
-            classNameStr: 'new', 
-            title: 'new project', 
+            inputId: 'createNew',
+            classNameStr: 'new',
+            title: 'new project',
             evtType: NavBtn.CREATE_NEW
         }));
         navContainer.appendChild(new NavBtn().createNavBtn({
@@ -81,6 +80,7 @@ interface INavBtnProps {
 }
 
 class NavBtn {
+    // static vars
     static CREATE_NEW: string = 'createNew';
     static OPEN_PROJECT: string = 'openProject';
     static SAVE_PROJECT: string = 'saveProject';
@@ -89,6 +89,10 @@ class NavBtn {
     static REVERT: string = 'revert';
     static REDO: string = 'redo';
 
+    /**
+     * create buttons whose event listeners are not file related
+     * @param props 
+     */
     createNavBtn(props: INavBtnProps): HTMLSpanElement {
         const btn: HTMLSpanElement = document.createElement('span');
         btn.className = 'nav-btn';
@@ -115,6 +119,10 @@ class NavBtn {
         return btn;
     }
 
+    /**
+     * create buttons whose event listeners are file related
+     * @param props
+     */
     createNavFileBtn(props: INavBtnProps) {
         const btn: HTMLSpanElement = document.createElement('span');
         btn.className = 'nav-btn';
@@ -145,7 +153,7 @@ class NavBtn {
         return btn;
     }
 
-    /****** btn listeners *********/
+    // btn listeners
     createNew() {
         console.log('load new charts to create new porject');
     }

@@ -10,7 +10,7 @@ function app(): HTMLDivElement {
 
     const innerWrapper: HTMLDivElement = document.createElement('div');
     innerWrapper.className = 'inner-wrapper';
-    const rPanels: IRPanel = ResizablePanel.createRPanels(7, 3);//chart & video, keyframe
+    const rPanels: IRPanel = ResizablePanel.createRPanels(6, 4);//chart & video, keyframe
     const chartVideoPanels: IRPanel = ResizablePanel.createRPanels(5, 5, false);
 
     //create chart view

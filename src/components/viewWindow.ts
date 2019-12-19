@@ -107,7 +107,7 @@ class ViewToolBtn {
         return btn;
     }
 
-    /******* btn listeners ********/
+    // btn listeners
     singleSelect(): void {
         console.log('toggle single selection!');
     }

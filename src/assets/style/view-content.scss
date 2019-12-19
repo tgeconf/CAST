@@ -11,3 +11,13 @@
     @extend .view-content;
     background: var(--gray-l10);
 }
+
+.kf-view-content{
+    @extend .view-content;
+    width: 100%;
+    margin: calc(var(--title-height) + 4px + var(--view-content-margin-v)) 0 var(--view-content-margin-v);
+}
+
+.kf-title{
+    width: 100px;
+}
