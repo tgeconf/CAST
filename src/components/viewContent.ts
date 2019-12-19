@@ -16,6 +16,7 @@ export class VideoViewContent {
         return viewContent;
     }
 }
+
 export class KFViewContent {
     public static createKeyframeViewContent() {
         const viewContent: HTMLDivElement = document.createElement('div');

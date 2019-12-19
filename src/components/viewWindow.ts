@@ -2,6 +2,13 @@ import '../assets/style/view-window.scss'
 import { ChartViewContent, VideoViewContent, KFViewContent } from './viewContent'
 import Tool from '../util/tool'
 
+interface IViewBtnProp {
+    title: string,
+    clickEvtType: string,
+    iconClass: string,
+    selected?: boolean
+}
+
 export default class ViewWindow {
     static CHART_VIEW_TITLE: string = 'chart';
     static VIDEO_VIEW_TITLE: string = 'animation';
@@ -38,10 +45,23 @@ export default class ViewWindow {
         const toolContainer: HTMLDivElement = document.createElement('div');
         toolContainer.className = 'view-tool-container';
         toolContainer.appendChild(this.createSeparator());
-        toolContainer.appendChild(this.createBtn('Selection', this.singleSelect, 'arrow-icon', true));
-        toolContainer.appendChild(this.createBtn('Lasso Selection', this.lassoSelect, 'lasso-icon'));
+        toolContainer.appendChild(this.createBtn({
+            title: 'Selection',
+            clickEvtType: ViewToolBtn.SINGLE,
+            iconClass: 'arrow-icon',
+            selected: true
+        }));
+        toolContainer.appendChild(this.createBtn({
+            title: 'Lasso Selection',
+            clickEvtType: ViewToolBtn.LASSO,
+            iconClass: 'lasso-icon'
+        }));
         toolContainer.appendChild(this.createSeparator());
-        toolContainer.appendChild(this.createBtn('Select from Data', this.dataSelect, 'table-icon'));
+        toolContainer.appendChild(this.createBtn({
+            title: 'Select from Data',
+            clickEvtType: ViewToolBtn.DATA,
+            iconClass: 'table-icon'
+        }));
         toolContainer.appendChild(this.createSeparator());
         return toolContainer;
     }
@@ -52,26 +72,51 @@ export default class ViewWindow {
         return separator;
     }
 
-    public static createBtn(title: string, clickEvt: () => void, iconClass: string, selected: boolean = false): HTMLSpanElement {
+    public static createBtn(props: IViewBtnProp): HTMLSpanElement {
+        const btn: HTMLSpanElement = new ViewToolBtn().btn(props);
+        return btn;
+    }
+}
+
+class ViewToolBtn {
+    //static vars
+    static SINGLE: string = 'single';
+    static LASSO: string = 'lasso';
+    static DATA: string = 'data';
+
+    btn(props: IViewBtnProp): HTMLSpanElement {
         const btn: HTMLSpanElement = document.createElement('span');
         btn.className = 'tool-btn';
-        btn.title = title;
-        btn.onclick = clickEvt;
+        btn.title = props.title;
+
+        switch (props.clickEvtType) {
+            case ViewToolBtn.SINGLE:
+                btn.onclick = () => this.singleSelect();
+                break;
+            case ViewToolBtn.LASSO:
+                btn.onclick = () => this.lassoSelect();
+                break;
+            case ViewToolBtn.DATA:
+                btn.onclick = () => this.dataSelect();
+                break;
+        }
+
         const btnIcon: HTMLSpanElement = document.createElement('span');
-        btnIcon.className = ['svg-icon', iconClass, selected ? 'selected-tool' : ''].join(' ');
+        btnIcon.className = ['svg-icon', props.iconClass, props.selected ? 'selected-tool' : ''].join(' ');
         btn.appendChild(btnIcon);
         return btn;
     }
 
-    public static singleSelect(): void {
+    /******* btn listeners ********/
+    singleSelect(): void {
         console.log('toggle single selection!');
     }
 
-    public static lassoSelect(): void {
+    lassoSelect(): void {
         console.log('toggle lasso selection!');
     }
 
-    public static dataSelect(): void {
+    dataSelect(): void {
         console.log('toggle data selection!');
     }
 }
