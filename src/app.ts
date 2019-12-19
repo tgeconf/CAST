@@ -15,11 +15,14 @@ function app() {
 
     //create chart view
     const chartView: HTMLDivElement = ViewWindow.createView(ViewWindow.CHART_VIEW_TITLE);
-
-    
     chartVideoPanels.panel1.appendChild(chartView);
-
+    const videoView: HTMLDivElement = ViewWindow.createView(ViewWindow.VIDEO_VIEW_TITLE);
+    chartVideoPanels.panel2.appendChild(videoView);
     rPanels.panel1.appendChild(chartVideoPanels.wrapper);
+
+    //create keyframe view
+    const kfView: HTMLDivElement = ViewWindow.createView(ViewWindow.KF_VIEW_TITLE);
+    rPanels.panel2.appendChild(kfView);
 
     innerWrapper.appendChild(rPanels.wrapper);
     outerWrapper.appendChild(innerWrapper);
