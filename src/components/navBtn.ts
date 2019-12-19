@@ -1,14 +1,14 @@
 import '../assets/style/nav-btn.scss'
-import Util from '../util/util'
+import Tool from '../util/tool'
 
 export default class NavBtn {
     public static createNavBtn(classNameStr: string, type: string, eventListener: any) {
-        const btn = document.createElement('span');
+        const btn: HTMLSpanElement = document.createElement('span');
         btn.className = 'nav-btn';
-        btn.setAttribute('title', Util.firstLetterUppercase(type));
+        btn.setAttribute('title', Tool.firstLetterUppercase(type));
         btn.onclick = eventListener;
 
-        const icon = document.createElement('span');
+        const icon: HTMLElement = document.createElement('span');
         icon.className = classNameStr + '-icon';
         btn.appendChild(icon);
 
@@ -16,14 +16,14 @@ export default class NavBtn {
     }
 
     public static createNavFileBtn(id: string, classNameStr:string, type: string, onchangeListener: any) {
-        const btn = document.createElement('span');
+        const btn: HTMLSpanElement = document.createElement('span');
         btn.className = 'nav-btn';
-        btn.setAttribute('title', Util.firstLetterUppercase(type));
+        btn.setAttribute('title', Tool.firstLetterUppercase(type));
         btn.onclick = ()=>{
             document.getElementById(id).click();
         }
 
-        const input = document.createElement('input');
+        const input: HTMLInputElement = document.createElement('input');
         input.type = 'file';
         input.multiple = true;
         input.id = id;
@@ -31,7 +31,7 @@ export default class NavBtn {
         input.onchange = onchangeListener;
         btn.appendChild(input);
 
-        const icon = document.createElement('span');
+        const icon: HTMLSpanElement = document.createElement('span');
         icon.className = classNameStr + '-icon';
         btn.appendChild(icon);
 

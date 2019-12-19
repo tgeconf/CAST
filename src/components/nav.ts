@@ -1,20 +1,20 @@
 import '../assets/style/nav.scss'
 import LogoImg from '../assets/img/logo.png'
-import Separator from './nav-separator'
-import NavBtn from './nav-btn'
+import Separator from './navSeparator'
+import NavBtn from './navBtn'
 
 export default class Nav {
     public static createNav() {
-        const navContainer = document.createElement('div');
+        const navContainer: HTMLDivElement = document.createElement('div');
         navContainer.className = 'nav';
 
         //create logo contianer
-        const logoContainer = document.createElement('span');
+        const logoContainer: HTMLSpanElement = document.createElement('span');
         logoContainer.className = 'logo-container';
-        const logo = new Image();
+        const logo: HTMLImageElement = new Image();
         logo.src = LogoImg;
         logoContainer.appendChild(logo);
-        const logoText = document.createElement('span');
+        const logoText: HTMLSpanElement = document.createElement('span');
         logoText.textContent = 'Canis';
         logoText.className = 'title';
         logoContainer.appendChild(logoText);
@@ -33,9 +33,6 @@ export default class Nav {
         navContainer.appendChild(NavBtn.createNavBtn('redo', 'redo', NavBtn.redo));
         navContainer.appendChild(Separator.createSeparator());
 
-
         return navContainer;
     }
-
-
 }

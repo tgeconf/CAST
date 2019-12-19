@@ -1,12 +1,18 @@
 import '../assets/style/panel.scss'
 
+export interface IRPanel {
+    wrapper: HTMLDivElement,
+    panel1: HTMLDivElement,
+    panel2: HTMLDivElement
+}
+
 export default class ResizablePanel {
     static panelNum: number = 0;
 
     /**
      * create two panels and one resizer
      */
-    public static createRPanels(p1: number, p2: number, verticle: boolean = true) {
+    public static createRPanels(p1: number, p2: number, verticle: boolean = true): IRPanel {
         const wrapper = this.createWrapper();
         const panel1 = this.createPanel(p1, verticle);
         const panel2 = this.createPanel(p2, verticle);
@@ -27,8 +33,8 @@ export default class ResizablePanel {
         };
     }
 
-    public static createWrapper() {
-        const wrapper = document.createElement('div');
+    public static createWrapper(): HTMLDivElement {
+        const wrapper: HTMLDivElement = document.createElement('div');
         wrapper.className = 'panel-wrapper';
         return wrapper;
     }
@@ -38,8 +44,8 @@ export default class ResizablePanel {
      * @param percent: 0 - 10, size of the panel
      * @param verticle: default creating verticle panels
      */
-    public static createPanel(percent: number, verticle: boolean = true) {
-        const panel = document.createElement('div');
+    public static createPanel(percent: number, verticle: boolean = true): HTMLDivElement {
+        const panel: HTMLDivElement = document.createElement('div');
         panel.className = 'panel';
         panel.id = 'panel' + this.panelNum;
         this.panelNum++;
@@ -55,11 +61,10 @@ export default class ResizablePanel {
         return panel;
     }
 
-    public static createResizer(panelId1: string, panelId2: string, verticle: boolean = true) {
-
-        const resizer = document.createElement('div');
+    public static createResizer(panelId1: string, panelId2: string, verticle: boolean = true): HTMLDivElement {
+        const resizer: HTMLDivElement = document.createElement('div');
         resizer.className = verticle ? 'v-resizer' : 'h-resizer';
-        const resizeBar = document.createElement('div');
+        const resizeBar: HTMLDivElement = document.createElement('div');
         resizeBar.className = 'resize-bar';
         resizer.appendChild(resizeBar);
 
