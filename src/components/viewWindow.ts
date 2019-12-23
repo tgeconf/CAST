@@ -1,5 +1,5 @@
 import '../assets/style/view-window.scss'
-import { ChartViewContent, VideoViewContent, KFViewContent } from './viewContent'
+import ViewContent from './viewContent'
 import Tool from '../util/tool'
 
 interface IViewBtnProp {
@@ -12,36 +12,42 @@ interface IViewBtnProp {
 export default class ViewWindow {
     static CHART_VIEW_TITLE: string = 'chart';
     static VIDEO_VIEW_TITLE: string = 'animation';
-    static KF_VIEW_TITLE: string = 'keyframes';
+    static KF_VIEW_TITLE: string = '';
 
-    public static createView(title: string) {
-        const view: HTMLDivElement = document.createElement('div');
-        view.className = 'view';
+    viewTitle: string;
+    view: HTMLDivElement;
+    constructor(title: string) {
+        this.viewTitle = title;
+    }
+    public createView() {
+        this.view = document.createElement('div');
+        this.view.className = 'view';
 
         const viewTitleContainer: HTMLDivElement = document.createElement('div');
         viewTitleContainer.className = 'view-title-container';
         const viewTitleText: HTMLSpanElement = document.createElement('span');
         viewTitleText.className = 'view-title-text';
-        viewTitleText.innerHTML = Tool.firstLetterUppercase(title);
+        viewTitleText.innerHTML = Tool.firstLetterUppercase(this.viewTitle);
         viewTitleContainer.appendChild(viewTitleText);
-        view.appendChild(viewTitleContainer);
+        this.view.appendChild(viewTitleContainer);
 
-        switch (title) {
-            case this.CHART_VIEW_TITLE:
+        const viewContent = new ViewContent();
+        viewContent.createViewContent(this.viewTitle);
+        this.view.appendChild(viewContent.container);
+
+        //create tools on the title
+        switch (this.viewTitle) {
+            case ViewWindow.CHART_VIEW_TITLE:
                 viewTitleContainer.appendChild(this.createSelectionTools());
-                view.appendChild(ChartViewContent.createChartViewContent());
                 break;
-            case this.VIDEO_VIEW_TITLE:
-                view.appendChild(VideoViewContent.createVideoViewContent());
+            case ViewWindow.VIDEO_VIEW_TITLE:
                 break;
-            case this.KF_VIEW_TITLE:
-                view.appendChild(KFViewContent.createKeyframeViewContent());
+            case ViewWindow.KF_VIEW_TITLE:
                 break;
         }
-        return view;
     }
 
-    public static createSelectionTools(): HTMLDivElement {
+    public createSelectionTools(): HTMLDivElement {
         const toolContainer: HTMLDivElement = document.createElement('div');
         toolContainer.className = 'view-tool-container';
         toolContainer.appendChild(this.createSeparator());
@@ -66,13 +72,14 @@ export default class ViewWindow {
         return toolContainer;
     }
 
-    public static createSeparator(): HTMLSpanElement {
+
+    public createSeparator(): HTMLSpanElement {
         const separator: HTMLSpanElement = document.createElement('span');
         separator.className = 'tool-separator';
         return separator;
     }
 
-    public static createBtn(props: IViewBtnProp): HTMLSpanElement {
+    public createBtn(props: IViewBtnProp): HTMLSpanElement {
         const btn: HTMLSpanElement = new ViewToolBtn().btn(props);
         return btn;
     }

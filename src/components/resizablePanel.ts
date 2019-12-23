@@ -1,4 +1,4 @@
-import '../assets/style/panel.scss'
+import '../assets/style/resizablePanel.scss'
 
 export interface IRPanel {
     wrapper: HTMLDivElement,
@@ -64,6 +64,7 @@ export default class ResizablePanel {
     public static createResizer(panelId1: string, panelId2: string, verticle: boolean = true): HTMLDivElement {
         const resizer: HTMLDivElement = document.createElement('div');
         resizer.className = verticle ? 'v-resizer' : 'h-resizer';
+        resizer.setAttribute('title', 'drag to resize');
         const resizeBar: HTMLDivElement = document.createElement('div');
         resizeBar.className = 'resize-bar';
         resizer.appendChild(resizeBar);

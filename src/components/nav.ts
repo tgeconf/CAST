@@ -3,9 +3,11 @@ import LogoImg from '../assets/img/logo.png'
 import Tool from '../util/tool'
 
 export default class Nav {
-    public static createNav() {
-        const navContainer: HTMLDivElement = document.createElement('div');
-        navContainer.className = 'nav';
+    navContainer: HTMLDivElement;
+
+    public createNav() {
+        this.navContainer = document.createElement('div');
+        this.navContainer.className = 'nav';
 
         // create logo contianer
         const logoContainer: HTMLSpanElement = document.createElement('span');
@@ -17,55 +19,53 @@ export default class Nav {
         logoText.textContent = 'Canis';
         logoText.className = 'title';
         logoContainer.appendChild(logoText);
-        navContainer.appendChild(logoContainer);
+        this.navContainer.appendChild(logoContainer);
 
-        navContainer.appendChild(this.createSeparator());
+        this.navContainer.appendChild(this.createSeparator());
 
         // create buttons
-        navContainer.appendChild(new NavBtn().createNavFileBtn({
+        this.navContainer.appendChild(new NavBtn().createNavFileBtn({
             inputId: 'createNew',
             classNameStr: 'new',
             title: 'new project',
             evtType: NavBtn.CREATE_NEW
         }));
-        navContainer.appendChild(new NavBtn().createNavBtn({
+        this.navContainer.appendChild(new NavBtn().createNavBtn({
             classNameStr: 'open-eg',
             title: 'load example',
             evtType: NavBtn.LOAD_EXAMPLES
         }));
-        navContainer.appendChild(new NavBtn().createNavFileBtn({
+        this.navContainer.appendChild(new NavBtn().createNavFileBtn({
             inputId: 'openProject',
             classNameStr: 'open',
             title: 'open project',
             evtType: NavBtn.OPEN_PROJECT
         }));
-        navContainer.appendChild(new NavBtn().createNavBtn({
+        this.navContainer.appendChild(new NavBtn().createNavBtn({
             classNameStr: 'save',
             title: 'save project',
             evtType: NavBtn.SAVE_PROJECT
         }));
-        navContainer.appendChild(new NavBtn().createNavBtn({
+        this.navContainer.appendChild(new NavBtn().createNavBtn({
             classNameStr: 'export',
             title: 'export video',
             evtType: NavBtn.EXPORT_PROJECT
         }));
-        navContainer.appendChild(this.createSeparator());
-        navContainer.appendChild(new NavBtn().createNavBtn({
+        this.navContainer.appendChild(this.createSeparator());
+        this.navContainer.appendChild(new NavBtn().createNavBtn({
             classNameStr: 'revert',
             title: 'revert',
             evtType: NavBtn.REVERT
         }));
-        navContainer.appendChild(new NavBtn().createNavBtn({
+        this.navContainer.appendChild(new NavBtn().createNavBtn({
             classNameStr: 'redo',
             title: 'redo',
             evtType: NavBtn.REDO
         }));
-        navContainer.appendChild(this.createSeparator());
-
-        return navContainer;
+        this.navContainer.appendChild(this.createSeparator());
     }
 
-    public static createSeparator() {
+    public createSeparator() {
         const sep: HTMLSpanElement = document.createElement('span');
         sep.className = 'separator';
         return sep;
