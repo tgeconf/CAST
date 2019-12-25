@@ -1,9 +1,10 @@
 import '../assets/style/view-window.scss'
 import ViewContent from './viewContent'
+import Slider from './slider'
 import Tool from '../util/tool'
 
 interface IViewBtnProp {
-    title: string,
+    title?: string,
     clickEvtType: string,
     iconClass: string,
     selected?: boolean
@@ -25,10 +26,13 @@ export default class ViewWindow {
 
         const viewTitleContainer: HTMLDivElement = document.createElement('div');
         viewTitleContainer.className = 'view-title-container';
-        const viewTitleText: HTMLSpanElement = document.createElement('span');
-        viewTitleText.className = 'view-title-text';
-        viewTitleText.innerHTML = Tool.firstLetterUppercase(this.viewTitle);
-        viewTitleContainer.appendChild(viewTitleText);
+        if (this.viewTitle !== '') {
+            const viewTitleText: HTMLSpanElement = document.createElement('span');
+            viewTitleText.className = 'view-title-text';
+            viewTitleText.innerHTML = Tool.firstLetterUppercase(this.viewTitle);
+            viewTitleContainer.appendChild(viewTitleText);
+        }
+
         this.view.appendChild(viewTitleContainer);
 
         const viewContent = new ViewContent();
@@ -43,6 +47,8 @@ export default class ViewWindow {
             case ViewWindow.VIDEO_VIEW_TITLE:
                 break;
             case ViewWindow.KF_VIEW_TITLE:
+                viewTitleContainer.classList.add('keyframe-title-container');
+                viewTitleContainer.appendChild(this.createKfTools());
                 break;
         }
     }
@@ -72,6 +78,39 @@ export default class ViewWindow {
         return toolContainer;
     }
 
+    public createKfTools(): HTMLDivElement {
+        const toolContainer = document.createElement('div');
+        toolContainer.className = 'view-tool-container';
+        toolContainer.appendChild(this.createBtn({
+            title: 'Revert',
+            clickEvtType: ViewToolBtn.REVERT,
+            iconClass: 'revert-icon'
+        }));
+        toolContainer.appendChild(this.createBtn({
+            title: 'Redo',
+            clickEvtType: ViewToolBtn.REVERT,
+            iconClass: 'redo-icon'
+        }));
+        toolContainer.appendChild(this.createSeparator());
+        toolContainer.appendChild(this.createBtn({
+            clickEvtType: ViewToolBtn.ZOOM,
+            iconClass: 'zoom-icon'
+        }));
+        toolContainer.appendChild(this.createBtn({
+            title: 'Zoom Out',
+            clickEvtType: ViewToolBtn.ZOOM_OUT,
+            iconClass: 'zoom-out-icon'
+        }));
+        //create zooming slider
+        const slider: Slider = new Slider(Slider.SLIDER_LONG, [0, 100]);
+        toolContainer.appendChild(slider.createSlider());
+        toolContainer.appendChild(this.createBtn({
+            title: 'Zoom In',
+            clickEvtType: ViewToolBtn.ZOOM_IN,
+            iconClass: 'zoom-in-icon'
+        }));
+        return toolContainer;
+    }
 
     public createSeparator(): HTMLSpanElement {
         const separator: HTMLSpanElement = document.createElement('span');
@@ -90,11 +129,18 @@ class ViewToolBtn {
     static SINGLE: string = 'single';
     static LASSO: string = 'lasso';
     static DATA: string = 'data';
+    static REVERT: string = 'revert';
+    static REDO: string = 'redo';
+    static ZOOM: string = 'zoom';
+    static ZOOM_OUT: string = 'zoomOut';
+    static ZOOM_IN: string = 'zoomIn';
 
     btn(props: IViewBtnProp): HTMLSpanElement {
         const btn: HTMLSpanElement = document.createElement('span');
         btn.className = 'tool-btn';
-        btn.title = props.title;
+        if (props.title) {
+            btn.title = props.title;
+        }
 
         switch (props.clickEvtType) {
             case ViewToolBtn.SINGLE:
@@ -105,6 +151,23 @@ class ViewToolBtn {
                 break;
             case ViewToolBtn.DATA:
                 btn.onclick = () => this.dataSelect();
+                break;
+            case ViewToolBtn.REVERT:
+                btn.onclick = () => this.revert();
+                break;
+            case ViewToolBtn.REDO:
+                btn.onclick = () => this.redo();
+                break;
+            case ViewToolBtn.ZOOM:
+                btn.setAttribute('disabled', 'true');
+                break;
+            case ViewToolBtn.ZOOM_IN:
+                btn.classList.add('narrow-tool-btn');
+                btn.onclick = () => this.zoomIn();
+                break;
+            case ViewToolBtn.ZOOM_OUT:
+                btn.classList.add('narrow-tool-btn');
+                btn.onclick = () => this.zoomOut();
                 break;
         }
 
@@ -125,5 +188,21 @@ class ViewToolBtn {
 
     dataSelect(): void {
         console.log('toggle data selection!');
+    }
+
+    zoomIn(): void{
+        console.log('zoom in!');
+    }
+
+    zoomOut(): void {
+        console.log('zoom in!');
+    }
+
+    revert():void {
+        console.log('step backward');
+    }
+
+    redo(): void {
+        console.log('step forward');
     }
 }
