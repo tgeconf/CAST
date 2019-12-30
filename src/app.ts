@@ -2,7 +2,7 @@ import './assets/style/app.scss'
 import Nav from './components/nav'
 import ResizablePanel, { IRPanel } from './components/resizablePanel'
 import ViewWindow from './components/viewWindow'
-
+import FloatingWindow from './components/floatingWindow'
 
 import Canis from 'canis_toolkit';
 
@@ -11,6 +11,7 @@ function app(): HTMLDivElement {
     canis.test();
 
     const outerWrapper: HTMLDivElement = document.createElement('div');
+    outerWrapper.id = 'appWrapper';
     outerWrapper.className = 'outer-wrapper';
     const nav = new Nav();
     nav.createNav();
@@ -39,6 +40,9 @@ function app(): HTMLDivElement {
     innerWrapper.appendChild(rPanels.wrapper);
     outerWrapper.appendChild(innerWrapper);
 
+    const floatingWindow: FloatingWindow = new FloatingWindow();
+    floatingWindow.createFloatingWindow(FloatingWindow.TYPE_EXAMPLE);
+    outerWrapper.appendChild(floatingWindow.floatingWindow);
     return outerWrapper;
 }
 

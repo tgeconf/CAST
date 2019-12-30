@@ -1,6 +1,7 @@
 import '../assets/style/nav.scss'
 import LogoImg from '../assets/img/logo.png'
 import Tool from '../util/tool'
+import FloatingWindow from './floatingWindow'
 
 export default class Nav {
     navContainer: HTMLDivElement;
@@ -164,6 +165,10 @@ class NavBtn {
 
     loadExamples() {
         console.log('loading examples');
+        //create the hidden floating example window
+        const floatingWindow: FloatingWindow = new FloatingWindow();
+        floatingWindow.createFloatingWindow(FloatingWindow.TYPE_EXAMPLE);
+        document.getElementById('appWrapper').appendChild(floatingWindow.floatingWindow);
     }
 
     saveProject() {
