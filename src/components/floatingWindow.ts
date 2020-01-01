@@ -1,8 +1,8 @@
 import '../assets/style/floating-window.scss'
 import MushroomImg from '../assets/img/examples/mushroom.png'
 import MushroomChart from '../assets/charts/mushrooms.svg'
-import Reducer from '../reducers/index'
-import * as action from '../actions/action'
+import Reducer from '../app/reducer'
+import * as action from '../app/action'
 
 export default class FloatingWindow {
     static TYPE_EXAMPLE: string = 'exampleContainer';//type of the floating window is example
@@ -72,7 +72,8 @@ export default class FloatingWindow {
             case FloatingWindow.MUSHROOM_CHART:
                 img.src = MushroomImg;
                 item.onclick = () => {
-                    Reducer.triger(action.LOAD_CHARTS, MushroomChart);
+                    console.log(typeof MushroomChart);
+                    Reducer.triger(action.LOAD_CHARTS, [MushroomChart]);
                 }
                 break;
         }
