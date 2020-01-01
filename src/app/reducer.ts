@@ -1,5 +1,4 @@
-import { state } from './stateProxy'
-import { canis } from './canisGenerator'
+import { state, IChart } from './state'
 import * as action from './action'
 
 export default class Reducer {
@@ -25,5 +24,6 @@ export default class Reducer {
 
 Reducer.listen(action.LOAD_CHARTS, function (chartContent: string[]) {
     console.log('chartStatus: ', chartContent);
-    state.setCharts(chartContent);
+    let chartStatus: IChart = state.chartStatus;
+    state.chartStatus = { ...chartStatus, charts: chartContent }
 })

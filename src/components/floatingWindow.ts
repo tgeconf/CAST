@@ -74,6 +74,7 @@ export default class FloatingWindow {
                 item.onclick = () => {
                     console.log(typeof MushroomChart);
                     Reducer.triger(action.LOAD_CHARTS, [MushroomChart]);
+                    this.floatingWindow.remove();
                 }
                 break;
         }

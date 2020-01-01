@@ -1,5 +1,7 @@
-import { IState, IChart } from './state'
+import { IState, IChart, IKeyframe } from './state'
 import Canis from 'canis_toolkit';
+import { ActionSpec } from 'canis_toolkit';
+
 export let canis = new Canis();
 
 interface IChartSpec {
@@ -42,12 +44,12 @@ interface IAction {
 interface IAnimationSpec {
     reference?: string
     offset?: number | IOffset
-    selection: string
+    selector: string
     grouping?: IGrouping
     actions: IAction[]
 }
 
-interface ICanisSpec {
+export interface ICanisSpec {
     charts: IChartSpec[]
     animations: IAnimationSpec[]
 }
@@ -55,12 +57,45 @@ interface ICanisSpec {
 class CanisGenerator {
     public canisSpec: ICanisSpec;
 
-    public generate(state: IState) {
+    constructor() {
+        this.canisSpec = {
+            charts: [],
+            animations: []
+        }
+    }
+
+    public generate(state: IState): void {
+        console.log('generating spec: ', state);
+        this.generateChartSpec(state.chartStatus.charts);//generate chart spec 
+        this.generateAnimationSpec();
+        this.validate();
+        console.log(this.canisSpec);
+    }
+
+    public generateChartSpec(charts: string[]): void {
+        for (let i = 0; i < charts.length; i++) {
+            const chartSpec: IChartSpec = {
+                source: charts[i]
+            }
+            this.canisSpec.charts.push(chartSpec);
+        }
+    }
+
+    public generateAnimationSpec(): void {
 
     }
 
-    public validate() {
-
+    public validate(): void {
+        if (this.canisSpec.charts.length === 0) {
+            console.error('there are no input charts!');
+        }
+        if (this.canisSpec.animations.length === 0) {
+            const animationSpec: IAnimationSpec = {
+                selector: '.mark',
+                actions: [{ type: ActionSpec.actionTypes.appear }]
+            }
+            this.canisSpec.animations.push(animationSpec);
+        }
     }
 }
 

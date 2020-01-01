@@ -3,11 +3,11 @@ import Timeline from './timeline'
 import ViewWindow from './viewWindow'
 
 export default class ViewContent {
-    static CHART_VIEW_CONTENT_ID: string = 'chartViewContent';
+    static CHART_VIEW_CONTENT_ID: string = 'chartContainer';
     static CHART_VIEW_CONTENT_CLS: string = 'chart-view-content';
-    static VIDEO_VIEW_CONTENT_ID: string = 'videoViewContent';
+    static VIDEO_VIEW_CONTENT_ID: string = 'videoContainer';
     static VIDEO_VIEW_CONTENT_CLS: string = 'video-view-content';
-    static KF_VIEW_CONTENT_ID: string = 'kfViewContent';
+    static KF_VIEW_CONTENT_ID: string = 'kfContainer';
     static KF_VIEW_CONTENT_CLS: string = 'kf-view-content';
 
     container: HTMLDivElement;
