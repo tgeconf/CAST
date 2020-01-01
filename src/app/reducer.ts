@@ -25,9 +25,5 @@ export default class Reducer {
 
 Reducer.listen(action.LOAD_CHARTS, function (chartContent: string[]) {
     console.log('chartStatus: ', chartContent);
-    state.setChartStatus({
-        charts: chartContent,
-        selection: [],
-        suggestion: false
-    });
+    state.setCharts(chartContent);
 })

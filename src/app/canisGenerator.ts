@@ -9,16 +9,16 @@ interface IChartSpec {
 }
 
 interface ISort {
-    field: string
+    field?: string
     order: string | string[]
 }
 
 interface IGrouping {
-    reference: string
-    delay: number
+    reference?: string
+    delay?: number
     groupBy: string
-    sort: ISort
-    grouping: IGrouping
+    sort?: ISort
+    grouping?: IGrouping
 }
 
 interface IOffset {
@@ -32,18 +32,18 @@ interface IDuration {
 }
 
 interface IAction {
-    reference: string
-    offset: number | IOffset
+    reference?: string
+    offset?: number | IOffset
     type: string
-    easing: string
-    duration: number | IDuration
+    easing?: string
+    duration?: number | IDuration
 }
 
 interface IAnimationSpec {
-    reference: string
-    offset: number | IOffset
+    reference?: string
+    offset?: number | IOffset
     selection: string
-    grouping: IGrouping
+    grouping?: IGrouping
     actions: IAction[]
 }
 
