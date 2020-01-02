@@ -8,7 +8,7 @@ import Canis from 'canis_toolkit';
 
 function app(): HTMLDivElement {
     const canis = new Canis();
-    canis.test();
+    // canis.test();
 
     const outerWrapper: HTMLDivElement = document.createElement('div');
     outerWrapper.id = 'appWrapper';
