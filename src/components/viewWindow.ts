@@ -1,6 +1,6 @@
 import '../assets/style/view-window.scss'
 import ViewContent from './viewContent'
-import ViewWidget from './viewWidget'
+import { player } from './player'
 import Slider from './slider'
 import Tool from '../util/tool'
 
@@ -41,9 +41,13 @@ export default class ViewWindow {
         this.view.appendChild(viewContent.container);
 
         //append view widgets
-        const viewWidget = new ViewWidget();
-        if (viewWidget.createViewWidget(this.viewTitle)) {
-            this.view.appendChild(viewWidget.container);
+        switch (this.viewTitle) {
+            case ViewWindow.CHART_VIEW_TITLE:
+                this.view.appendChild(this.createChartWidget());
+                break;
+            case ViewWindow.VIDEO_VIEW_TITLE:
+                this.view.appendChild(this.createPlayerWidget());
+                break;
         }
 
 
@@ -131,6 +135,29 @@ export default class ViewWindow {
         return btn;
     }
 
+    public createChartWidget(): HTMLDivElement {
+        const container: HTMLDivElement = document.createElement('div');
+        container.className = 'widget';
+        const checkboxContainer: HTMLLabelElement = document.createElement('label');
+        checkboxContainer.className = 'checkbox-container';
+        checkboxContainer.innerText = 'suggestion';
+        const suggestBox: HTMLInputElement = document.createElement('input');
+        suggestBox.id = 'suggestBox';
+        suggestBox.type = 'checkbox';
+        checkboxContainer.appendChild(suggestBox);
+        const checkMark: HTMLSpanElement = document.createElement('span');
+        checkMark.className = 'checkmark';
+        checkboxContainer.appendChild(checkMark);
+        container.appendChild(checkboxContainer);
+        return container;
+    }
+
+    public createPlayerWidget(): HTMLDivElement {
+        const container: HTMLDivElement = document.createElement('div');
+        container.className = 'widget';
+        container.appendChild(player.widget);
+        return container;
+    }
 }
 
 class ViewToolBtn {
