@@ -40,9 +40,9 @@ function app(): HTMLDivElement {
     innerWrapper.appendChild(rPanels.wrapper);
     outerWrapper.appendChild(innerWrapper);
 
-    const floatingWindow: FloatingWindow = new FloatingWindow();
-    floatingWindow.createFloatingWindow(FloatingWindow.TYPE_EXAMPLE);
-    outerWrapper.appendChild(floatingWindow.floatingWindow);
+    // const floatingWindow: FloatingWindow = new FloatingWindow();
+    // floatingWindow.createFloatingWindow(FloatingWindow.TYPE_EXAMPLE);
+    // outerWrapper.appendChild(floatingWindow.floatingWindow);
     return outerWrapper;
 }
 

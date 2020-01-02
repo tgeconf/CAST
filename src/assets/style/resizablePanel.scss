@@ -18,26 +18,26 @@
 	@extend .cover-size;
 	@extend .zero-margin-padding;
 	min-height: 300px;
-    min-width: 300px;
+	min-width: 300px;
 	position: relative;
 	float: left;
 	z-index: 99;
 }
 
-.v-panel{
-    max-height: calc(100% - 300px);
+.v-panel {
+	max-height: calc(100% - 300px);
 }
 
-.h-panel{
-    max-width: calc(100% - 300px);
+.h-panel {
+	max-width: calc(100% - 300px);
 }
 
 .resizer {
 	position: relative;
 	float: left;
 	z-index: 999;
-    background: rgba(0, 0, 0, 0);
-    transition: all 0.1s linear;
+	background: rgba(0, 0, 0, 0);
+	transition: all 0.1s linear;
 }
 
 .resize-bar {
@@ -47,10 +47,10 @@
 
 .v-resizer {
 	@extend .resizer;
-	height: 6px;
-	margin-top: -3px;
+	height: 4px;
+	margin-top: -2px;
 	width: 100%;
-	padding: 3px 0;
+	padding: 1px 0;
 	box-sizing: border-box;
 	cursor: ns-resize;
 	.resize-bar {
@@ -58,16 +58,19 @@
 		width: 100%;
 	}
 	&:hover {
-        background: var(--gray-l5);
+		background: var(--highlight-blue);
+		.resize-bar {
+			background: var(--highlight-blue);
+		}
 	}
 }
 
 .h-resizer {
 	@extend .resizer;
-	width: 6px;
-	margin-left: -3px;
+	width: 4px;
+	margin-left: -2px;
 	height: 100%;
-	padding: 0 3px;
+	padding: 0 1px;
 	box-sizing: border-box;
 	cursor: ew-resize;
 	.resize-bar {
@@ -75,6 +78,9 @@
 		height: 100%;
 	}
 	&:hover {
-         background: var(--gray-l5);
+        background: var(--highlight-blue);
+        .resize-bar {
+			background: var(--highlight-blue);
+		}
 	}
 }

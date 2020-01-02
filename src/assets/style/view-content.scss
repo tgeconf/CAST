@@ -2,14 +2,15 @@
     --view-content-margin-v: 5px;
 	float: left;
 	width: 98%;
-	height: calc(100% - 40px);
-	margin: calc(var(--title-height) + 4px + var(--view-content-margin-v)) 1% var(--view-content-margin-v);
+	height: calc(100% - 35px);
+	margin: calc(var(--title-height) + 4px + var(--view-content-margin-v)) 1% 0;
 }
 
 .chart-view-content,
 .video-view-content {
     @extend .view-content;
     background: var(--gray-l10);
+    height: calc(100% - 35px - 26px);
 }
 
 .kf-view-content{

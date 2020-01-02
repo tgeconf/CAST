@@ -1,5 +1,6 @@
 import '../assets/style/view-window.scss'
 import ViewContent from './viewContent'
+import ViewWidget from './viewWidget'
 import Slider from './slider'
 import Tool from '../util/tool'
 
@@ -38,6 +39,13 @@ export default class ViewWindow {
         const viewContent = new ViewContent();
         viewContent.createViewContent(this.viewTitle);
         this.view.appendChild(viewContent.container);
+
+        //append view widgets
+        const viewWidget = new ViewWidget();
+        if (viewWidget.createViewWidget(this.viewTitle)) {
+            this.view.appendChild(viewWidget.container);
+        }
+
 
         //create tools on the title
         switch (this.viewTitle) {
@@ -102,7 +110,7 @@ export default class ViewWindow {
             iconClass: 'zoom-out-icon'
         }));
         //create zooming slider
-        const slider: Slider = new Slider(Slider.SLIDER_LONG, [0, 100]);
+        const slider: Slider = new Slider([0, 100], 50);
         toolContainer.appendChild(slider.createSlider());
         toolContainer.appendChild(this.createBtn({
             title: 'Zoom In',
@@ -122,6 +130,7 @@ export default class ViewWindow {
         const btn: HTMLSpanElement = new ViewToolBtn().btn(props);
         return btn;
     }
+
 }
 
 class ViewToolBtn {
@@ -190,7 +199,7 @@ class ViewToolBtn {
         console.log('toggle data selection!');
     }
 
-    zoomIn(): void{
+    zoomIn(): void {
         console.log('zoom in!');
     }
 
@@ -198,7 +207,7 @@ class ViewToolBtn {
         console.log('zoom in!');
     }
 
-    revert():void {
+    revert(): void {
         console.log('step backward');
     }
 

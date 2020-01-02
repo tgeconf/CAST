@@ -7,6 +7,8 @@
 
 :root {
 	--nav-content-height: 20px;
+	--widget-font-size: 11pt;
+	--title-height: 26px;
 	--geforce-font: "geforce";
 	--gray-l1: #f2f2f2;
 	--gray-l2: #e2e2e2;
@@ -18,10 +20,10 @@
 	--gray-l8: #676767;
 	--gray-l9: #e6e6e6;
     --gray-l10: #ffffff;
-    --gray-l11: #dadada;
-    --gray-l12: #c2c2c2;
-    --gray-l13: #939393;
-    --highlight-blue: #238af8;
+    --gray-l11: #ededed;
+	--gray-l12: #c2c2c2;
+	--gray-l13: #939393;
+	--highlight-blue: #2196f3;
 }
 
 .zero-margin-padding {
