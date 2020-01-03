@@ -251,11 +251,13 @@ class ViewToolBtn {
                         //create the selection frame
                         const selectionFrame: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                         selectionFrame.setAttributeNS(null, 'id', 'rectSelectFrame');
-                        selectionFrame.setAttributeNS(null, 'x', rectPosi1X.toString());
-                        selectionFrame.setAttributeNS(null, 'y', rectPosi1Y.toString());
+                        selectionFrame.setAttributeNS(null, 'fill', 'rgba(255, 255, 255, 0)');
+                        selectionFrame.setAttributeNS(null, 'stroke', '#505050');
+                        selectionFrame.setAttributeNS(null, 'stroke-dasharray', '2,2');
                         svg.appendChild(selectionFrame);
                         document.onmousemove = (moveEvt) => {
                             if (isDragging) {
+                                console.log(svgBBox);
                                 const rectPosi2X = moveEvt.pageX - svgBBox.x, rectPosi2Y = moveEvt.pageY - svgBBox.y;
                                 const possibleMarks: string[] = that.judgeSelected({
                                     x1: rectPosi1X,
@@ -291,11 +293,12 @@ class ViewToolBtn {
                                     y2: rectPosi2Y
                                 }, state.selection, 'visChart');
                                 state.selection = selectedMarks;
-                            }else{//single selection
+                            } else {//single selection
 
                             }
                             selectionFrame.remove();
-                            
+                            document.onmousemove = null;
+                            document.onmouseup = null;
                         }
                     }
                 }
