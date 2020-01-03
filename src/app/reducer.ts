@@ -1,4 +1,4 @@
-import { state, IChart } from './state'
+import { state } from './state'
 import * as action from './action'
 
 export default class Reducer {
@@ -23,7 +23,5 @@ export default class Reducer {
 }
 
 Reducer.listen(action.LOAD_CHARTS, function (chartContent: string[]) {
-    console.log('chartStatus: ', chartContent);
-    let chartStatus: IChart = state.chartStatus;
-    state.chartStatus = { ...chartStatus, charts: chartContent }
+    state.charts = chartContent;
 })

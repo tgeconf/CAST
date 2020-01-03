@@ -1,74 +1,68 @@
 import { canisGenerator, canis, ICanisSpec } from './canisGenerator'
 
-export interface IChart {
-    charts: string[],
-    selection: string[],
-    suggestion: boolean
-}
-
 export interface IKeyframe {
 
 }
 
-export interface IStore {
-    chartStatus: IChart
-    keyframeStatus: IKeyframe
-}
-
 export interface IState {
-    chartStatus: IChart
+    //chart status
+    charts: string[],
+    selection: string[],
+    suggestion: boolean,
+
+    //keyframe status
     keyframeStatus: IKeyframe
-    // setChartStatus(cs: IChart): void
-    // getChartStatus(): IChart
-    // setCharts(charts: string[]): void
-    // getCharts(): string[]
-    // setSelection(selection: string[]): void
-    // getSelection(): string[]
-    // setSuggestion(suggestion: boolean): void
-    // getSuggestion(): boolean
 }
 
+/**
+ * re-render parts when the state changes
+ */
 export class State implements IState {
-    _chartStatus: IChart
+    _charts: string[]
+    _selection: string[]
+    _suggestion: boolean
     keyframeStatus: IKeyframe
 
     constructor() {
-        this._chartStatus = {
-            charts: [],
-            selection: [],
-            suggestion: false
-        }
+        this._charts = [];
+        this._selection = [];
+        this._suggestion = true;
     }
 
-    set chartStatus(cs: IChart) {
-        this._chartStatus = cs;
+    set charts(cs: string[]) {
+        this._charts = cs;
         this.trigerSpecGenerator();
     }
-    get chartStatus(): IChart {
-        return this._chartStatus;
+    get charts(): string[] {
+        return this._charts;
     }
-    // set charts(charts: string[]): void {
-    //     this.chartStatus.charts = charts;
+    set selection(sel: string[]) {
+        this._selection = sel;
+        if(this.suggestion){//if the suggestion switch is on, then do suggestion
+
+        }
+    }
+    get selection(): string[] {
+        return this._selection;
+    }
+    set suggestion(sug: boolean) {
+        this._suggestion = sug;
+    }
+    get suggestion(): boolean {
+        return this._suggestion;
+    }
+
+
+
+    // set chartStatus(cs: IChart) {
+    //     this._chartStatus = cs;
     //     this.trigerSpecGenerator();
     // }
-    // getCharts(): string[] {
-    //     return this.chartStatus.charts;
-    // }
-    // setSelection(selection: string[]): void {
-    //     this.chartStatus.selection = selection;
-    // }
-    // getSelection(): string[] {
-    //     return this.chartStatus.selection;
-    // }
-    // setSuggestion(suggestion: boolean): void {
-    //     this.chartStatus.suggestion = suggestion;
-    // }
-    // getSuggestion(): boolean {
-    //     return this.chartStatus.suggestion;
+    // get chartStatus(): IChart {
+    //     return this._chartStatus;
     // }
 
     private trigerSpecGenerator(): void {
-        console.log('going to generate spec', this);
         canisGenerator.generate(this);
         this.renderSpec(canisGenerator.canisSpec);
     }

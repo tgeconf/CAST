@@ -1,4 +1,4 @@
-import { IState, IChart, IKeyframe } from './state'
+import { IState } from './state'
 import Canis from 'canis_toolkit';
 import { ActionSpec } from 'canis_toolkit';
 
@@ -66,7 +66,7 @@ class CanisGenerator {
 
     public generate(state: IState): void {
         console.log('generating spec: ', state);
-        this.generateChartSpec(state.chartStatus.charts);//generate chart spec 
+        this.generateChartSpec(state.charts);//generate chart spec 
         this.generateAnimationSpec();
         this.validate();
         console.log(this.canisSpec);

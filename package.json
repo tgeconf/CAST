@@ -4,6 +4,9 @@
     "private": true,
     "license": "MIT",
     "dependencies": {
+        "@types/d3": "^5.7.2",
+        "d3": "^5.15.0",
+        "d3-lasso": "0.0.5",
         "lodash": "^4.17.15"
     },
     "devDependencies": {

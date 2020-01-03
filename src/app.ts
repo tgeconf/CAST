@@ -46,4 +46,16 @@ function app(): HTMLDivElement {
     return outerWrapper;
 }
 
+
 document.body.appendChild(app());
+// const promise = new Promise<string>((resolve, reject) => {
+//     // document.body.appendChild(app());
+//     // resolve();
+// })
+
+
+(function () {
+    //init buttons and stuff
+    console.log(document.getElementsByClassName('arrow-icon')[0]);
+    (<HTMLElement>document.getElementsByClassName('arrow-icon')[0]).click();
+})()
