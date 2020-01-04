@@ -3,13 +3,9 @@ import Nav from './components/nav'
 import ResizablePanel, { IRPanel } from './components/resizablePanel'
 import ViewWindow from './components/viewWindow'
 import FloatingWindow from './components/floatingWindow'
-
-import Canis from 'canis_toolkit';
+import {state} from './app/state'
 
 function app(): HTMLDivElement {
-    const canis = new Canis();
-    // canis.test();
-
     const outerWrapper: HTMLDivElement = document.createElement('div');
     outerWrapper.id = 'appWrapper';
     outerWrapper.className = 'outer-wrapper';
@@ -56,6 +52,6 @@ document.body.appendChild(app());
 
 (function () {
     //init buttons and stuff
-    console.log(document.getElementsByClassName('arrow-icon')[0]);
-    (<HTMLElement>document.getElementsByClassName('arrow-icon')[0]).click();
+    // (<HTMLElement>document.getElementsByClassName('arrow-icon')[0]).click();
+    state.reset();
 })()

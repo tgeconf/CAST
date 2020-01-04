@@ -1,4 +1,6 @@
 import { canisGenerator, canis, ICanisSpec } from './canisGenerator'
+import { ViewToolBtn } from '../components/viewWindow'
+import Renderer from './renderer'
 
 export interface IKeyframe {
 
@@ -7,6 +9,7 @@ export interface IKeyframe {
 export interface IState {
     //chart status
     charts: string[],
+    tool: string,
     selection: string[],
     suggestion: boolean,
 
@@ -17,59 +20,55 @@ export interface IState {
 /**
  * re-render parts when the state changes
  */
-export class State implements IState {
+class State implements IState {
     _charts: string[]
+    _tool: string
     _selection: string[]
     _suggestion: boolean
     keyframeStatus: IKeyframe
 
-    constructor() {
-        this._charts = [];
-        this._selection = [];
-        this._suggestion = true;
-    }
-
     set charts(cs: string[]) {
         this._charts = cs;
-        this.trigerSpecGenerator();
+        Renderer.generateAndRenderSpec(this);
+        console.log(this);
     }
     get charts(): string[] {
         return this._charts;
     }
+    set tool(t: string) {
+        this._tool = t;
+        Renderer.renderChartTool(t);
+        console.log(this);
+    }
+    get tool(): string {
+        return this._tool;
+    }
     set selection(sel: string[]) {
         this._selection = sel;
-        if(this.suggestion){//if the suggestion switch is on, then do suggestion
+        if (this.suggestion) {//if the suggestion switch is on, then do suggestion
 
         }
+        console.log(this);
     }
     get selection(): string[] {
         return this._selection;
     }
     set suggestion(sug: boolean) {
         this._suggestion = sug;
+        Renderer.renderSuggestionCheckbox(sug);
+        console.log(this);
     }
     get suggestion(): boolean {
         return this._suggestion;
     }
 
-
-
-    // set chartStatus(cs: IChart) {
-    //     this._chartStatus = cs;
-    //     this.trigerSpecGenerator();
-    // }
-    // get chartStatus(): IChart {
-    //     return this._chartStatus;
-    // }
-
-    private trigerSpecGenerator(): void {
-        canisGenerator.generate(this);
-        this.renderSpec(canisGenerator.canisSpec);
+    public reset(): void {
+        this.charts = [];
+        this.tool = ViewToolBtn.SINGLE;
+        this.selection = [];
+        this.suggestion = true;
     }
 
-    private renderSpec(spec: ICanisSpec): void {
-        canis.renderSpec(spec, () => { });
-    }
 }
 
 export let state = new State();

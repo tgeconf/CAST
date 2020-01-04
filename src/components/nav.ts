@@ -53,17 +53,17 @@ export default class Nav {
             evtType: NavBtn.EXPORT_PROJECT
         }));
         this.navContainer.appendChild(this.createSeparator());
-        // this.navContainer.appendChild(new NavBtn().createNavBtn({
-        //     classNameStr: 'revert',
-        //     title: 'revert',
-        //     evtType: NavBtn.REVERT
-        // }));
-        // this.navContainer.appendChild(new NavBtn().createNavBtn({
-        //     classNameStr: 'redo',
-        //     title: 'redo',
-        //     evtType: NavBtn.REDO
-        // }));
-        // this.navContainer.appendChild(this.createSeparator());
+        this.navContainer.appendChild(new NavBtn().createNavBtn({
+            classNameStr: 'revert',
+            title: 'revert',
+            evtType: NavBtn.REVERT
+        }));
+        this.navContainer.appendChild(new NavBtn().createNavBtn({
+            classNameStr: 'redo',
+            title: 'redo',
+            evtType: NavBtn.REDO
+        }));
+        this.navContainer.appendChild(this.createSeparator());
     }
 
     public createSeparator() {
@@ -87,8 +87,8 @@ class NavBtn {
     static SAVE_PROJECT: string = 'saveProject';
     static LOAD_EXAMPLES: string = 'loadExamples';
     static EXPORT_PROJECT: string = 'exportProject';
-    // static REVERT: string = 'revert';
-    // static REDO: string = 'redo';
+    static REVERT: string = 'revert';
+    static REDO: string = 'redo';
 
     /**
      * create buttons whose event listeners are not file related
@@ -105,12 +105,12 @@ class NavBtn {
             case NavBtn.EXPORT_PROJECT:
                 btn.onclick = () => this.exportProject();
                 break;
-            // case NavBtn.REVERT:
-            //     btn.onclick = () => this.revert();
-            //     break;
-            // case NavBtn.REDO:
-            //     btn.onclick = () => this.redo();
-            //     break;
+            case NavBtn.REVERT:
+                btn.onclick = () => this.revert();
+                break;
+            case NavBtn.REDO:
+                btn.onclick = () => this.redo();
+                break;
         }
 
         const icon: HTMLElement = document.createElement('span');
@@ -155,15 +155,15 @@ class NavBtn {
     }
 
     // btn listeners
-    createNew() {
+    public createNew() {
         console.log('load new charts to create new porject');
     }
 
-    openProject() {
+    public openProject() {
         console.log('open existing project');
     }
 
-    loadExamples() {
+    public loadExamples() {
         console.log('loading examples');
         //create the hidden floating example window
         const floatingWindow: FloatingWindow = new FloatingWindow();
@@ -171,11 +171,19 @@ class NavBtn {
         document.getElementById('appWrapper').appendChild(floatingWindow.floatingWindow);
     }
 
-    saveProject() {
+    public saveProject() {
         console.log('save project');
     }
 
-    exportProject() {
+    public exportProject() {
         console.log('export project');
+    }
+
+    public revert(): void {
+        console.log('step backward');
+    }
+
+    public redo(): void {
+        console.log('step forward');
     }
 }

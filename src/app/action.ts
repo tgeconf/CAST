@@ -1,2 +1,5 @@
 export const LOAD_CHARTS = 'LOAD_CHARTS'
 export type LOAD_CHARTS = typeof LOAD_CHARTS
+
+export const TOGGLE_SUGGESTION = 'TOGGLE_SUGGESTION'
+export type TOGGLE_SUGGESTION = typeof TOGGLE_SUGGESTION

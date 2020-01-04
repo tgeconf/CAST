@@ -5,6 +5,8 @@ import Slider from './slider'
 import { lassoSelector } from './lassoSelector'
 import Tool from '../util/tool'
 import { state } from '../app/state'
+import * as action from '../app/action'
+import Reducer from '../app/reducer'
 
 interface IViewBtnProp {
     title?: string,
@@ -51,7 +53,6 @@ export default class ViewWindow {
                 break;
         }
 
-
         //create tools on the title
         switch (this.viewTitle) {
             case ViewWindow.CHART_VIEW_TITLE:
@@ -93,17 +94,17 @@ export default class ViewWindow {
     public createKfTools(): HTMLDivElement {
         const toolContainer = document.createElement('div');
         toolContainer.className = 'view-tool-container';
-        toolContainer.appendChild(this.createBtn({
-            title: 'Revert',
-            clickEvtType: ViewToolBtn.REVERT,
-            iconClass: 'revert-icon'
-        }));
-        toolContainer.appendChild(this.createBtn({
-            title: 'Redo',
-            clickEvtType: ViewToolBtn.REVERT,
-            iconClass: 'redo-icon'
-        }));
-        toolContainer.appendChild(this.createSeparator());
+        // toolContainer.appendChild(this.createBtn({
+        //     title: 'Revert',
+        //     clickEvtType: ViewToolBtn.REVERT,
+        //     iconClass: 'revert-icon'
+        // }));
+        // toolContainer.appendChild(this.createBtn({
+        //     title: 'Redo',
+        //     clickEvtType: ViewToolBtn.REVERT,
+        //     iconClass: 'redo-icon'
+        // }));
+        // toolContainer.appendChild(this.createSeparator());
         toolContainer.appendChild(this.createBtn({
             clickEvtType: ViewToolBtn.ZOOM,
             iconClass: 'zoom-icon'
@@ -144,7 +145,13 @@ export default class ViewWindow {
         const suggestBox: HTMLInputElement = document.createElement('input');
         suggestBox.id = 'suggestBox';
         suggestBox.type = 'checkbox';
-        suggestBox.checked = true;
+        suggestBox.onchange = (evt) => {
+            if ((<HTMLInputElement>evt.target).checked) {
+                Reducer.triger(action.TOGGLE_SUGGESTION, true);
+            } else {
+                Reducer.triger(action.TOGGLE_SUGGESTION, false);
+            }
+        }
         checkboxContainer.appendChild(suggestBox);
         const checkMark: HTMLSpanElement = document.createElement('span');
         checkMark.className = 'checkmark';
@@ -168,13 +175,13 @@ interface IBoundary {
     y2: number
 }
 
-class ViewToolBtn {
+export class ViewToolBtn {
     //static vars
     static SINGLE: string = 'single';
     static LASSO: string = 'lasso';
     static DATA: string = 'data';
-    static REVERT: string = 'revert';
-    static REDO: string = 'redo';
+    // static REVERT: string = 'revert';
+    // static REDO: string = 'redo';
     static ZOOM: string = 'zoom';
     static ZOOM_OUT: string = 'zoomOut';
     static ZOOM_IN: string = 'zoomIn';
@@ -196,12 +203,12 @@ class ViewToolBtn {
             case ViewToolBtn.DATA:
                 btn.onclick = () => this.dataSelect();
                 break;
-            case ViewToolBtn.REVERT:
-                btn.onclick = () => this.revert();
-                break;
-            case ViewToolBtn.REDO:
-                btn.onclick = () => this.redo();
-                break;
+            // case ViewToolBtn.REVERT:
+            //     btn.onclick = () => this.revert();
+            //     break;
+            // case ViewToolBtn.REDO:
+            //     btn.onclick = () => this.redo();
+            //     break;
             case ViewToolBtn.ZOOM:
                 btn.setAttribute('disabled', 'true');
                 break;
@@ -372,12 +379,12 @@ class ViewToolBtn {
         console.log('zoom in!');
     }
 
-    public revert(): void {
-        console.log('step backward');
-    }
+    // public revert(): void {
+    //     console.log('step backward');
+    // }
 
-    public redo(): void {
-        console.log('step forward');
-    }
+    // public redo(): void {
+    //     console.log('step forward');
+    // }
 
 }

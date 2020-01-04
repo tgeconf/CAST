@@ -87,7 +87,7 @@ class CanisGenerator {
 
     public validate(): void {
         if (this.canisSpec.charts.length === 0) {
-            console.error('there are no input charts!');
+            console.warn('there are no input charts!');
         }
         if (this.canisSpec.animations.length === 0) {
             const animationSpec: IAnimationSpec = {
