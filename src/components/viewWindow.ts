@@ -142,6 +142,7 @@ export default class ViewWindow {
         const checkboxContainer: HTMLLabelElement = document.createElement('label');
         checkboxContainer.className = 'checkbox-container';
         checkboxContainer.innerText = 'suggestion';
+        checkboxContainer.title = 'Toggle suggestion mode'
         const suggestBox: HTMLInputElement = document.createElement('input');
         suggestBox.id = 'suggestBox';
         suggestBox.type = 'checkbox';

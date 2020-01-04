@@ -1,6 +1,8 @@
 import { IState } from './state'
+import { CanisSpec } from 'canis_toolkit'
 import { canisGenerator, canis } from './canisGenerator'
 import { ViewToolBtn } from '../components/viewWindow'
+import Util from './util'
 
 /**
  * render html according to the state
@@ -12,7 +14,7 @@ export default class Renderer {
      */
     public static generateAndRenderSpec(s: IState): void {
         canisGenerator.generate(s);
-        canis.renderSpec(canisGenerator.canisSpec, () => { });
+        canis.renderSpec(canisGenerator.canisSpec, () => { Util.determinAttrType(CanisSpec.markData); });
         //add highlight box on the chart
         const svg: HTMLElement = document.getElementById('visChart');
         if (svg) {

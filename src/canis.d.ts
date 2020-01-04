@@ -21,4 +21,8 @@ declare module 'canis_toolkit' {
         public startTime: number;
         public attribute: any;
     }
+    export class CanisSpec {
+        static markData: any;
+        static chartUnderstanding: any;
+    }
 }
