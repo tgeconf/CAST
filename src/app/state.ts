@@ -48,6 +48,7 @@ class State implements IState {
         if (this.suggestion) {//if the suggestion switch is on, then do suggestion
 
         }
+        Renderer.renderSelectedMarks(this._selection);
         console.log(this);
     }
     get selection(): string[] {

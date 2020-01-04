@@ -232,7 +232,6 @@ export class ViewToolBtn {
     public singleSelect(): void {
         const that: ViewToolBtn = this;
         console.log('toggle single selection!');
-        console.log(document.getElementById('chartContainer').classList.contains('single-select'));
         if (!document.getElementById('chartContainer').classList.contains('single-select')) {
             lassoSelector.removeContainer();
             //change cursor
@@ -246,7 +245,7 @@ export class ViewToolBtn {
             //bind mouse listeners
             document.getElementById('chartContainer').onmousedown = (downEvt) => {
                 const evtTarget: HTMLElement = <HTMLElement>downEvt.target;
-                if (evtTarget.id === 'selectionFrame' || (evtTarget.classList.contains('mark') && !state.selection.includes(evtTarget.id))) {//clicked within the selection frame
+                if (evtTarget.id === 'highlightSelectionFrame' || (evtTarget.classList.contains('mark') && !state.selection.includes(evtTarget.id))) {//clicked within the selection frame
 
                 } else {//doing selection
                     const svg: HTMLElement = document.getElementById('visChart');
@@ -264,7 +263,6 @@ export class ViewToolBtn {
                         svg.appendChild(selectionFrame);
                         document.onmousemove = (moveEvt) => {
                             if (isDragging) {
-                                console.log(svgBBox);
                                 const rectPosi2X = moveEvt.pageX - svgBBox.x, rectPosi2Y = moveEvt.pageY - svgBBox.y;
                                 const possibleMarks: string[] = that.judgeSelected({
                                     x1: rectPosi1X,
@@ -301,7 +299,11 @@ export class ViewToolBtn {
                                 }, state.selection, 'visChart');
                                 state.selection = selectedMarks;
                             } else {//single selection
+                                if ((<HTMLElement>upEvt.target).classList.contains('mark')) {//clicked on a mark
 
+                                } else {//didnt select any mark
+                                    state.selection = [];
+                                }
                             }
                             selectionFrame.remove();
                             document.onmousemove = null;
@@ -325,7 +327,7 @@ export class ViewToolBtn {
         const [minY, maxY] = boundary.y1 < boundary.y2 ? [boundary.y1, boundary.y2] : [boundary.y2, boundary.y1];
 
         //filter marks
-        Array.prototype.forEach.call(document.getElementsByClassName('mark'), (m: HTMLElement) => {
+        Array.from(document.getElementsByClassName('mark')).forEach((m: HTMLElement) => {
             const markBBox = m.getBoundingClientRect();
             const bBoxX1 = markBBox.left - document.getElementById(svgId).getBoundingClientRect().x,
                 bBoxY1 = markBBox.top - document.getElementById(svgId).getBoundingClientRect().y,
@@ -333,7 +335,6 @@ export class ViewToolBtn {
                 bBoxY2 = bBoxY1 + markBBox.height;
             let framed = false;
             if (bBoxX1 >= minX && bBoxX2 <= maxX && bBoxY1 >= minY && bBoxY2 <= maxY) {
-                result.push(m.id);
                 framed = true;
             }
             //update the appearance of marks
@@ -341,6 +342,7 @@ export class ViewToolBtn {
                 m.classList.add('non-framed-mark');
             } else if ((framedMarks.includes(m.id) && !framed) || (!framedMarks.includes(m.id) && framed)) {
                 m.classList.remove('non-framed-mark');
+                result.push(m.id);
             }
         })
 
