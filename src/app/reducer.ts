@@ -1,5 +1,6 @@
 import { state } from './state'
 import * as action from './action'
+import Util from './util'
 
 export default class Reducer {
     static list: any = {};
@@ -27,4 +28,10 @@ Reducer.listen(action.LOAD_CHARTS, function (chartContent: string[]) {
 })
 Reducer.listen(action.TOGGLE_SUGGESTION, function (suggestion: boolean) {
     state.suggestion = suggestion;
+})
+Reducer.listen(action.UPDATE_SELECTION, function (selection: string[]) {
+    if (state.suggestion && selection.length > 0) {
+        selection = Util.suggestSelection(selection);
+    }
+    state.selection = selection;
 })

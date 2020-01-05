@@ -1,5 +1,5 @@
 import { IState } from './state'
-import { CanisSpec } from 'canis_toolkit'
+import { ChartSpec } from 'canis_toolkit'
 import { canisGenerator, canis } from './canisGenerator'
 import { ViewToolBtn } from '../components/viewWindow'
 import Util from './util'
@@ -14,7 +14,7 @@ export default class Renderer {
      */
     public static generateAndRenderSpec(s: IState): void {
         canisGenerator.generate(s);
-        canis.renderSpec(canisGenerator.canisSpec, () => { Util.determinAttrType(CanisSpec.markData); });
+        canis.renderSpec(canisGenerator.canisSpec, () => { Util.determinAttrType(ChartSpec.dataMarkDatum); });
         //add highlight box on the chart
         const svg: HTMLElement = document.getElementById('visChart');
         if (svg) {

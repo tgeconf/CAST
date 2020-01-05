@@ -1,8 +1,7 @@
 import { canisGenerator, canis, ICanisSpec } from './canisGenerator'
-import { CanisSpec } from 'canis_toolkit'
+import { ChartSpec } from 'canis_toolkit'
 import { ViewToolBtn } from '../components/viewWindow'
 import Renderer from './renderer'
-import Util from './util'
 
 export interface IKeyframe {
 
@@ -47,9 +46,6 @@ class State implements IState {
     }
     set selection(sel: string[]) {
         this._selection = sel;
-        if (this.suggestion) {//if the suggestion switch is on, then do suggestion
-            Util.compareAttrs(sel, CanisSpec.markData);
-        }
         Renderer.renderSelectedMarks(this._selection);
         console.log(this);
     }

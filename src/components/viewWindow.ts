@@ -298,12 +298,12 @@ export class ViewToolBtn {
                                     x2: rectPosi2X,
                                     y2: rectPosi2Y
                                 }, state.selection, 'visChart');
-                                state.selection = selectedMarks;
+                                Reducer.triger(action.UPDATE_SELECTION, selectedMarks);
                             } else {//single selection
                                 if ((<HTMLElement>upEvt.target).classList.contains('mark')) {//clicked on a mark
 
                                 } else {//didnt select any mark
-                                    state.selection = [];
+                                    Reducer.triger(action.UPDATE_SELECTION, []);
                                 }
                             }
                             selectionFrame.remove();
