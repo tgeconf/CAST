@@ -1,4 +1,5 @@
 import '../assets/style/resizablePanel.scss'
+import Tool from '../util/tool';
 
 export interface IRPanel {
     wrapper: HTMLDivElement,
@@ -102,13 +103,30 @@ export default class ResizablePanel {
                     document.getElementById(panelId2).style.width = 'calc(' + (width2 - disPercent) + '% - 0.5px)';
                 }
                 downPosi = movePosi;
+
+                //resize the svg in view-content
+                this.resizeViewContentSVG(panelId1, panelId2);
             }
             document.onmouseup = (upEvt) => {
                 document.onmouseup = null;
                 document.onmousemove = null;
+
+                //resize the svg in view-content
+                this.resizeViewContentSVG(panelId1, panelId2);
             }
         }
 
         return resizer;
     }
+
+    public static resizeViewContentSVG(panelId1: string, panelId2: string) {
+        [panelId1, panelId2].forEach((pId) => {
+            const svgs: HTMLElement[] = Array.from(document.getElementById(pId).querySelectorAll('.view-content svg'));
+            svgs.forEach((svg) => {
+                const viewContent:HTMLElement = svg.parentElement;
+                Tool.resizeSVG(svg, viewContent.offsetWidth, viewContent.offsetHeight);
+            })
+        })
+    }
+
 }

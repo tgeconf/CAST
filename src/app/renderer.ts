@@ -3,6 +3,7 @@ import { ChartSpec } from 'canis_toolkit'
 import { canisGenerator, canis } from './canisGenerator'
 import { ViewToolBtn } from '../components/viewWindow'
 import Util from './util'
+import Tool from '../util/tool'
 
 /**
  * render html according to the state
@@ -26,6 +27,7 @@ export default class Renderer {
             highlightBox.setAttributeNS(null, 'stroke', '#2196f3');
             highlightBox.setAttributeNS(null, 'stroke-width', '2');
             svg.appendChild(highlightBox);
+            Tool.resizeSVG(svg, svg.parentElement.offsetWidth, svg.parentElement.offsetHeight);
         }
     }
 

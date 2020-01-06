@@ -12,4 +12,10 @@ export default class Tool {
         }
         return true;
     }
+    public static resizeSVG(svg: HTMLElement, w: number, h: number): void {
+        let oriViewbox: string[] = svg.getAttribute('viewBox').split(' ');
+        svg.setAttribute('width', w.toString());
+        svg.setAttribute('height', h.toString())
+        svg.setAttribute('viewBox', oriViewbox[0] + ' ' + oriViewbox[1] + ' ' + w + ' ' + h);
+    }
 }

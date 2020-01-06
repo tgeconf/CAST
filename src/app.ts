@@ -3,7 +3,8 @@ import Nav from './components/nav'
 import ResizablePanel, { IRPanel } from './components/resizablePanel'
 import ViewWindow from './components/viewWindow'
 import FloatingWindow from './components/floatingWindow'
-import {state} from './app/state'
+import { state } from './app/state'
+import Tool from './util/tool'
 
 function app(): HTMLDivElement {
     const outerWrapper: HTMLDivElement = document.createElement('div');
@@ -44,14 +45,12 @@ function app(): HTMLDivElement {
 
 
 document.body.appendChild(app());
-// const promise = new Promise<string>((resolve, reject) => {
-//     // document.body.appendChild(app());
-//     // resolve();
-// })
+state.reset();
 
-
-(function () {
-    //init buttons and stuff
-    // (<HTMLElement>document.getElementsByClassName('arrow-icon')[0]).click();
-    state.reset();
-})()
+window.onresize = () => {
+    const svgs: HTMLElement[] = Array.from(document.querySelectorAll('.view-content svg'));
+    svgs.forEach((svg) => {
+        const viewContent: HTMLElement = svg.parentElement;
+        Tool.resizeSVG(svg, viewContent.offsetWidth, viewContent.offsetHeight);
+    })
+}
