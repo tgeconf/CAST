@@ -169,12 +169,6 @@ export default class ViewWindow {
     }
 }
 
-interface IBoundary {
-    x1: number
-    y1: number
-    x2: number
-    y2: number
-}
 
 export class ViewToolBtn {
     //static vars
@@ -231,8 +225,6 @@ export class ViewToolBtn {
 
     // btn listeners
     public singleSelect(): void {
-        const that: ViewToolBtn = this;
-        console.log('toggle single selection!');
         if (!document.getElementById('chartContainer').classList.contains('single-select')) {
             lassoSelector.removeContainer();
             //change cursor
@@ -243,111 +235,9 @@ export class ViewToolBtn {
                 document.getElementsByClassName('selected-tool')[0].classList.remove('selected-tool');
             }
             document.getElementsByClassName('arrow-icon')[0].classList.add('selected-tool');
-            //bind mouse listeners
-            document.getElementById('chartContainer').onmousedown = (downEvt) => {
-                const evtTarget: HTMLElement = <HTMLElement>downEvt.target;
-                if (evtTarget.id === 'highlightSelectionFrame' || (evtTarget.classList.contains('mark') && !state.selection.includes(evtTarget.id))) {//clicked within the selection frame
-
-                } else {//doing selection
-                    const svg: HTMLElement = document.getElementById('visChart');
-                    if (svg) {
-                        const svgBBox = svg.getBoundingClientRect();
-                        const rectPosi1X = downEvt.pageX - svgBBox.x, rectPosi1Y = downEvt.pageY - svgBBox.y;
-                        let lastMouseX = downEvt.pageX, lastMouseY = downEvt.pageY;
-                        let isDragging = true;
-                        //create the selection frame
-                        const selectionFrame: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        selectionFrame.setAttributeNS(null, 'id', 'rectSelectFrame');
-                        selectionFrame.setAttributeNS(null, 'fill', 'rgba(255, 255, 255, 0)');
-                        selectionFrame.setAttributeNS(null, 'stroke', '#505050');
-                        selectionFrame.setAttributeNS(null, 'stroke-dasharray', '2,2');
-                        svg.appendChild(selectionFrame);
-                        document.onmousemove = (moveEvt) => {
-                            if (isDragging) {
-                                const rectPosi2X = moveEvt.pageX - svgBBox.x, rectPosi2Y = moveEvt.pageY - svgBBox.y;
-                                const possibleMarks: string[] = that.judgeSelected({
-                                    x1: rectPosi1X,
-                                    y1: rectPosi1Y,
-                                    x2: rectPosi2X,
-                                    y2: rectPosi2Y
-                                }, state.selection, 'visChart');
-
-                                //can't move outside the view
-                                if (rectPosi2X >= 0 && rectPosi2X <= document.getElementById('chartContainer').offsetWidth && rectPosi2Y >= 0 && rectPosi2Y <= document.getElementById('chartContainer').offsetHeight) {
-                                    let tmpX = rectPosi2X < rectPosi1X ? rectPosi2X : rectPosi1X;
-                                    let tmpY = rectPosi2Y < rectPosi1Y ? rectPosi2Y : rectPosi1Y;
-                                    let tmpWidth = Math.abs(rectPosi1X - rectPosi2X);
-                                    let tmpHeight = Math.abs(rectPosi1Y - rectPosi2Y);
-
-                                    /* update the selection frame */
-                                    selectionFrame.setAttributeNS(null, 'x', tmpX.toString());
-                                    selectionFrame.setAttributeNS(null, 'y', tmpY.toString());
-                                    selectionFrame.setAttributeNS(null, 'width', tmpWidth.toString());
-                                    selectionFrame.setAttributeNS(null, 'height', tmpHeight.toString());
-                                }
-                            }
-                        }
-                        document.onmouseup = (upEvt) => {
-                            isDragging = false;
-                            const mouseMoveThsh: number = 3;//mouse move less than 3px -> single selection; bigger than 3px -> rect selection
-                            if (Tool.pointDist(lastMouseX, upEvt.pageX, lastMouseY, upEvt.pageY) > mouseMoveThsh) {//doing rect selection
-                                const rectPosi2X = upEvt.pageX - svgBBox.x, rectPosi2Y = upEvt.pageY - svgBBox.y;
-                                const selectedMarks: string[] = that.judgeSelected({
-                                    x1: rectPosi1X,
-                                    y1: rectPosi1Y,
-                                    x2: rectPosi2X,
-                                    y2: rectPosi2Y
-                                }, state.selection, 'visChart');
-                                Reducer.triger(action.UPDATE_SELECTION, selectedMarks);
-                            } else {//single selection
-                                if ((<HTMLElement>upEvt.target).classList.contains('mark')) {//clicked on a mark
-
-                                } else {//didnt select any mark
-                                    Reducer.triger(action.UPDATE_SELECTION, []);
-                                }
-                            }
-                            selectionFrame.remove();
-                            document.onmousemove = null;
-                            document.onmouseup = null;
-                        }
-                    }
-                }
-            }
+            //init rectangular selection
+            Tool.initRectangularSelection('chartContainer');
         }
-    }
-
-    /**
-     * judge which marks are selected in the given area
-     * @param boundary 
-     * @param framedMarks
-     * @param svgId 
-     */
-    public judgeSelected(boundary: IBoundary, framedMarks: string[], svgId: string): string[] {
-        let result: string[] = [];
-        const [minX, maxX] = boundary.x1 < boundary.x2 ? [boundary.x1, boundary.x2] : [boundary.x2, boundary.x1];
-        const [minY, maxY] = boundary.y1 < boundary.y2 ? [boundary.y1, boundary.y2] : [boundary.y2, boundary.y1];
-
-        //filter marks
-        Array.from(document.getElementsByClassName('mark')).forEach((m: HTMLElement) => {
-            const markBBox = m.getBoundingClientRect();
-            const bBoxX1 = markBBox.left - document.getElementById(svgId).getBoundingClientRect().x,
-                bBoxY1 = markBBox.top - document.getElementById(svgId).getBoundingClientRect().y,
-                bBoxX2 = bBoxX1 + markBBox.width,
-                bBoxY2 = bBoxY1 + markBBox.height;
-            let framed = false;
-            if (bBoxX1 >= minX && bBoxX2 <= maxX && bBoxY1 >= minY && bBoxY2 <= maxY) {
-                framed = true;
-            }
-            //update the appearance of marks
-            if ((framedMarks.includes(m.id) && framed) || (!framedMarks.includes(m.id) && !framed)) {
-                m.classList.add('non-framed-mark');
-            } else if ((framedMarks.includes(m.id) && !framed) || (!framedMarks.includes(m.id) && framed)) {
-                m.classList.remove('non-framed-mark');
-                result.push(m.id);
-            }
-        })
-
-        return result;
     }
 
     public lassoSelect(): void {

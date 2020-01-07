@@ -30,8 +30,10 @@ Reducer.listen(action.TOGGLE_SUGGESTION, function (suggestion: boolean) {
     state.suggestion = suggestion;
 })
 Reducer.listen(action.UPDATE_SELECTION, function (selection: string[]) {
+    console.log('in reducer', selection);
     if (state.suggestion && selection.length > 0) {
         selection = Util.suggestSelection(selection);
     }
+    console.log('after suggestion:', selection);
     state.selection = selection;
 })

@@ -5,9 +5,11 @@
     "license": "MIT",
     "dependencies": {
         "@types/d3": "^5.7.2",
+        "@types/robust-point-in-polygon": "^1.0.0",
         "d3": "^5.15.0",
         "d3-lasso": "0.0.5",
-        "lodash": "^4.17.15"
+        "lodash": "^4.17.15",
+        "robust-point-in-polygon": "^1.0.3"
     },
     "devDependencies": {
         "@types/lodash": "^4.14.149",
