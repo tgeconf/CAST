@@ -2,7 +2,6 @@ import '../assets/style/view-window.scss'
 import ViewContent from './viewContent'
 import { player } from './player'
 import Slider from './slider'
-import { lassoSelector } from './lassoSelector'
 import Tool from '../util/tool'
 import { state } from '../app/state'
 import * as action from '../app/action'
@@ -226,7 +225,6 @@ export class ViewToolBtn {
     // btn listeners
     public singleSelect(): void {
         if (!document.getElementById('chartContainer').classList.contains('single-select')) {
-            lassoSelector.removeContainer();
             //change cursor
             document.getElementById('chartContainer').classList.add('single-select');
             document.getElementById('chartContainer').classList.remove('lasso-select');
@@ -251,12 +249,13 @@ export class ViewToolBtn {
                 document.getElementsByClassName('selected-tool')[0].classList.remove('selected-tool');
             }
             document.getElementsByClassName('lasso-icon')[0].classList.add('selected-tool');
-            //create the lasso container
-            if (document.getElementById('visChart')) {//there is a chart in chart view
-                const tmpChart: HTMLElement = document.getElementById('visChart');
-                lassoSelector.createContainer(tmpChart.clientWidth, tmpChart.clientHeight);
-                lassoSelector.createSelector();
-            }
+            //init lasso selection
+            Tool.initLassoSelection('chartContainer');
+            // if (document.getElementById('visChart')) {//there is a chart in chart view
+            //     const tmpChart: HTMLElement = document.getElementById('visChart');
+            //     lassoSelector.createContainer(tmpChart.clientWidth, tmpChart.clientHeight);
+            //     lassoSelector.createSelector();
+            // }
         }
     }
 

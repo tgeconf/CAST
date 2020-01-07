@@ -1,6 +1,7 @@
-import { IBoundary } from './ds'
+import { ICoord } from './ds'
 import { state } from '../app/state'
 import Rectangular from './rectangular'
+import Lasso from './lasso'
 import Reducer from '../app/reducer'
 import * as action from '../app/action'
 
@@ -24,7 +25,63 @@ export default class Tool {
         svg.setAttribute('height', h.toString())
         svg.setAttribute('viewBox', oriViewbox[0] + ' ' + oriViewbox[1] + ' ' + w + ' ' + h);
     }
-    public static initRectangularSelection(containerId: string) {
+    public static identicalArrays(arr1: any[], arr2: any[]): boolean {
+        let same: boolean = true;
+        if (arr1.length !== arr2.length) {
+            same = false;
+        }
+        for (let i = 0; i < arr1.length; i++) {
+            if (arr2.indexOf(arr1[i]) < 0) {
+                same = false;
+                break;
+            }
+        }
+        return same;
+    }
+    public static initLassoSelection(containerId: string): void {
+        document.getElementById(containerId).onmousedown = (downEvt) => {
+            const lassoSelection = new Lasso();
+            const evtTarget: HTMLElement = <HTMLElement>downEvt.target;
+            if (evtTarget.id === 'highlightSelectionFrame' ||
+                (evtTarget.classList.contains('mark') && state.selection.includes(evtTarget.id) && state.selection.length > 0)) {//clicked within the selection frame
+
+            } else {//doing selection
+                const svg: HTMLElement = document.getElementById('visChart');
+                if (svg) {
+                    const svgBBox = svg.getBoundingClientRect();
+                    const originX = downEvt.pageX - svgBBox.x, originY = downEvt.pageY - svgBBox.y;
+                    let isDragging: boolean = true;
+                    //create selection frame
+                    lassoSelection.createSelectionFrame(svg, { x: originX, y: originY });
+                    document.onmousemove = (moveEvt) => {
+                        if (isDragging) {
+                            const pathCoord: ICoord = { x: moveEvt.pageX - svgBBox.x, y: moveEvt.pageY - svgBBox.y };
+                            const possibleMarks: string[] = lassoSelection.lassoSelect(state.selection);
+                            //can't move outside the view
+                            if (pathCoord.x >= 0 && pathCoord.x <= document.getElementById('chartContainer').offsetWidth && pathCoord.y >= 0 && pathCoord.y <= document.getElementById('chartContainer').offsetHeight) {
+                                lassoSelection.updatePath(pathCoord);
+                            }
+                        }
+                    }
+                    document.onmouseup = (upEvt) => {
+                        isDragging = false;
+                        const selectedMarks: string[] = lassoSelection.lassoSelect(state.selection);
+                        console.log(selectedMarks, state.selection, this.identicalArrays(selectedMarks, state.selection));
+                        if (this.identicalArrays(selectedMarks, state.selection)) {
+                            Reducer.triger(action.UPDATE_SELECTION, []);
+                        } else {
+                            Reducer.triger(action.UPDATE_SELECTION, selectedMarks);
+                        }
+
+                        lassoSelection.removeSelectionFrame();
+                        document.onmousemove = null;
+                        document.onmouseup = null;
+                    }
+                }
+            }
+        }
+    }
+    public static initRectangularSelection(containerId: string): void {
         const rectangularSelection = new Rectangular();
         document.getElementById(containerId).onmousedown = (downEvt) => {
             const evtTarget: HTMLElement = <HTMLElement>downEvt.target;
@@ -35,27 +92,27 @@ export default class Tool {
                 const svg: HTMLElement = document.getElementById('visChart');
                 if (svg) {
                     const svgBBox = svg.getBoundingClientRect();
-                    const rectPosi1X = downEvt.pageX - svgBBox.x, rectPosi1Y = downEvt.pageY - svgBBox.y;
+                    const rectPosi1: ICoord = { x: downEvt.pageX - svgBBox.x, y: downEvt.pageY - svgBBox.y };
                     let lastMouseX = downEvt.pageX, lastMouseY = downEvt.pageY;
-                    let isDragging = true;
+                    let isDragging: boolean = true;
                     //create the selection frame
                     rectangularSelection.createSelectionFrame(svg);
                     document.onmousemove = (moveEvt) => {
                         if (isDragging) {
-                            const rectPosi2X = moveEvt.pageX - svgBBox.x, rectPosi2Y = moveEvt.pageY - svgBBox.y;
+                            const rectPosi2: ICoord = { x: moveEvt.pageX - svgBBox.x, y: moveEvt.pageY - svgBBox.y };
                             const possibleMarks: string[] = rectangularSelection.rectangularSelect({
-                                x1: rectPosi1X,
-                                y1: rectPosi1Y,
-                                x2: rectPosi2X,
-                                y2: rectPosi2Y
+                                x1: rectPosi1.x,
+                                y1: rectPosi1.y,
+                                x2: rectPosi2.x,
+                                y2: rectPosi2.y
                             }, state.selection);
 
                             //can't move outside the view
-                            if (rectPosi2X >= 0 && rectPosi2X <= document.getElementById('chartContainer').offsetWidth && rectPosi2Y >= 0 && rectPosi2Y <= document.getElementById('chartContainer').offsetHeight) {
-                                const tmpX = rectPosi2X < rectPosi1X ? rectPosi2X : rectPosi1X;
-                                const tmpY = rectPosi2Y < rectPosi1Y ? rectPosi2Y : rectPosi1Y;
-                                const tmpWidth = Math.abs(rectPosi1X - rectPosi2X);
-                                const tmpHeight = Math.abs(rectPosi1Y - rectPosi2Y);
+                            if (rectPosi2.x >= 0 && rectPosi2.x <= document.getElementById('chartContainer').offsetWidth && rectPosi2.y >= 0 && rectPosi2.y <= document.getElementById('chartContainer').offsetHeight) {
+                                const tmpX = rectPosi2.x < rectPosi1.x ? rectPosi2.x : rectPosi1.x;
+                                const tmpY = rectPosi2.y < rectPosi1.y ? rectPosi2.y : rectPosi1.y;
+                                const tmpWidth = Math.abs(rectPosi1.x - rectPosi2.x);
+                                const tmpHeight = Math.abs(rectPosi1.y - rectPosi2.y);
 
                                 /* update the selection frame */
                                 rectangularSelection.updateSelectionFrame({ x1: tmpX, y1: tmpY, x2: tmpX + tmpWidth, y2: tmpY + tmpHeight });
@@ -66,12 +123,12 @@ export default class Tool {
                         isDragging = false;
                         const mouseMoveThsh: number = 3;//mouse move less than 3px -> single selection; bigger than 3px -> rect selection
                         if (Tool.pointDist(lastMouseX, upEvt.pageX, lastMouseY, upEvt.pageY) > mouseMoveThsh) {//doing rect selection
-                            const rectPosi2X = upEvt.pageX - svgBBox.x, rectPosi2Y = upEvt.pageY - svgBBox.y;
+                            const rectPosi2: ICoord = { x: upEvt.pageX - svgBBox.x, y: upEvt.pageY - svgBBox.y };
                             const selectedMarks: string[] = rectangularSelection.rectangularSelect({
-                                x1: rectPosi1X,
-                                y1: rectPosi1Y,
-                                x2: rectPosi2X,
-                                y2: rectPosi2Y
+                                x1: rectPosi1.x,
+                                y1: rectPosi1.y,
+                                x2: rectPosi2.x,
+                                y2: rectPosi2.y
                             }, state.selection);
                             Reducer.triger(action.UPDATE_SELECTION, selectedMarks);
                         } else {//single selection

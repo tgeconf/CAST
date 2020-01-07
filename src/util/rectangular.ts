@@ -30,7 +30,9 @@ export default class Rectangular {
      * remove the dashed selection frame when mouse up
      */
     public removeSelectionFrame() {
-        document.getElementById('rectSelectFrame').remove();
+        if (document.getElementById('rectSelectFrame')) {
+            document.getElementById('rectSelectFrame').remove();
+        }
     }
 
     /**
