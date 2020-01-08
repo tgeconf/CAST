@@ -1,9 +1,11 @@
-import { IState } from './state'
+import { state, IState, IDataItem, ISortDataAttr } from './state'
 import { ChartSpec } from 'canis_toolkit'
 import { canisGenerator, canis } from './canisGenerator'
 import { ViewToolBtn } from '../components/viewWindow'
 import Util from './util'
 import Tool from '../util/tool'
+import Reducer from './reducer'
+import * as action from './action'
 
 /**
  * render html according to the state
@@ -15,7 +17,10 @@ export default class Renderer {
      */
     public static generateAndRenderSpec(s: IState): void {
         canisGenerator.generate(s);
-        canis.renderSpec(canisGenerator.canisSpec, () => { Util.determinAttrType(ChartSpec.dataMarkDatum); });
+        canis.renderSpec(canisGenerator.canisSpec, () => {
+            Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
+            Reducer.triger(action.UPDATE_DATA_TABLE, ChartSpec.dataMarkDatum);
+        });
         //add highlight box on the chart
         const svg: HTMLElement = document.getElementById('visChart');
         if (svg) {
@@ -28,6 +33,41 @@ export default class Renderer {
             highlightBox.setAttributeNS(null, 'stroke-width', '2');
             svg.appendChild(highlightBox);
             Tool.resizeSVG(svg, svg.parentElement.offsetWidth, svg.parentElement.offsetHeight);
+        }
+    }
+
+    public static renderDataAttrs(sda: ISortDataAttr[]): void {
+        
+    }
+
+    public static renderDataTable(dt: Map<string, IDataItem>): void {
+        if (dt.size > 0) {
+            const dataTable: HTMLTableElement = document.createElement('table');
+            let count = 0;
+            dt.forEach((dataItem, markId) => {
+                if (count === 0) {
+                    //create title
+                    const headerTr: HTMLTableRowElement = document.createElement('tr');
+                    ['markId', ...Object.keys(dataItem)].forEach(key => {
+                        const th: HTMLTableHeaderCellElement = document.createElement('th');
+                        th.innerText = key;
+                        headerTr.appendChild(th);
+                    })
+                    dataTable.appendChild(headerTr);
+                }
+                //create content
+                const tr: HTMLTableRowElement = document.createElement('tr');
+                console.log('dataitem: ', dataItem);
+                [markId, ...Object.values(dataItem)].forEach(value => {
+                    console.log(value);
+                    const td: HTMLTableCellElement = document.createElement('td');
+                    td.innerText = value.toString();
+                    tr.appendChild(td);
+                })
+                dataTable.appendChild(tr);
+                count++;
+            })
+            document.getElementById('dataTableWrapper').appendChild(dataTable);
         }
     }
 

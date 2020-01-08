@@ -19,16 +19,16 @@
 	--gray-l7: #484848;
 	--gray-l8: #676767;
 	--gray-l9: #e6e6e6;
-    --gray-l10: #ffffff;
-    --gray-l11: #ededed;
+	--gray-l10: #ffffff;
+	--gray-l11: #ededed;
 	--gray-l12: #c2c2c2;
 	--gray-l13: #939393;
-    --highlight-blue: #2196f3;
+	--highlight-blue: #2196f3;
 }
 
 .zero-margin-padding {
 	margin: 0;
-    padding: 0;
+	padding: 0;
 }
 
 .cover-size {
@@ -55,9 +55,4 @@ body {
 	@extend .cover-size;
 	display: flex;
 	flex-direction: column;
-}
-
-.inner-wrapper {
-	box-sizing: border-box;
-	flex: 1;
 }

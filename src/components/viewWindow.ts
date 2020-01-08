@@ -1,7 +1,6 @@
 import '../assets/style/view-window.scss'
-import ViewContent from './viewContent'
 import { player } from './player'
-import Slider from './slider'
+import Slider from './widgets/slider'
 import Tool from '../util/tool'
 import { state } from '../app/state'
 import * as action from '../app/action'
@@ -14,6 +13,7 @@ interface IViewBtnProp {
 }
 
 export default class ViewWindow {
+    static DATA_VIEW_TITLE: string = 'data';
     static CHART_VIEW_TITLE: string = 'chart';
     static VIDEO_VIEW_TITLE: string = 'animation';
     static KF_VIEW_TITLE: string = '';
@@ -93,17 +93,6 @@ export default class ViewWindow {
     public createKfTools(): HTMLDivElement {
         const toolContainer = document.createElement('div');
         toolContainer.className = 'view-tool-container';
-        // toolContainer.appendChild(this.createBtn({
-        //     title: 'Revert',
-        //     clickEvtType: ViewToolBtn.REVERT,
-        //     iconClass: 'revert-icon'
-        // }));
-        // toolContainer.appendChild(this.createBtn({
-        //     title: 'Redo',
-        //     clickEvtType: ViewToolBtn.REVERT,
-        //     iconClass: 'redo-icon'
-        // }));
-        // toolContainer.appendChild(this.createSeparator());
         toolContainer.appendChild(this.createBtn({
             clickEvtType: ViewToolBtn.ZOOM,
             iconClass: 'zoom-icon'
@@ -115,7 +104,8 @@ export default class ViewWindow {
         }));
         //create zooming slider
         const slider: Slider = new Slider([0, 100], 50);
-        toolContainer.appendChild(slider.createSlider());
+        slider.createSlider()
+        toolContainer.appendChild(slider.sliderContainer);
         toolContainer.appendChild(this.createBtn({
             title: 'Zoom In',
             clickEvtType: ViewToolBtn.ZOOM_IN,
@@ -174,8 +164,6 @@ export class ViewToolBtn {
     static SINGLE: string = 'single';
     static LASSO: string = 'lasso';
     static DATA: string = 'data';
-    // static REVERT: string = 'revert';
-    // static REDO: string = 'redo';
     static ZOOM: string = 'zoom';
     static ZOOM_OUT: string = 'zoomOut';
     static ZOOM_IN: string = 'zoomIn';
@@ -197,12 +185,6 @@ export class ViewToolBtn {
             case ViewToolBtn.DATA:
                 btn.onclick = () => this.dataSelect();
                 break;
-            // case ViewToolBtn.REVERT:
-            //     btn.onclick = () => this.revert();
-            //     break;
-            // case ViewToolBtn.REDO:
-            //     btn.onclick = () => this.redo();
-            //     break;
             case ViewToolBtn.ZOOM:
                 btn.setAttribute('disabled', 'true');
                 break;
@@ -251,11 +233,6 @@ export class ViewToolBtn {
             document.getElementsByClassName('lasso-icon')[0].classList.add('selected-tool');
             //init lasso selection
             Tool.initLassoSelection('chartContainer');
-            // if (document.getElementById('visChart')) {//there is a chart in chart view
-            //     const tmpChart: HTMLElement = document.getElementById('visChart');
-            //     lassoSelector.createContainer(tmpChart.clientWidth, tmpChart.clientHeight);
-            //     lassoSelector.createSelector();
-            // }
         }
     }
 
@@ -270,13 +247,75 @@ export class ViewToolBtn {
     public zoomOut(): void {
         console.log('zoom in!');
     }
+}
 
-    // public revert(): void {
-    //     console.log('step backward');
-    // }
+export class ViewContent {
+    static VIEW_CONTENT_CLS: string = 'view-content';
+    static DATA_VIEW_CONTENT_ID: string = 'dataContainer';
+    static DATA_VIEW_CONTENT_CLS: string = 'data-view-content';
+    static CHART_VIEW_CONTENT_ID: string = 'chartContainer';
+    static CHART_VIEW_CONTENT_CLS: string = 'chart-view-content';
+    static VIDEO_VIEW_CONTENT_ID: string = 'videoContainer';
+    static VIDEO_VIEW_CONTENT_CLS: string = 'video-view-content';
+    static KF_VIEW_CONTENT_ID: string = 'kfContainer';
+    static KF_VIEW_CONTENT_CLS: string = 'kf-view-content';
 
-    // public redo(): void {
-    //     console.log('step forward');
-    // }
+    container: HTMLDivElement;
 
+    public createViewContent(contentType: string) {
+        switch (contentType) {
+            case ViewWindow.DATA_VIEW_TITLE:
+                this.createViewContainer(ViewContent.DATA_VIEW_CONTENT_ID, ViewContent.DATA_VIEW_CONTENT_CLS);
+                this.createDataDashboard();
+                break;
+            case ViewWindow.CHART_VIEW_TITLE:
+                this.createViewContainer(ViewContent.CHART_VIEW_CONTENT_ID, ViewContent.CHART_VIEW_CONTENT_CLS);
+                break;
+            case ViewWindow.VIDEO_VIEW_TITLE:
+                this.createViewContainer(ViewContent.VIDEO_VIEW_CONTENT_ID, ViewContent.VIDEO_VIEW_CONTENT_CLS);
+                break;
+            case ViewWindow.KF_VIEW_TITLE:
+                this.createViewContainer(ViewContent.KF_VIEW_CONTENT_ID, ViewContent.KF_VIEW_CONTENT_CLS);
+                break;
+        }
+    }
+
+    public createViewContainer(id: string, className: string): void {
+        this.container = document.createElement('div');
+        this.container.id = id;
+        this.container.className = ViewContent.VIEW_CONTENT_CLS + ' ' + className;
+    }
+
+    public createDataDashboard() {
+        //attribute container
+        const attrWrapper: HTMLDivElement = document.createElement('div');
+        attrWrapper.className = 'attr-wrapper';
+        const attrBtnWrapper: HTMLDivElement = document.createElement('div');
+        const titleColumn: HTMLSpanElement = document.createElement('span');
+        titleColumn.innerText = 'columns';
+        attrBtnWrapper.appendChild(titleColumn);
+        const attrBtnContainer: HTMLDivElement = document.createElement('div');
+        attrBtnContainer.id = 'attrBtnContainer';
+        attrBtnWrapper.appendChild(attrBtnContainer);
+        attrWrapper.appendChild(attrBtnWrapper);
+
+        const sortInputWrapper: HTMLDivElement = document.createElement('div');
+        sortInputWrapper.id = 'sortInputContainer';
+        const titleSort: HTMLSpanElement = document.createElement('span');
+        titleSort.innerText = 'sort';
+        sortInputWrapper.appendChild(titleSort);
+        const sortInputContainer: HTMLDivElement = document.createElement('div');
+        sortInputContainer.id = 'sortInputContainer';
+        sortInputWrapper.appendChild(sortInputContainer);
+        attrWrapper.appendChild(sortInputWrapper);
+        this.container.appendChild(attrWrapper);
+
+        //data table container
+        const dataTableWrapper: HTMLDivElement = document.createElement('div');
+        dataTableWrapper.id = 'dataTableWrapper';
+        dataTableWrapper.className = 'data-table-wrapper';
+        this.container.appendChild(dataTableWrapper);
+    }
+
+    
 }

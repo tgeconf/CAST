@@ -1,5 +1,6 @@
 import { ICoord } from './ds'
 import { state } from '../app/state'
+import { player } from '../components/player'
 import Rectangular from './rectangular'
 import Lasso from './lasso'
 import Reducer from '../app/reducer'
@@ -38,6 +39,25 @@ export default class Tool {
         }
         return same;
     }
+    public static resizeWidgets(svgContainerId: string = ''): void {
+        this.resizeSvgContainer(svgContainerId);
+        this.resizePlayerContainer();
+    }
+
+    public static resizeSvgContainer(svgContainerId: string = ''): void {
+        //resize svg containers
+        const svgs: HTMLElement[] = Array.from(svgContainerId === '' ? document.querySelectorAll('.view-content svg') : document.getElementById(svgContainerId).querySelectorAll('.view-content svg'));
+        svgs.forEach((svg) => {
+            const viewContent: HTMLElement = svg.parentElement;
+            Tool.resizeSVG(svg, viewContent.offsetWidth, viewContent.offsetHeight);
+        })
+    }
+
+    public static resizePlayerContainer(): void {
+        //resize player
+        player.resizePlayer(player.widget.clientWidth - 160);
+    }
+
     public static initLassoSelection(containerId: string): void {
         document.getElementById(containerId).onmousedown = (downEvt) => {
             const lassoSelection = new Lasso();

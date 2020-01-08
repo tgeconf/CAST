@@ -1,4 +1,4 @@
-import '../assets/style/timeline.scss'
+import '../../assets/style/timeline.scss'
 
 export default class Timeline {
     public static createTimeline(): HTMLDivElement {

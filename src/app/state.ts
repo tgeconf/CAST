@@ -7,12 +7,25 @@ export interface IKeyframe {
 
 }
 
+export interface ISortDataAttr {
+    attr: string
+    sort: string
+}
+
+export interface IDataItem {
+    [propName: string]: string | number;
+}
+
 export interface IState {
+    sortDataAttrs: ISortDataAttr[]
+    dataTable: Map<string, IDataItem>
+    dataOrder: string[]
+
     //chart status
-    charts: string[],
-    tool: string,
-    selection: string[],
-    suggestion: boolean,
+    charts: string[]
+    tool: string
+    selection: string[]
+    suggestion: boolean
 
     //keyframe status
     keyframeStatus: IKeyframe
@@ -22,12 +35,38 @@ export interface IState {
  * re-render parts when the state changes
  */
 class State implements IState {
+    _sortDataAttrs: ISortDataAttr[]
+    _dataTable: Map<string, IDataItem>
+    _dataOrder: string[]
+
     _charts: string[]
     _tool: string
     _selection: string[]
     _suggestion: boolean
     keyframeStatus: IKeyframe
 
+    set sortDataAttrs(sda: ISortDataAttr[]) {
+        this._sortDataAttrs = sda;
+        console.log(this);
+    }
+    get sortDataAttrs(): ISortDataAttr[] {
+        return this._sortDataAttrs;
+    }
+    set dataTable(dt: Map<string, IDataItem>) {
+        this._dataTable = dt;
+        Renderer.renderDataTable(dt);
+        console.log(this);
+    }
+    get dataTable(): Map<string, IDataItem> {
+        return this._dataTable;
+    }
+    set dataOrder(dord: string[]) {
+        this._dataOrder = dord;
+        console.log(this);
+    }
+    get dataOrder(): string[] {
+        return this._dataOrder;
+    }
     set charts(cs: string[]) {
         this._charts = cs;
         Renderer.generateAndRenderSpec(this);
@@ -62,6 +101,10 @@ class State implements IState {
     }
 
     public reset(): void {
+        this.sortDataAttrs = [];
+        this.dataTable = new Map();
+        this.dataOrder = [];
+
         this.charts = [];
         this.tool = ViewToolBtn.SINGLE;
         this.selection = [];

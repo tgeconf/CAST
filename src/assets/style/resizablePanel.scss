@@ -13,12 +13,14 @@
 	@extend .cover-size;
 }
 
+.flex-panel-wrapper {
+	display: flex;
+}
+
 .panel {
 	background: var(--gray-l2);
 	@extend .cover-size;
 	@extend .zero-margin-padding;
-	min-height: 300px;
-	min-width: 300px;
 	position: relative;
 	float: left;
 	z-index: 99;
@@ -26,10 +28,25 @@
 
 .v-panel {
 	max-height: calc(100% - 300px);
+	min-height: 300px;
+}
+
+.v-fix-panel {
+	height: 300px;
 }
 
 .h-panel {
 	max-width: calc(100% - 300px);
+	min-width: 300px;
+}
+
+.h-fix-panel {
+	width: 300px;
+}
+
+.v-flex-panel,
+.h-flex-panel {
+	flex: 1;
 }
 
 .resizer {
@@ -78,9 +95,35 @@
 		height: 100%;
 	}
 	&:hover {
-        background: var(--highlight-blue);
-        .resize-bar {
+		background: var(--highlight-blue);
+		.resize-bar {
 			background: var(--highlight-blue);
 		}
+	}
+}
+
+.non-dragable-v-resizer {
+	@extend .resizer;
+	height: 4px;
+	margin-top: -2px;
+	width: 100%;
+	box-sizing: border-box;
+	.resize-bar {
+        background: var(--gray-l3);
+		height: 4px;
+		width: 100%;
+	}
+}
+
+.non-dragable-h-resizer {
+	@extend .resizer;
+	width: 4px;
+	margin-left: -2px;
+	height: 100%;
+	box-sizing: border-box;
+	.resize-bar {
+        background: var(--gray-l3);
+		width: 4px;
+		height: 100%;
 	}
 }

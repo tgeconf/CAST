@@ -1,4 +1,4 @@
-import { state } from './state'
+import { state, IDataItem } from './state'
 import * as action from './action'
 import Util from './util'
 
@@ -23,17 +23,18 @@ export default class Reducer {
     }
 }
 
-Reducer.listen(action.LOAD_CHARTS, function (chartContent: string[]) {
+Reducer.listen(action.UPDATE_DATA_TABLE, (dt: Map<string, IDataItem>) => {
+    state.dataTable = dt;
+})
+Reducer.listen(action.LOAD_CHARTS, (chartContent: string[]) => {
     state.charts = chartContent;
 })
-Reducer.listen(action.TOGGLE_SUGGESTION, function (suggestion: boolean) {
+Reducer.listen(action.TOGGLE_SUGGESTION, (suggestion: boolean) => {
     state.suggestion = suggestion;
 })
-Reducer.listen(action.UPDATE_SELECTION, function (selection: string[]) {
-    console.log('in reducer', selection);
+Reducer.listen(action.UPDATE_SELECTION, (selection: string[]) => {
     if (state.suggestion && selection.length > 0) {
         selection = Util.suggestSelection(selection);
     }
-    console.log('after suggestion:', selection);
     state.selection = selection;
 })

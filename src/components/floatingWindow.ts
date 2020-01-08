@@ -72,7 +72,6 @@ export default class FloatingWindow {
             case FloatingWindow.MUSHROOM_CHART:
                 img.src = MushroomImg;
                 item.onclick = () => {
-                    console.log(typeof MushroomChart);
                     Reducer.triger(action.LOAD_CHARTS, [MushroomChart]);
                     this.floatingWindow.remove();
                 }

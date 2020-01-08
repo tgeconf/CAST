@@ -14,11 +14,16 @@ function app(): HTMLDivElement {
     nav.createNav();
     outerWrapper.appendChild(nav.navContainer);
 
-    const innerWrapper: HTMLDivElement = document.createElement('div');
-    innerWrapper.className = 'inner-wrapper';
-    const rPanels: IRPanel = ResizablePanel.createRPanels(6, 4);//chart & video, keyframe
-    const chartVideoPanels: IRPanel = ResizablePanel.createRPanels(5, 5, false);
+    const innerWrapper: IRPanel = ResizablePanel.createRPanels(false, { verticle: false });
 
+    //create data panel
+    const dataView: ViewWindow = new ViewWindow(ViewWindow.DATA_VIEW_TITLE);
+    dataView.createView();
+    innerWrapper.panel1.appendChild(dataView.view);
+
+    //create main panels
+    const mainWrapper: IRPanel = ResizablePanel.createRPanels(true, { p1: 6, p2: 4, verticle: true });//chart & video, keyframe
+    const chartVideoPanels: IRPanel = ResizablePanel.createRPanels(true, { p1: 5, p2: 5, verticle: false });
     //create chart view
     const chartView: ViewWindow = new ViewWindow(ViewWindow.CHART_VIEW_TITLE);
     chartView.createView();
@@ -27,30 +32,24 @@ function app(): HTMLDivElement {
     const videoView: ViewWindow = new ViewWindow(ViewWindow.VIDEO_VIEW_TITLE);
     videoView.createView();
     chartVideoPanels.panel2.appendChild(videoView.view);
-    rPanels.panel1.appendChild(chartVideoPanels.wrapper);
+    mainWrapper.panel1.appendChild(chartVideoPanels.wrapper);
 
     //create keyframe view
     const kfView: ViewWindow = new ViewWindow(ViewWindow.KF_VIEW_TITLE);
     kfView.createView();
-    rPanels.panel2.appendChild(kfView.view);
+    mainWrapper.panel2.appendChild(kfView.view);
 
-    innerWrapper.appendChild(rPanels.wrapper);
-    outerWrapper.appendChild(innerWrapper);
-
-    // const floatingWindow: FloatingWindow = new FloatingWindow();
-    // floatingWindow.createFloatingWindow(FloatingWindow.TYPE_EXAMPLE);
-    // outerWrapper.appendChild(floatingWindow.floatingWindow);
+    // mainWrapper.appendChild(rPanels.wrapper);
+    innerWrapper.panel2.appendChild(mainWrapper.wrapper);
+    outerWrapper.appendChild(innerWrapper.wrapper);
     return outerWrapper;
 }
 
 
 document.body.appendChild(app());
+Tool.resizeWidgets();
 state.reset();
 
 window.onresize = () => {
-    const svgs: HTMLElement[] = Array.from(document.querySelectorAll('.view-content svg'));
-    svgs.forEach((svg) => {
-        const viewContent: HTMLElement = svg.parentElement;
-        Tool.resizeSVG(svg, viewContent.offsetWidth, viewContent.offsetHeight);
-    })
+    Tool.resizeWidgets();
 }

@@ -1,6 +1,6 @@
 import '../assets/style/player.scss'
 
-import Slider from './slider'
+import Slider from './widgets/slider'
 
 class Player {
     //lottieJSON:any
@@ -8,6 +8,9 @@ class Player {
     playing: boolean;
     currentTime: number;
     totalTime: number;
+
+    //component
+    slider: Slider;
 
     constructor() {
         this.currentTime = 0;
@@ -18,7 +21,7 @@ class Player {
 
     public createPlayer(): void {
         this.widget = document.createElement('div');
-        this.widget.style.minWidth = (0.98 * window.innerWidth / 2).toString() + 'px';
+        // this.widget.style.minWidth = (0.98 * window.innerWidth / 2).toString() + 'px';
         const playBtnWrapper: HTMLDivElement = document.createElement('div');
         playBtnWrapper.className = 'play-btn-wrapper';
         playBtnWrapper.title = 'Play';
@@ -44,8 +47,9 @@ class Player {
         }
         this.widget.appendChild(playBtnWrapper);
 
-        const slider: Slider = new Slider([0, 1], 0, true, 5, 2, 0.98 * window.innerWidth / 2 - 146);
-        this.widget.appendChild(slider.createSlider());
+        this.slider = new Slider([0, 1], 0, true, 5, 2, Slider.MIN_WIDTH);
+        this.slider.createSlider();
+        this.widget.appendChild(this.slider.sliderContainer);
 
         const timeWrapper: HTMLDivElement = document.createElement('div');
         timeWrapper.className = 'time-span-wrapper';
@@ -76,6 +80,10 @@ class Player {
         const secStr: string = secNum < 10 ? '0' + secNum.toString() : secNum.toString();
         const msStr: string = msNum < 10 ? '0' + msNum.toString() : msNum.toString();
         return minStr + ':' + secStr + '.' + msStr;
+    }
+
+    public resizePlayer(cw: number): void {
+        this.slider.containerWidth = cw;
     }
 }
 

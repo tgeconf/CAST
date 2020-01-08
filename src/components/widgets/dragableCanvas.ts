@@ -1,4 +1,4 @@
-import '../assets/style/dragableCanvas.scss'
+import '../../assets/style/dragableCanvas.scss'
 
 export default class DragableCanvas{
     public createCanvas(){

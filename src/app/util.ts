@@ -225,7 +225,7 @@ export default class Util {
      * determine the attribute type of the data attributes of marks
      * @param markData 
      */
-    public static determinAttrType(markData: Map<string, any>) {
+    public static extractAttrValueAndDeterminType(markData: Map<string, any>) {
         markData.forEach((dataDatum: any, markId: string) => {
             for (const key in dataDatum) {
                 let tmpAttrType: string = (!isNaN(Number(dataDatum[key])) && dataDatum[key] !== '') ? this.NUMERIC_ATTR : this.CATEGORICAL_ATTR;
