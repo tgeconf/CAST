@@ -242,7 +242,6 @@ export default class Util {
      * find out to sort with which attr
      */
     public static findUpdatedAttrOrder(sda: ISortDataAttr[]) {
-        console.log(sda, state.sortDataAttrs);
         let result: ISortDataAttr = { attr: '', sort: '' };
         for (let i = 0, len = state.sortDataAttrs.length; i < len; i++) {
             let found: boolean = false;

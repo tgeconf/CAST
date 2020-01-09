@@ -9,6 +9,7 @@ import Util from './util'
 import Tool from '../util/tool'
 import Reducer from './reducer'
 import * as action from './action'
+import SelectableTable from '../components/widgets/selectableTable'
 
 /**
  * render html according to the state
@@ -61,34 +62,11 @@ export default class Renderer {
         }
     }
 
-    public static renderDataTable(dt: Map<string, IDataItem>, sdaArr: ISortDataAttr[]): void {
+    public static renderDataTable(dt: Map<string, IDataItem>): void {
         if (dt.size > 0) {
-            const dataTable: HTMLTableElement = document.createElement('table');
-            let count = 0;
-            state.dataOrder.forEach(markId => {
-                const dataItem = dt.get(markId);
-                if (count === 0) {
-                    //create title
-                    const headerTr: HTMLTableRowElement = document.createElement('tr');
-                    ['markId', ...Object.keys(dataItem)].forEach(key => {
-                        const th: HTMLTableHeaderCellElement = document.createElement('th');
-                        th.innerText = key;
-                        headerTr.appendChild(th);
-                    })
-                    dataTable.appendChild(headerTr);
-                }
-                //create content
-                const tr: HTMLTableRowElement = document.createElement('tr');
-                [markId, ...Object.values(dataItem)].forEach(value => {
-                    const td: HTMLTableCellElement = document.createElement('td');
-                    td.innerText = value.toString();
-                    tr.appendChild(td);
-                })
-                dataTable.appendChild(tr);
-                count++;
-            })
+            const dataTable: SelectableTable = new SelectableTable();
             document.getElementById('dataTableWrapper').innerHTML = '';
-            document.getElementById('dataTableWrapper').appendChild(dataTable);
+            document.getElementById('dataTableWrapper').appendChild(dataTable.createTable(dt));
         }
     }
 

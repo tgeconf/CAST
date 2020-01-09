@@ -47,8 +47,12 @@ function app(): HTMLDivElement {
 
 
 document.body.appendChild(app());
+//init styles
 Tool.resizeWidgets();
 state.reset();
+//load examples
+(<HTMLElement>document.getElementsByClassName('open-eg-icon')[0]).click();
+
 
 window.onresize = () => {
     Tool.resizeWidgets();

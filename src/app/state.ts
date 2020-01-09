@@ -47,7 +47,7 @@ class State implements IState {
             let newAttrs: string[] = sda.map(a => { return a.attr });
             sameAttrs = Tool.identicalArrays(oriAttrs, newAttrs);
         }
-        
+
 
         if (!sameAttrs) {
             Renderer.renderDataAttrs(sda);
@@ -57,7 +57,7 @@ class State implements IState {
             const attrAndOrder: ISortDataAttr = Util.findUpdatedAttrOrder(sda);
             //reorder data items
             Reducer.triger(action.UPDATE_DATA_ORDER, Util.sortDataTable(attrAndOrder));
-            Renderer.renderDataTable(this.dataTable, this.sortDataAttrs);
+            Renderer.renderDataTable(this.dataTable);
         }
         this._sortDataAttrs = sda;
         console.log(this);
@@ -67,7 +67,7 @@ class State implements IState {
     }
     set dataTable(dt: Map<string, IDataItem>) {
         this._dataTable = dt;
-        Renderer.renderDataTable(dt, this.sortDataAttrs);
+        Renderer.renderDataTable(dt);
         console.log(this);
     }
     get dataTable(): Map<string, IDataItem> {
