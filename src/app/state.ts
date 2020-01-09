@@ -2,19 +2,11 @@ import { canisGenerator, canis, ICanisSpec } from './canisGenerator'
 import { ChartSpec } from 'canis_toolkit'
 import { ViewToolBtn } from '../components/viewWindow'
 import Renderer from './renderer'
-
-export interface IKeyframe {
-
-}
-
-export interface ISortDataAttr {
-    attr: string
-    sort: string
-}
-
-export interface IDataItem {
-    [propName: string]: string | number;
-}
+import Tool from '../util/tool'
+import { ISortDataAttr, IDataItem } from './ds'
+import Util from './util'
+import Reducer from './reducer'
+import * as action from './action'
 
 export interface IState {
     sortDataAttrs: ISortDataAttr[]
@@ -28,14 +20,14 @@ export interface IState {
     suggestion: boolean
 
     //keyframe status
-    keyframeStatus: IKeyframe
+    // keyframeStatus: IKeyframe
 }
 
 /**
  * re-render parts when the state changes
  */
 class State implements IState {
-    _sortDataAttrs: ISortDataAttr[]
+    _sortDataAttrs: ISortDataAttr[] = [];
     _dataTable: Map<string, IDataItem> = new Map();
     _dataOrder: string[]
 
@@ -43,12 +35,31 @@ class State implements IState {
     _tool: string
     _selection: string[]
     _suggestion: boolean
-    keyframeStatus: IKeyframe
+    // keyframeStatus: IKeyframe
 
     set sortDataAttrs(sda: ISortDataAttr[]) {
+        //compare incoming
+        let sameAttrs: boolean = true;
+        if (sda.length !== this._sortDataAttrs.length) {
+            sameAttrs = false;
+        } else {
+            let oriAttrs: string[] = this._sortDataAttrs.map(a => { return a.attr });
+            let newAttrs: string[] = sda.map(a => { return a.attr });
+            sameAttrs = Tool.identicalArrays(oriAttrs, newAttrs);
+        }
+        
+
+        if (!sameAttrs) {
+            Renderer.renderDataAttrs(sda);
+        } else {
+            console.log('data attributes unchanged!!!');
+            //find sort reference
+            const attrAndOrder: ISortDataAttr = Util.findUpdatedAttrOrder(sda);
+            //reorder data items
+            Reducer.triger(action.UPDATE_DATA_ORDER, Util.sortDataTable(attrAndOrder));
+            Renderer.renderDataTable(this.dataTable, this.sortDataAttrs);
+        }
         this._sortDataAttrs = sda;
-        Renderer.renderDataAttrs(sda);
-        Renderer.renderDataTable(this.dataTable, sda);
         console.log(this);
     }
     get sortDataAttrs(): ISortDataAttr[] {
@@ -72,6 +83,7 @@ class State implements IState {
     set charts(cs: string[]) {
         this._charts = cs;
         Renderer.generateAndRenderSpec(this);
+
         console.log(this);
     }
     get charts(): string[] {

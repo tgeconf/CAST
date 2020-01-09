@@ -1,4 +1,5 @@
-import { state, IState, IDataItem, ISortDataAttr } from './state'
+import { state, IState } from './state'
+import { IDataItem, ISortDataAttr } from './ds'
 import { ChartSpec } from 'canis_toolkit'
 import { canisGenerator, canis } from './canisGenerator'
 import { ViewToolBtn } from '../components/viewWindow'
@@ -21,7 +22,9 @@ export default class Renderer {
         canisGenerator.generate(s);
         canis.renderSpec(canisGenerator.canisSpec, () => {
             Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
+            Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(ChartSpec.dataMarkDatum.keys()));
             Reducer.triger(action.UPDATE_DATA_TABLE, ChartSpec.dataMarkDatum);
+            console.log(Util.attrType, Object.keys(Util.attrType));
             Reducer.triger(action.UPDATE_DATA_SORT, Object.keys(Util.attrType).map(attrName => {
                 return {
                     attr: attrName,
@@ -45,6 +48,7 @@ export default class Renderer {
     }
 
     public static renderDataAttrs(sdaArr: ISortDataAttr[]): void {
+        console.log(sdaArr);
         if (sdaArr.length > 0) {
             sdaArr.forEach(sda => {
                 const attrBtn: AttrBtn = new AttrBtn();
@@ -59,14 +63,10 @@ export default class Renderer {
 
     public static renderDataTable(dt: Map<string, IDataItem>, sdaArr: ISortDataAttr[]): void {
         if (dt.size > 0) {
-            if (sdaArr.length > 0) {
-                //order the data table according to the data sort
-
-            }
-
             const dataTable: HTMLTableElement = document.createElement('table');
             let count = 0;
-            dt.forEach((dataItem, markId) => {
+            state.dataOrder.forEach(markId => {
+                const dataItem = dt.get(markId);
                 if (count === 0) {
                     //create title
                     const headerTr: HTMLTableRowElement = document.createElement('tr');

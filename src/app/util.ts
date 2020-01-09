@@ -1,5 +1,9 @@
 import { ChartSpec } from 'canis_toolkit'
+import { state } from './state'
 import Tool from '../util/tool'
+import { ISortDataAttr } from './ds';
+import AttrBtn from '../components/widgets/attrBtn';
+import AttrSort from '../components/widgets/attrSort';
 
 type dataDatumType = {
     [key: string]: string | number
@@ -232,5 +236,60 @@ export default class Util {
                 this.attrType[key] = tmpAttrType;
             }
         })
+    }
+
+    /**
+     * find out to sort with which attr
+     */
+    public static findUpdatedAttrOrder(sda: ISortDataAttr[]) {
+        console.log(sda, state.sortDataAttrs);
+        let result: ISortDataAttr = { attr: '', sort: '' };
+        for (let i = 0, len = state.sortDataAttrs.length; i < len; i++) {
+            let found: boolean = false;
+            for (let j = 0; j < len; j++) {
+                if (sda[j].attr === state.sortDataAttrs[i].attr) {
+                    found = sda[j].sort !== state.sortDataAttrs[i].sort;
+                    if (found) {
+                        result.attr = sda[j].attr;
+                        result.sort = sda[j].sort;
+                        break;
+                    }
+                }
+            }
+            if (found) {
+                break;
+            }
+        }
+        return result;
+    }
+    public static sortDataTable(attrOrder: ISortDataAttr): string[] {
+        let result: string[] = [];
+        if (attrOrder.attr !== '') {
+            switch (attrOrder.sort) {
+                case AttrSort.INDEX_ORDER:
+                    result = Array.from(state.dataTable.keys());
+                    result.sort((a, b) => {
+                        const aNum: number = parseInt(a.substring(4));
+                        const bNum: number = parseInt(b.substring(4));
+                        return aNum < bNum ? -1 : 1;
+                    })
+                    break;
+                case AttrSort.ASSCENDING_ORDER:
+                case AttrSort.DESCENDING_ORDER:
+                    let arrToOrder: string[][] = [];
+                    state.dataTable.forEach((datum, markId) => {
+                        arrToOrder.push([markId, datum[attrOrder.attr].toString()]);
+                    })
+                    arrToOrder.sort((a, b) => {
+                        if (attrOrder.sort === AttrSort.ASSCENDING_ORDER)
+                            return a[1] < b[1] ? -1 : 1;
+                        else
+                            return a[1] > b[1] ? -1 : 1;
+                    })
+                    result = arrToOrder.map(a => a[0]);
+                    break;
+            }
+        }
+        return result;
     }
 }

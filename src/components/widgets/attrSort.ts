@@ -1,18 +1,42 @@
 import '../../assets/style/attrSort.scss'
+import { ISortDataAttr } from '../../app/ds'
+import { state } from '../../app/state'
+import Reducer from '../../app/reducer';
+import * as action from '../../app/action';
 
-export default class AttrBtn {
+export default class AttrSort {
+    static ASSCENDING_ORDER: string = 'asscending';
+    static DESCENDING_ORDER: string = 'descending';
+    static INDEX_ORDER: string = 'dataIndex';
     selectInput: HTMLSpanElement;
 
     public createAttrSort(attrName: string) {
         this.selectInput = document.createElement('span');
         this.selectInput.className = 'attr-sort';
         const select: HTMLSelectElement = document.createElement('select');
-        select.value = attrName;
-        ['dataIndex', 'asscending', 'descending'].forEach(order => {
+        select.name = attrName;
+        [AttrSort.INDEX_ORDER, AttrSort.ASSCENDING_ORDER, AttrSort.DESCENDING_ORDER].forEach(order => {
             const option: HTMLOptionElement = document.createElement('option');
             option.innerText = order;
+            option.value = order;
             select.appendChild(option);
         })
+        select.onchange = () => {
+            let sortDataAttrArr: ISortDataAttr[] = [];
+            state.sortDataAttrs.forEach(sda => {
+                if (sda.attr === select.name) {
+                    sortDataAttrArr.push({
+                        attr: select.name,
+                        sort: select.value
+                    })
+                } else {
+                    sortDataAttrArr.push(sda);
+                }
+            })
+            Reducer.triger(action.UPDATE_DATA_SORT, sortDataAttrArr);
+        }
         this.selectInput.appendChild(select);
     }
+
+
 }

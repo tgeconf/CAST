@@ -26,6 +26,8 @@ export default class Tool {
         svg.setAttribute('height', h.toString())
         svg.setAttribute('viewBox', oriViewbox[0] + ' ' + oriViewbox[1] + ' ' + w + ' ' + h);
     }
+
+    
     public static identicalArrays(arr1: any[], arr2: any[]): boolean {
         let same: boolean = true;
         if (arr1.length !== arr2.length) {
