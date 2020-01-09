@@ -24,9 +24,9 @@ export default class ResizablePanel {
         const panel1 = this.createPanel(resizable, props.verticle, props.p1, !resizable);
         const panel2 = this.createPanel(resizable, props.verticle, props.p2);
         if (props.verticle) {
-            panel2.style.marginTop = '-3px';
+            panel2.style.marginTop = resizable? '-3px': '0px';
         } else {
-            panel2.style.marginLeft = '-3px';
+            panel2.style.marginLeft = resizable ? '-3px' : '0px';
         }
 
         const resizer = this.createResizer(panel1.id, panel2.id, props.verticle, resizable);

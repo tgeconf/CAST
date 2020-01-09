@@ -104,26 +104,26 @@
 
 .non-dragable-v-resizer {
 	@extend .resizer;
-	height: 4px;
+	height: 5px;
 	margin-top: -2px;
 	width: 100%;
 	box-sizing: border-box;
 	.resize-bar {
         background: var(--gray-l3);
-		height: 4px;
+		height: 5px;
 		width: 100%;
 	}
 }
 
 .non-dragable-h-resizer {
 	@extend .resizer;
-	width: 4px;
+	width: 5px;
 	margin-left: -2px;
 	height: 100%;
 	box-sizing: border-box;
 	.resize-bar {
         background: var(--gray-l3);
-		width: 4px;
+		width: 5px;
 		height: 100%;
 	}
 }

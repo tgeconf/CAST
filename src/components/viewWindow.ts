@@ -300,7 +300,7 @@ export class ViewContent {
         attrWrapper.appendChild(attrBtnWrapper);
 
         const sortInputWrapper: HTMLDivElement = document.createElement('div');
-        sortInputWrapper.id = 'sortInputContainer';
+        sortInputWrapper.id = 'sortInputWrapper';
         const titleSort: HTMLSpanElement = document.createElement('span');
         titleSort.innerText = 'sort';
         sortInputWrapper.appendChild(titleSort);

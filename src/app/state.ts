@@ -36,7 +36,7 @@ export interface IState {
  */
 class State implements IState {
     _sortDataAttrs: ISortDataAttr[]
-    _dataTable: Map<string, IDataItem>
+    _dataTable: Map<string, IDataItem> = new Map();
     _dataOrder: string[]
 
     _charts: string[]
@@ -47,6 +47,8 @@ class State implements IState {
 
     set sortDataAttrs(sda: ISortDataAttr[]) {
         this._sortDataAttrs = sda;
+        Renderer.renderDataAttrs(sda);
+        Renderer.renderDataTable(this.dataTable, sda);
         console.log(this);
     }
     get sortDataAttrs(): ISortDataAttr[] {
@@ -54,7 +56,7 @@ class State implements IState {
     }
     set dataTable(dt: Map<string, IDataItem>) {
         this._dataTable = dt;
-        Renderer.renderDataTable(dt);
+        Renderer.renderDataTable(dt, this.sortDataAttrs);
         console.log(this);
     }
     get dataTable(): Map<string, IDataItem> {

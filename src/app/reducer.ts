@@ -1,4 +1,4 @@
-import { state, IDataItem } from './state'
+import { state, IDataItem, ISortDataAttr } from './state'
 import * as action from './action'
 import Util from './util'
 
@@ -23,6 +23,10 @@ export default class Reducer {
     }
 }
 
+
+Reducer.listen(action.UPDATE_DATA_SORT, (sdaArr: ISortDataAttr[]) => {
+    state.sortDataAttrs = sdaArr;
+})
 Reducer.listen(action.UPDATE_DATA_TABLE, (dt: Map<string, IDataItem>) => {
     state.dataTable = dt;
 })

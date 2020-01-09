@@ -1,0 +1,21 @@
+
+.attr-btn {
+	display: block;
+	width: 96%;
+	height: 24px;
+	margin: 6px 0px;
+	line-height: 24px;
+	text-align: center;
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+	border-radius: 2px;
+	font-size: 10pt;
+	background: var(--gray-l1);
+	color: var(--gray-l8);
+	transition: all 0.2s cubic-bezier(0.445, 0.05, 0.55, 0.95);
+	&:hover {
+		cursor: pointer;
+		background: var(--gray-l10);
+		box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+		color: var(--gray-l14);
+	}
+}

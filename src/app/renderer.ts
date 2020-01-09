@@ -2,6 +2,8 @@ import { state, IState, IDataItem, ISortDataAttr } from './state'
 import { ChartSpec } from 'canis_toolkit'
 import { canisGenerator, canis } from './canisGenerator'
 import { ViewToolBtn } from '../components/viewWindow'
+import AttrBtn from '../components/widgets/attrBtn'
+import AttrSort from '../components/widgets/attrSort'
 import Util from './util'
 import Tool from '../util/tool'
 import Reducer from './reducer'
@@ -20,6 +22,12 @@ export default class Renderer {
         canis.renderSpec(canisGenerator.canisSpec, () => {
             Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
             Reducer.triger(action.UPDATE_DATA_TABLE, ChartSpec.dataMarkDatum);
+            Reducer.triger(action.UPDATE_DATA_SORT, Object.keys(Util.attrType).map(attrName => {
+                return {
+                    attr: attrName,
+                    sort: 'dataIndex'
+                }
+            }));
         });
         //add highlight box on the chart
         const svg: HTMLElement = document.getElementById('visChart');
@@ -36,12 +44,26 @@ export default class Renderer {
         }
     }
 
-    public static renderDataAttrs(sda: ISortDataAttr[]): void {
-        
+    public static renderDataAttrs(sdaArr: ISortDataAttr[]): void {
+        if (sdaArr.length > 0) {
+            sdaArr.forEach(sda => {
+                const attrBtn: AttrBtn = new AttrBtn();
+                attrBtn.createAttrBtn(sda.attr);
+                document.getElementById('attrBtnContainer').appendChild(attrBtn.btn);
+                const attrSort: AttrSort = new AttrSort();
+                attrSort.createAttrSort(sda.attr);
+                document.getElementById('sortInputContainer').appendChild(attrSort.selectInput);
+            })
+        }
     }
 
-    public static renderDataTable(dt: Map<string, IDataItem>): void {
+    public static renderDataTable(dt: Map<string, IDataItem>, sdaArr: ISortDataAttr[]): void {
         if (dt.size > 0) {
+            if (sdaArr.length > 0) {
+                //order the data table according to the data sort
+
+            }
+
             const dataTable: HTMLTableElement = document.createElement('table');
             let count = 0;
             dt.forEach((dataItem, markId) => {
@@ -57,9 +79,7 @@ export default class Renderer {
                 }
                 //create content
                 const tr: HTMLTableRowElement = document.createElement('tr');
-                console.log('dataitem: ', dataItem);
                 [markId, ...Object.values(dataItem)].forEach(value => {
-                    console.log(value);
                     const td: HTMLTableCellElement = document.createElement('td');
                     td.innerText = value.toString();
                     tr.appendChild(td);
@@ -67,6 +87,7 @@ export default class Renderer {
                 dataTable.appendChild(tr);
                 count++;
             })
+            document.getElementById('dataTableWrapper').innerHTML = '';
             document.getElementById('dataTableWrapper').appendChild(dataTable);
         }
     }
