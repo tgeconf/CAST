@@ -12,9 +12,9 @@
 	height: var(--title-height);
 	padding-left: 10px;
 	font-size: 11pt;
-	font-weight: bold;
+	font-weight: 600;
 	line-height: var(--title-height);
-	color: var(--gray-l8);
+	color: var(--gray-l7);
 	background: var(--gray-l1);
 	box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 	.view-title-text {
@@ -209,43 +209,93 @@
 }
 
 .attr-wrapper {
+	margin-top: 6px;
 	box-sizing: border-box;
 	padding: 0px 10px;
 	width: 100%;
 	display: flex;
-	& > div > span {
-		float: left;
-		text-transform: capitalize;
-		font-size: 11pt;
-		color: var(--gray-l8);
-	}
 	& div {
 		clear: both;
 		float: left;
-		margin-top: 4px;
 		&:first-child {
 			flex: 6;
 		}
 		&:last-child {
 			flex: 4;
 		}
-		& div {
+		div {
 			width: 100%;
-			padding: 4px 0px;
-			border-top: 1px solid var(--gray-l12);
-			border-bottom: 1px solid var(--gray-l12);
+			// border-top: 1px solid var(--gray-l12);
+			// border-bottom: 1px solid var(--gray-l12);
 		}
 	}
+}
+
+.data-column-title {
+	float: left;
+	text-transform: capitalize;
+	font-size: 10pt;
+	display: block;
+	box-sizing: border-box;
+	padding: 0 4px;
+	width: 100%;
+	height: 26px;
+	line-height: 26px;
+	background: var(--gray-l3);
+	color: var(--gray-l7);
 }
 
 .data-table-wrapper {
 	box-sizing: border-box;
 	padding: 0px 10px;
 	margin-top: 10px;
-	width: calc(100% - 8px);
 	flex: 1;
+	display: flex;
+	flex-direction: column;
 	overflow: auto;
-	
+	.data-table-title {
+		box-sizing: border-box;
+		padding: 0 4px;
+		height: 26px;
+		line-height: 26px;
+		background: var(--gray-l3);
+		.data-table-title-text {
+			float: left;
+			text-transform: capitalize;
+			color: var(--gray-l7);
+			font-size: 10pt;
+		}
+		.drop-down {
+			float: right;
+			width: 14px;
+			height: 14px;
+			margin: 6px;
+			background-color: none;
+			background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICAgICB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDEwMCAxMjUiIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDEwMCAxMDAiIHhtbDpzcGFjZT0icHJlc2VydmUiPiAgICA8cGF0aCBkPSJNNDcuNDQ5LDY2LjE4Mkw0Ny40NDksNjYuMTgyYy0wLjY2MywwLTEuMjk5LTAuMjY0LTEuNzY4LTAuNzMybC0yNy4zNi0yNy4zNjNjLTAuOTc3LTAuOTc3LTAuOTc3LTIuNTYsMC0zLjUzNSAgYzAuOTc3LTAuOTc3LDIuNTU5LTAuOTc3LDMuNTM1LDBsMjUuNTkzLDI1LjU5NmwyNS41OTUtMjUuNTk0YzAuOTc3LTAuOTc3LDIuNTU5LTAuOTc3LDMuNTM1LDBzMC45NzcsMi41NTksMCwzLjUzNUw0OS4yMTcsNjUuNDQ5ICBDNDguNzQ4LDY1LjkxOCw0OC4xMTIsNjYuMTgyLDQ3LjQ0OSw2Ni4xODJ6Ii8+PC9zdmc+);
+			background-repeat: no-repeat;
+            background-size: 100% auto;
+            transform: rotate(180deg);
+			filter: invert(50%);
+			&:hover {
+				filter: invert(0%);
+				cursor: pointer;
+			}
+		}
+		.left-up-icon {
+			transform: rotate(0deg);
+		}
+	}
+	.data-table-container {
+		width: 100%;
+		flex: 1;
+		overflow: auto;
+        margin-top: 6px;
+        transition: all 0.2s cubic-bezier(0.445, 0.05, 0.55, 0.95);
+	}
+	.hidden-data-table {
+		flex: none;
+		height: 0px;
+	}
 }
 
 .kf-view-content {

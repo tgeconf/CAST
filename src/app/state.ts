@@ -48,16 +48,15 @@ class State implements IState {
             sameAttrs = Tool.identicalArrays(oriAttrs, newAttrs);
         }
 
-
         if (!sameAttrs) {
             Renderer.renderDataAttrs(sda);
         } else {
-            console.log('data attributes unchanged!!!');
             //find sort reference
             const attrAndOrder: ISortDataAttr = Util.findUpdatedAttrOrder(sda);
             //reorder data items
             Reducer.triger(action.UPDATE_DATA_ORDER, Util.sortDataTable(attrAndOrder));
             Renderer.renderDataTable(this.dataTable);
+            
         }
         this._sortDataAttrs = sda;
         console.log(this);

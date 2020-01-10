@@ -292,6 +292,7 @@ export class ViewContent {
         attrWrapper.className = 'attr-wrapper';
         const attrBtnWrapper: HTMLDivElement = document.createElement('div');
         const titleColumn: HTMLSpanElement = document.createElement('span');
+        titleColumn.className = 'data-column-title';
         titleColumn.innerText = 'columns';
         attrBtnWrapper.appendChild(titleColumn);
         const attrBtnContainer: HTMLDivElement = document.createElement('div');
@@ -303,6 +304,7 @@ export class ViewContent {
         sortInputWrapper.id = 'sortInputWrapper';
         const titleSort: HTMLSpanElement = document.createElement('span');
         titleSort.innerText = 'sort';
+        titleSort.className = 'data-column-title';
         sortInputWrapper.appendChild(titleSort);
         const sortInputContainer: HTMLDivElement = document.createElement('div');
         sortInputContainer.id = 'sortInputContainer';
@@ -312,10 +314,28 @@ export class ViewContent {
 
         //data table container
         const dataTableWrapper: HTMLDivElement = document.createElement('div');
-        dataTableWrapper.id = 'dataTableWrapper';
+        // dataTableWrapper.id = 'dataTableWrapper';
         dataTableWrapper.className = 'data-table-wrapper';
+        const dataTableTitle: HTMLDivElement = document.createElement('div');
+        dataTableTitle.className = 'data-table-title';
+        const dataTableTitleText: HTMLSpanElement = document.createElement('span');
+        dataTableTitleText.innerText = 'table';
+        dataTableTitleText.className = 'data-table-title-text';
+        dataTableTitle.appendChild(dataTableTitleText);
+        const dataTableTitleDropdown: HTMLSpanElement = document.createElement('span');
+        dataTableTitleDropdown.className = 'drop-down';
+        dataTableTitleDropdown.onclick = () => {
+            dataTableTitleDropdown.classList.toggle('left-up-icon');
+            dataTableContainer.classList.toggle('hidden-data-table');
+        }
+        dataTableTitle.appendChild(dataTableTitleDropdown);
+        dataTableWrapper.appendChild(dataTableTitle);
+        const dataTableContainer: HTMLDivElement = document.createElement('div');
+        dataTableContainer.id = 'dataTabelContainer';
+        dataTableContainer.className = 'data-table-container';
+        dataTableWrapper.appendChild(dataTableContainer);
         this.container.appendChild(dataTableWrapper);
     }
 
-    
+
 }

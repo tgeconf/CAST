@@ -25,7 +25,6 @@ export default class Renderer {
             Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
             Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(ChartSpec.dataMarkDatum.keys()));
             Reducer.triger(action.UPDATE_DATA_TABLE, ChartSpec.dataMarkDatum);
-            console.log(Util.attrType, Object.keys(Util.attrType));
             Reducer.triger(action.UPDATE_DATA_SORT, Object.keys(Util.attrType).map(attrName => {
                 return {
                     attr: attrName,
@@ -49,7 +48,6 @@ export default class Renderer {
     }
 
     public static renderDataAttrs(sdaArr: ISortDataAttr[]): void {
-        console.log(sdaArr);
         if (sdaArr.length > 0) {
             sdaArr.forEach(sda => {
                 const attrBtn: AttrBtn = new AttrBtn();
@@ -65,8 +63,9 @@ export default class Renderer {
     public static renderDataTable(dt: Map<string, IDataItem>): void {
         if (dt.size > 0) {
             const dataTable: SelectableTable = new SelectableTable();
-            document.getElementById('dataTableWrapper').innerHTML = '';
-            document.getElementById('dataTableWrapper').appendChild(dataTable.createTable(dt));
+            document.getElementById('dataTabelContainer').innerHTML = '';
+            document.getElementById('dataTabelContainer').appendChild(dataTable.createTable(dt));
+            SelectableTable.renderSelection(state.selection);
         }
     }
 
@@ -102,6 +101,8 @@ export default class Renderer {
      */
     public static renderSelectedMarks(selection: string[]): void {
         let highlightSelectionBox: HTMLElement = document.getElementById('highlightSelectionFrame');
+        //highlight selection in data table
+        SelectableTable.renderSelection(selection);
         if (selection.length === 0) {//no mark is selected
             if (highlightSelectionBox) {
                 //reset highlightselectionbox
