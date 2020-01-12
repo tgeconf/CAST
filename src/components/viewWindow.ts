@@ -289,7 +289,7 @@ export class ViewContent {
     public createDataDashboard() {
         //attribute container
         const attrWrapper: HTMLDivElement = document.createElement('div');
-        attrWrapper.className = 'attr-wrapper';
+        attrWrapper.className = 'attr-wrapper non-sortable-attr-wrapper';
         const attrBtnWrapper: HTMLDivElement = document.createElement('div');
         const titleColumn: HTMLSpanElement = document.createElement('span');
         titleColumn.className = 'data-column-title';
@@ -323,16 +323,17 @@ export class ViewContent {
         dataTableTitleText.className = 'data-table-title-text';
         dataTableTitle.appendChild(dataTableTitleText);
         const dataTableTitleDropdown: HTMLSpanElement = document.createElement('span');
-        dataTableTitleDropdown.className = 'drop-down';
+        dataTableTitleDropdown.className = 'drop-down left-up-icon';
         dataTableTitleDropdown.onclick = () => {
             dataTableTitleDropdown.classList.toggle('left-up-icon');
             dataTableContainer.classList.toggle('hidden-data-table');
+            attrWrapper.classList.toggle('non-sortable-attr-wrapper');
         }
         dataTableTitle.appendChild(dataTableTitleDropdown);
         dataTableWrapper.appendChild(dataTableTitle);
         const dataTableContainer: HTMLDivElement = document.createElement('div');
         dataTableContainer.id = 'dataTabelContainer';
-        dataTableContainer.className = 'data-table-container';
+        dataTableContainer.className = 'data-table-container hidden-data-table';
         dataTableWrapper.appendChild(dataTableContainer);
         this.container.appendChild(dataTableWrapper);
     }
