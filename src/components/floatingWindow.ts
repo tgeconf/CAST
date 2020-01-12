@@ -28,7 +28,7 @@ export default class FloatingWindow {
         windowTitle.className = 'title-wrapper';
         const titleContent: HTMLDivElement = document.createElement('div');
         titleContent.className = 'title-content';
-        titleContent.innerHTML = 'examples'
+        
         windowTitle.appendChild(titleContent);
         const closeBtn: HTMLSpanElement = document.createElement('span');
         closeBtn.className = 'title-btn';
@@ -45,9 +45,11 @@ export default class FloatingWindow {
         windowContent.className = 'content-wrapper';
         switch (id) {
             case FloatingWindow.TYPE_EXAMPLE:
+                titleContent.innerHTML = 'examples';
                 windowContent.appendChild(this.createExampleList());
                 break;
             case FloatingWindow.TYPE_SPEC:
+                titleContent.innerHTML = 'spec';
                 windowContent.appendChild(this.createSpecPanel());
                 break;
             default:
