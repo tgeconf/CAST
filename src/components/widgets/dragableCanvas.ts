@@ -5,6 +5,5 @@ export default class DragableCanvas{
         const canvas:HTMLCanvasElement = document.createElement('canvas');
         canvas.className = 'drag-drop-canvas grab-selection';
         canvas.id = 'dragDropCanvas';
-        
     }
 }

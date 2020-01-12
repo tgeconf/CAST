@@ -64,18 +64,8 @@ export default class Renderer {
      * test rendering spec
      * @param spec 
      */
-    public static renderSpec() {
-        canis.renderSpec(canisGenerator.canisSpec, () => {
-            // Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
-            // Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(ChartSpec.dataMarkDatum.keys()));
-            // Reducer.triger(action.UPDATE_DATA_TABLE, ChartSpec.dataMarkDatum);
-            // Reducer.triger(action.UPDATE_DATA_SORT, Object.keys(Util.attrType).map(attrName => {
-            //     return {
-            //         attr: attrName,
-            //         sort: 'dataIndex'
-            //     }
-            // }));
-        });
+    public static async renderSpec() {
+        const lottieSpec = await canis.renderSpec(canisGenerator.canisSpec, () => { });
         //add highlight box on the chart
         const svg: HTMLElement = document.getElementById('visChart');
         if (svg) {
@@ -89,6 +79,13 @@ export default class Renderer {
             svg.appendChild(highlightBox);
             Tool.resizeSVG(svg, svg.parentElement.offsetWidth, svg.parentElement.offsetHeight);
         }
+        //render video view
+        this.renderVideo(lottieSpec);
+        player.resetPlayer({
+            frameRate: canis.frameRate,
+            currentTime: 0,
+            totalTime: canis.duration()
+        })
     }
 
     public static renderVideo(lottieSpec: any) {
@@ -96,6 +93,7 @@ export default class Renderer {
         //save histroy before update state
         State.tmpStateBusket.push([action.UPDATE_LOTTIE, state.lottieAni]);
         State.saveHistory();
+        Lottie.destroy();
         Reducer.triger(action.UPDATE_LOTTIE, Lottie.loadAnimation({
             container: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID),
             renderer: 'svg',
