@@ -1,6 +1,6 @@
 import '../../assets/style/attrSort.scss'
 import { ISortDataAttr } from '../../app/ds'
-import { state } from '../../app/state'
+import { state, State } from '../../app/state'
 import Reducer from '../../app/reducer';
 import * as action from '../../app/action';
 
@@ -33,6 +33,9 @@ export default class AttrSort {
                     sortDataAttrArr.push(sda);
                 }
             })
+            //save histroy before update state
+            State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
+            State.saveHistory();
             Reducer.triger(action.UPDATE_DATA_SORT, sortDataAttrArr);
         }
         this.selectInput.appendChild(select);

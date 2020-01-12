@@ -2,7 +2,7 @@ import '../assets/style/view-window.scss'
 import { player } from './player'
 import Slider from './widgets/slider'
 import Tool from '../util/tool'
-import { state } from '../app/state'
+import { state, State } from '../app/state'
 import * as action from '../app/action'
 import Reducer from '../app/reducer'
 
@@ -81,12 +81,12 @@ export default class ViewWindow {
             iconClass: 'lasso-icon'
         }));
         toolContainer.appendChild(this.createSeparator());
-        toolContainer.appendChild(this.createBtn({
-            title: 'Select from Data',
-            clickEvtType: ViewToolBtn.DATA,
-            iconClass: 'table-icon'
-        }));
-        toolContainer.appendChild(this.createSeparator());
+        // toolContainer.appendChild(this.createBtn({
+        //     title: 'Select from Data',
+        //     clickEvtType: ViewToolBtn.DATA,
+        //     iconClass: 'table-icon'
+        // }));
+        // toolContainer.appendChild(this.createSeparator());
         return toolContainer;
     }
 
@@ -136,6 +136,9 @@ export default class ViewWindow {
         suggestBox.id = 'suggestBox';
         suggestBox.type = 'checkbox';
         suggestBox.onchange = (evt) => {
+            //save histroy before update state
+            State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, state.suggestion]);
+            State.saveHistory();
             if ((<HTMLInputElement>evt.target).checked) {
                 Reducer.triger(action.TOGGLE_SUGGESTION, true);
             } else {
@@ -182,9 +185,9 @@ export class ViewToolBtn {
             case ViewToolBtn.LASSO:
                 btn.onclick = () => this.lassoSelect();
                 break;
-            case ViewToolBtn.DATA:
-                btn.onclick = () => this.dataSelect();
-                break;
+            // case ViewToolBtn.DATA:
+            //     btn.onclick = () => this.dataSelect();
+            //     break;
             case ViewToolBtn.ZOOM:
                 btn.setAttribute('disabled', 'true');
                 break;
@@ -236,9 +239,9 @@ export class ViewToolBtn {
         }
     }
 
-    public dataSelect(): void {
-        console.log('toggle data selection!');
-    }
+    // public dataSelect(): void {
+    //     console.log('toggle data selection!');
+    // }
 
     public zoomIn(): void {
         console.log('zoom in!');

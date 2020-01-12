@@ -1,5 +1,5 @@
 import '../../assets/style/selectableTable.scss'
-import { state } from '../../app/state'
+import { state, State } from '../../app/state'
 import { IDataItem } from '../../app/ds';
 import Reducer from '../../app/reducer';
 import * as action from '../../app/action'
@@ -72,6 +72,9 @@ export default class SelectableTable {
             this.resetSelection();
             this.selectedRows.push(this.startRowIdx);
             SelectableTable.renderSelection(this.selectedRows);
+            //save histroy before update state
+            State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
+            State.saveHistory();
             Reducer.triger(action.UPDATE_SELECTION, this.selectedRows);
         }
         document.onmousemove = (moveEvt) => {
@@ -109,6 +112,9 @@ export default class SelectableTable {
         }
         this.selectedRows = state.dataOrder.slice(selectionStartIdx, selectionEndIdx + 1);
         SelectableTable.renderSelection(this.selectedRows);
+        //save histroy before update state
+        State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
+        State.saveHistory();
         Reducer.triger(action.UPDATE_SELECTION, this.selectedRows);
     }
 }

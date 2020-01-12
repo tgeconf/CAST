@@ -6,6 +6,7 @@ import * as action from '../app/action'
 import { canisGenerator } from '../app/canisGenerator'
 
 import Renderer from '../app/renderer';//for test!!!!!
+import { State, state } from '../app/state'
 
 export default class FloatingWindow {
     static TYPE_EXAMPLE: string = 'exampleContainer';//type of the floating window is example
@@ -101,6 +102,9 @@ export default class FloatingWindow {
             case FloatingWindow.MUSHROOM_CHART:
                 img.src = MushroomImg;
                 item.onclick = () => {
+                    //save histroy before update state
+                    State.tmpStateBusket = [];
+                    State.tmpStateBusket.push([action.LOAD_CHARTS, state.charts]);
                     Reducer.triger(action.LOAD_CHARTS, [MushroomChart]);
                     this.floatingWindow.remove();
                 }

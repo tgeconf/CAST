@@ -31,7 +31,7 @@ export interface IState {
 /**
  * re-render parts when the state changes
  */
-class State implements IState {
+export class State implements IState {
     _sortDataAttrs: ISortDataAttr[] = [];
     _dataTable: Map<string, IDataItem> = new Map();
     _dataOrder: string[]
@@ -65,32 +65,30 @@ class State implements IState {
             Renderer.renderDataTable(this.dataTable);
 
         }
+        //State.saveHistory(action.UPDATE_DATA_SORT, this._sortDataAttrs);
         this._sortDataAttrs = sda;
-        console.log(this);
     }
     get sortDataAttrs(): ISortDataAttr[] {
         return this._sortDataAttrs;
     }
     set dataTable(dt: Map<string, IDataItem>) {
+        //State.saveHistory(action.UPDATE_DATA_TABLE, this._dataTable);
         this._dataTable = dt;
         Renderer.renderDataTable(dt);
-        console.log(this);
     }
     get dataTable(): Map<string, IDataItem> {
         return this._dataTable;
     }
     set dataOrder(dord: string[]) {
         this._dataOrder = dord;
-        console.log(this);
     }
     get dataOrder(): string[] {
         return this._dataOrder;
     }
     set charts(cs: string[]) {
+        //State.saveHistory(action.LOAD_CHARTS, this._charts);
         this._charts = cs;
         Renderer.generateAndRenderSpec(this);
-
-        console.log(this);
     }
     get charts(): string[] {
         return this._charts;
@@ -98,23 +96,22 @@ class State implements IState {
     set tool(t: string) {
         this._tool = t;
         Renderer.renderChartTool(t);
-        console.log(this);
     }
     get tool(): string {
         return this._tool;
     }
     set selection(sel: string[]) {
+        //State.saveHistory(action.UPDATE_SELECTION, this._selection);
         this._selection = sel;
         Renderer.renderSelectedMarks(this._selection);
-        console.log(this);
     }
     get selection(): string[] {
         return this._selection;
     }
     set suggestion(sug: boolean) {
+        //State.saveHistory(action.TOGGLE_SUGGESTION, this._suggestion);
         this._suggestion = sug;
         Renderer.renderSuggestionCheckbox(sug);
-        console.log(this);
     }
     get suggestion(): boolean {
         return this._suggestion;
@@ -135,6 +132,37 @@ class State implements IState {
         this.tool = ViewToolBtn.SINGLE;
         this.selection = [];
         this.suggestion = true;
+    }
+
+    static stateHistory: Array<Array<[string, any]>> = [];//each step might triger multiple actions, thus each step correspond to one Array<[actionType, stateAttrValue]>
+    static stateHistoryIdx: number = 0;
+    static tmpStateBusket: Array<[string, any]> = [];
+    public static saveHistory() {
+        this.stateHistory = this.stateHistory.slice(0, this.stateHistoryIdx);
+        this.stateHistory.push(this.tmpStateBusket);
+        this.stateHistoryIdx++;
+        this.tmpStateBusket = [];
+        console.log('current history: ', this.stateHistory);
+    }
+
+    public static revertHistory() {
+        if (this.stateHistoryIdx > 0) {
+            this.stateHistoryIdx--;
+            const actionAndValues: Array<[string, any]> = this.stateHistory[this.stateHistoryIdx];
+            actionAndValues.forEach(actionValue => {
+                Reducer.triger(actionValue[0], actionValue[1]);
+            })
+        }
+    }
+
+    public static redoHistory() {
+        if (this.stateHistoryIdx < this.stateHistory.length - 1) {
+            this.stateHistoryIdx++;
+            const actionAndValues: Array<[string, any]> = this.stateHistory[this.stateHistoryIdx];
+            actionAndValues.forEach(actionValue => {
+                Reducer.triger(actionValue[0], actionValue[1]);
+            })
+        }
     }
 
 }

@@ -1,4 +1,4 @@
-import { state, IState } from './state'
+import { state, IState, State } from './state'
 import { IDataItem, ISortDataAttr } from './ds'
 import { ChartSpec } from 'canis_toolkit'
 import { canisGenerator, canis } from './canisGenerator'
@@ -25,6 +25,10 @@ export default class Renderer {
         canisGenerator.generate(s);
         const lottieSpec = await canis.renderSpec(canisGenerator.canisSpec, () => {
             Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
+            //save histroy before update state
+            State.tmpStateBusket.push([action.UPDATE_DATA_ORDER, state.dataOrder]);
+            State.tmpStateBusket.push([action.UPDATE_DATA_TABLE, state.dataTable]);
+            State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
             Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(ChartSpec.dataMarkDatum.keys()));
             Reducer.triger(action.UPDATE_DATA_TABLE, ChartSpec.dataMarkDatum);
             Reducer.triger(action.UPDATE_DATA_SORT, Object.keys(Util.attrType).map(attrName => {
@@ -89,6 +93,9 @@ export default class Renderer {
 
     public static renderVideo(lottieSpec: any) {
         document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID).innerHTML = '';
+        //save histroy before update state
+        State.tmpStateBusket.push([action.UPDATE_LOTTIE, state.lottieAni]);
+        State.saveHistory();
         Reducer.triger(action.UPDATE_LOTTIE, Lottie.loadAnimation({
             container: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID),
             renderer: 'svg',

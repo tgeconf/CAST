@@ -115,7 +115,6 @@ class Player {
     }
 
     public renderCurrentTime() {
-        console.log('current time is: ', this.currentTime);
         document.getElementById(Player.CURRENT_TIME_SPAN_ID).innerHTML = (this.formatTime(this.currentTime));
     }
 
@@ -128,7 +127,6 @@ class Player {
     }
 
     public resetPlayer(props: IPlayerProps) {
-        console.log(props);
         this.frameRate = props.frameRate;
         this.currentTime = props.currentTime;
         this.totalTime = props.totalTime;
@@ -157,7 +155,6 @@ class Player {
             document.getElementById('playBtnWrapper').title = 'Stop';
         }
         this.animationInterval = setInterval(() => {
-            console.log('current time: ', this.currentTime);
             this.slider.moveSlider(this.currentTime);
             const nextTimePoint: number = this.currentTime + (1000 / this.frameRate);
             if (nextTimePoint > this.totalTime) {

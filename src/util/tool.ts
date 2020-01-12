@@ -1,5 +1,5 @@
 import { ICoord } from './ds'
-import { state } from '../app/state'
+import { state, State } from '../app/state'
 import { player } from '../components/player'
 import Rectangular from './rectangular'
 import Lasso from './lasso'
@@ -88,7 +88,9 @@ export default class Tool {
                     document.onmouseup = (upEvt) => {
                         isDragging = false;
                         const selectedMarks: string[] = lassoSelection.lassoSelect(state.selection);
-                        console.log(selectedMarks, state.selection, this.identicalArrays(selectedMarks, state.selection));
+                        //save histroy before update state
+                        State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
+                        State.saveHistory();
                         if (this.identicalArrays(selectedMarks, state.selection)) {
                             Reducer.triger(action.UPDATE_SELECTION, []);
                         } else {
@@ -144,6 +146,9 @@ export default class Tool {
                     document.onmouseup = (upEvt) => {
                         isDragging = false;
                         const mouseMoveThsh: number = 3;//mouse move less than 3px -> single selection; bigger than 3px -> rect selection
+                        //save histroy before update state
+                        State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
+                        State.saveHistory();
                         if (Tool.pointDist(lastMouseX, upEvt.pageX, lastMouseY, upEvt.pageY) > mouseMoveThsh) {//doing rect selection
                             const rectPosi2: ICoord = { x: upEvt.pageX - svgBBox.x, y: upEvt.pageY - svgBBox.y };
                             const selectedMarks: string[] = rectangularSelection.rectangularSelect({
