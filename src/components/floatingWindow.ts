@@ -60,6 +60,9 @@ export default class FloatingWindow {
         this.floatingWindow.appendChild(fWindow);
     }
 
+    /**
+     * to test keyframes since there is no timeline view yet
+     */
     public createSpecPanel(): HTMLDivElement {
         const wrapper: HTMLDivElement = document.createElement('div');
         wrapper.style.width = '100%';
