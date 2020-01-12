@@ -64,6 +64,12 @@ export default class Nav {
             evtType: NavBtn.REDO
         }));
         this.navContainer.appendChild(this.createSeparator());
+        const testBtn: HTMLButtonElement = document.createElement('button');
+        testBtn.innerHTML = 'testSpec';
+        testBtn.onclick = () => {
+            NavBtn.testSpec();
+        }
+        this.navContainer.appendChild(testBtn);
     }
 
     public createSeparator() {
@@ -164,8 +170,6 @@ class NavBtn {
     }
 
     public loadExamples() {
-        console.log('loading examples');
-        //create the hidden floating example window
         const floatingWindow: FloatingWindow = new FloatingWindow();
         floatingWindow.createFloatingWindow(FloatingWindow.TYPE_EXAMPLE);
         document.getElementById('appWrapper').appendChild(floatingWindow.floatingWindow);
@@ -185,5 +189,11 @@ class NavBtn {
 
     public redo(): void {
         console.log('step forward');
+    }
+
+    public static testSpec(): void {
+        const floatingWindow: FloatingWindow = new FloatingWindow();
+        floatingWindow.createFloatingWindow(FloatingWindow.TYPE_SPEC);
+        document.getElementById('appWrapper').appendChild(floatingWindow.floatingWindow);
     }
 }

@@ -46,7 +46,7 @@ interface IAnimationSpec {
     offset?: number | IOffset
     selector: string
     grouping?: IGrouping
-    actions: IAction[]
+    effects: IAction[]
 }
 
 export interface ICanisSpec {
@@ -92,7 +92,7 @@ class CanisGenerator {
         if (this.canisSpec.animations.length === 0) {
             const animationSpec: IAnimationSpec = {
                 selector: '.mark',
-                actions: [{ type: ActionSpec.actionTypes.appear }]
+                effects: [{ type: ActionSpec.actionTypes.fade, duration: 300 }]
             }
             this.canisSpec.animations.push(animationSpec);
         }

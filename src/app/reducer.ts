@@ -3,7 +3,7 @@ import { IDataItem, ISortDataAttr } from './ds'
 import * as action from './action'
 import Util from './util'
 import Renderer from './renderer';
-
+import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie'
 export default class Reducer {
     static list: any = {};
 
@@ -45,4 +45,8 @@ Reducer.listen(action.UPDATE_SELECTION, (selection: string[]) => {
         selection = Util.suggestSelection(selection);
     }
     state.selection = selection;
+})
+
+Reducer.listen(action.UPDATE_LOTTIE, (lai: AnimationItem) => {
+    state.lottieAni = lai;
 })

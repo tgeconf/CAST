@@ -7,6 +7,8 @@ import { ISortDataAttr, IDataItem } from './ds'
 import Util from './util'
 import Reducer from './reducer'
 import * as action from './action'
+import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie';
+
 
 export interface IState {
     sortDataAttrs: ISortDataAttr[]
@@ -21,6 +23,9 @@ export interface IState {
 
     //keyframe status
     // keyframeStatus: IKeyframe
+
+    //video
+    lottieAni: any
 }
 
 /**
@@ -36,6 +41,8 @@ class State implements IState {
     _selection: string[]
     _suggestion: boolean
     // keyframeStatus: IKeyframe
+
+    _lottieAni: AnimationItem
 
     set sortDataAttrs(sda: ISortDataAttr[]) {
         //compare incoming
@@ -56,7 +63,7 @@ class State implements IState {
             //reorder data items
             Reducer.triger(action.UPDATE_DATA_ORDER, Util.sortDataTable(attrAndOrder));
             Renderer.renderDataTable(this.dataTable);
-            
+
         }
         this._sortDataAttrs = sda;
         console.log(this);
@@ -111,6 +118,12 @@ class State implements IState {
     }
     get suggestion(): boolean {
         return this._suggestion;
+    }
+    set lottieAni(lai: AnimationItem) {
+        this._lottieAni = lai;
+    }
+    get lottieAni(): AnimationItem {
+        return this._lottieAni;
     }
 
     public reset(): void {

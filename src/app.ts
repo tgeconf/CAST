@@ -51,7 +51,7 @@ document.body.appendChild(app());
 Tool.resizeWidgets();
 state.reset();
 //load examples
-(<HTMLElement>document.getElementsByClassName('open-eg-icon')[0]).click();
+// (<HTMLElement>document.getElementsByClassName('open-eg-icon')[0]).click();
 
 
 window.onresize = () => {

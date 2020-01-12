@@ -2,7 +2,7 @@ import { state, IState } from './state'
 import { IDataItem, ISortDataAttr } from './ds'
 import { ChartSpec } from 'canis_toolkit'
 import { canisGenerator, canis } from './canisGenerator'
-import { ViewToolBtn } from '../components/viewWindow'
+import { ViewToolBtn, ViewContent } from '../components/viewWindow'
 import AttrBtn from '../components/widgets/attrBtn'
 import AttrSort from '../components/widgets/attrSort'
 import Util from './util'
@@ -10,6 +10,8 @@ import Tool from '../util/tool'
 import Reducer from './reducer'
 import * as action from './action'
 import SelectableTable from '../components/widgets/selectableTable'
+import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie'
+import { player } from '../components/player'
 
 /**
  * render html according to the state
@@ -19,9 +21,9 @@ export default class Renderer {
      * generate the canis spec and render
      * @param s : state
      */
-    public static generateAndRenderSpec(s: IState): void {
+    public static async generateAndRenderSpec(s: IState) {
         canisGenerator.generate(s);
-        canis.renderSpec(canisGenerator.canisSpec, () => {
+        const lottieSpec = await canis.renderSpec(canisGenerator.canisSpec, () => {
             Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
             Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(ChartSpec.dataMarkDatum.keys()));
             Reducer.triger(action.UPDATE_DATA_TABLE, ChartSpec.dataMarkDatum);
@@ -45,6 +47,55 @@ export default class Renderer {
             svg.appendChild(highlightBox);
             Tool.resizeSVG(svg, svg.parentElement.offsetWidth, svg.parentElement.offsetHeight);
         }
+        //render video view
+        this.renderVideo(lottieSpec);
+        player.resetPlayer({
+            frameRate: canis.frameRate,
+            currentTime: 0,
+            totalTime: canis.duration()
+        })
+    }
+
+    /**
+     * test rendering spec
+     * @param spec 
+     */
+    public static renderSpec() {
+        canis.renderSpec(canisGenerator.canisSpec, () => {
+            // Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
+            // Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(ChartSpec.dataMarkDatum.keys()));
+            // Reducer.triger(action.UPDATE_DATA_TABLE, ChartSpec.dataMarkDatum);
+            // Reducer.triger(action.UPDATE_DATA_SORT, Object.keys(Util.attrType).map(attrName => {
+            //     return {
+            //         attr: attrName,
+            //         sort: 'dataIndex'
+            //     }
+            // }));
+        });
+        //add highlight box on the chart
+        const svg: HTMLElement = document.getElementById('visChart');
+        if (svg) {
+            //create the highlight box
+            const highlightBox: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            highlightBox.setAttributeNS(null, 'id', 'highlightSelectionFrame');
+            highlightBox.setAttributeNS(null, 'class', 'highlight-selection-frame');
+            highlightBox.setAttributeNS(null, 'fill', 'rgba(255, 255, 255, 0.01)');
+            highlightBox.setAttributeNS(null, 'stroke', '#2196f3');
+            highlightBox.setAttributeNS(null, 'stroke-width', '2');
+            svg.appendChild(highlightBox);
+            Tool.resizeSVG(svg, svg.parentElement.offsetWidth, svg.parentElement.offsetHeight);
+        }
+    }
+
+    public static renderVideo(lottieSpec: any) {
+        document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID).innerHTML = '';
+        Reducer.triger(action.UPDATE_LOTTIE, Lottie.loadAnimation({
+            container: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID),
+            renderer: 'svg',
+            loop: false,
+            autoplay: false,
+            animationData: lottieSpec // the animation data
+        }))
     }
 
     public static renderDataAttrs(sdaArr: ISortDataAttr[]): void {

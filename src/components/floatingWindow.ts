@@ -3,9 +3,14 @@ import MushroomImg from '../assets/img/examples/mushroom.png'
 import MushroomChart from '../assets/charts/mushrooms.svg'
 import Reducer from '../app/reducer'
 import * as action from '../app/action'
+import { canisGenerator } from '../app/canisGenerator'
+
+import Renderer from '../app/renderer';//for test!!!!!
 
 export default class FloatingWindow {
     static TYPE_EXAMPLE: string = 'exampleContainer';//type of the floating window is example
+    static TYPE_SPEC: string = 'SpecContainer';//type of the floating window is spec test
+
     static MUSHROOM_CHART: string = 'mushroom';
 
     floatingWindow: HTMLDivElement;
@@ -41,12 +46,36 @@ export default class FloatingWindow {
             case FloatingWindow.TYPE_EXAMPLE:
                 windowContent.appendChild(this.createExampleList());
                 break;
+            case FloatingWindow.TYPE_SPEC:
+                windowContent.appendChild(this.createSpecPanel());
+                break;
             default:
                 break;
         }
 
         fWindow.appendChild(windowContent);
         this.floatingWindow.appendChild(fWindow);
+    }
+
+    public createSpecPanel(): HTMLDivElement {
+        const wrapper: HTMLDivElement = document.createElement('div');
+        wrapper.style.width = '100%';
+        wrapper.style.height = '100%';
+        const specPanel: HTMLTextAreaElement = document.createElement('textarea');
+        specPanel.style.width = '100%';
+        specPanel.style.height = '100%';
+        specPanel.id = 'specPanel';
+        specPanel.innerHTML = JSON.stringify(canisGenerator.canisSpec.animations, null, 2);
+        wrapper.appendChild(specPanel);
+        const renderBtn: HTMLButtonElement = document.createElement('button');
+        renderBtn.innerHTML = 'render spec';
+        renderBtn.onclick = () => {
+            let tmpSpec = JSON.parse(specPanel.value);
+            canisGenerator.canisSpec.animations = tmpSpec;
+            Renderer.renderSpec();
+        }
+        wrapper.appendChild(renderBtn);
+        return wrapper;
     }
 
     public createExampleList(): HTMLDivElement {

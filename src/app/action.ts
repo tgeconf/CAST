@@ -15,3 +15,6 @@ export type UPDATE_DATA_SORT = typeof UPDATE_DATA_SORT
 
 export const UPDATE_DATA_ORDER = 'UPDATE_DATA_ORDER'
 export type UPDATE_DATA_ORDER = typeof UPDATE_DATA_ORDER
+
+export const UPDATE_LOTTIE = 'UPDATE_LOTTIE'
+export type UPDATE_LOTTIE = typeof UPDATE_LOTTIE

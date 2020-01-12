@@ -1,34 +1,64 @@
 import '../assets/style/player.scss'
 
 import Slider from './widgets/slider'
+import { state } from '../app/state';
+
+interface IPlayerProps {
+    frameRate: number
+    currentTime: number
+    totalTime: number
+}
 
 class Player {
+    static PLAY_BTN_ID: string = 'playBtn';
+    static TOTAL_TIME_SPAN_ID: string = 'totalTime';
+    static CURRENT_TIME_SPAN_ID: string = 'currentTime';
+
     //lottieJSON:any
     widget: HTMLDivElement;
     playing: boolean;
-    currentTime: number;
-    totalTime: number;
+    frameRate: number;
+    _currentTime: number;
+    _totalTime: number;
+    animationInterval: any;
 
     //component
     slider: Slider;
 
     constructor() {
-        this.currentTime = 0;
-        this.totalTime = 0;
+        this._currentTime = 0;
+        this._totalTime = 0;
+        this.frameRate = 10;
         this.playing = false;
         this.createPlayer();
+    }
+
+    set currentTime(time: number) {
+        this._currentTime = time;
+        this.renderCurrentTime();
+    }
+    get currentTime(): number {
+        return this._currentTime;
+    }
+    set totalTime(time: number) {
+        this._totalTime = time;
+        this.renderTotalTime()
+    }
+    get totalTime(): number {
+        return this._totalTime;
     }
 
     public createPlayer(): void {
         this.widget = document.createElement('div');
         // this.widget.style.minWidth = (0.98 * window.innerWidth / 2).toString() + 'px';
         const playBtnWrapper: HTMLDivElement = document.createElement('div');
+        playBtnWrapper.id = 'playBtnWrapper';
         playBtnWrapper.className = 'play-btn-wrapper';
         playBtnWrapper.title = 'Play';
         const playCheck: HTMLInputElement = document.createElement('input');
         playCheck.type = 'checkbox';
         playCheck.value = 'None';
-        playCheck.id = 'playBtn';
+        playCheck.id = Player.PLAY_BTN_ID;
         playCheck.name = 'check';
         playCheck.checked = true;
         playBtnWrapper.appendChild(playCheck);
@@ -38,34 +68,32 @@ class Player {
         playBtnWrapper.appendChild(playLabel);
         playCheck.onclick = (e) => {
             if (this.playing) {
-                this.playing = false;
-                playBtnWrapper.title = 'Play';
+                this.pauseAnimation();
             } else {
-                this.playing = true;
-                playBtnWrapper.title = 'Stop';
+                this.playAnimation();
             }
         }
         this.widget.appendChild(playBtnWrapper);
 
         this.slider = new Slider([0, 1], 0, true, 5, 2, Slider.MIN_WIDTH);
         this.slider.createSlider();
+        this.slider.callbackFunc = this.renderFrame;
         this.widget.appendChild(this.slider.sliderContainer);
 
         const timeWrapper: HTMLDivElement = document.createElement('div');
         timeWrapper.className = 'time-span-wrapper';
         const currentTimeSpan: HTMLSpanElement = document.createElement('span');
-        currentTimeSpan.id = 'currentTime';
+        currentTimeSpan.id = Player.CURRENT_TIME_SPAN_ID;
         currentTimeSpan.innerText = this.formatTime(this.currentTime);
         const splitSpan: HTMLSpanElement = document.createElement('span');
         splitSpan.innerText = '/';
         const totalTimeSpan: HTMLSpanElement = document.createElement('span');
-        totalTimeSpan.id = 'totalTime';
+        totalTimeSpan.id = Player.TOTAL_TIME_SPAN_ID;
         totalTimeSpan.innerText = this.formatTime(this.totalTime);
         timeWrapper.appendChild(currentTimeSpan);
         timeWrapper.appendChild(splitSpan);
         timeWrapper.appendChild(totalTimeSpan);
         this.widget.appendChild(timeWrapper);
-
     }
 
     /**
@@ -82,8 +110,75 @@ class Player {
         return minStr + ':' + secStr + '.' + msStr;
     }
 
+    public renderTotalTime() {
+        document.getElementById(Player.TOTAL_TIME_SPAN_ID).innerHTML = (this.formatTime(this.totalTime));
+    }
+
+    public renderCurrentTime() {
+        console.log('current time is: ', this.currentTime);
+        document.getElementById(Player.CURRENT_TIME_SPAN_ID).innerHTML = (this.formatTime(this.currentTime));
+    }
+
     public resizePlayer(cw: number): void {
         this.slider.containerWidth = cw;
+    }
+
+    public updateTimeDomain() {
+        this.slider.updateDomain([0, this.totalTime]);
+    }
+
+    public resetPlayer(props: IPlayerProps) {
+        console.log(props);
+        this.frameRate = props.frameRate;
+        this.currentTime = props.currentTime;
+        this.totalTime = props.totalTime;
+        this.updateTimeDomain();
+    }
+
+    public renderFrame(time: number) {
+        player.currentTime = time;
+        state.lottieAni.goToAndStop(Math.ceil(time / (1000 / player.frameRate)), true);
+    }
+
+    public playAnimation() {
+        if (this.currentTime === this.totalTime) {
+            this.currentTime = 0;
+            if (state.lottieAni) {
+                state.lottieAni.stop();
+            }
+        } else {
+            this.currentTime = Math.floor(this.currentTime / (1000 / this.frameRate)) * (1000 / this.frameRate);
+        }
+        this.playing = true;
+        if (state.lottieAni) {
+            state.lottieAni.play();
+        }
+        if (document.getElementById('playBtnWrapper')) {
+            document.getElementById('playBtnWrapper').title = 'Stop';
+        }
+        this.animationInterval = setInterval(() => {
+            console.log('current time: ', this.currentTime);
+            this.slider.moveSlider(this.currentTime);
+            const nextTimePoint: number = this.currentTime + (1000 / this.frameRate);
+            if (nextTimePoint > this.totalTime) {
+                this.pauseAnimation();
+                (<HTMLInputElement>document.getElementById(Player.PLAY_BTN_ID)).checked = true;
+            } else {
+                this.currentTime = nextTimePoint;
+            }
+        }, 1000 / this.frameRate)
+    }
+
+    public pauseAnimation() {
+        this.playing = false;
+        if (state.lottieAni) {
+            state.lottieAni.pause();
+        }
+        if (document.getElementById('playBtnWrapper')) {
+            document.getElementById('playBtnWrapper').title = 'Play';
+        }
+        clearInterval(this.animationInterval);
+        this.animationInterval = 'undefined';
     }
 }
 

@@ -22,6 +22,7 @@ export default class Slider {
     reverseScale: (a: number) => number;//return the data value which the slider currently encodes
     scale: (a: number) => number;//return position of the slider with the input data value
     created: boolean = false;//whether this slide bar is added
+    callbackFunc: (v: number) => void;//function to call on mouse up
 
     //components in the slider
     sliderContainer: SVGSVGElement;
@@ -52,10 +53,10 @@ export default class Slider {
         this.containerHeight = sliderHeight;
         this.containerWidth = sliderWidth - 2 * this.sliderMargin;
         this.reverseScale = (a: number) => {
-            return Math.floor(100 * (((a - this.sliderMargin) / this.containerWidth) * (domain[1] - domain[0]) + domain[0])) / 100;
+            return Math.floor(100 * (((a - this.sliderMargin) / this.containerWidth) * (this.domain[1] - this.domain[0]) + this.domain[0])) / 100;
         }
         this.scale = (a: number) => {
-            return Math.floor(100 * (this.containerWidth * (a - domain[0]) / (domain[1] - domain[0]) + this.sliderMargin)) / 100;
+            return Math.floor(100 * (this.containerWidth * (a - this.domain[0]) / (this.domain[1] - this.domain[0]) + this.sliderMargin)) / 100;
         }
     }
 
@@ -103,11 +104,17 @@ export default class Slider {
                     this.trackPassed.setAttributeNS(null, 'x2', (currentSliderX + diffX).toString());
                     preX = currentX;
                 }
+                if (this.callbackFunc && typeof this.callbackFunc !== 'undefined') {
+                    console.log('moving');
+                    this.callbackFunc(this.reverseScale(currentSliderX));
+                }
             }
             document.onmouseup = () => {
                 const currentSliderX: number = parseFloat(this.slider.getAttributeNS(null, 'cx'));
                 this.currentValue = this.reverseScale(currentSliderX);
-                console.log('reset current value:', this.currentValue);
+                if (this.callbackFunc && typeof this.callbackFunc !== 'undefined') {
+                    this.callbackFunc(this.currentValue);
+                }
                 document.onmousemove = null;
                 document.onmouseup = null;
             }
@@ -129,5 +136,9 @@ export default class Slider {
      */
     public updateSlider(cw: number) {
         this.containerWidth = cw;
+    }
+
+    public updateDomain(domain: [number, number]) {
+        this.domain = domain;
     }
 }
