@@ -26,27 +26,35 @@ export default class Reducer {
 }
 
 Reducer.listen(action.UPDATE_DATA_SORT, (sdaArr: ISortDataAttr[]) => {
-    state.sortDataAttrs = sdaArr;
+    console.log('updating data sort!', sdaArr);
+    //filter the attributes, remove the ones that are not data attributes
+    state.sortDataAttrs = Util.filterDataSort(sdaArr);
 })
 Reducer.listen(action.UPDATE_DATA_ORDER, (dord: string[]) => {
+    console.log('updating data order!');
     state.dataOrder = dord;
 })
 Reducer.listen(action.UPDATE_DATA_TABLE, (dt: Map<string, IDataItem>) => {
+    console.log('updating data table!', dt);
     state.dataTable = dt;
 })
 Reducer.listen(action.LOAD_CHARTS, (chartContent: string[]) => {
+    console.log('loading charts!', chartContent);
+    document.getElementById('chartContainer').innerHTML = '';
     state.charts = chartContent;
 })
 Reducer.listen(action.TOGGLE_SUGGESTION, (suggestion: boolean) => {
+    console.log('updating suggestion!');
     state.suggestion = suggestion;
 })
 Reducer.listen(action.UPDATE_SELECTION, (selection: string[]) => {
+    console.log('updating selection!');
     if (state.suggestion && selection.length > 0) {
         selection = Util.suggestSelection(selection);
     }
     state.selection = selection;
 })
-
 Reducer.listen(action.UPDATE_LOTTIE, (lai: AnimationItem) => {
+    console.log('updating lottie');
     state.lottieAni = lai;
 })

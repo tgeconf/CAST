@@ -1,7 +1,7 @@
 import { ChartSpec } from 'canis_toolkit'
 import { state } from './state'
 import Tool from '../util/tool'
-import { ISortDataAttr } from './ds';
+import { ISortDataAttr, IDataItem } from './ds';
 import AttrBtn from '../components/widgets/attrBtn';
 import AttrSort from '../components/widgets/attrSort';
 
@@ -15,10 +15,10 @@ export default class Util {
     static CATEGORICAL_ATTR: string = 'categorical';
     static NUMERIC_CATEGORICAL_ATTR: string[] = ['Year', 'year', 'Month', 'month', 'Day', 'day'];
     static EFFECTIVENESS_RANKING: string[] = ['position', 'color', 'shape'];
-    static EXCLUDED_DATA_ATTR: string[] = ['_TYPE', 'text'];
+    static EXCLUDED_DATA_ATTR: string[] = ['_TYPE', 'text', '_x', '_y', '_id', '_MARKID'];
 
+    static filteredDataTable: Map<string, IDataItem> = new Map();//markId, dataItem
     /**
-     * 
      * @param markIds : selected marks
      */
     public static suggestSelection(markIds: string[]): string[] {
@@ -33,7 +33,8 @@ export default class Util {
         const filteredDiffAttrs = this.filterAttrs(diffAttrs);
         //list all data-encoded marks
         let allMarkIds: string[] = [];
-        ChartSpec.dataMarkDatum.forEach((datum, markId) => {
+        // ChartSpec.dataMarkDatum.forEach((datum, markId) => {
+        this.filteredDataTable.forEach((datum, markId) => {
             allMarkIds.push(markId);
         })
         const [sections, orderedSectionIds] = this.partitionChart(sameAttrs, filteredDiffAttrs, allMarkIds);
@@ -59,7 +60,8 @@ export default class Util {
         markIds.forEach((markId) => {
             let sectionId: string = '';
             [...sameAttrs, ...filteredDiffAttrs].forEach((attr) => {
-                sectionId += ChartSpec.dataMarkDatum.get(markId)[attr] + ',';
+                // sectionId += ChartSpec.dataMarkDatum.get(markId)[attr] + ',';
+                sectionId += this.filteredDataTable.get(markId)[attr] + ',';
             })
             if (typeof selAndSug.get(sectionId) === 'undefined') {
                 selAndSug.set(sectionId, new Set());
@@ -71,7 +73,8 @@ export default class Util {
         //find suggestion
         let valueOfSameAttrs: string[] = [];
         sameAttrs.forEach((sAttr) => {
-            valueOfSameAttrs.push(ChartSpec.dataMarkDatum.get(markIds[0])[sAttr]);
+            valueOfSameAttrs.push(this.filteredDataTable.get(markIds[0])[sAttr].toString());
+            // valueOfSameAttrs.push(ChartSpec.dataMarkDatum.get(markIds[0])[sAttr]);
         })
         sections.forEach((marksInSec, secId) => {
             marksInSec.forEach((mId) => {
@@ -91,7 +94,8 @@ export default class Util {
                             //judge if this mark has the same attr value
                             let hasSameVal: boolean = true;
                             for (let j = 0, len2 = sameAttrs.length; j < len2; j++) {
-                                if (ChartSpec.dataMarkDatum.get(mId)[sameAttrs[j]] !== ChartSpec.dataMarkDatum.get(markIds[0])[sameAttrs[j]]) {
+                                // if (ChartSpec.dataMarkDatum.get(mId)[sameAttrs[j]] !== ChartSpec.dataMarkDatum.get(markIds[0])[sameAttrs[j]]) {
+                                if (this.filteredDataTable.get(mId)[sameAttrs[j]] !== this.filteredDataTable.get(markIds[0])[sameAttrs[j]]) {
                                     hasSameVal = false;
                                     break;
                                 }
@@ -104,7 +108,8 @@ export default class Util {
                 } else if (filteredDiffAttrs.length === 0 && markIds.length > 1) {//there are no diff categorical attrs && selected more than 1 mark
                     let hasSameVal: boolean = true;
                     for (let j = 0, len2 = sameAttrs.length; j < len2; j++) {
-                        if (ChartSpec.dataMarkDatum.get(mId)[sameAttrs[j]] !== ChartSpec.dataMarkDatum.get(markIds[0])[sameAttrs[j]]) {
+                        // if (ChartSpec.dataMarkDatum.get(mId)[sameAttrs[j]] !== ChartSpec.dataMarkDatum.get(markIds[0])[sameAttrs[j]]) {
+                        if (this.filteredDataTable.get(mId)[sameAttrs[j]] !== this.filteredDataTable.get(markIds[0])[sameAttrs[j]]) {
                             hasSameVal = false;
                             break;
                         }
@@ -145,8 +150,10 @@ export default class Util {
             let sectionId: string = '';
             let seperateSecId: string[] = [];//for ordering section ids
             [...sameAttrs, ...filteredDiffAttrs].forEach((attr) => {
-                sectionId += ChartSpec.dataMarkDatum.get(markId)[attr] + ',';
-                seperateSecId.push(ChartSpec.dataMarkDatum.get(markId)[attr]);
+                // sectionId += ChartSpec.dataMarkDatum.get(markId)[attr] + ',';
+                // seperateSecId.push(ChartSpec.dataMarkDatum.get(markId)[attr]);
+                sectionId += this.filteredDataTable.get(markId)[attr] + ',';
+                seperateSecId.push(this.filteredDataTable.get(markId)[attr].toString());
             })
             if (hasOneMark) {
                 sectionId += markId + ',';
@@ -207,9 +214,11 @@ export default class Util {
         let sameAttr: string[] = [], diffAttrs: string[] = [];
         for (let attrName in this.attrType) {
             let sameAttrType = true;
-            const firstMarkType = ChartSpec.dataMarkDatum.get(markIds[0])[attrName];
+            // const firstMarkType = ChartSpec.dataMarkDatum.get(markIds[0])[attrName];
+            const firstMarkType = this.filteredDataTable.get(markIds[0])[attrName];
             for (let i = 1, len = markIds.length; i < len; i++) {
-                if (ChartSpec.dataMarkDatum.get(markIds[i])[attrName] !== firstMarkType) {
+                // if (ChartSpec.dataMarkDatum.get(markIds[i])[attrName] !== firstMarkType) {
+                if (this.filteredDataTable.get(markIds[i])[attrName] !== firstMarkType) {
                     sameAttrType = false;
                     break;
                 }
@@ -229,13 +238,24 @@ export default class Util {
      * determine the attribute type of the data attributes of marks
      * @param markData 
      */
-    public static extractAttrValueAndDeterminType(markData: Map<string, any>) {
-        markData.forEach((dataDatum: any, markId: string) => {
+    public static extractAttrValueAndDeterminType(markData: Map<string, IDataItem>) {
+        this.filteredDataTable.clear();
+        this.attrType = {};
+        markData.forEach((dataDatum: IDataItem, markId: string) => {
+            let tmpDataItem: IDataItem = {};
             for (const key in dataDatum) {
                 let tmpAttrType: string = (!isNaN(Number(dataDatum[key])) && dataDatum[key] !== '') ? this.NUMERIC_ATTR : this.CATEGORICAL_ATTR;
                 this.attrType[key] = tmpAttrType;
+                if (!this.EXCLUDED_DATA_ATTR.includes(key)) {
+                    tmpDataItem[key] = dataDatum[key];
+                }
             }
+            this.filteredDataTable.set(markId, tmpDataItem);
         })
+    }
+
+    public static filterDataSort(dataSort: ISortDataAttr[]): ISortDataAttr[] {
+        return dataSort.filter(ds => !Util.EXCLUDED_DATA_ATTR.includes(ds.attr));
     }
 
     /**
@@ -280,10 +300,12 @@ export default class Util {
                         arrToOrder.push([markId, datum[attrOrder.attr].toString()]);
                     })
                     arrToOrder.sort((a, b) => {
+                        const compareA: string | number = !isNaN(Number(a[1])) ? Number(a[1]) : a[1];
+                        const compareB: string | number = !isNaN(Number(b[1])) ? Number(b[1]) : b[1];
                         if (attrOrder.sort === AttrSort.ASSCENDING_ORDER)
-                            return a[1] < b[1] ? -1 : 1;
+                            return compareA < compareB ? -1 : 1;
                         else
-                            return a[1] > b[1] ? -1 : 1;
+                            return compareA > compareB ? -1 : 1;
                     })
                     result = arrToOrder.map(a => a[0]);
                     break;

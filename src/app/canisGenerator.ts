@@ -66,6 +66,7 @@ class CanisGenerator {
 
     public generate(state: IState): void {
         console.log('generating spec: ', state);
+        this.resetSpec();
         this.generateChartSpec(state.charts);//generate chart spec 
         this.generateAnimationSpec();
         this.validate();
@@ -95,6 +96,13 @@ class CanisGenerator {
                 effects: [{ type: ActionSpec.actionTypes.fade, duration: 300 }]
             }
             this.canisSpec.animations.push(animationSpec);
+        }
+    }
+
+    public resetSpec(): void {
+        this.canisSpec = {
+            charts: [],
+            animations: []
         }
     }
 }

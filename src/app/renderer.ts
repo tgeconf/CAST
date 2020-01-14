@@ -23,14 +23,15 @@ export default class Renderer {
      */
     public static async generateAndRenderSpec(s: IState) {
         canisGenerator.generate(s);
+        console.log('generated canis spec: ', canisGenerator.canisSpec);
         const lottieSpec = await canis.renderSpec(canisGenerator.canisSpec, () => {
             Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
             //save histroy before update state
             State.tmpStateBusket.push([action.UPDATE_DATA_ORDER, state.dataOrder]);
             State.tmpStateBusket.push([action.UPDATE_DATA_TABLE, state.dataTable]);
             State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
-            Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(ChartSpec.dataMarkDatum.keys()));
-            Reducer.triger(action.UPDATE_DATA_TABLE, ChartSpec.dataMarkDatum);
+            Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(Util.filteredDataTable.keys()));
+            Reducer.triger(action.UPDATE_DATA_TABLE, Util.filteredDataTable);
             Reducer.triger(action.UPDATE_DATA_SORT, Object.keys(Util.attrType).map(attrName => {
                 return {
                     attr: attrName,
@@ -105,6 +106,8 @@ export default class Renderer {
 
     public static renderDataAttrs(sdaArr: ISortDataAttr[]): void {
         if (sdaArr.length > 0) {
+            document.getElementById('attrBtnContainer').innerHTML = '';
+            document.getElementById('sortInputContainer').innerHTML = '';
             sdaArr.forEach(sda => {
                 const attrBtn: AttrBtn = new AttrBtn();
                 attrBtn.createAttrBtn(sda.attr);

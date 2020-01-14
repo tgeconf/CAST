@@ -1,6 +1,8 @@
 import '../assets/style/floating-window.scss'
 import MushroomImg from '../assets/img/examples/mushroom.png'
 import MushroomChart from '../assets/charts/mushrooms.svg'
+import GanttImg from '../assets/img/examples/gantt.png'
+import GanttChart from '../assets/charts/gantt.svg'
 import Reducer from '../app/reducer'
 import * as action from '../app/action'
 import { canisGenerator } from '../app/canisGenerator'
@@ -13,6 +15,7 @@ export default class FloatingWindow {
     static TYPE_SPEC: string = 'SpecContainer';//type of the floating window is spec test
 
     static MUSHROOM_CHART: string = 'mushroom';
+    static GANTT_CHART: string = 'gantt';
 
     floatingWindow: HTMLDivElement;
 
@@ -28,7 +31,7 @@ export default class FloatingWindow {
         windowTitle.className = 'title-wrapper';
         const titleContent: HTMLDivElement = document.createElement('div');
         titleContent.className = 'title-content';
-        
+
         windowTitle.appendChild(titleContent);
         const closeBtn: HTMLSpanElement = document.createElement('span');
         closeBtn.className = 'title-btn';
@@ -95,6 +98,7 @@ export default class FloatingWindow {
         exampleList.appendChild(chartTitle);
         //add chart examples
         exampleList.appendChild(this.createExampleItem(FloatingWindow.MUSHROOM_CHART, 'Mushroom'));
+        exampleList.appendChild(this.createExampleItem(FloatingWindow.GANTT_CHART, 'Gantt'));
         return exampleList;
     }
 
@@ -111,6 +115,17 @@ export default class FloatingWindow {
                     State.tmpStateBusket = [];
                     State.tmpStateBusket.push([action.LOAD_CHARTS, state.charts]);
                     Reducer.triger(action.LOAD_CHARTS, [MushroomChart]);
+                    this.floatingWindow.remove();
+                }
+                break;
+            case FloatingWindow.GANTT_CHART:
+                img.src = GanttImg;
+                item.onclick = () => {
+                    //save histroy before update state
+                    State.tmpStateBusket = [];
+                    State.tmpStateBusket.push([action.LOAD_CHARTS, state.charts]);
+                    Reducer.triger(action.LOAD_CHARTS, [GanttChart]);
+                    console.log('gantt chart: ', GanttChart);
                     this.floatingWindow.remove();
                 }
                 break;
