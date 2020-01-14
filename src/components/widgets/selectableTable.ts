@@ -1,6 +1,6 @@
 import '../../assets/style/selectableTable.scss'
 import { state, State } from '../../app/state'
-import { IDataItem } from '../../app/ds';
+import { TDataItem } from '../../app/ds';
 import Reducer from '../../app/reducer';
 import * as action from '../../app/action'
 
@@ -23,7 +23,7 @@ export default class SelectableTable {
         })
     }
 
-    public createTable(dt: Map<string, IDataItem>): HTMLTableElement {
+    public createTable(dt: Map<string, TDataItem>): HTMLTableElement {
         const dataTable: HTMLTableElement = document.createElement('table');
         dataTable.className = 'selectable-table';
         let count = 0;

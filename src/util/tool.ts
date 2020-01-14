@@ -27,6 +27,21 @@ export default class Tool {
         svg.setAttribute('viewBox', oriViewbox[0] + ' ' + oriViewbox[1] + ' ' + w + ' ' + h);
     }
 
+    public static svg2canvs(svgElement:HTMLElement, canvas: HTMLCanvasElement){
+        const svgString = new XMLSerializer().serializeToString(svgElement);
+        const ctx = canvas.getContext("2d");
+        // const DOMURL = self.URL || self.webkitURL || self;
+        const img = new Image();
+        const svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svg);
+        img.onload = function () {
+            ctx.drawImage(img, 0, 0);
+            var png = canvas.toDataURL("image/png");
+            document.querySelector('#png-container').innerHTML = '<img src="' + png + '"/>';
+            URL.revokeObjectURL(png);
+        };
+        img.src = url;
+    }
     
     public static identicalArrays(arr1: any[], arr2: any[]): boolean {
         let same: boolean = true;

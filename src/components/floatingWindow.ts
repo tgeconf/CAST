@@ -6,9 +6,12 @@ import GanttChart from '../assets/charts/gantt.svg'
 import Reducer from '../app/reducer'
 import * as action from '../app/action'
 import { canisGenerator } from '../app/canisGenerator'
-
-import Renderer from '../app/renderer';//for test!!!!!
 import { State, state } from '../app/state'
+
+/**for test!!!!!!!!!!!!!!!!!!!!!!!! */
+import Renderer from '../app/renderer';//for test!!!!!
+import mushroomSpec from '../assets/tmp/mushroomSpec.json'
+/**end for test!!!!!!!!!!!!!!!!!!!!!!!! */
 
 export default class FloatingWindow {
     static TYPE_EXAMPLE: string = 'exampleContainer';//type of the floating window is example
@@ -63,30 +66,6 @@ export default class FloatingWindow {
         this.floatingWindow.appendChild(fWindow);
     }
 
-    /**
-     * to test keyframes since there is no timeline view yet
-     */
-    public createSpecPanel(): HTMLDivElement {
-        const wrapper: HTMLDivElement = document.createElement('div');
-        wrapper.style.width = '100%';
-        wrapper.style.height = '100%';
-        const specPanel: HTMLTextAreaElement = document.createElement('textarea');
-        specPanel.style.width = '100%';
-        specPanel.style.height = '100%';
-        specPanel.id = 'specPanel';
-        specPanel.innerHTML = JSON.stringify(canisGenerator.canisSpec.animations, null, 2);
-        wrapper.appendChild(specPanel);
-        const renderBtn: HTMLButtonElement = document.createElement('button');
-        renderBtn.innerHTML = 'render spec';
-        renderBtn.onclick = () => {
-            let tmpSpec = JSON.parse(specPanel.value);
-            canisGenerator.canisSpec.animations = tmpSpec;
-            Renderer.renderSpec();
-        }
-        wrapper.appendChild(renderBtn);
-        return wrapper;
-    }
-
     public createExampleList(): HTMLDivElement {
         const exampleList: HTMLDivElement = document.createElement('div');
         exampleList.className = 'example-list';
@@ -136,5 +115,39 @@ export default class FloatingWindow {
         captionWrapper.innerText = caption;
         item.appendChild(captionWrapper);
         return item;
+    }
+
+    /**
+     * to test keyframes since there is no timeline view yet
+     */
+    public createSpecPanel(): HTMLDivElement {
+        const wrapper: HTMLDivElement = document.createElement('div');
+        wrapper.style.width = '100%';
+        wrapper.style.height = '100%';
+        const specWrapper: HTMLDivElement = document.createElement('div');
+        specWrapper.style.width = '100%';
+        specWrapper.style.height = '30px';
+        const mushroomSpecBtn: HTMLButtonElement = document.createElement('button');
+        mushroomSpecBtn.innerHTML = 'mushroomspec';
+        mushroomSpecBtn.onclick = () => {
+            specPanel.innerHTML = JSON.stringify(mushroomSpec, null, 2);
+        }
+        specWrapper.appendChild(mushroomSpecBtn);
+        wrapper.appendChild(specWrapper);
+        const specPanel: HTMLTextAreaElement = document.createElement('textarea');
+        specPanel.style.width = '100%';
+        specPanel.style.height = '400px';
+        specPanel.id = 'specPanel';
+        specPanel.innerHTML = JSON.stringify(canisGenerator.canisSpec.animations, null, 2);
+        wrapper.appendChild(specPanel);
+        const renderBtn: HTMLButtonElement = document.createElement('button');
+        renderBtn.innerHTML = 'render spec';
+        renderBtn.onclick = () => {
+            let tmpSpec = JSON.parse(specPanel.value);
+            canisGenerator.canisSpec.animations = tmpSpec;
+            Renderer.renderSpec();
+        }
+        wrapper.appendChild(renderBtn);
+        return wrapper;
     }
 }

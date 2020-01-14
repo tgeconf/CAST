@@ -16,6 +16,7 @@ export default class ViewWindow {
     static DATA_VIEW_TITLE: string = 'data';
     static CHART_VIEW_TITLE: string = 'chart';
     static VIDEO_VIEW_TITLE: string = 'animation';
+    static HIDDEN_LOTTIE_ID: string = 'hiddenLottie';
     static KF_VIEW_TITLE: string = '';
 
     viewTitle: string;
@@ -49,6 +50,7 @@ export default class ViewWindow {
                 break;
             case ViewWindow.VIDEO_VIEW_TITLE:
                 this.view.appendChild(this.createPlayerWidget());
+                this.view.appendChild(this.createHiddenCanvasContainer());
                 break;
         }
 
@@ -158,6 +160,17 @@ export default class ViewWindow {
         container.className = 'widget';
         container.appendChild(player.widget);
         return container;
+    }
+
+    public createHiddenCanvasContainer(): HTMLDivElement {
+        const canvasContainer: HTMLDivElement = document.createElement('div');
+        canvasContainer.id = ViewWindow.HIDDEN_LOTTIE_ID;
+        canvasContainer.style.width = '800px';
+        canvasContainer.style.height = '600px';
+        canvasContainer.style.position = 'absolute';
+        canvasContainer.style.top = '300px';
+        canvasContainer.style.left = '0';
+        return canvasContainer;
     }
 }
 
@@ -279,6 +292,7 @@ export class ViewContent {
                 break;
             case ViewWindow.KF_VIEW_TITLE:
                 this.createViewContainer(ViewContent.KF_VIEW_CONTENT_ID, ViewContent.KF_VIEW_CONTENT_CLS);
+                this.container.appendChild(this.createKeyframeListContainer());
                 break;
         }
     }
@@ -287,6 +301,21 @@ export class ViewContent {
         this.container = document.createElement('div');
         this.container.id = id;
         this.container.className = ViewContent.VIEW_CONTENT_CLS + ' ' + className;
+    }
+
+    public createKeyframeListContainer(): HTMLDivElement {
+        const keyframeList: HTMLDivElement = document.createElement('div');
+        keyframeList.className = 'kf-list';
+        // for(let i = 0; i < 30; i++){
+        //     const testDiv = document.createElement('div');
+        //     testDiv.style.display = 'inline-block';
+        //     testDiv.style.width = '300px';
+        //     testDiv.style.height = '150px';
+        //     testDiv.style.background = '#00f';
+        //     testDiv.style.marginLeft = '10px';
+        //     keyframeList.appendChild(testDiv);
+        // }
+        return keyframeList;
     }
 
     public createDataDashboard() {

@@ -1,23 +1,21 @@
 import { ChartSpec } from 'canis_toolkit'
 import { state } from './state'
 import Tool from '../util/tool'
-import { ISortDataAttr, IDataItem } from './ds';
+import { TSortDataAttr, TDataItem, TDataDatumType } from './ds';
 import AttrBtn from '../components/widgets/attrBtn';
 import AttrSort from '../components/widgets/attrSort';
 
-type dataDatumType = {
-    [key: string]: string | number
-}
+
 
 export default class Util {
-    static attrType: dataDatumType = {};
+    static attrType: TDataDatumType = {};
     static NUMERIC_ATTR: string = 'numeric';
     static CATEGORICAL_ATTR: string = 'categorical';
     static NUMERIC_CATEGORICAL_ATTR: string[] = ['Year', 'year', 'Month', 'month', 'Day', 'day'];
     static EFFECTIVENESS_RANKING: string[] = ['position', 'color', 'shape'];
     static EXCLUDED_DATA_ATTR: string[] = ['_TYPE', 'text', '_x', '_y', '_id', '_MARKID'];
 
-    static filteredDataTable: Map<string, IDataItem> = new Map();//markId, dataItem
+    static filteredDataTable: Map<string, TDataItem> = new Map();//markId, dataItem
     /**
      * @param markIds : selected marks
      */
@@ -238,11 +236,11 @@ export default class Util {
      * determine the attribute type of the data attributes of marks
      * @param markData 
      */
-    public static extractAttrValueAndDeterminType(markData: Map<string, IDataItem>) {
+    public static extractAttrValueAndDeterminType(markData: Map<string, TDataItem>) {
         this.filteredDataTable.clear();
         this.attrType = {};
-        markData.forEach((dataDatum: IDataItem, markId: string) => {
-            let tmpDataItem: IDataItem = {};
+        markData.forEach((dataDatum: TDataItem, markId: string) => {
+            let tmpDataItem: TDataItem = {};
             for (const key in dataDatum) {
                 let tmpAttrType: string = (!isNaN(Number(dataDatum[key])) && dataDatum[key] !== '') ? this.NUMERIC_ATTR : this.CATEGORICAL_ATTR;
                 this.attrType[key] = tmpAttrType;
@@ -254,15 +252,15 @@ export default class Util {
         })
     }
 
-    public static filterDataSort(dataSort: ISortDataAttr[]): ISortDataAttr[] {
+    public static filterDataSort(dataSort: TSortDataAttr[]): TSortDataAttr[] {
         return dataSort.filter(ds => !Util.EXCLUDED_DATA_ATTR.includes(ds.attr));
     }
 
     /**
      * find out to sort with which attr
      */
-    public static findUpdatedAttrOrder(sda: ISortDataAttr[]) {
-        let result: ISortDataAttr = { attr: '', sort: '' };
+    public static findUpdatedAttrOrder(sda: TSortDataAttr[]) {
+        let result: TSortDataAttr = { attr: '', sort: '' };
         for (let i = 0, len = state.sortDataAttrs.length; i < len; i++) {
             let found: boolean = false;
             for (let j = 0; j < len; j++) {
@@ -281,7 +279,7 @@ export default class Util {
         }
         return result;
     }
-    public static sortDataTable(attrOrder: ISortDataAttr): string[] {
+    public static sortDataTable(attrOrder: TSortDataAttr): string[] {
         let result: string[] = [];
         if (attrOrder.attr !== '') {
             switch (attrOrder.sort) {

@@ -1,5 +1,5 @@
 import '../../assets/style/attrSort.scss'
-import { ISortDataAttr } from '../../app/ds'
+import { TSortDataAttr } from '../../app/ds'
 import { state, State } from '../../app/state'
 import Reducer from '../../app/reducer';
 import * as action from '../../app/action';
@@ -22,7 +22,7 @@ export default class AttrSort {
             select.appendChild(option);
         })
         select.onchange = () => {
-            let sortDataAttrArr: ISortDataAttr[] = [];
+            let sortDataAttrArr: TSortDataAttr[] = [];
             state.sortDataAttrs.forEach(sda => {
                 if (sda.attr === select.name) {
                     sortDataAttrArr.push({

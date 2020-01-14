@@ -1,8 +1,8 @@
 import { state, IState, State } from './state'
-import { IDataItem, ISortDataAttr } from './ds'
-import { ChartSpec } from 'canis_toolkit'
+import { TDataItem, TSortDataAttr, TKeyframe } from './ds'
+import { ChartSpec, Animation } from 'canis_toolkit'
 import { canisGenerator, canis } from './canisGenerator'
-import { ViewToolBtn, ViewContent } from '../components/viewWindow'
+import ViewWindow, { ViewToolBtn, ViewContent } from '../components/viewWindow'
 import AttrBtn from '../components/widgets/attrBtn'
 import AttrSort from '../components/widgets/attrSort'
 import Util from './util'
@@ -12,6 +12,11 @@ import * as action from './action'
 import SelectableTable from '../components/widgets/selectableTable'
 import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie'
 import { player } from '../components/player'
+
+
+/** for test!!!!!!!!!!!!!!!!!!!!!!!!! */
+import testSpec from '../assets/tmp/testSpec.json'
+/** end for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 
 /**
  * render html according to the state
@@ -59,6 +64,9 @@ export default class Renderer {
             currentTime: 0,
             totalTime: canis.duration()
         })
+
+        //render keyframes
+
     }
 
     /**
@@ -102,9 +110,27 @@ export default class Renderer {
             autoplay: false,
             animationData: lottieSpec // the animation data
         }))
+        //render the hidden lottie for keyframes
+        console.log('rendering lottie spec: ', lottieSpec);
+        Reducer.triger(action.UPDATE_HIDDEN_LOTTIE, Lottie.loadAnimation({
+            container: document.getElementById(ViewWindow.HIDDEN_LOTTIE_ID),
+            renderer: 'svg',
+            loop: false,
+            autoplay: false,
+            animationData: lottieSpec
+        }))
+        //meanwhile render keyframes
+        Reducer.triger(action.UPDATE_KEYFRAME_TIME_POINTS, Animation.frameTime);
     }
 
-    public static renderDataAttrs(sdaArr: ISortDataAttr[]): void {
+    public static renderKeyframes(kfs: TKeyframe[], lottieAnimation: AnimationItem) {
+        console.log('rendering keyframes: ', kfs);
+        lottieAnimation.goToAndStop(300);
+        
+        console.log();
+    }
+
+    public static renderDataAttrs(sdaArr: TSortDataAttr[]): void {
         if (sdaArr.length > 0) {
             document.getElementById('attrBtnContainer').innerHTML = '';
             document.getElementById('sortInputContainer').innerHTML = '';
@@ -119,7 +145,7 @@ export default class Renderer {
         }
     }
 
-    public static renderDataTable(dt: Map<string, IDataItem>): void {
+    public static renderDataTable(dt: Map<string, TDataItem>): void {
         if (dt.size > 0) {
             const dataTable: SelectableTable = new SelectableTable();
             document.getElementById('dataTabelContainer').innerHTML = '';

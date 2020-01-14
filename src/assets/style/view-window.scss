@@ -307,15 +307,24 @@
 	}
 	.hidden-data-table {
 		flex: none;
-        height: 0px;
-        overflow: hidden;
+		height: 0px;
+		overflow: hidden;
 	}
 }
 
 .kf-view-content {
 	@extend .view-content;
+	box-sizing: border-box;
 	width: 100%;
+	height: 180px;
+	padding: 0 10px;
+	overflow-x: auto;
 	margin: calc(var(--title-height) + 4px + var(--view-content-margin-v)) 0 var(--view-content-margin-v);
+}
+
+.kf-list {
+	display: inline-block;
+	height: 100%;
 }
 
 .kf-title {

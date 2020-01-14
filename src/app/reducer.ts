@@ -1,5 +1,5 @@
 import { state } from './state'
-import { IDataItem, ISortDataAttr } from './ds'
+import { TDataItem, TSortDataAttr, TKeyframe } from './ds'
 import * as action from './action'
 import Util from './util'
 import Renderer from './renderer';
@@ -25,7 +25,7 @@ export default class Reducer {
     }
 }
 
-Reducer.listen(action.UPDATE_DATA_SORT, (sdaArr: ISortDataAttr[]) => {
+Reducer.listen(action.UPDATE_DATA_SORT, (sdaArr: TSortDataAttr[]) => {
     console.log('updating data sort!', sdaArr);
     //filter the attributes, remove the ones that are not data attributes
     state.sortDataAttrs = Util.filterDataSort(sdaArr);
@@ -34,7 +34,7 @@ Reducer.listen(action.UPDATE_DATA_ORDER, (dord: string[]) => {
     console.log('updating data order!');
     state.dataOrder = dord;
 })
-Reducer.listen(action.UPDATE_DATA_TABLE, (dt: Map<string, IDataItem>) => {
+Reducer.listen(action.UPDATE_DATA_TABLE, (dt: Map<string, TDataItem>) => {
     console.log('updating data table!', dt);
     state.dataTable = dt;
 })
@@ -57,4 +57,24 @@ Reducer.listen(action.UPDATE_SELECTION, (selection: string[]) => {
 Reducer.listen(action.UPDATE_LOTTIE, (lai: AnimationItem) => {
     console.log('updating lottie');
     state.lottieAni = lai;
+})
+Reducer.listen(action.UPDATE_HIDDEN_LOTTIE, (hl: AnimationItem) => {
+    state.hiddenLottie = hl;
+})
+Reducer.listen(action.UPDATE_KEYFRAME_TIME_POINTS, (frameTime: Map<number, boolean>) => {
+    const frameTimeArr: Array<[number, boolean]> = [[0, true], ...frameTime];
+    frameTimeArr.sort((a, b) => a[0] - b[0]);
+    console.log(frameTimeArr);
+    let isContinued: boolean = true;
+    let keyframes: TKeyframe[] = [];
+    frameTimeArr.forEach(ft => {
+        if (ft[1]) {
+            keyframes.push(<TKeyframe>{
+                continued: isContinued,
+                timePoint: ft[0],
+            })
+        }
+        isContinued = ft[1];
+    })
+    state.keyframes = keyframes;
 })

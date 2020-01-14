@@ -1,13 +1,18 @@
-export interface ISortDataAttr {
+export type TSortDataAttr = {
     attr: string
     sort: string
 }
 
-export interface IDataItem {
+export type TDataItem = {
     [propName: string]: string | number
 }
 
-export interface IKeyframe {
+export type TKeyframe = {
     continued: boolean
+    timePoint: number
     highlightingMarks?: string[]//marks that should be highlighted
+}
+
+export type TDataDatumType = {
+    [key: string]: string | number
 }

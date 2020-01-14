@@ -3,7 +3,7 @@ import { ChartSpec } from 'canis_toolkit'
 import { ViewToolBtn } from '../components/viewWindow'
 import Renderer from './renderer'
 import Tool from '../util/tool'
-import { ISortDataAttr, IDataItem } from './ds'
+import { TSortDataAttr, TDataItem, TKeyframe } from './ds'
 import Util from './util'
 import Reducer from './reducer'
 import * as action from './action'
@@ -11,8 +11,8 @@ import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/playe
 
 
 export interface IState {
-    sortDataAttrs: ISortDataAttr[]
-    dataTable: Map<string, IDataItem>
+    sortDataAttrs: TSortDataAttr[]
+    dataTable: Map<string, TDataItem>
     dataOrder: string[]
 
     //chart status
@@ -25,26 +25,29 @@ export interface IState {
     // keyframeStatus: IKeyframe
 
     //video
-    lottieAni: any
+    lottieAni: AnimationItem
+    hiddenLottie: AnimationItem
+    keyframes: TKeyframe[]
 }
 
 /**
  * re-render parts when the state changes
  */
 export class State implements IState {
-    _sortDataAttrs: ISortDataAttr[] = [];
-    _dataTable: Map<string, IDataItem> = new Map();
+    _sortDataAttrs: TSortDataAttr[] = [];
+    _dataTable: Map<string, TDataItem> = new Map();
     _dataOrder: string[]
 
     _charts: string[]
     _tool: string
     _selection: string[]
     _suggestion: boolean
-    // keyframeStatus: IKeyframe
 
     _lottieAni: AnimationItem
+    _hiddenLottie: AnimationItem
+    _keyframes: TKeyframe[]
 
-    set sortDataAttrs(sda: ISortDataAttr[]) {
+    set sortDataAttrs(sda: TSortDataAttr[]) {
         //compare incoming
         let sameAttrs: boolean = true;
         if (sda.length !== this._sortDataAttrs.length) {
@@ -59,7 +62,7 @@ export class State implements IState {
             Renderer.renderDataAttrs(sda);
         } else {
             //find sort reference
-            const attrAndOrder: ISortDataAttr = Util.findUpdatedAttrOrder(sda);
+            const attrAndOrder: TSortDataAttr = Util.findUpdatedAttrOrder(sda);
             //reorder data items
             Reducer.triger(action.UPDATE_DATA_ORDER, Util.sortDataTable(attrAndOrder));
             Renderer.renderDataTable(this.dataTable);
@@ -68,15 +71,15 @@ export class State implements IState {
         //State.saveHistory(action.UPDATE_DATA_SORT, this._sortDataAttrs);
         this._sortDataAttrs = sda;
     }
-    get sortDataAttrs(): ISortDataAttr[] {
+    get sortDataAttrs(): TSortDataAttr[] {
         return this._sortDataAttrs;
     }
-    set dataTable(dt: Map<string, IDataItem>) {
+    set dataTable(dt: Map<string, TDataItem>) {
         //State.saveHistory(action.UPDATE_DATA_TABLE, this._dataTable);
         this._dataTable = dt;
-        Renderer.renderDataTable(dt);
+        Renderer.renderDataTable(this.dataTable);
     }
-    get dataTable(): Map<string, IDataItem> {
+    get dataTable(): Map<string, TDataItem> {
         return this._dataTable;
     }
     set dataOrder(dord: string[]) {
@@ -95,7 +98,7 @@ export class State implements IState {
     }
     set tool(t: string) {
         this._tool = t;
-        Renderer.renderChartTool(t);
+        Renderer.renderChartTool(this.tool);
     }
     get tool(): string {
         return this._tool;
@@ -103,7 +106,7 @@ export class State implements IState {
     set selection(sel: string[]) {
         //State.saveHistory(action.UPDATE_SELECTION, this._selection);
         this._selection = sel;
-        Renderer.renderSelectedMarks(this._selection);
+        Renderer.renderSelectedMarks(this.selection);
     }
     get selection(): string[] {
         return this._selection;
@@ -111,7 +114,7 @@ export class State implements IState {
     set suggestion(sug: boolean) {
         //State.saveHistory(action.TOGGLE_SUGGESTION, this._suggestion);
         this._suggestion = sug;
-        Renderer.renderSuggestionCheckbox(sug);
+        Renderer.renderSuggestionCheckbox(this.suggestion);
     }
     get suggestion(): boolean {
         return this._suggestion;
@@ -121,6 +124,20 @@ export class State implements IState {
     }
     get lottieAni(): AnimationItem {
         return this._lottieAni;
+    }
+    set hiddenLottie(hl: AnimationItem) {
+        this._hiddenLottie = hl;
+    }
+    get hiddenLottie(): AnimationItem {
+        return this._hiddenLottie;
+    }
+    set keyframes(kfs: TKeyframe[]) {
+        this._keyframes = kfs;
+        //render keyframes
+        Renderer.renderKeyframes(this.keyframes, this.hiddenLottie);
+    }
+    get keyframes(): TKeyframe[] {
+        return this._keyframes;
     }
 
     public reset(): void {
