@@ -1,4 +1,4 @@
-<svg id="visChart" x="0" y="0" width="730" height="600" viewBox="0 0 730.000000 600.000000" 
+<svg id="visChart" x="0" y="0" width="800" height="600" viewBox="0 0 800.000000 600.000000" 
     xmlns="http://www.w3.org/2000/svg" 
     xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve">
     <g id="chartContent" transform="translate(450.000000,300.000000)">
@@ -612,7 +612,7 @@
                         </g>
                     </g>
                     <g transform="translate(0,0)" opacity="1">
-                        <g transform="translate(0,0)" class="axis" data-datum="{&quot;_TYPE&quot;:&quot;axis&quot;,&quot;type&quot;:&quot;x&quot;,&quot;position&quot;:&quot;Odor&quot;}" opacity="1">
+                        <g transform="translate(0,0)" class="axis" data-datum="{&quot;type&quot;:&quot;x&quot;,&quot;position&quot;:&quot;Odor&quot;}" opacity="1">
                             <path id="mark1001" class=" mark axis-domain" d="M -392.6159601,250 L 349.99967627,250.00107478" data-datum="{&quot;_TYPE&quot;:&quot;axis-domain&quot;}" stroke="rgb(0,0,0)" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="round" fill="none" fill-opacity="1" text-anchor="start" opacity="1"></path>
                             <path id="mark2001" class=" mark axis-tick" d="M -350.84381234,250 L -350.84845317,254.99646436" data-datum="{&quot;_TYPE&quot;:&quot;axis-tick&quot;,&quot;text&quot;:&quot;Almond&quot;}" stroke="rgb(0,0,0)" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="round" fill="none" fill-opacity="1" text-anchor="start" opacity="1"></path>
                             <path id="mark2002" class=" mark axis-tick" d="M -256.6907174,250 L -256.6886747,255.00484706" data-datum="{&quot;_TYPE&quot;:&quot;axis-tick&quot;,&quot;text&quot;:&quot;Anise&quot;}" stroke="rgb(0,0,0)" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="round" fill="none" fill-opacity="1" text-anchor="start" opacity="1"></path>
@@ -649,7 +649,7 @@
                                 <text id="mark3008" class=" mark axis-label" x="-14.671875" y="10.396272568433318" data-datum="{&quot;_TYPE&quot;:&quot;axis-label&quot;,&quot;text&quot;:&quot;Spicy&quot;}" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" fill-opacity="1" text-anchor="start" opacity="1" font-family="Arial" font-size="12px">Spicy</text>
                             </g>
                         </g>
-                        <g transform="translate(0,0)" class="axis" data-datum="{&quot;_TYPE&quot;:&quot;axis&quot;,&quot;type&quot;:&quot;y&quot;,&quot;position&quot;:&quot;Surface&quot;}" opacity="1">
+                        <g transform="translate(0,0)" class="axis" data-datum="{&quot;type&quot;:&quot;y&quot;,&quot;position&quot;:&quot;Surface&quot;}" opacity="1">
                             <path id="mark1004" class=" mark axis-domain" d="M -392.6159601,250 L -392.61399044,-219.99751633" data-datum="{&quot;_TYPE&quot;:&quot;axis-domain&quot;}" stroke="rgb(0,0,0)" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="round" fill="none" fill-opacity="1" text-anchor="start" opacity="1"></path>
                             <path id="mark2009" class=" mark axis-tick" d="M -392.6159601,-149.5 L -397.61972887,-149.50206391" data-datum="{&quot;_TYPE&quot;:&quot;axis-tick&quot;,&quot;text&quot;:&quot;Fibrous&quot;}" stroke="rgb(0,0,0)" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="round" fill="none" fill-opacity="1" text-anchor="start" opacity="1"></path>
                             <path id="mark2010" class=" mark axis-tick" d="M -392.6159601,15 L -397.6158132,14.99684444" data-datum="{&quot;_TYPE&quot;:&quot;axis-tick&quot;,&quot;text&quot;:&quot;Scaly&quot;}" stroke="rgb(0,0,0)" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="round" fill="none" fill-opacity="1" text-anchor="start" opacity="1"></path>
@@ -677,12 +677,12 @@
             <g transform="translate(0,0)" opacity="1">
                 <g transform="translate(350,-172)" data-datum="{&quot;_TYPE&quot;:&quot;legend&quot;,&quot;fill&quot;:&quot;IsEdible&quot;,&quot;color&quot;:&quot;IsEdible&quot;}" opacity="1">
                     <g transform="translate(0,-24)" opacity="1">
-                        <text id="mark4001" class="mark legend-label"  x="29" y="-7.377204426324983" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" fill-opacity="1" text-anchor="start" opacity="1" font-family="Arial" font-size="14px">Edible</text>
-                        <path id="mark4002" class="mark legend-symbol" d="M 8,-4 L 8.00249333,-20.00231613 L 24.00303015,-20.00114246 L 24.00463083,-3.99586451 Z" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(107,174,214)" fill-opacity="1" text-anchor="start" opacity="1"></path>
+                        <text id="mark4001" class="mark legend-label" data-datum="{}" x="29" y="-7.377204426324983" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" fill-opacity="1" text-anchor="start" opacity="1" font-family="Arial" font-size="14px">Edible</text>
+                        <path id="mark4002" class="mark legend-symbol" data-datum="{}" d="M 8,-4 L 8.00249333,-20.00231613 L 24.00303015,-20.00114246 L 24.00463083,-3.99586451 Z" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(107,174,214)" fill-opacity="1" text-anchor="start" opacity="1"></path>
                     </g>
                     <g transform="translate(0,0)" opacity="1">
-                        <text id="mark4003" class="mark legend-label" x="29" y="-7.377204426324983" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" fill-opacity="1" text-anchor="start" opacity="1" font-family="Arial" font-size="14px">Poisonous</text>
-                        <path id="mark4004" class="mark legend-symbol" d="M 8,-4 L 7.99789296,-19.99715591 L 24.00066975,-20.00128521 L 24.00038468,-3.99688534 Z" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(239,59,44)" fill-opacity="1" text-anchor="start" opacity="1"></path>
+                        <text id="mark4003" class="mark legend-label" data-datum="{}" x="29" y="-7.377204426324983" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" fill-opacity="1" text-anchor="start" opacity="1" font-family="Arial" font-size="14px">Poisonous</text>
+                        <path id="mark4004" class="mark legend-symbol" data-datum="{}" d="M 8,-4 L 7.99789296,-19.99715591 L 24.00066975,-20.00128521 L 24.00038468,-3.99688534 Z" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(239,59,44)" fill-opacity="1" text-anchor="start" opacity="1"></path>
                     </g>
                 </g>
             </g>

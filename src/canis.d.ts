@@ -26,4 +26,7 @@ declare module 'canis_toolkit' {
         static nonDataMarkDatum: Map<string, any>;
         static chartUnderstanding: any;
     }
+    export class Animation {
+        static frameTime: Map<number, boolean>;
+    }
 }

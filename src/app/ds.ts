@@ -4,5 +4,10 @@ export interface ISortDataAttr {
 }
 
 export interface IDataItem {
-    [propName: string]: string | number;
+    [propName: string]: string | number
+}
+
+export interface IKeyframe {
+    continued: boolean
+    highlightingMarks?: string[]//marks that should be highlighted
 }
