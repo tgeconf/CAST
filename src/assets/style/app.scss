@@ -25,6 +25,7 @@
 	--gray-l13: #939393;
     --gray-l14: #000000;
     --gray-l15: #f7f7f7;
+    --gray-l16: #d2d2d2;
 	--highlight-blue: #2196f3;
 	--selected-bg: #cbeaff;
 }
@@ -58,4 +59,11 @@ body {
 	@extend .cover-size;
 	display: flex;
 	flex-direction: column;
+}
+
+.footer{
+    width: 100%;
+    height: 22px;
+    color: var(--gray-l10);
+    background: var(--highlight-blue);
 }

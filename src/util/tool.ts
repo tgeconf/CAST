@@ -21,12 +21,22 @@ export default class Tool {
         return true;
     }
     public static resizeSVG(svg: HTMLElement, w: number, h: number): void {
-        let oriViewbox: string[] = svg.getAttribute('viewBox').split(' ');
-        svg.setAttribute('width', w.toString());
-        svg.setAttribute('height', h.toString())
-        svg.setAttribute('viewBox', oriViewbox[0] + ' ' + oriViewbox[1] + ' ' + w + ' ' + h);
+        if (svg.getAttribute('viewBox')){
+            let oriViewbox: string[] = svg.getAttribute('viewBox').split(' ');
+            svg.setAttribute('width', w.toString());
+            svg.setAttribute('height', h.toString())
+            svg.setAttribute('viewBox', oriViewbox[0] + ' ' + oriViewbox[1] + ' ' + w + ' ' + h);
+        }
     }
-
+    public static formatTime(time: number): string {
+        const minute: number = Math.floor(time / 60000);
+        const second: number = Math.floor((time - minute * 60000) / 1000);
+        const ms: number = Math.floor((time - minute * 60000 - second * 1000) / 1);
+        const minStr: string = minute < 10 ? '0' + minute : '' + minute;
+        const secStr: string = second < 10 ? '0' + second : '' + second;
+        const msStr = ms < 100 ? (ms < 10 ? '00' + ms : '0' + ms) : '' + ms;
+        return minStr + ':' + secStr + '.' + msStr;
+    }
     public static svg2canvs(svgElement: HTMLElement, canvas: HTMLCanvasElement) {
         // const svgString = new XMLSerializer().serializeToString(svgElement);
         const svgString = svgElement.outerHTML;

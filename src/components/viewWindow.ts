@@ -295,6 +295,7 @@ export class ViewContent {
             case ViewWindow.KF_VIEW_TITLE:
                 this.createViewContainer(ViewContent.KF_VIEW_CONTENT_ID, ViewContent.KF_VIEW_CONTENT_CLS);
                 this.container.appendChild(this.createKeyframeListContainer());
+                this.container.appendChild(this.createTimelineContainer());
                 break;
         }
     }
@@ -306,10 +307,29 @@ export class ViewContent {
     }
 
     public createKeyframeListContainer(): HTMLDivElement {
+        const keyframeListContainer: HTMLDivElement = document.createElement('div');
+        keyframeListContainer.className = 'kf-list-container';
         const keyframeList: HTMLDivElement = document.createElement('div');
         keyframeList.id = ViewWindow.KF_LIST_ID;
         keyframeList.className = 'kf-list';
-        return keyframeList;
+        keyframeListContainer.appendChild(keyframeList);
+        return keyframeListContainer;
+    }
+
+    public createTimelineContainer(): HTMLDivElement {
+        const timelineContainer: HTMLDivElement = document.createElement('div');
+        timelineContainer.className = 'timeline-container';
+        const timelineSvgWrapper: HTMLDivElement = document.createElement('div');
+        timelineSvgWrapper.className = 'timeline-svg-wrapper';
+        const svgContent: SVGSVGElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        timelineSvgWrapper.appendChild(svgContent);
+        timelineContainer.appendChild(timelineSvgWrapper);
+        const timeSvgWrapper: HTMLDivElement = document.createElement('div');
+        timeSvgWrapper.className = 'time-svg-wrapper';
+        const timeSvg: SVGSVGElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        timeSvgWrapper.appendChild(timeSvg);
+        timelineContainer.appendChild(timeSvgWrapper);
+        return timelineContainer;
     }
 
     public createDataDashboard() {

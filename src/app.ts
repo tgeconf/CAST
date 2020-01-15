@@ -39,9 +39,13 @@ function app(): HTMLDivElement {
     kfView.createView();
     mainWrapper.panel2.appendChild(kfView.view);
 
-    // mainWrapper.appendChild(rPanels.wrapper);
     innerWrapper.panel2.appendChild(mainWrapper.wrapper);
     outerWrapper.appendChild(innerWrapper.wrapper);
+
+    // const footer: HTMLDivElement = document.createElement('div');
+    // footer.id = 'footer';
+    // footer.className = 'footer';
+    // outerWrapper.appendChild(footer);
     return outerWrapper;
 }
 
