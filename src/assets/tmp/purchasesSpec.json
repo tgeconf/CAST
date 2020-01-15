@@ -1,0 +1,99 @@
+[
+    {
+        "selector": ".axis-domain",
+        "grouping": {
+            "groupBy": "id",
+            "reference": "start after previous",
+            "delay": 2000
+        },
+        "effects": [
+            {
+                "type": "grow",
+                "duration": 2000
+            }
+        ]
+    },
+    {
+        "selector": ".x-axis-tick",
+        "grouping": {
+            "groupBy": "id",
+            "reference": "start after previous"
+        },
+        "effects": [
+            {
+                "type": "fade",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "reference": "start after previous",
+        "selector": ".x-axis-label",
+        "grouping": {
+            "groupBy": "id",
+            "reference": "start after previous"
+        },
+        "effects": [
+            {
+                "type": "fade",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "reference": "start after previous",
+        "selector": ".y-axis-tick",
+        "grouping": {
+            "groupBy": "id",
+            "reference": "start after previous"
+        },
+        "effects": [
+            {
+                "type": "fade",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "reference": "start after previous",
+        "selector": ".y-axis-label",
+        "grouping": {
+            "groupBy": "id",
+            "reference": "start after previous"
+        },
+        "effects": [
+            {
+                "type": "fade",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "reference": "start after previous",
+        "selector": ".symbol, .text",
+        "grouping": {
+            "groupBy": "year",
+            "reference": "start after previous",
+            "delay": 400
+        },
+        "effects": [
+            {
+                "type": "fade",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "selector": ".link",
+        "grouping": {
+            "groupBy": "id",
+            "reference": "start after previous"
+        },
+        "effects": [
+            {
+                "type": "grow",
+                "duration": 600
+            }
+        ]
+    }
+]

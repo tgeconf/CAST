@@ -44,9 +44,11 @@
 	width: 300px;
 }
 
-.v-flex-panel,
+.v-flex-panel {
+	height: calc(100% - 300px);
+}
 .h-flex-panel {
-	flex: 1;
+	width: calc(100% - 300px);
 }
 
 .resizer {
@@ -109,7 +111,7 @@
 	width: 100%;
 	box-sizing: border-box;
 	.resize-bar {
-        background: var(--gray-l3);
+		background: var(--gray-l3);
 		height: 5px;
 		width: 100%;
 	}
@@ -122,7 +124,7 @@
 	height: 100%;
 	box-sizing: border-box;
 	.resize-bar {
-        background: var(--gray-l3);
+		background: var(--gray-l3);
 		width: 5px;
 		height: 100%;
 	}

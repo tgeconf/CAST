@@ -9,7 +9,7 @@ interface IPlayerProps {
     totalTime: number
 }
 
-class Player {
+export class Player {
     static PLAY_BTN_ID: string = 'playBtn';
     static TOTAL_TIME_SPAN_ID: string = 'totalTime';
     static CURRENT_TIME_SPAN_ID: string = 'currentTime';

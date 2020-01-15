@@ -11,11 +11,12 @@ import Reducer from './reducer'
 import * as action from './action'
 import SelectableTable from '../components/widgets/selectableTable'
 import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie'
-import { player } from '../components/player'
+import { Player, player } from '../components/player'
 
 
 /** for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 import testSpec from '../assets/tmp/testSpec.json'
+import KeyframeItem from '../components/widgets/keyframeItem'
 /** end for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 
 /**
@@ -64,9 +65,6 @@ export default class Renderer {
             currentTime: 0,
             totalTime: canis.duration()
         })
-
-        //render keyframes
-
     }
 
     /**
@@ -109,7 +107,9 @@ export default class Renderer {
             loop: false,
             autoplay: false,
             animationData: lottieSpec // the animation data
-        }))
+        }));
+        //start to play animation
+        document.getElementById(Player.PLAY_BTN_ID).click();
         //render the hidden lottie for keyframes
         console.log('rendering lottie spec: ', lottieSpec);
         Reducer.triger(action.UPDATE_HIDDEN_LOTTIE, Lottie.loadAnimation({
@@ -118,16 +118,31 @@ export default class Renderer {
             loop: false,
             autoplay: false,
             animationData: lottieSpec
-        }))
+        }));
         //meanwhile render keyframes
         Reducer.triger(action.UPDATE_KEYFRAME_TIME_POINTS, Animation.frameTime);
     }
 
     public static renderKeyframes(kfs: TKeyframe[], lottieAnimation: AnimationItem) {
+        let kfListWidth: number = 0;
         console.log('rendering keyframes: ', kfs);
-        lottieAnimation.goToAndStop(300);
-        
-        console.log();
+        const kfList: HTMLElement = document.getElementById(ViewWindow.KF_LIST_ID);
+        //clear container
+        kfList.innerHTML = '';
+        kfs.forEach(kf => {
+            lottieAnimation.goToAndStop(kf.timePoint);
+            const hiddenSvg: HTMLElement = document.querySelector('#' + ViewWindow.HIDDEN_LOTTIE_ID + ' svg');
+            const kfItem: KeyframeItem = new KeyframeItem();
+            if (!kf.continued) {
+                kfList.appendChild(kfItem.createEllipsis());
+                kfListWidth += 22;
+            }
+            kfItem.createItem(hiddenSvg);
+            kfList.appendChild(kfItem.keyframeContainer);
+            kfListWidth += 250;
+        })
+        //reset the width of the kf-list
+        kfList.style.width = kfListWidth + 'px';
     }
 
     public static renderDataAttrs(sdaArr: TSortDataAttr[]): void {

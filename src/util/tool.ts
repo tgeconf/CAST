@@ -27,22 +27,28 @@ export default class Tool {
         svg.setAttribute('viewBox', oriViewbox[0] + ' ' + oriViewbox[1] + ' ' + w + ' ' + h);
     }
 
-    public static svg2canvs(svgElement:HTMLElement, canvas: HTMLCanvasElement){
-        const svgString = new XMLSerializer().serializeToString(svgElement);
+    public static svg2canvs(svgElement: HTMLElement, canvas: HTMLCanvasElement) {
+        // const svgString = new XMLSerializer().serializeToString(svgElement);
+        const svgString = svgElement.outerHTML;
         const ctx = canvas.getContext("2d");
-        // const DOMURL = self.URL || self.webkitURL || self;
         const img = new Image();
         const svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
         const url = URL.createObjectURL(svg);
         img.onload = function () {
-            ctx.drawImage(img, 0, 0);
-            var png = canvas.toDataURL("image/png");
-            document.querySelector('#png-container').innerHTML = '<img src="' + png + '"/>';
-            URL.revokeObjectURL(png);
+            let dx = 0, dy = 0, scaleWidth = canvas.width, scaleHeight = canvas.width * (img.height / img.width);
+            if (scaleHeight <= canvas.height) {
+                dy = (canvas.height - scaleHeight) / 2;
+            } else {
+                scaleHeight = canvas.height;
+                scaleWidth = canvas.height * (img.width / img.height);
+                dx = (canvas.width - scaleWidth) / 2;
+            }
+            ctx.drawImage(img, dx, dy, scaleWidth, scaleHeight);
+            URL.revokeObjectURL(url);
         };
         img.src = url;
     }
-    
+
     public static identicalArrays(arr1: any[], arr2: any[]): boolean {
         let same: boolean = true;
         if (arr1.length !== arr2.length) {

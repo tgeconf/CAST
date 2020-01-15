@@ -25,10 +25,6 @@
                         "Pungent",
                         "Spicy"
                     ]
-                },
-                "grouping": {
-                    "groupBy": "IsEdible",
-                    "reference": "start after previous"
                 }
             }
         },

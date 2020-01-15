@@ -3,6 +3,12 @@ import MushroomImg from '../assets/img/examples/mushroom.png'
 import MushroomChart from '../assets/charts/mushrooms.svg'
 import GanttImg from '../assets/img/examples/gantt.png'
 import GanttChart from '../assets/charts/gantt.svg'
+import OsImg from '../assets/img/examples/os.png'
+import OsChart from '../assets/charts/os.svg'
+import PurchasesImg from '../assets/img/examples/purchases.png'
+import PurchasesChart from '../assets/charts/purchases.svg'
+import NightingaleImg from '../assets/img/examples/nightingale.png'
+import NightingaleChart from '../assets/charts/nightingale.svg'
 import Reducer from '../app/reducer'
 import * as action from '../app/action'
 import { canisGenerator } from '../app/canisGenerator'
@@ -11,6 +17,10 @@ import { State, state } from '../app/state'
 /**for test!!!!!!!!!!!!!!!!!!!!!!!! */
 import Renderer from '../app/renderer';//for test!!!!!
 import mushroomSpec from '../assets/tmp/mushroomSpec.json'
+import ganttSpec from '../assets/tmp/ganttSpec.json'
+import osSpec from '../assets/tmp/osSpec.json'
+import purchasesSpec from '../assets/tmp/purchasesSpec.json'
+import nightingaleSpec from '../assets/tmp/nightingaleSpec.json'
 /**end for test!!!!!!!!!!!!!!!!!!!!!!!! */
 
 export default class FloatingWindow {
@@ -19,6 +29,9 @@ export default class FloatingWindow {
 
     static MUSHROOM_CHART: string = 'mushroom';
     static GANTT_CHART: string = 'gantt';
+    static OS_CHART: string = 'mobileOS';
+    static PURCHASE_CHART: string = 'purchases';
+    static NIGHTINGALE_CHART: string = 'nightingale';
 
     floatingWindow: HTMLDivElement;
 
@@ -78,6 +91,9 @@ export default class FloatingWindow {
         //add chart examples
         exampleList.appendChild(this.createExampleItem(FloatingWindow.MUSHROOM_CHART, 'Mushroom'));
         exampleList.appendChild(this.createExampleItem(FloatingWindow.GANTT_CHART, 'Gantt'));
+        exampleList.appendChild(this.createExampleItem(FloatingWindow.OS_CHART, 'Mobile OS'));
+        exampleList.appendChild(this.createExampleItem(FloatingWindow.PURCHASE_CHART, 'Doughnut Purchases'));
+        exampleList.appendChild(this.createExampleItem(FloatingWindow.NIGHTINGALE_CHART, 'Nightingale'));
         return exampleList;
     }
 
@@ -89,24 +105,23 @@ export default class FloatingWindow {
         switch (name) {
             case FloatingWindow.MUSHROOM_CHART:
                 img.src = MushroomImg;
-                item.onclick = () => {
-                    //save histroy before update state
-                    State.tmpStateBusket = [];
-                    State.tmpStateBusket.push([action.LOAD_CHARTS, state.charts]);
-                    Reducer.triger(action.LOAD_CHARTS, [MushroomChart]);
-                    this.floatingWindow.remove();
-                }
+                item.onclick = () => this.loadExampleChart(MushroomChart);
                 break;
             case FloatingWindow.GANTT_CHART:
                 img.src = GanttImg;
-                item.onclick = () => {
-                    //save histroy before update state
-                    State.tmpStateBusket = [];
-                    State.tmpStateBusket.push([action.LOAD_CHARTS, state.charts]);
-                    Reducer.triger(action.LOAD_CHARTS, [GanttChart]);
-                    console.log('gantt chart: ', GanttChart);
-                    this.floatingWindow.remove();
-                }
+                item.onclick = () => this.loadExampleChart(GanttChart);
+                break;
+            case FloatingWindow.OS_CHART:
+                img.src = OsImg;
+                item.onclick = () => this.loadExampleChart(OsChart);
+                break;
+            case FloatingWindow.PURCHASE_CHART:
+                img.src = PurchasesImg;
+                item.onclick = () => this.loadExampleChart(PurchasesChart);
+                break;
+            case FloatingWindow.NIGHTINGALE_CHART:
+                img.src = NightingaleImg;
+                item.onclick = () => this.loadExampleChart(NightingaleChart);
                 break;
         }
         imgWrapper.appendChild(img);
@@ -115,6 +130,14 @@ export default class FloatingWindow {
         captionWrapper.innerText = caption;
         item.appendChild(captionWrapper);
         return item;
+    }
+
+    public loadExampleChart(chart: any) {
+        //save histroy before update state
+        State.tmpStateBusket = [];
+        State.tmpStateBusket.push([action.LOAD_CHARTS, state.charts]);
+        Reducer.triger(action.LOAD_CHARTS, [chart]);
+        this.floatingWindow.remove();
     }
 
     /**
@@ -127,12 +150,11 @@ export default class FloatingWindow {
         const specWrapper: HTMLDivElement = document.createElement('div');
         specWrapper.style.width = '100%';
         specWrapper.style.height = '30px';
-        const mushroomSpecBtn: HTMLButtonElement = document.createElement('button');
-        mushroomSpecBtn.innerHTML = 'mushroomspec';
-        mushroomSpecBtn.onclick = () => {
-            specPanel.innerHTML = JSON.stringify(mushroomSpec, null, 2);
-        }
-        specWrapper.appendChild(mushroomSpecBtn);
+        specWrapper.appendChild(this.createTestSpecBtn('mushroomSpec',mushroomSpec));
+        specWrapper.appendChild(this.createTestSpecBtn('ganttSpec', ganttSpec));
+        specWrapper.appendChild(this.createTestSpecBtn('osSpec', osSpec));
+        specWrapper.appendChild(this.createTestSpecBtn('purchasesSpec', purchasesSpec));
+        specWrapper.appendChild(this.createTestSpecBtn('nightingaleSpec', nightingaleSpec));
         wrapper.appendChild(specWrapper);
         const specPanel: HTMLTextAreaElement = document.createElement('textarea');
         specPanel.style.width = '100%';
@@ -146,8 +168,17 @@ export default class FloatingWindow {
             let tmpSpec = JSON.parse(specPanel.value);
             canisGenerator.canisSpec.animations = tmpSpec;
             Renderer.renderSpec();
+            this.floatingWindow.remove();
         }
         wrapper.appendChild(renderBtn);
         return wrapper;
+    }
+    public createTestSpecBtn(text: string, spec: any) {
+        const mushroomSpecBtn: HTMLButtonElement = document.createElement('button');
+        mushroomSpecBtn.innerHTML = text;
+        mushroomSpecBtn.onclick = () => {
+            document.getElementById('specPanel').innerHTML = JSON.stringify(spec, null, 2);
+        }
+        return mushroomSpecBtn;
     }
 }

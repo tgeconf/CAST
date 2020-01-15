@@ -1,0 +1,70 @@
+[
+    {
+        "selector": ".axis-domain",
+        "effects": [
+            {
+                "type": "grow",
+                "duration": 1000
+            }
+        ]
+    },
+    {
+        "selector": ".axis-tick, .axis-label",
+        "effects": [
+            {
+                "type": "fade",
+                "duration": 1000
+            }
+        ]
+    },
+    {
+        "reference": "start after previous",
+        "selector": ".text",
+        "effects": [
+            {
+                "type": "fade",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "reference": "start after previous",
+        "selector": ".rectangle",
+        "grouping": {
+            "groupBy": "OperatingSystem",
+            "reference": "start after previous",
+            "grouping": {
+                "groupBy": "Year",
+                "reference": "start after previous",
+                "delay": 400
+            }
+        },
+        "effects": [
+            {
+                "type": "fade",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "offset": 400,
+        "selector": ".link",
+        "grouping": {
+            "groupBy": "OperatingSystem",
+            "reference": "start after previous",
+            "delay": 800,
+            "grouping": {
+                "groupBy": "Year",
+                "reference": "start after previous",
+                "delay": 400
+            }
+        },
+        "effects": [
+            {
+                "type": "wipe left",
+                "easing": "easeOutCubic",
+                "duration": 400
+            }
+        ]
+    }
+]

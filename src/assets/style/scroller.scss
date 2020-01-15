@@ -1,25 +1,27 @@
 ::-webkit-scrollbar {
-	width: 8px;
+	width: 6px;
 	margin-right: 2px;
 }
 
 ::-webkit-scrollbar:horizontal {
-	height: 10px;
+	height: 8px;
 	margin-bottom: 2px;
 }
 
 ::-webkit-scrollbar-track {
-	border-radius: 10px;
+	border-radius: 8px;
 }
 
 ::-webkit-scrollbar-track-piece {
 	background-color: #cdcdcd;
-	border-radius: 10px;
+	border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-	width: 6px;
-	border-radius: 5px;
-	background: #8f8f8f;
+	width: 4px;
+	border-radius: 3px;
+	// background: #8f8f8f;
+	background: var(--gray-l1);
 	margin-right: 3px;
+	// box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
 }

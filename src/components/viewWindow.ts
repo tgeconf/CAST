@@ -17,6 +17,7 @@ export default class ViewWindow {
     static CHART_VIEW_TITLE: string = 'chart';
     static VIDEO_VIEW_TITLE: string = 'animation';
     static HIDDEN_LOTTIE_ID: string = 'hiddenLottie';
+    static KF_LIST_ID: string = 'kfList';
     static KF_VIEW_TITLE: string = '';
 
     viewTitle: string;
@@ -165,11 +166,12 @@ export default class ViewWindow {
     public createHiddenCanvasContainer(): HTMLDivElement {
         const canvasContainer: HTMLDivElement = document.createElement('div');
         canvasContainer.id = ViewWindow.HIDDEN_LOTTIE_ID;
-        canvasContainer.style.width = '800px';
-        canvasContainer.style.height = '600px';
-        canvasContainer.style.position = 'absolute';
-        canvasContainer.style.top = '300px';
-        canvasContainer.style.left = '0';
+        // canvasContainer.style.width = '800px';
+        // canvasContainer.style.height = '600px';
+        // canvasContainer.style.position = 'absolute';
+        canvasContainer.style.display = 'none';
+        // canvasContainer.style.top = '300px';
+        // canvasContainer.style.left = '0';
         return canvasContainer;
     }
 }
@@ -305,16 +307,8 @@ export class ViewContent {
 
     public createKeyframeListContainer(): HTMLDivElement {
         const keyframeList: HTMLDivElement = document.createElement('div');
+        keyframeList.id = ViewWindow.KF_LIST_ID;
         keyframeList.className = 'kf-list';
-        // for(let i = 0; i < 30; i++){
-        //     const testDiv = document.createElement('div');
-        //     testDiv.style.display = 'inline-block';
-        //     testDiv.style.width = '300px';
-        //     testDiv.style.height = '150px';
-        //     testDiv.style.background = '#00f';
-        //     testDiv.style.marginLeft = '10px';
-        //     keyframeList.appendChild(testDiv);
-        // }
         return keyframeList;
     }
 
