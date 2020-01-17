@@ -7,7 +7,6 @@
         "@types/d3": "^5.7.2",
         "@types/domurl": "0.0.5",
         "@types/robust-point-in-polygon": "^1.0.0",
-        "canis_toolkit": "^1.1.1",
         "d3": "^5.15.0",
         "lodash": "^4.17.15",
         "lottie-web": "^5.6.0",

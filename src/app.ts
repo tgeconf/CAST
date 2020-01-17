@@ -5,6 +5,7 @@ import ViewWindow from './components/viewWindow'
 import FloatingWindow from './components/floatingWindow'
 import { state } from './app/state'
 import Tool from './util/tool'
+import Timeline from './components/widgets/timeline'
 
 function app(): HTMLDivElement {
     const outerWrapper: HTMLDivElement = document.createElement('div');
@@ -56,7 +57,8 @@ Tool.resizeWidgets();
 state.reset();
 //load examples
 // (<HTMLElement>document.getElementsByClassName('open-eg-icon')[0]).click();
-
+//thisis to test timeline
+// Timeline.renderTimeline(<SVGSVGElement><unknown>document.getElementById('timelineSvg'));
 
 window.onresize = () => {
     Tool.resizeWidgets();

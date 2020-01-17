@@ -17,6 +17,7 @@ import { Player, player } from '../components/player'
 /** for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 import testSpec from '../assets/tmp/testSpec.json'
 import KeyframeItem from '../components/widgets/keyframeItem'
+import Timeline from '../components/widgets/timeline'
 /** end for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 
 /**
@@ -119,8 +120,10 @@ export default class Renderer {
             autoplay: false,
             animationData: lottieSpec
         }));
-        //meanwhile render keyframes
+        //meanwhile render keyframes and timeline
         Reducer.triger(action.UPDATE_KEYFRAME_TIME_POINTS, Animation.frameTime);
+        Reducer.triger(action.UPDATE_GEOUPING_AND_TIMING, Animation.animations);
+        console.log(Animation.animations);
     }
 
     public static renderKeyframes(kfs: TKeyframe[], lottieAnimation: AnimationItem) {
@@ -143,6 +146,16 @@ export default class Renderer {
         })
         //reset the width of the kf-list
         kfList.style.width = kfListWidth + 'px';
+    }
+
+    public static renderTimeline(groupingAndTiming: any) {
+        console.log('in rendering timeline: ', groupingAndTiming, document.getElementById('timelineSvg'), document.getElementById('timelineSvg').offsetWidth, document.getElementById('timelineSvg').clientWidth);
+        Timeline.updateTimelineProps({
+            width: document.getElementById('timelineSvg').clientWidth,
+            height: document.getElementById('timelineSvg').clientHeight - 20,
+            dx: 100,
+            dy: 100
+        }, typeof state.lottieAni === 'undefined' ? 1 : state.lottieAni.getDuration(false) * 1000);
     }
 
     public static renderDataAttrs(sdaArr: TSortDataAttr[]): void {

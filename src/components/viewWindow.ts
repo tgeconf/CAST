@@ -5,6 +5,7 @@ import Tool from '../util/tool'
 import { state, State } from '../app/state'
 import * as action from '../app/action'
 import Reducer from '../app/reducer'
+import Timeline from './widgets/timeline'
 
 interface IViewBtnProp {
     title?: string,
@@ -322,6 +323,8 @@ export class ViewContent {
         const timelineSvgWrapper: HTMLDivElement = document.createElement('div');
         timelineSvgWrapper.className = 'timeline-svg-wrapper';
         const svgContent: SVGSVGElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svgContent.id = 'timelineSvg';
+        Timeline.initTimeline(svgContent);
         timelineSvgWrapper.appendChild(svgContent);
         timelineContainer.appendChild(timelineSvgWrapper);
         const timeSvgWrapper: HTMLDivElement = document.createElement('div');

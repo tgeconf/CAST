@@ -64,7 +64,6 @@ Reducer.listen(action.UPDATE_HIDDEN_LOTTIE, (hl: AnimationItem) => {
 Reducer.listen(action.UPDATE_KEYFRAME_TIME_POINTS, (frameTime: Map<number, boolean>) => {
     const frameTimeArr: Array<[number, boolean]> = [[0, true], ...frameTime];
     frameTimeArr.sort((a, b) => a[0] - b[0]);
-    console.log(frameTimeArr);
     let isContinued: boolean = true;
     let keyframes: TKeyframe[] = [];
     frameTimeArr.forEach(ft => {
@@ -77,4 +76,11 @@ Reducer.listen(action.UPDATE_KEYFRAME_TIME_POINTS, (frameTime: Map<number, boole
         isContinued = ft[1];
     })
     state.keyframes = keyframes;
+})
+Reducer.listen(action.UPDATE_GEOUPING_AND_TIMING, (animations: Map<string, any>) => {
+    const gat: any = [];
+    animations.forEach((ani: any, selection: string) => {
+        gat.push(ani);
+    })
+    state.groupingAndTiming = gat;
 })

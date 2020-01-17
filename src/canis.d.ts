@@ -28,5 +28,6 @@ declare module 'canis_toolkit' {
     }
     export class Animation {
         static frameTime: Map<number, boolean>;
+        static animations: Map<string, any>;
     }
 }

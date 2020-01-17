@@ -28,6 +28,7 @@ export interface IState {
     lottieAni: AnimationItem
     hiddenLottie: AnimationItem
     keyframes: TKeyframe[]
+    groupingAndTiming: any
 }
 
 /**
@@ -46,6 +47,7 @@ export class State implements IState {
     _lottieAni: AnimationItem
     _hiddenLottie: AnimationItem
     _keyframes: TKeyframe[]
+    _groupingAndTiming: any
 
     set sortDataAttrs(sda: TSortDataAttr[]) {
         //compare incoming
@@ -139,6 +141,14 @@ export class State implements IState {
     get keyframes(): TKeyframe[] {
         return this._keyframes;
     }
+    set groupingAndTiming(gat: any) {
+        this._groupingAndTiming = gat;
+        //render timeline
+        Renderer.renderTimeline(this.groupingAndTiming);
+    }
+    get groupingAndTiming(): any {
+        return this._groupingAndTiming;
+    }
 
     public reset(): void {
         this.sortDataAttrs = [];
@@ -149,6 +159,10 @@ export class State implements IState {
         this.tool = ViewToolBtn.SINGLE;
         this.selection = [];
         this.suggestion = true;
+
+        this.keyframes = [];
+        // this.groupingAndTiming = null;
+
     }
 
     static stateHistory: Array<Array<[string, any]>> = [];//each step might triger multiple actions, thus each step correspond to one Array<[actionType, stateAttrValue]>
