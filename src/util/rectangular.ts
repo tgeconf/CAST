@@ -1,7 +1,7 @@
-import { IBoundary } from './ds'
+import { IBoundary, ICoord } from './ds'
 
 export default class Rectangular {
-    svg: HTMLElement;
+    svg: any;
     /**
      * create the dashed selection frame when mouse down
      * @param svg 
@@ -19,6 +19,7 @@ export default class Rectangular {
      * update the dashed selection frame when mouse move
      */
     public updateSelectionFrame(boundary: IBoundary) {
+        
         const selectionFrame: SVGRectElement = <SVGRectElement><unknown>document.getElementById('rectSelectFrame');
         selectionFrame.setAttributeNS(null, 'x', boundary.x1.toString());
         selectionFrame.setAttributeNS(null, 'y', boundary.y1.toString());
@@ -46,11 +47,16 @@ export default class Rectangular {
         //filter marks
         Array.from(document.getElementsByClassName('mark')).forEach((m: HTMLElement) => {
             const markBBox = m.getBoundingClientRect();
-            const coord1X = markBBox.left - this.svg.getBoundingClientRect().x,
-                coord1Y = markBBox.top - this.svg.getBoundingClientRect().y,
-                coord2X = coord1X + markBBox.width,
-                coord2Y = coord1Y + markBBox.height;
-            const framed: boolean = this.pointInRect(boundary, { x1: coord1X, y1: coord1Y, x2: coord2X, y2: coord2Y });
+            let coord1 = this.svg.createSVGPoint();
+            coord1.x = markBBox.left;
+            coord1.y = markBBox.top;
+            const svgCoord1: ICoord = coord1.matrixTransform(this.svg.getScreenCTM().inverse());
+            let coord2 = this.svg.createSVGPoint();
+            coord2.x = markBBox.left + markBBox.width;
+            coord2.y = markBBox.top + markBBox.height;
+            const svgCoord2: ICoord = coord2.matrixTransform(this.svg.getScreenCTM().inverse());
+
+            const framed: boolean = this.pointInRect(boundary, { x1: svgCoord1.x, y1: svgCoord1.y, x2: svgCoord2.x, y2: svgCoord2.y });
             //update the appearance of marks
             if ((framedMarks.includes(m.id) && framed) || (!framedMarks.includes(m.id) && !framed)) {
                 m.classList.add('non-framed-mark');

@@ -1,5 +1,5 @@
 import { state, IState, State } from './state'
-import { TDataItem, TSortDataAttr, TKeyframe } from './ds'
+import { IDataItem, ISortDataAttr, IKeyframeGroup, IKeyframe } from './ds'
 import { ChartSpec, Animation } from 'canis_toolkit'
 import { canisGenerator, canis } from './canisGenerator'
 import ViewWindow, { ViewToolBtn, ViewContent } from '../components/viewWindow'
@@ -16,8 +16,10 @@ import { Player, player } from '../components/player'
 
 /** for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 import testSpec from '../assets/tmp/testSpec.json'
-import KeyframeItem from '../components/widgets/keyframeItem'
+import KfItem from '../components/widgets/kfItem'
 import Timeline from '../components/widgets/timeline'
+import KfTrack from '../components/widgets/kfTrack'
+import KfGroup from '../components/widgets/kfGroup'
 /** end for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 
 /**
@@ -57,7 +59,7 @@ export default class Renderer {
             highlightBox.setAttributeNS(null, 'stroke', '#2196f3');
             highlightBox.setAttributeNS(null, 'stroke-width', '2');
             svg.appendChild(highlightBox);
-            Tool.resizeSVG(svg, svg.parentElement.offsetWidth, svg.parentElement.offsetHeight);
+            // Tool.resizeSVG(svg, svg.parentElement.offsetWidth, svg.parentElement.offsetHeight);
         }
         //render video view
         this.renderVideo(lottieSpec);
@@ -85,7 +87,7 @@ export default class Renderer {
             highlightBox.setAttributeNS(null, 'stroke', '#2196f3');
             highlightBox.setAttributeNS(null, 'stroke-width', '2');
             svg.appendChild(highlightBox);
-            Tool.resizeSVG(svg, svg.parentElement.offsetWidth, svg.parentElement.offsetHeight);
+            // Tool.resizeSVG(svg, svg.parentElement.offsetWidth, svg.parentElement.offsetHeight);
         }
         //render video view
         this.renderVideo(lottieSpec);
@@ -96,7 +98,7 @@ export default class Renderer {
         })
     }
 
-    public static renderVideo(lottieSpec: any) {
+    public static renderVideo(lottieSpec: any): void {
         document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID).innerHTML = '';
         //save histroy before update state
         State.tmpStateBusket.push([action.UPDATE_LOTTIE, state.lottieAni]);
@@ -112,53 +114,85 @@ export default class Renderer {
         //start to play animation
         document.getElementById(Player.PLAY_BTN_ID).click();
         //render the hidden lottie for keyframes
-        console.log('rendering lottie spec: ', lottieSpec);
-        Reducer.triger(action.UPDATE_HIDDEN_LOTTIE, Lottie.loadAnimation({
-            container: document.getElementById(ViewWindow.HIDDEN_LOTTIE_ID),
-            renderer: 'svg',
-            loop: false,
-            autoplay: false,
-            animationData: lottieSpec
-        }));
+        // console.log('rendering lottie spec: ', lottieSpec);
+        // Reducer.triger(action.UPDATE_HIDDEN_LOTTIE, Lottie.loadAnimation({
+        //     container: document.getElementById(ViewWindow.HIDDEN_LOTTIE_ID),
+        //     renderer: 'svg',
+        //     loop: false,
+        //     autoplay: false,
+        //     animationData: lottieSpec
+        // }));
         //meanwhile render keyframes and timeline
-        Reducer.triger(action.UPDATE_KEYFRAME_TIME_POINTS, Animation.frameTime);
-        Reducer.triger(action.UPDATE_GEOUPING_AND_TIMING, Animation.animations);
+        // Reducer.triger(action.UPDATE_KEYFRAME_TIME_POINTS, Animation.frameTime);
+        Reducer.triger(action.UPDATE_KEYFRAME_TRACKS, Animation.animations);
+        // Reducer.triger(action.UPDATE_GEOUPING_AND_TIMING, Animation.animations);
         console.log(Animation.animations);
     }
 
-    public static renderKeyframes(kfs: TKeyframe[], lottieAnimation: AnimationItem) {
-        let kfListWidth: number = 0;
-        console.log('rendering keyframes: ', kfs);
-        const kfList: HTMLElement = document.getElementById(ViewWindow.KF_LIST_ID);
-        //clear container
-        kfList.innerHTML = '';
-        kfs.forEach(kf => {
-            lottieAnimation.goToAndStop(kf.timePoint);
-            const hiddenSvg: HTMLElement = document.querySelector('#' + ViewWindow.HIDDEN_LOTTIE_ID + ' svg');
-            const kfItem: KeyframeItem = new KeyframeItem();
-            if (!kf.continued) {
-                kfList.appendChild(kfItem.createEllipsis());
-                kfListWidth += 22;
-            }
-            kfItem.createItem(hiddenSvg);
-            kfList.appendChild(kfItem.keyframeContainer);
-            kfListWidth += 250;
+    public static renderKeyframeTracks(kfgs: IKeyframeGroup[]): void {
+        //reset
+        //TODO: need to check performance
+        document.getElementById(ViewWindow.KF_BG).innerHTML = '';
+        document.getElementById(ViewWindow.KF_FG).innerHTML = '';
+        KfTrack.reset();
+        KfGroup.reset();
+
+        let groupTrackMapping: Map<string, KfTrack[]> = new Map();//key: aniId, value: track id array
+        kfgs.forEach((kfg: IKeyframeGroup) => {
+            console.log('kfg: ', kfg);
+            KfGroup.leafLevel = 0;
+            let treeLevel = 0;//use this to decide the background color of each group
+            //top-down to init group and kf
+            const rootGroup: KfGroup = this.renderKeyframeGroup(kfg, groupTrackMapping, treeLevel);
+            //bottom-up to update size and position
+            rootGroup.updateGroupPosiAndSize(0, 0, true);
         })
-        //reset the width of the kf-list
-        kfList.style.width = kfListWidth + 'px';
     }
 
-    public static renderTimeline(groupingAndTiming: any) {
-        console.log('in rendering timeline: ', groupingAndTiming, document.getElementById('timelineSvg'), document.getElementById('timelineSvg').offsetWidth, document.getElementById('timelineSvg').clientWidth);
-        Timeline.updateTimelineProps({
-            width: document.getElementById('timelineSvg').clientWidth,
-            height: document.getElementById('timelineSvg').clientHeight - 20,
-            dx: 100,
-            dy: 100
-        }, typeof state.lottieAni === 'undefined' ? 1 : state.lottieAni.getDuration(false) * 1000);
+    public static renderKeyframeGroup(kfg: IKeyframeGroup, groupTrackMapping: Map<string, KfTrack[]>, treeLevel: number, parentObj?: KfGroup): KfGroup {
+        let targetTrack: KfTrack; //foreground of the track used to put the keyframe group
+        if (kfg.newTrack) {
+            targetTrack = new KfTrack();
+            targetTrack.createTrack();
+            if (typeof groupTrackMapping.get(kfg.aniId) === 'undefined') {
+                groupTrackMapping.set(kfg.aniId, []);
+            }
+            groupTrackMapping.get(kfg.aniId).push(targetTrack);
+        } else {
+            targetTrack = groupTrackMapping.get(kfg.aniId)[0];
+        }
+
+        //draw group container
+        let kfGroup: KfGroup = new KfGroup();
+        kfGroup.children = [];
+        console.log(parentObj ? 'has parentobj (group)' : 'dont have (track)');
+        kfGroup.createGroup(kfg, parentObj ? parentObj : targetTrack, targetTrack.trackPosiY, treeLevel);
+
+        treeLevel++;
+        if (treeLevel > KfGroup.leafLevel) {
+            KfGroup.leafLevel = treeLevel;
+        }
+        if (kfg.keyframes.length > 0) {
+            //rendering kf
+            console.log('rendering kf');
+            let kfPosiX = 0;
+            kfg.keyframes.forEach((k: any) => {
+                let kfItem: KfItem = new KfItem();
+                kfItem.createItem(k, treeLevel, kfGroup, kfPosiX);
+                kfGroup.children.push(kfItem);
+                kfPosiX += KfItem.PADDING + parseFloat(kfItem.kfBg.getAttributeNS(null, 'width'));
+            })
+
+        } else if (kfg.children.length > 0) {
+            //rendering kf group
+            console.log('rendering group');
+            kfg.children.forEach((c: any) => kfGroup.children.push(this.renderKeyframeGroup(c, groupTrackMapping, treeLevel, kfGroup)));
+        }
+
+        return kfGroup;
     }
 
-    public static renderDataAttrs(sdaArr: TSortDataAttr[]): void {
+    public static renderDataAttrs(sdaArr: ISortDataAttr[]): void {
         if (sdaArr.length > 0) {
             document.getElementById('attrBtnContainer').innerHTML = '';
             document.getElementById('sortInputContainer').innerHTML = '';
@@ -173,7 +207,7 @@ export default class Renderer {
         }
     }
 
-    public static renderDataTable(dt: Map<string, TDataItem>): void {
+    public static renderDataTable(dt: Map<string, IDataItem>): void {
         if (dt.size > 0) {
             const dataTable: SelectableTable = new SelectableTable();
             document.getElementById('dataTabelContainer').innerHTML = '';
@@ -225,9 +259,7 @@ export default class Renderer {
                 highlightSelectionBox.setAttributeNS(null, 'height', '0');
             }
             //reset all marks to un-selected
-            Array.from(document.getElementsByClassName('non-framed-mark')).forEach((m: HTMLElement) => {
-                m.classList.remove('non-framed-mark');
-            })
+            Array.from(document.getElementsByClassName('non-framed-mark')).forEach((m: HTMLElement) => m.classList.remove('non-framed-mark'))
         } else {
             //find the boundary of the selected marks
             let minX = 10000, minY = 10000, maxX = -10000, maxY = -10000;

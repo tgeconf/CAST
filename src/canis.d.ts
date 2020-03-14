@@ -27,7 +27,19 @@ declare module 'canis_toolkit' {
         static chartUnderstanding: any;
     }
     export class Animation {
+        static FIRST_ANI_ID: string;
         static frameTime: Map<number, boolean>;
         static animations: Map<string, any>;
+        static allMarkAni: Map<string, any>;
+        static alignTarget: {
+            withEle: string
+            withObj: string
+        }
+    }
+    export class TimingSpec {
+        static timingRef: {
+            previousStart: string
+            previousEnd: string
+        }
     }
 }

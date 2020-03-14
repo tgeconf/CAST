@@ -1,18 +1,42 @@
-export type TSortDataAttr = {
+export interface ISortDataAttr {
     attr: string
     sort: string
 }
 
-export type TDataItem = {
+export interface IDataItem {
     [propName: string]: string | number
 }
 
-export type TKeyframe = {
-    continued: boolean
-    timePoint: number
-    highlightingMarks?: string[]//marks that should be highlighted
+export interface IKeyframe {
+    id: string
+    parentId: string //keyframe group id
+    durationIcon: boolean
+    duration: number
+    delayIcon: boolean
+    delay: number
+    marksThisKf: string[] //markid array
 }
 
-export type TDataDatumType = {
+export interface IKeyframeGroup {
+    groupRef: string
+    id: string
+    aniId: string
+    parentId: string //keyframe group id
+    children?: IKeyframeGroup[]
+    keyframes?: IKeyframe[]
+    // numKf: number
+    // numGroup: number
+    marks: string[]
+    timingRef: string
+    delayIcon: boolean
+    delay: number
+    offsetIcon?: boolean
+    offset?: number // for aniunit only
+    alignType?: string
+    alignTarget?: string //target at an animation id
+    newTrack: boolean;
+}
+
+export interface IDataDatumType {
     [key: string]: string | number
 }

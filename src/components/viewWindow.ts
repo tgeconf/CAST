@@ -19,6 +19,8 @@ export default class ViewWindow {
     static VIDEO_VIEW_TITLE: string = 'animation';
     static HIDDEN_LOTTIE_ID: string = 'hiddenLottie';
     static KF_LIST_ID: string = 'kfList';
+    static KF_BG: string = 'kfBgG';
+    static KF_FG: string = 'kfFgG';
     static KF_VIEW_TITLE: string = '';
 
     viewTitle: string;
@@ -52,7 +54,7 @@ export default class ViewWindow {
                 break;
             case ViewWindow.VIDEO_VIEW_TITLE:
                 this.view.appendChild(this.createPlayerWidget());
-                this.view.appendChild(this.createHiddenCanvasContainer());
+                // this.view.appendChild(this.createHiddenCanvasContainer());
                 break;
         }
 
@@ -164,17 +166,17 @@ export default class ViewWindow {
         return container;
     }
 
-    public createHiddenCanvasContainer(): HTMLDivElement {
-        const canvasContainer: HTMLDivElement = document.createElement('div');
-        canvasContainer.id = ViewWindow.HIDDEN_LOTTIE_ID;
-        // canvasContainer.style.width = '800px';
-        // canvasContainer.style.height = '600px';
-        // canvasContainer.style.position = 'absolute';
-        canvasContainer.style.display = 'none';
-        // canvasContainer.style.top = '300px';
-        // canvasContainer.style.left = '0';
-        return canvasContainer;
-    }
+    // public createHiddenCanvasContainer(): HTMLDivElement {
+    //     const canvasContainer: HTMLDivElement = document.createElement('div');
+    //     canvasContainer.id = ViewWindow.HIDDEN_LOTTIE_ID;
+    //     // canvasContainer.style.width = '800px';
+    //     // canvasContainer.style.height = '600px';
+    //     // canvasContainer.style.position = 'absolute';
+    //     canvasContainer.style.display = 'none';
+    //     // canvasContainer.style.top = '300px';
+    //     // canvasContainer.style.left = '0';
+    //     return canvasContainer;
+    // }
 }
 
 
@@ -296,7 +298,7 @@ export class ViewContent {
             case ViewWindow.KF_VIEW_TITLE:
                 this.createViewContainer(ViewContent.KF_VIEW_CONTENT_ID, ViewContent.KF_VIEW_CONTENT_CLS);
                 this.container.appendChild(this.createKeyframeListContainer());
-                this.container.appendChild(this.createTimelineContainer());
+                // this.container.appendChild(this.createTimelineContainer());
                 break;
         }
     }
@@ -308,13 +310,19 @@ export class ViewContent {
     }
 
     public createKeyframeListContainer(): HTMLDivElement {
-        const keyframeListContainer: HTMLDivElement = document.createElement('div');
-        keyframeListContainer.className = 'kf-list-container';
-        const keyframeList: HTMLDivElement = document.createElement('div');
-        keyframeList.id = ViewWindow.KF_LIST_ID;
-        keyframeList.className = 'kf-list';
-        keyframeListContainer.appendChild(keyframeList);
-        return keyframeListContainer;
+        const keyframeContainer: HTMLDivElement = document.createElement('div');
+        keyframeContainer.className = 'kf-container';
+        const keyframeTrackContainer: SVGElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        keyframeTrackContainer.id = ViewWindow.KF_LIST_ID;
+        keyframeTrackContainer.setAttributeNS(null, 'class', 'kf-tracks-container');
+        const kfBgG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        kfBgG.setAttributeNS(null, 'id', ViewWindow.KF_BG);
+        keyframeTrackContainer.appendChild(kfBgG);
+        const kfFgG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        kfFgG.setAttributeNS(null, 'id', ViewWindow.KF_FG);
+        keyframeTrackContainer.appendChild(kfFgG);
+        keyframeContainer.appendChild(keyframeTrackContainer);
+        return keyframeContainer;
     }
 
     public createTimelineContainer(): HTMLDivElement {

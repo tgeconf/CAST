@@ -1,21 +1,21 @@
-import { ChartSpec } from 'canis_toolkit'
+import { ChartSpec, TimingSpec, Animation } from 'canis_toolkit'
 import { state } from './state'
 import Tool from '../util/tool'
-import { TSortDataAttr, TDataItem, TDataDatumType } from './ds';
+import { ISortDataAttr, IDataItem, IDataDatumType, IKeyframeGroup, IKeyframe } from './ds';
 import AttrBtn from '../components/widgets/attrBtn';
 import AttrSort from '../components/widgets/attrSort';
 
 
 
 export default class Util {
-    static attrType: TDataDatumType = {};
+    static attrType: IDataDatumType = {};
     static NUMERIC_ATTR: string = 'numeric';
     static CATEGORICAL_ATTR: string = 'categorical';
     static NUMERIC_CATEGORICAL_ATTR: string[] = ['Year', 'year', 'Month', 'month', 'Day', 'day'];
     static EFFECTIVENESS_RANKING: string[] = ['position', 'color', 'shape'];
     static EXCLUDED_DATA_ATTR: string[] = ['_TYPE', 'text', '_x', '_y', '_id', '_MARKID'];
 
-    static filteredDataTable: Map<string, TDataItem> = new Map();//markId, dataItem
+    static filteredDataTable: Map<string, IDataItem> = new Map();//markId, dataItem
     /**
      * @param markIds : selected marks
      */
@@ -236,11 +236,11 @@ export default class Util {
      * determine the attribute type of the data attributes of marks
      * @param markData 
      */
-    public static extractAttrValueAndDeterminType(markData: Map<string, TDataItem>) {
+    public static extractAttrValueAndDeterminType(markData: Map<string, IDataItem>) {
         this.filteredDataTable.clear();
         this.attrType = {};
-        markData.forEach((dataDatum: TDataItem, markId: string) => {
-            let tmpDataItem: TDataItem = {};
+        markData.forEach((dataDatum: IDataItem, markId: string) => {
+            let tmpDataItem: IDataItem = {};
             for (const key in dataDatum) {
                 let tmpAttrType: string = (!isNaN(Number(dataDatum[key])) && dataDatum[key] !== '') ? this.NUMERIC_ATTR : this.CATEGORICAL_ATTR;
                 this.attrType[key] = tmpAttrType;
@@ -252,15 +252,15 @@ export default class Util {
         })
     }
 
-    public static filterDataSort(dataSort: TSortDataAttr[]): TSortDataAttr[] {
+    public static filterDataSort(dataSort: ISortDataAttr[]): ISortDataAttr[] {
         return dataSort.filter(ds => !Util.EXCLUDED_DATA_ATTR.includes(ds.attr));
     }
 
     /**
      * find out to sort with which attr
      */
-    public static findUpdatedAttrOrder(sda: TSortDataAttr[]) {
-        let result: TSortDataAttr = { attr: '', sort: '' };
+    public static findUpdatedAttrOrder(sda: ISortDataAttr[]) {
+        let result: ISortDataAttr = { attr: '', sort: '' };
         for (let i = 0, len = state.sortDataAttrs.length; i < len; i++) {
             let found: boolean = false;
             for (let j = 0; j < len; j++) {
@@ -279,7 +279,7 @@ export default class Util {
         }
         return result;
     }
-    public static sortDataTable(attrOrder: TSortDataAttr): string[] {
+    public static sortDataTable(attrOrder: ISortDataAttr): string[] {
         let result: string[] = [];
         if (attrOrder.attr !== '') {
             switch (attrOrder.sort) {
@@ -310,5 +310,61 @@ export default class Util {
             }
         }
         return result;
+    }
+    public static aniRootToKFGroup(aniunitNode: any, aniId: string, parentId: string): IKeyframeGroup {
+        console.log('aniunit node: ', aniunitNode);
+        let kfGroupRoot: IKeyframeGroup = {
+            groupRef: aniunitNode.groupRef,
+            id: aniunitNode.id,
+            aniId: aniId,
+            parentId: parentId,
+            marks: aniunitNode.marks,
+            timingRef: aniunitNode.timingRef,
+            delay: aniunitNode.delay,
+            delayIcon: aniunitNode.delay > 0,
+            newTrack: (typeof aniunitNode.align === 'undefined' && aniunitNode.groupRef === 'root')
+                || aniunitNode.timingRef === TimingSpec.timingRef.previousStart
+            // || aniunitNode.aniId !== Animation.FIRST_ANI_ID //add this after adding static kf
+        }
+        if (typeof aniunitNode.offset !== 'undefined') {
+            kfGroupRoot.offset = aniunitNode.offset;
+            kfGroupRoot.offsetIcon = aniunitNode.offset > 0;
+        }
+        if (typeof aniunitNode.align !== 'undefined') {
+            kfGroupRoot.alignType = aniunitNode.align.type;
+            kfGroupRoot.alignTarget = aniunitNode.align.target;
+        }
+        kfGroupRoot.children = [];
+        kfGroupRoot.keyframes = [];
+        if (aniunitNode.children.length > 0) {
+            if (aniunitNode.children[0].children.length > 0) {
+                aniunitNode.children.forEach((c: any) => {
+                    const kfGroupChild: IKeyframeGroup = this.aniRootToKFGroup(c, aniId, kfGroupRoot.id);
+                    kfGroupRoot.children.push(kfGroupChild);
+                    // kfGroupRoot.numGroup += kfGroupChild.numGroup;
+                    // kfGroupRoot.numKf += kfGroupChild.numKf;
+                })
+                // kfGroupRoot.numGroup += kfGroupRoot.children.length;
+            } else {//children are keyframes
+                aniunitNode.children.forEach((k: any) => kfGroupRoot.keyframes.push(this.aniLeafToKF(k, aniId, kfGroupRoot.id)))
+                // kfGroupRoot.numKf = kfGroupRoot.keyframes.length;
+            }
+        }
+
+        return kfGroupRoot;
+    }
+    public static aniLeafToKF(aniLeaf: any, aniId: string, parentId: string): IKeyframe {
+        //find all the marks animate before marks in aniLeaf
+        const targetIdx = Animation.animations.get(aniId).marksInOrder.indexOf(aniLeaf.marks[0]);
+        const marksThisKf = Animation.animations.get(aniId).marksInOrder.slice(0, targetIdx + 1);
+        return {
+            id: aniLeaf.id,
+            parentId: parentId,
+            delay: aniLeaf.delay,
+            delayIcon: aniLeaf.delay > 0,
+            duration: aniLeaf.end - aniLeaf.start,
+            durationIcon: aniLeaf.timingRef === TimingSpec.timingRef.previousEnd,
+            marksThisKf: marksThisKf
+        }
     }
 }

@@ -56,7 +56,10 @@ export default class Slider {
             return Math.floor(100 * (((a - this.sliderMargin) / this.containerWidth) * (this.domain[1] - this.domain[0]) + this.domain[0])) / 100;
         }
         this.scale = (a: number) => {
-            return Math.floor(100 * (this.containerWidth * (a - this.domain[0]) / (this.domain[1] - this.domain[0]) + this.sliderMargin)) / 100;
+            if(this.domain[1] !== this.domain[0]){
+                return Math.floor(100 * (this.containerWidth * (a - this.domain[0]) / (this.domain[1] - this.domain[0]) + this.sliderMargin)) / 100;
+            }
+            return this.sliderMargin;
         }
     }
 

@@ -133,9 +133,9 @@ export default class ResizablePanel {
     }
 
     public static resizeViewContentSVG(panelId1: string, panelId2: string) {
-        [panelId1, panelId2].forEach((pId) => {
-            Tool.resizeSvgContainer(pId);
-        })
+        // [panelId1, panelId2].forEach((pId) => {
+        //     Tool.resizeSvgContainer(pId);
+        // })
         Tool.resizePlayerContainer();
     }
 

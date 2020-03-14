@@ -4,6 +4,7 @@ import { player } from '../components/player'
 import Rectangular from './rectangular'
 import Lasso from './lasso'
 import Reducer from '../app/reducer'
+import { dragableCanvas } from '../components/widgets/dragableCanvas'
 import * as action from '../app/action'
 
 export default class Tool {
@@ -20,14 +21,14 @@ export default class Tool {
         }
         return true;
     }
-    public static resizeSVG(svg: HTMLElement, w: number, h: number): void {
-        if (svg.getAttribute('viewBox')){
-            let oriViewbox: string[] = svg.getAttribute('viewBox').split(' ');
-            svg.setAttribute('width', w.toString());
-            svg.setAttribute('height', h.toString())
-            svg.setAttribute('viewBox', oriViewbox[0] + ' ' + oriViewbox[1] + ' ' + w + ' ' + h);
-        }
-    }
+    // public static resizeSVG(svg: HTMLElement, w: number, h: number): void {
+    //     if (svg.getAttribute('viewBox')) {
+    //         let oriViewbox: string[] = svg.getAttribute('viewBox').split(' ');
+    //         svg.setAttribute('width', w.toString());
+    //         svg.setAttribute('height', h.toString())
+    //         svg.setAttribute('viewBox', oriViewbox[0] + ' ' + oriViewbox[1] + ' ' + w + ' ' + h);
+    //     }
+    // }
     public static formatTime(time: number): string {
         const minute: number = Math.floor(time / 60000);
         const second: number = Math.floor((time - minute * 60000) / 1000);
@@ -37,7 +38,7 @@ export default class Tool {
         const msStr = ms < 100 ? (ms < 10 ? '00' + ms : '0' + ms) : '' + ms;
         return minStr + ':' + secStr + '.' + msStr;
     }
-    public static svg2canvs(svgElement: HTMLElement, canvas: HTMLCanvasElement) {
+    public static svg2canvas(svgElement: HTMLElement, canvas: HTMLCanvasElement) {
         // const svgString = new XMLSerializer().serializeToString(svgElement);
         const svgString = svgElement.outerHTML;
         const ctx = canvas.getContext("2d");
@@ -73,18 +74,18 @@ export default class Tool {
         return same;
     }
     public static resizeWidgets(svgContainerId: string = ''): void {
-        this.resizeSvgContainer(svgContainerId);
+        // this.resizeSvgContainer(svgContainerId);
         this.resizePlayerContainer();
     }
 
-    public static resizeSvgContainer(svgContainerId: string = ''): void {
-        //resize svg containers
-        const svgs: HTMLElement[] = Array.from(svgContainerId === '' ? document.querySelectorAll('.view-content svg') : document.getElementById(svgContainerId).querySelectorAll('.view-content svg'));
-        svgs.forEach((svg) => {
-            const viewContent: HTMLElement = svg.parentElement;
-            Tool.resizeSVG(svg, viewContent.offsetWidth, viewContent.offsetHeight);
-        })
-    }
+    // public static resizeSvgContainer(svgContainerId: string = ''): void {
+    //     //resize svg containers
+    //     const svgs: HTMLElement[] = Array.from(svgContainerId === '' ? document.querySelectorAll('.view-content svg') : document.getElementById(svgContainerId).querySelectorAll('.view-content svg'));
+    //     svgs.forEach((svg) => {
+    //         const viewContent: HTMLElement = svg.parentElement;
+    //         Tool.resizeSVG(svg, viewContent.offsetWidth, viewContent.offsetHeight);
+    //     })
+    // }
 
     public static resizePlayerContainer(): void {
         //resize player
@@ -139,22 +140,45 @@ export default class Tool {
     public static initRectangularSelection(containerId: string): void {
         const rectangularSelection = new Rectangular();
         document.getElementById(containerId).onmousedown = (downEvt) => {
+            //get the scale of the chart since the size of the svg container is different from that of the chart
+            let scaleW: number = 1, scaleH: number = 1;
+            const svg: any = document.getElementById('visChart');
+            if (svg) {
+                scaleW = parseFloat(svg.getAttribute('width')) / document.getElementById('chartContainer').offsetWidth;
+                scaleH = parseFloat(svg.getAttribute('height')) / document.getElementById('chartContainer').offsetHeight;
+                console.log('svg scale : ', parseFloat(svg.getAttribute('width')), document.getElementById('chartContainer').offsetWidth, scaleW, scaleH);
+            }
+
             const evtTarget: HTMLElement = <HTMLElement>downEvt.target;
             if (evtTarget.id === 'highlightSelectionFrame' ||
                 (evtTarget.classList.contains('mark') && state.selection.includes(evtTarget.id) && state.selection.length > 0)) {//clicked within the selection frame
-
+                dragableCanvas.createCanvas(
+                    document.querySelector('#' + containerId + ' > svg:first-of-type'),
+                    document.getElementById('highlightSelectionFrame').getBoundingClientRect(),
+                    { x: downEvt.pageX, y: downEvt.pageY });
             } else {//doing selection
-                const svg: HTMLElement = document.getElementById('visChart');
                 if (svg) {
                     const svgBBox = svg.getBoundingClientRect();
-                    const rectPosi1: ICoord = { x: downEvt.pageX - svgBBox.x, y: downEvt.pageY - svgBBox.y };
+                    console.log(svgBBox);
+                    let rectPosiPoint1 = svg.createSVGPoint();
+                    rectPosiPoint1.x = downEvt.pageX;
+                    rectPosiPoint1.y = downEvt.pageY;
+                    const rectPosi1: ICoord = rectPosiPoint1.matrixTransform(svg.getScreenCTM().inverse());
+                    // const rectPosi1: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
+                    // const rectPosi1: ICoord = { x: (downEvt.pageX - svgBBox.x) * scaleW, y: (downEvt.pageY - svgBBox.y) * scaleH };
                     let lastMouseX = downEvt.pageX, lastMouseY = downEvt.pageY;
                     let isDragging: boolean = true;
                     //create the selection frame
                     rectangularSelection.createSelectionFrame(svg);
                     document.onmousemove = (moveEvt) => {
                         if (isDragging) {
-                            const rectPosi2: ICoord = { x: moveEvt.pageX - svgBBox.x, y: moveEvt.pageY - svgBBox.y };
+                            let rectPosiPoint2 = svg.createSVGPoint();
+                            rectPosiPoint2.x = moveEvt.pageX;
+                            rectPosiPoint2.y = moveEvt.pageY;
+                            const rectPosi2: ICoord = rectPosiPoint2.matrixTransform(svg.getScreenCTM().inverse());
+
+                            // const rectPosi2: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
+                            // const rectPosi2: ICoord = { x: (moveEvt.pageX - svgBBox.x) * scaleW, y: (moveEvt.pageY - svgBBox.y) * scaleH };
                             const possibleMarks: string[] = rectangularSelection.rectangularSelect({
                                 x1: rectPosi1.x,
                                 y1: rectPosi1.y,
@@ -163,13 +187,17 @@ export default class Tool {
                             }, state.selection);
 
                             //can't move outside the view
-                            if (rectPosi2.x >= 0 && rectPosi2.x <= document.getElementById('chartContainer').offsetWidth && rectPosi2.y >= 0 && rectPosi2.y <= document.getElementById('chartContainer').offsetHeight) {
-                                const tmpX = rectPosi2.x < rectPosi1.x ? rectPosi2.x : rectPosi1.x;
-                                const tmpY = rectPosi2.y < rectPosi1.y ? rectPosi2.y : rectPosi1.y;
+                            if ((moveEvt.pageX - svgBBox.x) >= 0 && 
+                                (moveEvt.pageX - svgBBox.x) <= document.getElementById('chartContainer').offsetWidth && 
+                                (moveEvt.pageY - svgBBox.y) >= 0 && 
+                                (moveEvt.pageY - svgBBox.y) <= document.getElementById('chartContainer').offsetHeight) {
+                                const tmpX = (rectPosi2.x < rectPosi1.x ? rectPosi2.x : rectPosi1.x);
+                                const tmpY = (rectPosi2.y < rectPosi1.y ? rectPosi2.y : rectPosi1.y);
                                 const tmpWidth = Math.abs(rectPosi1.x - rectPosi2.x);
                                 const tmpHeight = Math.abs(rectPosi1.y - rectPosi2.y);
 
                                 /* update the selection frame */
+                                console.log('selection frame: ', tmpX, tmpY);
                                 rectangularSelection.updateSelectionFrame({ x1: tmpX, y1: tmpY, x2: tmpX + tmpWidth, y2: tmpY + tmpHeight });
                             }
                         }
@@ -181,7 +209,11 @@ export default class Tool {
                         State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
                         State.saveHistory();
                         if (Tool.pointDist(lastMouseX, upEvt.pageX, lastMouseY, upEvt.pageY) > mouseMoveThsh) {//doing rect selection
-                            const rectPosi2: ICoord = { x: upEvt.pageX - svgBBox.x, y: upEvt.pageY - svgBBox.y };
+                            let rectPosiPoint2 = svg.createSVGPoint();
+                            rectPosiPoint2.x = upEvt.pageX;
+                            rectPosiPoint2.y = upEvt.pageY;
+                            const rectPosi2: ICoord = rectPosiPoint2.matrixTransform(svg.getScreenCTM().inverse());
+                            // const rectPosi2: ICoord = { x: upEvt.pageX - svgBBox.x, y: upEvt.pageY - svgBBox.y };
                             const selectedMarks: string[] = rectangularSelection.rectangularSelect({
                                 x1: rectPosi1.x,
                                 y1: rectPosi1.y,
@@ -208,6 +240,5 @@ export default class Tool {
             }
         }
     }
-
 
 }

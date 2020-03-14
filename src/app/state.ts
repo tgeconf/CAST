@@ -3,7 +3,7 @@ import { ChartSpec } from 'canis_toolkit'
 import { ViewToolBtn } from '../components/viewWindow'
 import Renderer from './renderer'
 import Tool from '../util/tool'
-import { TSortDataAttr, TDataItem, TKeyframe } from './ds'
+import { ISortDataAttr, IDataItem, IKeyframeGroup } from './ds'
 import Util from './util'
 import Reducer from './reducer'
 import * as action from './action'
@@ -11,8 +11,8 @@ import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/playe
 
 
 export interface IState {
-    sortDataAttrs: TSortDataAttr[]
-    dataTable: Map<string, TDataItem>
+    sortDataAttrs: ISortDataAttr[]
+    dataTable: Map<string, IDataItem>
     dataOrder: string[]
 
     //chart status
@@ -26,17 +26,17 @@ export interface IState {
 
     //video
     lottieAni: AnimationItem
-    hiddenLottie: AnimationItem
-    keyframes: TKeyframe[]
-    groupingAndTiming: any
+    // hiddenLottie: AnimationItem
+    keyframeGroups: IKeyframeGroup[]//each keyframe group correspond to one root from one aniunit
+    // groupingAndTiming: any
 }
 
 /**
  * re-render parts when the state changes
  */
 export class State implements IState {
-    _sortDataAttrs: TSortDataAttr[] = [];
-    _dataTable: Map<string, TDataItem> = new Map();
+    _sortDataAttrs: ISortDataAttr[] = [];
+    _dataTable: Map<string, IDataItem> = new Map();
     _dataOrder: string[]
 
     _charts: string[]
@@ -46,10 +46,10 @@ export class State implements IState {
 
     _lottieAni: AnimationItem
     _hiddenLottie: AnimationItem
-    _keyframes: TKeyframe[]
-    _groupingAndTiming: any
+    _keyframeGroups: IKeyframeGroup[]
+    // _groupingAndTiming: any
 
-    set sortDataAttrs(sda: TSortDataAttr[]) {
+    set sortDataAttrs(sda: ISortDataAttr[]) {
         //compare incoming
         let sameAttrs: boolean = true;
         if (sda.length !== this._sortDataAttrs.length) {
@@ -64,7 +64,7 @@ export class State implements IState {
             Renderer.renderDataAttrs(sda);
         } else {
             //find sort reference
-            const attrAndOrder: TSortDataAttr = Util.findUpdatedAttrOrder(sda);
+            const attrAndOrder: ISortDataAttr = Util.findUpdatedAttrOrder(sda);
             //reorder data items
             Reducer.triger(action.UPDATE_DATA_ORDER, Util.sortDataTable(attrAndOrder));
             Renderer.renderDataTable(this.dataTable);
@@ -73,15 +73,15 @@ export class State implements IState {
         //State.saveHistory(action.UPDATE_DATA_SORT, this._sortDataAttrs);
         this._sortDataAttrs = sda;
     }
-    get sortDataAttrs(): TSortDataAttr[] {
+    get sortDataAttrs(): ISortDataAttr[] {
         return this._sortDataAttrs;
     }
-    set dataTable(dt: Map<string, TDataItem>) {
+    set dataTable(dt: Map<string, IDataItem>) {
         //State.saveHistory(action.UPDATE_DATA_TABLE, this._dataTable);
         this._dataTable = dt;
         Renderer.renderDataTable(this.dataTable);
     }
-    get dataTable(): Map<string, TDataItem> {
+    get dataTable(): Map<string, IDataItem> {
         return this._dataTable;
     }
     set dataOrder(dord: string[]) {
@@ -127,28 +127,31 @@ export class State implements IState {
     get lottieAni(): AnimationItem {
         return this._lottieAni;
     }
-    set hiddenLottie(hl: AnimationItem) {
-        this._hiddenLottie = hl;
+    // set hiddenLottie(hl: AnimationItem) {
+    //     this._hiddenLottie = hl;
+    // }
+    // get hiddenLottie(): AnimationItem {
+    //     return this._hiddenLottie;
+    // }
+    set keyframeGroups(kfts: IKeyframeGroup[]) {
+        if (kfts) {
+            console.log('keyframe tracks: ', kfts);
+            this._keyframeGroups = kfts;
+            //render keyframes
+            Renderer.renderKeyframeTracks(this.keyframeGroups);
+        }
     }
-    get hiddenLottie(): AnimationItem {
-        return this._hiddenLottie;
+    get keyframeGroups(): IKeyframeGroup[] {
+        return this._keyframeGroups;
     }
-    set keyframes(kfs: TKeyframe[]) {
-        this._keyframes = kfs;
-        //render keyframes
-        Renderer.renderKeyframes(this.keyframes, this.hiddenLottie);
-    }
-    get keyframes(): TKeyframe[] {
-        return this._keyframes;
-    }
-    set groupingAndTiming(gat: any) {
-        this._groupingAndTiming = gat;
-        //render timeline
-        Renderer.renderTimeline(this.groupingAndTiming);
-    }
-    get groupingAndTiming(): any {
-        return this._groupingAndTiming;
-    }
+    // set groupingAndTiming(gat: any) {
+    //     this._groupingAndTiming = gat;
+    //     //render timeline
+    //     Renderer.renderTimeline(this.groupingAndTiming);
+    // }
+    // get groupingAndTiming(): any {
+    //     return this._groupingAndTiming;
+    // }
 
     public reset(): void {
         this.sortDataAttrs = [];
@@ -160,9 +163,8 @@ export class State implements IState {
         this.selection = [];
         this.suggestion = true;
 
-        this.keyframes = [];
+        this.keyframeGroups = null;
         // this.groupingAndTiming = null;
-
     }
 
     static stateHistory: Array<Array<[string, any]>> = [];//each step might triger multiple actions, thus each step correspond to one Array<[actionType, stateAttrValue]>
