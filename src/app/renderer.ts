@@ -2,7 +2,7 @@ import { state, IState, State } from './state'
 import { IDataItem, ISortDataAttr, IKeyframeGroup, IKeyframe } from './ds'
 import { ChartSpec, Animation } from 'canis_toolkit'
 import { canisGenerator, canis } from './canisGenerator'
-import ViewWindow, { ViewToolBtn, ViewContent } from '../components/viewWindow'
+import { ViewToolBtn, ViewContent } from '../components/viewWindow'
 import AttrBtn from '../components/widgets/attrBtn'
 import AttrSort from '../components/widgets/attrSort'
 import Util from './util'
@@ -17,9 +17,10 @@ import { Player, player } from '../components/player'
 /** for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 import testSpec from '../assets/tmp/testSpec.json'
 import KfItem from '../components/widgets/kfItem'
-import Timeline from '../components/widgets/timeline'
 import KfTrack from '../components/widgets/kfTrack'
 import KfGroup from '../components/widgets/kfGroup'
+import { KfContainer, kfContainer } from '../components/kfContainer'
+import KfOmit from '../components/widgets/kfOmit'
 /** end for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 
 /**
@@ -129,11 +130,15 @@ export default class Renderer {
         console.log(Animation.animations);
     }
 
+    public static renderKfContainerXSlider(kfGroupWidth: number) {
+        kfContainer.updateKfSlider(kfGroupWidth);
+    }
+
     public static renderKeyframeTracks(kfgs: IKeyframeGroup[]): void {
         //reset
         //TODO: need to check performance
-        document.getElementById(ViewWindow.KF_BG).innerHTML = '';
-        document.getElementById(ViewWindow.KF_FG).innerHTML = '';
+        document.getElementById(KfContainer.KF_BG).innerHTML = '';
+        document.getElementById(KfContainer.KF_FG).innerHTML = '';
         KfTrack.reset();
         KfGroup.reset();
 
@@ -143,13 +148,15 @@ export default class Renderer {
             KfGroup.leafLevel = 0;
             let treeLevel = 0;//use this to decide the background color of each group
             //top-down to init group and kf
-            const rootGroup: KfGroup = this.renderKeyframeGroup(kfg, groupTrackMapping, treeLevel);
+            const rootGroup: KfGroup = this.renderKeyframeGroup(0, 1, kfg, groupTrackMapping, treeLevel);
             //bottom-up to update size and position
             rootGroup.updateGroupPosiAndSize(0, 0, true);
+            const rootGroupBBox: DOMRect = rootGroup.container.getBoundingClientRect();
+            Reducer.triger(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, rootGroupBBox.left + rootGroupBBox.width);
         })
     }
 
-    public static renderKeyframeGroup(kfg: IKeyframeGroup, groupTrackMapping: Map<string, KfTrack[]>, treeLevel: number, parentObj?: KfGroup): KfGroup {
+    public static renderKeyframeGroup(kfgIdx: number, totalKfgNum: number, kfg: IKeyframeGroup, groupTrackMapping: Map<string, KfTrack[]>, treeLevel: number, parentObj?: KfGroup): KfGroup {
         let targetTrack: KfTrack; //foreground of the track used to put the keyframe group
         if (kfg.newTrack) {
             targetTrack = new KfTrack();
@@ -166,27 +173,52 @@ export default class Renderer {
         let kfGroup: KfGroup = new KfGroup();
         kfGroup.children = [];
         console.log(parentObj ? 'has parentobj (group)' : 'dont have (track)');
-        kfGroup.createGroup(kfg, parentObj ? parentObj : targetTrack, targetTrack.trackPosiY, treeLevel);
+        if (kfgIdx === 0 || kfgIdx === 1 || kfgIdx === totalKfgNum - 1) {
+            kfGroup.createGroup(kfg, parentObj ? parentObj : targetTrack, targetTrack.trackPosiY, treeLevel);
+        } else if (totalKfgNum > 3 && kfgIdx === totalKfgNum - 2) {
+            let kfOmit: KfOmit = new KfOmit();
+            kfOmit.createOmit(0, 0, parentObj);
+            parentObj.kfOmit = kfOmit;
+        }
 
         treeLevel++;
         if (treeLevel > KfGroup.leafLevel) {
             KfGroup.leafLevel = treeLevel;
         }
         if (kfg.keyframes.length > 0) {
+            kfGroup.kfNum = kfg.keyframes.length;
             //rendering kf
             console.log('rendering kf');
             let kfPosiX = 0;
-            kfg.keyframes.forEach((k: any) => {
-                let kfItem: KfItem = new KfItem();
-                kfItem.createItem(k, treeLevel, kfGroup, kfPosiX);
-                kfGroup.children.push(kfItem);
-                kfPosiX += KfItem.PADDING + parseFloat(kfItem.kfBg.getAttributeNS(null, 'width'));
+            kfg.keyframes.forEach((k: any, i: number) => {
+                if (i === 0 || i === 1 || i === kfg.keyframes.length - 1) {
+                    let kfItem: KfItem = new KfItem();
+                    kfItem.createItem(k, treeLevel, kfGroup, kfPosiX);
+                    kfGroup.children.push(kfItem);
+                    kfPosiX += kfItem.totalWidth;
+                } else if (kfg.keyframes.length > 3 && i === kfg.keyframes.length - 2) {//generate '...'
+                    const omitNum: number = kfGroup.kfNum - 3;
+                    if (omitNum > 0) {//omitted at least 1 kf
+                        const kfOmit: KfOmit = new KfOmit();
+                        kfOmit.createOmit(kfPosiX, omitNum, kfGroup);
+                        kfPosiX += KfOmit.OMIT_W;
+                    }
+                }
             })
 
         } else if (kfg.children.length > 0) {
             //rendering kf group
             console.log('rendering group');
-            kfg.children.forEach((c: any) => kfGroup.children.push(this.renderKeyframeGroup(c, groupTrackMapping, treeLevel, kfGroup)));
+            kfg.children.forEach((c: any, i: number) => {
+                // if (i === 0 || i === 1 || i === kfg.children.length - 1) {
+                const tmpKfGroup: KfGroup = this.renderKeyframeGroup(i, kfg.children.length, c, groupTrackMapping, treeLevel, kfGroup);
+                kfGroup.children.push(tmpKfGroup);
+                kfGroup.kfNum += tmpKfGroup.kfNum;
+                // } else if(i === kfg.keyframes.length - 2) {
+
+                // }
+
+            });
         }
 
         return kfGroup;

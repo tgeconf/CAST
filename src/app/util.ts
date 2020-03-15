@@ -4,6 +4,7 @@ import Tool from '../util/tool'
 import { ISortDataAttr, IDataItem, IDataDatumType, IKeyframeGroup, IKeyframe } from './ds';
 import AttrBtn from '../components/widgets/attrBtn';
 import AttrSort from '../components/widgets/attrSort';
+import KfItem from '../components/widgets/kfItem';
 
 
 
@@ -338,24 +339,53 @@ export default class Util {
         kfGroupRoot.keyframes = [];
         if (aniunitNode.children.length > 0) {
             if (aniunitNode.children[0].children.length > 0) {
-                aniunitNode.children.forEach((c: any) => {
-                    const kfGroupChild: IKeyframeGroup = this.aniRootToKFGroup(c, aniId, kfGroupRoot.id);
-                    kfGroupRoot.children.push(kfGroupChild);
-                    // kfGroupRoot.numGroup += kfGroupChild.numGroup;
-                    // kfGroupRoot.numKf += kfGroupChild.numKf;
-                })
-                // kfGroupRoot.numGroup += kfGroupRoot.children.length;
+                console.log('testig desing euser: ', aniunitNode.children[0].children[0].definedById);
+                let childrenIsGroup: boolean = true;
+                if (typeof aniunitNode.children[0].children[0].definedById !== 'undefined') {
+                    if (!aniunitNode.children[0].children[0].definedById) {
+                        childrenIsGroup = false;
+                    }
+                }
+                if (childrenIsGroup) {
+                    aniunitNode.children.forEach((c: any) => {
+                        const kfGroupChild: IKeyframeGroup = this.aniRootToKFGroup(c, aniId, kfGroupRoot.id);
+                        kfGroupRoot.children.push(kfGroupChild);
+                    })
+                } else {
+                    console.log('leag nodes: ', aniunitNode, aniunitNode.children);
+                    aniunitNode.children.forEach((k: any) => kfGroupRoot.keyframes.push(this.aniLeafToKF(k, aniId, kfGroupRoot.id)))
+                }
             } else {//children are keyframes
+                // if (aniunitNode.children[0].definedById) {//user defined groupby id
+                console.log('leag nodes: ', aniunitNode, aniunitNode.children);
                 aniunitNode.children.forEach((k: any) => kfGroupRoot.keyframes.push(this.aniLeafToKF(k, aniId, kfGroupRoot.id)))
-                // kfGroupRoot.numKf = kfGroupRoot.keyframes.length;
+                // } else {//auto complete groupby id
+
+                // }
             }
         }
 
         return kfGroupRoot;
     }
     public static aniLeafToKF(aniLeaf: any, aniId: string, parentId: string): IKeyframe {
+        //find the min and max duraion of kfs, in order to render kfs
+        const tmpDuration: number = aniLeaf.end - aniLeaf.start;
+        if (tmpDuration > KfItem.maxDuration) {
+            KfItem.maxDuration = tmpDuration;
+        }
+        if (tmpDuration < KfItem.minDuration) {
+            KfItem.minDuration = tmpDuration;
+        }
         //find all the marks animate before marks in aniLeaf
-        const targetIdx = Animation.animations.get(aniId).marksInOrder.indexOf(aniLeaf.marks[0]);
+        const marksInOrder: string[] = Animation.animations.get(aniId).marksInOrder;
+        let targetIdx: number = 0;
+        aniLeaf.marks.forEach((m: string) => {
+            const tmpIdx: number = marksInOrder.indexOf(m);
+            if (tmpIdx > targetIdx) {
+                targetIdx = tmpIdx;
+            }
+        })
+        // const targetIdx = .indexOf(aniLeaf.marks[0]);
         const marksThisKf = Animation.animations.get(aniId).marksInOrder.slice(0, targetIdx + 1);
         return {
             id: aniLeaf.id,

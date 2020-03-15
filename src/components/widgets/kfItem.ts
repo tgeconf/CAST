@@ -9,6 +9,11 @@ export default class KfItem {
     static KF_H_STEP: number = 6;
     static KF_W_STEP: number = 8;
     static PADDING: number = 6;
+    static BASIC_DURATION_W: number = 20;
+    static DURATION_COLOR: string = '#5e9bd4';
+    static OFFSET_COLOR: string = '#ef7b2a';
+    static minDuration: number = 0;
+    static maxDuration: number = 0;
 
     // public isContinued: boolean
     // public highlightMarks: string[]
@@ -17,7 +22,17 @@ export default class KfItem {
 
     //widgets
     public container: SVGGElement
+    public kfHeight: number
     public kfBg: SVGRectElement
+    public kfWidth: number
+    public offsetIllus: SVGGElement
+    public offsetBg: SVGRectElement
+    public offsetWidth: number
+    public durationIllus: SVGGElement
+    public durationBg: SVGRectElement
+    public durationIcon: SVGGElement
+    public durationWidth: number
+    public totalWidth: number = 0
     public canvas: HTMLCanvasElement
 
     public createItem(kf: IKeyframe, treeLevel: number, parentObj: KfGroup, startX: number): void {
@@ -31,18 +46,45 @@ export default class KfItem {
         // this.keyframeContainer.appendChild(this.canvas);
         this.drawKfBg(treeLevel);
         this.container.appendChild(this.kfBg);
+        this.drawDuration(kf.duration, treeLevel);
+        this.container.appendChild(this.durationIllus);
         const testTxt: SVGTextElement = this.drawChart(kf.marksThisKf);
         this.container.appendChild(testTxt);
         parentObj.container.appendChild(this.container);
     }
 
     public drawKfBg(treeLevel: number) {
+        this.kfWidth = KfItem.KF_WIDTH - treeLevel * KfItem.KF_W_STEP;
+        this.kfHeight = KfItem.KF_HEIGHT - 2 * treeLevel * KfItem.KF_H_STEP;
         this.kfBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         this.kfBg.setAttributeNS(null, 'fill', '#fff');
-        this.kfBg.setAttributeNS(null, 'x', '0');
+        this.kfBg.setAttributeNS(null, 'x', `${typeof this.offsetIllus === 'undefined' ? 0 : this.offsetWidth}`);
         this.kfBg.setAttributeNS(null, 'y', '0');
-        this.kfBg.setAttributeNS(null, 'width', `${KfItem.KF_WIDTH - treeLevel * KfItem.KF_W_STEP}`);
-        this.kfBg.setAttributeNS(null, 'height', `${KfItem.KF_HEIGHT - 2 * treeLevel * KfItem.KF_H_STEP}`);
+        this.kfBg.setAttributeNS(null, 'width', `${this.kfWidth}`);
+        this.kfBg.setAttributeNS(null, 'height', `${this.kfHeight}`);
+        this.totalWidth += this.kfWidth;
+    }
+
+    public drawDuration(duration: number, treeLevel: number) {
+        this.durationWidth = KfItem.BASIC_DURATION_W * duration / KfItem.minDuration;
+        this.durationIllus = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        const transX: number = typeof this.offsetIllus === 'undefined' ? this.kfWidth : this.kfWidth + this.offsetWidth;
+        this.durationIllus.setAttributeNS(null, 'transform', `translate(${transX}, 0)`);
+        this.durationBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        this.durationBg.setAttributeNS(null, 'x', '0');
+        this.durationBg.setAttributeNS(null, 'y', '0');
+        this.durationBg.setAttributeNS(null, 'fill', KfItem.DURATION_COLOR);
+        this.durationBg.setAttributeNS(null, 'width', `${this.durationWidth}`);
+        this.durationBg.setAttributeNS(null, 'height', `${this.kfHeight}`);
+        this.durationIllus.appendChild(this.durationBg);
+        this.totalWidth += this.durationWidth;
+        this.durationIcon = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.durationIcon.setAttributeNS(null, 'transform', `translate(${this.durationWidth / 2 - 6}, ${this.kfHeight / 2 - 6})`);
+        const durationIconPolygon: SVGPolygonElement = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        durationIconPolygon.setAttributeNS(null, 'fill', '#fff');
+        durationIconPolygon.setAttributeNS(null, 'points', '10.1,0 10.1,4.1 5.6,0.1 4.3,1.5 8.3,5.1 0,5.1 0,6.9 8.3,6.9 4.3,10.5 5.6,11.9 10.1,7.9 10.1,12 12,12 12,0 ');
+        this.durationIcon.appendChild(durationIconPolygon);
+        this.durationIllus.appendChild(this.durationIcon);
     }
 
     public drawChart(marks: string[]) {
@@ -57,12 +99,5 @@ export default class KfItem {
             txt.appendChild(tspan);
         }
         return txt;
-    }
-
-    public createEllipsis(): HTMLSpanElement {
-        const ellipsisContainer: HTMLSpanElement = document.createElement('span');
-        ellipsisContainer.className = 'ellipsis-container';
-        ellipsisContainer.innerHTML = '...';
-        return ellipsisContainer;
     }
 }

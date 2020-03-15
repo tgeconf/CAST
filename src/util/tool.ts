@@ -92,6 +92,14 @@ export default class Tool {
         player.resizePlayer(player.widget.clientWidth - 160);
     }
 
+    public static screenToSvgCoords(svg: any, x: number, y: number): ICoord {
+        let rectPosiPoint1 = svg.createSVGPoint();
+        rectPosiPoint1.x = x;
+        rectPosiPoint1.y = y;
+        return rectPosiPoint1.matrixTransform(svg.getScreenCTM().inverse());
+    }
+
+    //TODO: coord problem
     public static initLassoSelection(containerId: string): void {
         document.getElementById(containerId).onmousedown = (downEvt) => {
             const lassoSelection = new Lasso();
@@ -160,25 +168,23 @@ export default class Tool {
                 if (svg) {
                     const svgBBox = svg.getBoundingClientRect();
                     console.log(svgBBox);
-                    let rectPosiPoint1 = svg.createSVGPoint();
-                    rectPosiPoint1.x = downEvt.pageX;
-                    rectPosiPoint1.y = downEvt.pageY;
-                    const rectPosi1: ICoord = rectPosiPoint1.matrixTransform(svg.getScreenCTM().inverse());
-                    // const rectPosi1: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
-                    // const rectPosi1: ICoord = { x: (downEvt.pageX - svgBBox.x) * scaleW, y: (downEvt.pageY - svgBBox.y) * scaleH };
+                    // let rectPosiPoint1 = svg.createSVGPoint();
+                    // rectPosiPoint1.x = downEvt.pageX;
+                    // rectPosiPoint1.y = downEvt.pageY;
+                    // const rectPosi1: ICoord = rectPosiPoint1.matrixTransform(svg.getScreenCTM().inverse());
+                    const rectPosi1: ICoord = this.screenToSvgCoords(svg, downEvt.pageX, downEvt.pageY);
                     let lastMouseX = downEvt.pageX, lastMouseY = downEvt.pageY;
                     let isDragging: boolean = true;
                     //create the selection frame
                     rectangularSelection.createSelectionFrame(svg);
                     document.onmousemove = (moveEvt) => {
                         if (isDragging) {
-                            let rectPosiPoint2 = svg.createSVGPoint();
-                            rectPosiPoint2.x = moveEvt.pageX;
-                            rectPosiPoint2.y = moveEvt.pageY;
-                            const rectPosi2: ICoord = rectPosiPoint2.matrixTransform(svg.getScreenCTM().inverse());
+                            // let rectPosiPoint2 = svg.createSVGPoint();
+                            // rectPosiPoint2.x = moveEvt.pageX;
+                            // rectPosiPoint2.y = moveEvt.pageY;
+                            // const rectPosi2: ICoord = rectPosiPoint2.matrixTransform(svg.getScreenCTM().inverse());
+                            const rectPosi2: ICoord = this.screenToSvgCoords(svg, moveEvt.pageX, moveEvt.pageY);
 
-                            // const rectPosi2: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
-                            // const rectPosi2: ICoord = { x: (moveEvt.pageX - svgBBox.x) * scaleW, y: (moveEvt.pageY - svgBBox.y) * scaleH };
                             const possibleMarks: string[] = rectangularSelection.rectangularSelect({
                                 x1: rectPosi1.x,
                                 y1: rectPosi1.y,
@@ -187,9 +193,9 @@ export default class Tool {
                             }, state.selection);
 
                             //can't move outside the view
-                            if ((moveEvt.pageX - svgBBox.x) >= 0 && 
-                                (moveEvt.pageX - svgBBox.x) <= document.getElementById('chartContainer').offsetWidth && 
-                                (moveEvt.pageY - svgBBox.y) >= 0 && 
+                            if ((moveEvt.pageX - svgBBox.x) >= 0 &&
+                                (moveEvt.pageX - svgBBox.x) <= document.getElementById('chartContainer').offsetWidth &&
+                                (moveEvt.pageY - svgBBox.y) >= 0 &&
                                 (moveEvt.pageY - svgBBox.y) <= document.getElementById('chartContainer').offsetHeight) {
                                 const tmpX = (rectPosi2.x < rectPosi1.x ? rectPosi2.x : rectPosi1.x);
                                 const tmpY = (rectPosi2.y < rectPosi1.y ? rectPosi2.y : rectPosi1.y);
@@ -209,11 +215,11 @@ export default class Tool {
                         State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
                         State.saveHistory();
                         if (Tool.pointDist(lastMouseX, upEvt.pageX, lastMouseY, upEvt.pageY) > mouseMoveThsh) {//doing rect selection
-                            let rectPosiPoint2 = svg.createSVGPoint();
-                            rectPosiPoint2.x = upEvt.pageX;
-                            rectPosiPoint2.y = upEvt.pageY;
-                            const rectPosi2: ICoord = rectPosiPoint2.matrixTransform(svg.getScreenCTM().inverse());
-                            // const rectPosi2: ICoord = { x: upEvt.pageX - svgBBox.x, y: upEvt.pageY - svgBBox.y };
+                            // let rectPosiPoint2 = svg.createSVGPoint();
+                            // rectPosiPoint2.x = upEvt.pageX;
+                            // rectPosiPoint2.y = upEvt.pageY;
+                            // const rectPosi2: ICoord = rectPosiPoint2.matrixTransform(svg.getScreenCTM().inverse());
+                            const rectPosi2: ICoord = this.screenToSvgCoords(svg, upEvt.pageX, upEvt.pageY);
                             const selectedMarks: string[] = rectangularSelection.rectangularSelect({
                                 x1: rectPosi1.x,
                                 y1: rectPosi1.y,

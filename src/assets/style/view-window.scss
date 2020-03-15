@@ -325,7 +325,7 @@
     margin: calc(var(--title-height) + 4px + var(--view-content-margin-v)) 0 var(--view-content-margin-v);
 }
 
-.kf-container {
+.kf-panel {
     width: calc(100% - 20px);
     height: 100%;
     margin-left: 10px;
@@ -333,42 +333,37 @@
     overflow-y: hidden;
 }
 
-.kf-tracks-container {
-    width: 100%;
-    height: 100%;
-}
-
 .kf-title {
     width: 100px;
 }
 
-.timeline-container {
-    width: 100%;
-    flex: 1;
-    box-sizing: border-box;
-    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.1) inset;
-    display: flex;
-    flex-direction: column;
-    .timeline-svg-wrapper {
-        width: 100%;
-        flex: 1;
-        overflow-y: auto;
-        overflow-x: hidden;
-        svg {
-            width: 100%;
-        }
-    }
-    .time-svg-wrapper {
-        background: var(--gray-l16);
-        width: 100%;
-        height: 26px;
-        overflow: hidden;
-        svg {
-            width: 100%;
-            height: 100%;
-        }
-    }
-}
+// .timeline-container {
+//     width: 100%;
+//     flex: 1;
+//     box-sizing: border-box;
+//     box-shadow: 0 3px 3px rgba(0, 0, 0, 0.1) inset;
+//     display: flex;
+//     flex-direction: column;
+//     .timeline-svg-wrapper {
+//         width: 100%;
+//         flex: 1;
+//         overflow-y: auto;
+//         overflow-x: hidden;
+//         svg {
+//             width: 100%;
+//         }
+//     }
+//     .time-svg-wrapper {
+//         background: var(--gray-l16);
+//         width: 100%;
+//         height: 26px;
+//         overflow: hidden;
+//         svg {
+//             width: 100%;
+//             height: 100%;
+//         }
+//     }
+// }
 
 .single-select {
     cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QAAKqNIzIAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAHdElNRQfjBQ0LMh59pBLSAAAAXUlEQVQoz4XRyw2AQAhF0buwWwvxgxttwD5sxWJwYTSTYebBioQTIHkAcDAj68TZMiDJCwT5gGMZ6JASOGsGGqQGgUTgLBlwRoChOmZcf3/HDY3/S2CggAxrZ+qNHtmgUBreRHxSAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE5LTA1LTEzVDA5OjUwOjMwKzAyOjAwlrKGxgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxOS0wNS0xM1QwOTo1MDozMCswMjowMOfvPnoAAAAZdEVYdFNvZnR3YXJlAHd3dy5pbmtzY2FwZS5vcmeb7jwaAAAAAElFTkSuQmCC"),

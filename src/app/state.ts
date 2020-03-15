@@ -23,6 +23,7 @@ export interface IState {
 
     //keyframe status
     // keyframeStatus: IKeyframe
+    kfGroupWidth: number // width of all kf groups
 
     //video
     lottieAni: AnimationItem
@@ -43,6 +44,8 @@ export class State implements IState {
     _tool: string
     _selection: string[]
     _suggestion: boolean
+
+    _kfGroupWidth: number
 
     _lottieAni: AnimationItem
     _hiddenLottie: AnimationItem
@@ -120,6 +123,13 @@ export class State implements IState {
     }
     get suggestion(): boolean {
         return this._suggestion;
+    }
+    set kfGroupWidth(kfgw: number) {
+        this._kfGroupWidth = kfgw;
+        Renderer.renderKfContainerXSlider(this.kfGroupWidth);
+    }
+    get kfGroupWidth(): number {
+        return this._kfGroupWidth;
     }
     set lottieAni(lai: AnimationItem) {
         this._lottieAni = lai;

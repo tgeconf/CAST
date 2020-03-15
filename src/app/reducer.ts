@@ -2,8 +2,8 @@ import { state } from './state'
 import { IDataItem, ISortDataAttr, IKeyframeGroup } from './ds'
 import * as action from './action'
 import Util from './util'
-import Renderer from './renderer';
 import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie'
+import KfItem from '../components/widgets/kfItem'
 export default class Reducer {
     static list: any = {};
 
@@ -58,33 +58,15 @@ Reducer.listen(action.UPDATE_LOTTIE, (lai: AnimationItem) => {
     console.log('updating lottie');
     state.lottieAni = lai;
 })
-// Reducer.listen(action.UPDATE_HIDDEN_LOTTIE, (hl: AnimationItem) => {
-//     state.hiddenLottie = hl;
-// })
 Reducer.listen(action.UPDATE_KEYFRAME_TRACKS, (animations: Map<string, any>) => {
     console.log('all animations: ', animations);
+    //reset the min and max duraiton of KfItem
+    KfItem.minDuration = 1000000;
+    KfItem.maxDuration = 0;
     const rootGroup: IKeyframeGroup[] = [...animations].map((a: any) => Util.aniRootToKFGroup(a[1].root, a[0], ''));
     console.log('roots to generate the keyframe ', rootGroup);
     state.keyframeGroups = rootGroup;
-    // const frameTimeArr: Array<[number, boolean]> = [[0, true], ...frameTime];
-    // frameTimeArr.sort((a, b) => a[0] - b[0]);
-    // let isContinued: boolean = true;
-    // let keyframes: TKeyframe[] = [];
-    // frameTimeArr.forEach(ft => {
-    //     if (ft[1]) {
-    //         keyframes.push(<TKeyframe>{
-    //             continued: isContinued,
-    //             timePoint: ft[0],
-    //         })
-    //     }
-    //     isContinued = ft[1];
-    // })
-    // state.keyframes = keyframes;
 })
-// Reducer.listen(action.UPDATE_GEOUPING_AND_TIMING, (animations: Map<string, any>) => {
-//     const gat: any = [];
-//     animations.forEach((ani: any, selection: string) => {
-//         gat.push(ani);
-//     })
-//     state.groupingAndTiming = gat;
-// })
+Reducer.listen(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, (kfGroupWidth: number) => {
+    state.kfGroupWidth = kfGroupWidth;
+})

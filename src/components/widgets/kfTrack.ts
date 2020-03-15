@@ -1,6 +1,4 @@
-import ViewWindow from "../viewWindow";
-
-// import '../../assets/style/kfTrack.scss'
+import { KfContainer } from "../kfContainer";
 
 export default class KfTrack {
     static TRACK_HEIGHT: number = 180;
@@ -25,13 +23,13 @@ export default class KfTrack {
         this.trackBgContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.trackBgContainer.setAttributeNS(null, 'transform', `translate(0, ${this.trackPosiY})`);
         this.trackBgContainer.setAttributeNS(null, 'id', `trackBg${KfTrack.trackIdx}`);
-        document.getElementById(ViewWindow.KF_BG).appendChild(this.trackBgContainer);
+        document.getElementById(KfContainer.KF_BG).appendChild(this.trackBgContainer);
 
         this.trackId = `trackFg${KfTrack.trackIdx}`;
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.container.setAttributeNS(null, 'transform', `translate(0, ${numExistTracks * KfTrack.TRACK_HEIGHT})`);
         this.container.setAttributeNS(null, 'id', this.trackId);
-        document.getElementById(ViewWindow.KF_FG).appendChild(this.container);
+        document.getElementById(KfContainer.KF_FG).appendChild(this.container);
 
         KfTrack.trackIdx++;
 
@@ -39,7 +37,7 @@ export default class KfTrack {
         this.trackBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         this.trackBg.setAttributeNS(null, 'x', '0');
         this.trackBg.setAttributeNS(null, 'y', '0');
-        this.trackBg.setAttributeNS(null, 'width', '2000');
+        this.trackBg.setAttributeNS(null, 'width', '20000');
         this.trackBg.setAttributeNS(null, 'height', `${KfTrack.TRACK_HEIGHT}`);
         this.trackBg.setAttributeNS(null, 'fill', '#efefef');
         this.trackBgContainer.appendChild(this.trackBg);
@@ -47,7 +45,7 @@ export default class KfTrack {
         //draw split line
         this.splitLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         this.splitLine.setAttributeNS(null, 'x1', '0');
-        this.splitLine.setAttributeNS(null, 'x2', '2000');
+        this.splitLine.setAttributeNS(null, 'x2', '20000');
         this.splitLine.setAttributeNS(null, 'y1', `${KfTrack.TRACK_HEIGHT}`);
         this.splitLine.setAttributeNS(null, 'y2', `${KfTrack.TRACK_HEIGHT}`);
         this.splitLine.setAttributeNS(null, 'stroke', '#c9c9c9');

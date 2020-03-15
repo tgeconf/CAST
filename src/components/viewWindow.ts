@@ -6,6 +6,7 @@ import { state, State } from '../app/state'
 import * as action from '../app/action'
 import Reducer from '../app/reducer'
 import Timeline from './widgets/timeline'
+import { kfContainer } from './kfContainer'
 
 interface IViewBtnProp {
     title?: string,
@@ -18,9 +19,6 @@ export default class ViewWindow {
     static CHART_VIEW_TITLE: string = 'chart';
     static VIDEO_VIEW_TITLE: string = 'animation';
     static HIDDEN_LOTTIE_ID: string = 'hiddenLottie';
-    static KF_LIST_ID: string = 'kfList';
-    static KF_BG: string = 'kfBgG';
-    static KF_FG: string = 'kfFgG';
     static KF_VIEW_TITLE: string = '';
 
     viewTitle: string;
@@ -310,19 +308,12 @@ export class ViewContent {
     }
 
     public createKeyframeListContainer(): HTMLDivElement {
-        const keyframeContainer: HTMLDivElement = document.createElement('div');
-        keyframeContainer.className = 'kf-container';
-        const keyframeTrackContainer: SVGElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        keyframeTrackContainer.id = ViewWindow.KF_LIST_ID;
-        keyframeTrackContainer.setAttributeNS(null, 'class', 'kf-tracks-container');
-        const kfBgG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        kfBgG.setAttributeNS(null, 'id', ViewWindow.KF_BG);
-        keyframeTrackContainer.appendChild(kfBgG);
-        const kfFgG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        kfFgG.setAttributeNS(null, 'id', ViewWindow.KF_FG);
-        keyframeTrackContainer.appendChild(kfFgG);
-        keyframeContainer.appendChild(keyframeTrackContainer);
-        return keyframeContainer;
+        const keyframePanel: HTMLDivElement = document.createElement('div');
+        keyframePanel.className = 'kf-panel';
+        kfContainer.createKfContainer();
+        keyframePanel.appendChild(kfContainer.kfWidgetContainer);
+
+        return keyframePanel;
     }
 
     public createTimelineContainer(): HTMLDivElement {
