@@ -1,5 +1,5 @@
 import { state } from './state'
-import { IDataItem, ISortDataAttr, IKeyframeGroup } from './ds'
+import { IDataItem, ISortDataAttr, IKeyframeGroup, IKfGroupSize } from './ds'
 import * as action from './action'
 import Util from './util'
 import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie'
@@ -63,10 +63,10 @@ Reducer.listen(action.UPDATE_KEYFRAME_TRACKS, (animations: Map<string, any>) => 
     //reset the min and max duraiton of KfItem
     KfItem.minDuration = 1000000;
     KfItem.maxDuration = 0;
-    const rootGroup: IKeyframeGroup[] = [...animations].map((a: any) => Util.aniRootToKFGroup(a[1].root, a[0], ''));
+    const rootGroup: IKeyframeGroup[] = [...animations].map((a: any) => Util.aniRootToKFGroup(a[1].root, a[0], '', -1));
     console.log('roots to generate the keyframe ', rootGroup);
     state.keyframeGroups = rootGroup;
 })
-Reducer.listen(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, (kfGroupWidth: number) => {
-    state.kfGroupWidth = kfGroupWidth;
+Reducer.listen(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, (kfGroupSize: IKfGroupSize) => {
+    state.kfGroupSize = kfGroupSize;
 })

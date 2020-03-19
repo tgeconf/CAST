@@ -29,6 +29,7 @@ export default class KfTrack {
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.container.setAttributeNS(null, 'transform', `translate(0, ${numExistTracks * KfTrack.TRACK_HEIGHT})`);
         this.container.setAttributeNS(null, 'id', this.trackId);
+        this.container.setAttributeNS(null, 'class', 'kf-track');
         document.getElementById(KfContainer.KF_FG).appendChild(this.container);
 
         KfTrack.trackIdx++;

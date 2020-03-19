@@ -1,12 +1,11 @@
 import { state, IState, State } from './state'
-import { IDataItem, ISortDataAttr, IKeyframeGroup, IKeyframe } from './ds'
+import { IDataItem, ISortDataAttr, IKeyframeGroup, IKeyframe, IKfGroupSize } from './ds'
 import { ChartSpec, Animation } from 'canis_toolkit'
 import { canisGenerator, canis } from './canisGenerator'
 import { ViewToolBtn, ViewContent } from '../components/viewWindow'
 import AttrBtn from '../components/widgets/attrBtn'
 import AttrSort from '../components/widgets/attrSort'
 import Util from './util'
-import Tool from '../util/tool'
 import Reducer from './reducer'
 import * as action from './action'
 import SelectableTable from '../components/widgets/selectableTable'
@@ -130,8 +129,8 @@ export default class Renderer {
         console.log(Animation.animations);
     }
 
-    public static renderKfContainerXSlider(kfGroupWidth: number) {
-        kfContainer.updateKfSlider(kfGroupWidth);
+    public static renderKfContainerSliders(kfgSize: IKfGroupSize) {
+        kfContainer.updateKfSlider(kfgSize);
     }
 
     public static renderKeyframeTracks(kfgs: IKeyframeGroup[]): void {
@@ -152,13 +151,15 @@ export default class Renderer {
             //bottom-up to update size and position
             rootGroup.updateGroupPosiAndSize(0, 0, true);
             const rootGroupBBox: DOMRect = rootGroup.container.getBoundingClientRect();
-            Reducer.triger(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, rootGroupBBox.left + rootGroupBBox.width);
+            Reducer.triger(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, { width: rootGroupBBox.width, height: rootGroupBBox.height });
+            // Reducer.triger(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, rootGroupBBox.left + rootGroupBBox.width);
         })
     }
 
     public static renderKeyframeGroup(kfgIdx: number, totalKfgNum: number, kfg: IKeyframeGroup, groupTrackMapping: Map<string, KfTrack[]>, treeLevel: number, parentObj?: KfGroup): KfGroup {
         let targetTrack: KfTrack; //foreground of the track used to put the keyframe group
         if (kfg.newTrack) {
+            console.log('creating ew track', kfg);
             targetTrack = new KfTrack();
             targetTrack.createTrack();
             if (typeof groupTrackMapping.get(kfg.aniId) === 'undefined') {
@@ -166,8 +167,10 @@ export default class Renderer {
             }
             groupTrackMapping.get(kfg.aniId).push(targetTrack);
         } else {
+            console.log('using existing track', kfg);
             targetTrack = groupTrackMapping.get(kfg.aniId)[0];
         }
+        console.log('track posi Y: ', targetTrack.trackPosiY);
 
         //draw group container
         let kfGroup: KfGroup = new KfGroup();
@@ -177,7 +180,7 @@ export default class Renderer {
             kfGroup.createGroup(kfg, parentObj ? parentObj : targetTrack, targetTrack.trackPosiY, treeLevel);
         } else if (totalKfgNum > 3 && kfgIdx === totalKfgNum - 2) {
             let kfOmit: KfOmit = new KfOmit();
-            kfOmit.createOmit(0, 0, parentObj);
+            kfOmit.createOmit(0, 0, parentObj, false, false);
             parentObj.kfOmit = kfOmit;
         }
 
@@ -200,24 +203,18 @@ export default class Renderer {
                     const omitNum: number = kfGroup.kfNum - 3;
                     if (omitNum > 0) {//omitted at least 1 kf
                         const kfOmit: KfOmit = new KfOmit();
-                        kfOmit.createOmit(kfPosiX, omitNum, kfGroup);
+                        kfOmit.createOmit(kfPosiX, omitNum, kfGroup, kfg.keyframes[0].delayIcon, kfg.keyframes[0].durationIcon, kfGroup.children[0].kfHeight / 2);
                         kfPosiX += KfOmit.OMIT_W;
                     }
                 }
             })
-
         } else if (kfg.children.length > 0) {
             //rendering kf group
             console.log('rendering group');
             kfg.children.forEach((c: any, i: number) => {
-                // if (i === 0 || i === 1 || i === kfg.children.length - 1) {
                 const tmpKfGroup: KfGroup = this.renderKeyframeGroup(i, kfg.children.length, c, groupTrackMapping, treeLevel, kfGroup);
                 kfGroup.children.push(tmpKfGroup);
                 kfGroup.kfNum += tmpKfGroup.kfNum;
-                // } else if(i === kfg.keyframes.length - 2) {
-
-                // }
-
             });
         }
 

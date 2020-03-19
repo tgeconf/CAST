@@ -5,7 +5,6 @@ import ViewWindow from './components/viewWindow'
 import FloatingWindow from './components/floatingWindow'
 import { state } from './app/state'
 import Tool from './util/tool'
-import Timeline from './components/widgets/timeline'
 
 function app(): HTMLDivElement {
     const outerWrapper: HTMLDivElement = document.createElement('div');

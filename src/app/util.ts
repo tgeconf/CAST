@@ -312,7 +312,7 @@ export default class Util {
         }
         return result;
     }
-    public static aniRootToKFGroup(aniunitNode: any, aniId: string, parentId: string): IKeyframeGroup {
+    public static aniRootToKFGroup(aniunitNode: any, aniId: string, parentId: string, parentChildIdx: number): IKeyframeGroup {
         console.log('aniunit node: ', aniunitNode);
         let kfGroupRoot: IKeyframeGroup = {
             groupRef: aniunitNode.groupRef,
@@ -324,7 +324,7 @@ export default class Util {
             delay: aniunitNode.delay,
             delayIcon: aniunitNode.delay > 0,
             newTrack: (typeof aniunitNode.align === 'undefined' && aniunitNode.groupRef === 'root')
-                || aniunitNode.timingRef === TimingSpec.timingRef.previousStart
+                || (aniunitNode.timingRef === TimingSpec.timingRef.previousStart && parentChildIdx !== 0)
             // || aniunitNode.aniId !== Animation.FIRST_ANI_ID //add this after adding static kf
         }
         if (typeof aniunitNode.offset !== 'undefined') {
@@ -347,8 +347,8 @@ export default class Util {
                     }
                 }
                 if (childrenIsGroup) {
-                    aniunitNode.children.forEach((c: any) => {
-                        const kfGroupChild: IKeyframeGroup = this.aniRootToKFGroup(c, aniId, kfGroupRoot.id);
+                    aniunitNode.children.forEach((c: any, i: number) => {
+                        const kfGroupChild: IKeyframeGroup = this.aniRootToKFGroup(c, aniId, kfGroupRoot.id, i);
                         kfGroupRoot.children.push(kfGroupChild);
                     })
                 } else {
@@ -385,7 +385,6 @@ export default class Util {
                 targetIdx = tmpIdx;
             }
         })
-        // const targetIdx = .indexOf(aniLeaf.marks[0]);
         const marksThisKf = Animation.animations.get(aniId).marksInOrder.slice(0, targetIdx + 1);
         return {
             id: aniLeaf.id,
@@ -394,7 +393,8 @@ export default class Util {
             delayIcon: aniLeaf.delay > 0,
             duration: aniLeaf.end - aniLeaf.start,
             durationIcon: aniLeaf.timingRef === TimingSpec.timingRef.previousEnd,
-            marksThisKf: marksThisKf
+            allCurrentMarks: marksThisKf,
+            marksThisKf: aniLeaf.marks
         }
     }
 }

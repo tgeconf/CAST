@@ -3,7 +3,7 @@ import { ChartSpec } from 'canis_toolkit'
 import { ViewToolBtn } from '../components/viewWindow'
 import Renderer from './renderer'
 import Tool from '../util/tool'
-import { ISortDataAttr, IDataItem, IKeyframeGroup } from './ds'
+import { ISortDataAttr, IDataItem, IKeyframeGroup, IKfGroupSize } from './ds'
 import Util from './util'
 import Reducer from './reducer'
 import * as action from './action'
@@ -23,7 +23,7 @@ export interface IState {
 
     //keyframe status
     // keyframeStatus: IKeyframe
-    kfGroupWidth: number // width of all kf groups
+    kfGroupSize: IKfGroupSize // size of all kf groups
 
     //video
     lottieAni: AnimationItem
@@ -45,7 +45,7 @@ export class State implements IState {
     _selection: string[]
     _suggestion: boolean
 
-    _kfGroupWidth: number
+    _kfGroupSize: IKfGroupSize
 
     _lottieAni: AnimationItem
     _hiddenLottie: AnimationItem
@@ -124,12 +124,12 @@ export class State implements IState {
     get suggestion(): boolean {
         return this._suggestion;
     }
-    set kfGroupWidth(kfgw: number) {
-        this._kfGroupWidth = kfgw;
-        Renderer.renderKfContainerXSlider(this.kfGroupWidth);
+    set kfGroupSize(kfgSize: IKfGroupSize) {
+        this._kfGroupSize = kfgSize;
+        Renderer.renderKfContainerSliders(this.kfGroupSize);
     }
-    get kfGroupWidth(): number {
-        return this._kfGroupWidth;
+    get kfGroupSize(): IKfGroupSize {
+        return this._kfGroupSize;
     }
     set lottieAni(lai: AnimationItem) {
         this._lottieAni = lai;

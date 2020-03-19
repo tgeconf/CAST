@@ -1,30 +1,7 @@
-.keyframe-base-container{
-    float: left;
-	height: 150px;
-	border-radius: 4px;
+.transparent-mark {
+    opacity: 0;
 }
 
-.keyframe-item-container {
-    @extend .keyframe-base-container;
-	width: 240px;
-	background: var(--gray-l15);
-	box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-	margin: 0 4px;
-	transition: all 0.2s cubic-bezier(0.445, 0.05, 0.55, 0.95);
-	canvas {
-		width: 100%;
-		height: 100%;
-		border-radius: 4px;
-	}
-	&:hover {
-        cursor: pointer;
-        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
-        background: var(--gray-l10);
-	}
-}
-
-.ellipsis-container {
-	@extend .keyframe-base-container;
-	width: 12px;
-	line-height: 150px;
+.translucent-mark {
+    opacity: 0.2;
 }

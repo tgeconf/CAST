@@ -38,27 +38,50 @@ export default class Tool {
         const msStr = ms < 100 ? (ms < 10 ? '00' + ms : '0' + ms) : '' + ms;
         return minStr + ':' + secStr + '.' + msStr;
     }
-    public static svg2canvas(svgElement: HTMLElement, canvas: HTMLCanvasElement) {
+    public static svg2url(svgElement: HTMLElement): string {
         // const svgString = new XMLSerializer().serializeToString(svgElement);
         const svgString = svgElement.outerHTML;
-        const ctx = canvas.getContext("2d");
-        const img = new Image();
+        // const img = new Image();
         const svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
         const url = URL.createObjectURL(svg);
-        img.onload = function () {
-            let dx = 0, dy = 0, scaleWidth = canvas.width, scaleHeight = canvas.width * (img.height / img.width);
-            if (scaleHeight <= canvas.height) {
-                dy = (canvas.height - scaleHeight) / 2;
-            } else {
-                scaleHeight = canvas.height;
-                scaleWidth = canvas.height * (img.width / img.height);
-                dx = (canvas.width - scaleWidth) / 2;
-            }
-            ctx.drawImage(img, dx, dy, scaleWidth, scaleHeight);
-            URL.revokeObjectURL(url);
-        };
-        img.src = url;
+        // img.onload = function () {
+        //     let dx = 0, dy = 0, scaleWidth = canvas.width, scaleHeight = canvas.width * (img.height / img.width);
+        //     if (scaleHeight <= canvas.height) {
+        //         dy = (canvas.height - scaleHeight) / 2;
+        //     } else {
+        //         scaleHeight = canvas.height;
+        //         scaleWidth = canvas.height * (img.width / img.height);
+        //         dx = (canvas.width - scaleWidth) / 2;
+        //     }
+        //     ctx.drawImage(img, dx, dy, scaleWidth, scaleHeight);
+        //     URL.revokeObjectURL(url);
+        // };
+        // img.src = url;
+        return url;
     }
+
+    // public static svg2url(svgElement: HTMLElement, canvas: HTMLCanvasElement): string {
+    //     // const svgString = new XMLSerializer().serializeToString(svgElement);
+    //     const svgString = svgElement.outerHTML;
+    //     const ctx = canvas.getContext("2d");
+    //     const img = new Image();
+    //     const svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+    //     const url = URL.createObjectURL(svg);
+    //     img.onload = function () {
+    //         let dx = 0, dy = 0, scaleWidth = canvas.width, scaleHeight = canvas.width * (img.height / img.width);
+    //         if (scaleHeight <= canvas.height) {
+    //             dy = (canvas.height - scaleHeight) / 2;
+    //         } else {
+    //             scaleHeight = canvas.height;
+    //             scaleWidth = canvas.height * (img.width / img.height);
+    //             dx = (canvas.width - scaleWidth) / 2;
+    //         }
+    //         ctx.drawImage(img, dx, dy, scaleWidth, scaleHeight);
+    //         URL.revokeObjectURL(url);
+    //     };
+    //     img.src = url;
+    //     return url;
+    // }
 
     public static identicalArrays(arr1: any[], arr2: any[]): boolean {
         let same: boolean = true;

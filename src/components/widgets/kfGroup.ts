@@ -35,6 +35,7 @@ export default class KfGroup {
      * @param p : init position of the root group
      */
     public createGroup(kfg: IKeyframeGroup, parentObj: KfGroup | KfTrack, posiY: number, treeLevel: number): void {
+        console.log('creating group based on: ', kfg);
         if (parentObj.container) {
             // console.log('number group and kf: ', kfg.numGroup, kfg.numKf);
             this.newTrack = kfg.newTrack;
@@ -72,45 +73,42 @@ export default class KfGroup {
                             if (this.children.length > 3 && i === this.children.length - 1) {
                                 this.children[i].updateGroupPosiAndSize(this.children[1].posiX, this.children[1].width + KfOmit.OMIT_W, false);
                             }
+                            console.log('updating ', i);
                             this.children[i].updateGroupPosiAndSize(this.children[i - 1].posiX, this.children[i - 1].width, false);
                         }
                     } else if (this.children.length > 3 && i === this.children.length - 2) {
-                        // this.kfOmit = new KfOmit();
-                        // this.kfOmit.createOmit()
+                        this.kfOmit.updateThumbnail(this.children[0].kfOmit.hasOffset, this.children[0].kfOmit.hasDuration);
                         this.kfOmit.updateNum(this.kfNum - 3);
-                        this.kfOmit.updateStartX(this.children[1].posiX + this.children[1].width);
+                        this.kfOmit.updateTrans(this.children[1].posiX + this.children[1].width, KfGroup.PADDING + this.children[0].container.getBoundingClientRect().height / 2);
                     }
                 })
             }
             //get size of all children (kfgroup or kfitem)
-            let currentGroupWidth: number = this.children[this.children.length - 1].container.getBoundingClientRect().right - this.children[0].container.getBoundingClientRect().left;
-            let childHeight: number = this.children[0].container.getBoundingClientRect().height;
+
+            // let currentGroupWidth: number = this.children[this.children.length - 1].container.getBoundingClientRect().right - this.children[0].container.getBoundingClientRect().left;
+            // let childHeight: number = this.children[0].container.getBoundingClientRect().height;
+            const containerBBox: DOMRect = this.container.getBoundingClientRect();
+            const currentGroupWidth: number = containerBBox.width + 2 * KfGroup.PADDING;
+            const childHeight: number = containerBBox.height + 2 * KfGroup.PADDING;
+
             console.log('inner width: ', this.marks);
-            // this.children.forEach((c: KfItem | KfGroup) => {
-            //     console.log(c.container.getBoundingClientRect());
-            //     currentGroupWidth += c.container.getBoundingClientRect().width;
-            // })
-            // if (this.children.length > 3) {
-            //     currentGroupWidth += KfOmit.OMIT_W;
-            // }
-            // if (this.children[0] instanceof KfItem) {
-            //     currentGroupWidth += (this.children.length - 1) * KfItem.PADDING;
-            // }
             //TODO consider size of suggestion frame
 
             //update size
-            currentGroupWidth += (2 * KfGroup.PADDING);
-            this.groupBg.setAttributeNS(null, 'height', `${2 * KfGroup.PADDING + childHeight}`);
+            // currentGroupWidth += (2 * KfGroup.PADDING);
+            this.groupBg.setAttributeNS(null, 'height', `${childHeight}`);
             this.groupBg.setAttributeNS(null, 'width', `${currentGroupWidth}`);
             //update background color
             const grayColor: number = KfGroup.BASIC_GRAY - KfGroup.GRAY_STEP * (KfGroup.leafLevel - this.treeLevel);
-            this.groupBg.setAttributeNS(null, 'fill', `rgb(${grayColor}, ${grayColor}, ${grayColor})`);
+            this.groupBg.setAttributeNS(null, 'fill', `rgba(${grayColor}, ${grayColor}, ${grayColor}, 1)`);
 
             //update position
             const transPosiY = rootGroup ? this.posiY + 1 : this.posiY + KfGroup.PADDING;
             if (this.newTrack) {
+                console.log('updating in new track: ', this, lastGroupStart, transPosiY);
                 this.container.setAttributeNS(null, 'transform', `translate(${lastGroupStart}, ${transPosiY})`);
-                this.posiX = currentGroupWidth > lastGroupWidth ? currentGroupWidth : lastGroupWidth;
+                this.posiX = lastGroupStart;
+                this.width = currentGroupWidth > lastGroupWidth ? currentGroupWidth : lastGroupWidth;
             } else {
                 this.container.setAttributeNS(null, 'transform', `translate(${lastGroupStart + lastGroupWidth}, ${transPosiY})`);
                 this.posiX = lastGroupStart + lastGroupWidth;

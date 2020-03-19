@@ -7,6 +7,11 @@ export interface IDataItem {
     [propName: string]: string | number
 }
 
+export interface IKfGroupSize {
+    width?: number
+    height?: number
+}
+
 export interface IKeyframe {
     id: string
     parentId: string //keyframe group id
@@ -14,6 +19,7 @@ export interface IKeyframe {
     duration: number
     delayIcon: boolean
     delay: number
+    allCurrentMarks: string[] // marks until this kf
     marksThisKf: string[] //markid array
 }
 
