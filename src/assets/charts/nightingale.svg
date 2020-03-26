@@ -1,6 +1,4 @@
-<svg id="visChart" x="0" y="0" width="669.023569023569" height="600" viewBox="0 0 669.023569 600.000000" 
-    xmlns="http://www.w3.org/2000/svg" 
-    xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve">
+<svg id="visChart" x="0" y="0" width="669.023569023569" height="600" viewBox="0 0 669.023569 600.000000" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve">
     <g id="chartContent" transform="translate(334.511785,300.000000)">
         <g transform="translate(0,0)" opacity="1">
             <g transform="translate(0,0)" opacity="1"></g>
@@ -175,22 +173,22 @@
             </g>
             <g transform="translate(0,0)" opacity="1">
                 <g transform="translate(-17.92929293,-300)" opacity="1">
-                    <text x="-158.935546875" y="51.254979615608626" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" fill-opacity="1" text-anchor="start" opacity="1" font-family="Arial" font-size="24px">Causes of Mortality over Time</text>
+                    <text  id="mark5001" class=" mark title" data-datum="{}"  x="-158.935546875" y="51.254979615608626" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" fill-opacity="1" text-anchor="start" opacity="1" font-family="Arial" font-size="24px">Causes of Mortality over Time</text>
                 </g>
             </g>
             <g transform="translate(0,0)" opacity="1">
-                <g transform="translate(-284.51178451,-148)" id="mark3001" class="mark legend" data-datum="{&quot;_TYPE&quot;:&quot;legend&quot;,&quot;fill&quot;:&quot;Type&quot;,&quot;color&quot;:&quot;Type&quot;}" opacity="1">
+                <g transform="translate(-284.51178451,-148)" opacity="1">
                     <g transform="translate(0,-48)" opacity="1">
-                        <text x="29" y="-7.377204426324983" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" fill-opacity="1" text-anchor="start" opacity="1" font-family="Arial" font-size="14px">Disease</text>
-                        <path d="M 8,-4 L 7.99504601,-20.00086906 L 24.00279328,-20.00012267 L 23.99642421,-4.00428521 Z" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(251,106,74)" fill-opacity="1" text-anchor="start" opacity="1"></path>
+                        <text id="mark3001" class="mark legend-text" data-datum="{}" x="29" y="-7.377204426324983" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" fill-opacity="1" text-anchor="start" opacity="1" font-family="Arial" font-size="14px">Disease</text>
+                        <path id="mark4001" class="mark legend-symbol" data-datum="{}" d="M 8,-4 L 7.99504601,-20.00086906 L 24.00279328,-20.00012267 L 23.99642421,-4.00428521 Z" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(251,106,74)" fill-opacity="1" text-anchor="start" opacity="1"></path>
                     </g>
                     <g transform="translate(0,-24)" opacity="1">
-                        <text x="29" y="-7.377204426324983" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" fill-opacity="1" text-anchor="start" opacity="1" font-family="Arial" font-size="14px">Other</text>
-                        <path d="M 8,-4 L 8.00391169,-20.00447585 L 24.00482659,-19.99697002 L 23.99933678,-3.99953197 Z" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(150,150,150)" fill-opacity="1" text-anchor="start" opacity="1"></path>
+                        <text id="mark3002" class="mark legend-text" data-datum="{}" x="29" y="-7.377204426324983" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" fill-opacity="1" text-anchor="start" opacity="1" font-family="Arial" font-size="14px">Other</text>
+                        <path id="mark4002" class="mark legend-symbol" data-datum="{}" d="M 8,-4 L 8.00391169,-20.00447585 L 24.00482659,-19.99697002 L 23.99933678,-3.99953197 Z" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(150,150,150)" fill-opacity="1" text-anchor="start" opacity="1"></path>
                     </g>
                     <g transform="translate(0,0)" opacity="1">
-                        <text x="29" y="-7.377204426324983" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" fill-opacity="1" text-anchor="start" opacity="1" font-family="Arial" font-size="14px">Wounds</text>
-                        <path d="M 8,-4 L 8.00390872,-20.0028572 L 23.99691361,-20.0033874 L 24.00361397,-4.00291874 Z" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(107,174,214)" fill-opacity="1" text-anchor="start" opacity="1"></path>
+                        <text id="mark3003" class="mark legend-text" data-datum="{}" x="29" y="-7.377204426324983" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" fill-opacity="1" text-anchor="start" opacity="1" font-family="Arial" font-size="14px">Wounds</text>
+                        <path id="mark4003" class="mark legend-symbol" data-datum="{}" d="M 8,-4 L 8.00390872,-20.0028572 L 23.99691361,-20.0033874 L 24.00361397,-4.00291874 Z" stroke="none" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(107,174,214)" fill-opacity="1" text-anchor="start" opacity="1"></path>
                     </g>
                 </g>
             </g>

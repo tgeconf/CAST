@@ -2,47 +2,90 @@ import { ChartSpec, TimingSpec, Animation } from 'canis_toolkit'
 import { state } from './state'
 import Tool from '../util/tool'
 import { ISortDataAttr, IDataItem, IDataDatumType, IKeyframeGroup, IKeyframe } from './ds';
-import AttrBtn from '../components/widgets/attrBtn';
 import AttrSort from '../components/widgets/attrSort';
+import KfTimingIllus from '../components/widgets/kfTimingIllus';
 import KfItem from '../components/widgets/kfItem';
-
-
 
 export default class Util {
     static attrType: IDataDatumType = {};
     static NUMERIC_ATTR: string = 'numeric';
     static CATEGORICAL_ATTR: string = 'categorical';
+    static DATA_SUGGESTION: string = 'dataSuggestion';
+    static NON_DATA_SUGGESTION: string = 'nonDataSuggestion';
+    static NO_SUGGESTION: string = 'noSuggestion';
     static NUMERIC_CATEGORICAL_ATTR: string[] = ['Year', 'year', 'Month', 'month', 'Day', 'day'];
     static EFFECTIVENESS_RANKING: string[] = ['position', 'color', 'shape'];
     static EXCLUDED_DATA_ATTR: string[] = ['_TYPE', 'text', '_x', '_y', '_id', '_MARKID'];
 
     static filteredDataTable: Map<string, IDataItem> = new Map();//markId, dataItem
+    static nonDataTable: Map<string, IDataItem> = new Map();//markId, non dataitem (for axis, legend, title)
+
     /**
+     * based on selected marks, judge perfrom which kind of suggestion
+     * @param markIds 
+     */
+    public static judgeSuggestionType(markIds: string[]): string {
+        const allDataEncodedMarks: string[] = Array.from(this.filteredDataTable.keys());
+        const allNonDataEncodedMarks: string[] = Array.from(this.nonDataTable.keys());
+        let containDataMark: boolean = false, containNonDataMark: boolean = false;
+        for (let i = 0, len = markIds.length; i < len; i++) {
+            if (allDataEncodedMarks.includes(markIds[i])) {
+                containDataMark = true;
+                if (containNonDataMark) {
+                    break;
+                }
+            } else if (allNonDataEncodedMarks.includes(markIds[i])) {
+                containNonDataMark = true;
+                if (containDataMark) {
+                    break;
+                }
+            }
+        }
+        if (containDataMark && !containNonDataMark) {
+            return this.DATA_SUGGESTION;
+        } else if (!containDataMark && containNonDataMark) {
+            return this.NON_DATA_SUGGESTION;
+        } else {
+            return this.NO_SUGGESTION;
+        }
+    }
+
+    /**
+     * suggest based on selected marks
      * @param markIds : selected marks
      */
     public static suggestSelection(markIds: string[]): string[] {
-        //TODO: judge if this is data-driven suggestion or non-data-driven
-        /****** non-data-driven suggestion ******/
+        const suggestionType: string = this.judgeSuggestionType(markIds);
+        switch (suggestionType) {
+            case this.DATA_SUGGESTION:
+                return this.suggestSelBasedOnData(markIds);
+            case this.NON_DATA_SUGGESTION:
+                return this.suggestSelBasedOnChart(markIds);
+            default:
+                return markIds;
+        }
+    }
 
-
-        /****** data-driven suggestion ******/
+    /**
+     * the selected marks are data encoded marks
+     */
+    public static suggestSelBasedOnData(markIds: string[]): string[] {
         //find the same and diff attributes of the selected marks
         const [sameAttrs, diffAttrs] = this.compareAttrs(markIds);
         //filter attributes according to the effectiveness ranking
         const filteredDiffAttrs = this.filterAttrs(diffAttrs);
+        console.log('found same and diff attrs: ', sameAttrs, diffAttrs);
         //list all data-encoded marks
-        let allMarkIds: string[] = [];
-        // ChartSpec.dataMarkDatum.forEach((datum, markId) => {
-        this.filteredDataTable.forEach((datum, markId) => {
-            allMarkIds.push(markId);
-        })
+        let allMarkIds: string[] = Array.from(this.filteredDataTable.keys());
+        // this.filteredDataTable.forEach((datum, markId) => {
+        //     allMarkIds.push(markId);
+        // })
         const [sections, orderedSectionIds] = this.partitionChart(sameAttrs, filteredDiffAttrs, allMarkIds);
 
         //judge if marks from one section are selected all, otherwise repeat selection with the one with the most selected marks
         let allSelected: boolean = false, mostSelectionNumInSec: number = 0;
         sections.forEach((marksInSec, secId) => {
             allSelected = Tool.arrayContained(markIds, marksInSec) || allSelected;//whether marks in this section are all selected
-            // console.log(secId, marksInSec, allSelected);
             let tmpCount: number = 0;
             marksInSec.forEach((mId) => {
                 if (markIds.includes(mId)) {
@@ -131,6 +174,14 @@ export default class Util {
     }
 
     /**
+     * the selected marks are non data encoded marks
+     */
+    public static suggestSelBasedOnChart(markIds: string[]): string[] {
+        console.log(this.nonDataTable);
+        return markIds;
+    }
+
+    /**
      * partition the chart according to the given attributes when doing data-driven suggestion
      * @param sameAttr 
      * @param filteredDiffAttrs 
@@ -213,7 +264,6 @@ export default class Util {
         let sameAttr: string[] = [], diffAttrs: string[] = [];
         for (let attrName in this.attrType) {
             let sameAttrType = true;
-            // const firstMarkType = ChartSpec.dataMarkDatum.get(markIds[0])[attrName];
             const firstMarkType = this.filteredDataTable.get(markIds[0])[attrName];
             for (let i = 1, len = markIds.length; i < len; i++) {
                 // if (ChartSpec.dataMarkDatum.get(markIds[i])[attrName] !== firstMarkType) {
@@ -250,6 +300,18 @@ export default class Util {
                 }
             }
             this.filteredDataTable.set(markId, tmpDataItem);
+        })
+    }
+
+    public static extractNonDataAttrValue(markData: Map<string, IDataItem>) {
+        this.nonDataTable.clear();
+        markData.forEach((dataDatum: IDataItem, markId: string) => {
+            let tmpDataItem: IDataItem = {};
+            for (const key in dataDatum) {
+                
+                tmpDataItem[key] = dataDatum[key];
+            }
+            this.nonDataTable.set(markId, tmpDataItem);
         })
     }
 
@@ -312,24 +374,27 @@ export default class Util {
         }
         return result;
     }
-    public static aniRootToKFGroup(aniunitNode: any, aniId: string, parentId: string, parentChildIdx: number): IKeyframeGroup {
+    public static aniRootToKFGroup(aniunitNode: any, aniId: string, parentObj: {} | IKeyframeGroup, parentChildIdx: number): IKeyframeGroup {
         console.log('aniunit node: ', aniunitNode);
         let kfGroupRoot: IKeyframeGroup = {
             groupRef: aniunitNode.groupRef,
             id: aniunitNode.id,
             aniId: aniId,
-            parentId: parentId,
+            // parentObj: parentObj,
             marks: aniunitNode.marks,
             timingRef: aniunitNode.timingRef,
             delay: aniunitNode.delay,
-            delayIcon: aniunitNode.delay > 0,
+            delayIcon: (typeof aniunitNode.offset !== 'undefined' && aniunitNode.offset !== 0) || (aniunitNode.delay > 0 && parentChildIdx > 0),
             newTrack: (typeof aniunitNode.align === 'undefined' && aniunitNode.groupRef === 'root')
                 || (aniunitNode.timingRef === TimingSpec.timingRef.previousStart && parentChildIdx !== 0)
-            // || aniunitNode.aniId !== Animation.FIRST_ANI_ID //add this after adding static kf
         }
+        console.log(aniId, 'new track: ', kfGroupRoot.newTrack);
+        KfTimingIllus.updateOffsetRange(aniunitNode.delay);
         if (typeof aniunitNode.offset !== 'undefined') {
-            kfGroupRoot.offset = aniunitNode.offset;
-            kfGroupRoot.offsetIcon = aniunitNode.offset > 0;
+            kfGroupRoot.delay = aniunitNode.offset;
+            // kfGroupRoot.offset = aniunitNode.offset;
+            // kfGroupRoot.offsetIcon = aniunitNode.offset > 0;
+            KfTimingIllus.updateOffsetRange(aniunitNode.offset);
         }
         if (typeof aniunitNode.align !== 'undefined') {
             kfGroupRoot.alignType = aniunitNode.align.type;
@@ -339,7 +404,6 @@ export default class Util {
         kfGroupRoot.keyframes = [];
         if (aniunitNode.children.length > 0) {
             if (aniunitNode.children[0].children.length > 0) {
-                console.log('testig desing euser: ', aniunitNode.children[0].children[0].definedById);
                 let childrenIsGroup: boolean = true;
                 if (typeof aniunitNode.children[0].children[0].definedById !== 'undefined') {
                     if (!aniunitNode.children[0].children[0].definedById) {
@@ -348,53 +412,123 @@ export default class Util {
                 }
                 if (childrenIsGroup) {
                     aniunitNode.children.forEach((c: any, i: number) => {
-                        const kfGroupChild: IKeyframeGroup = this.aniRootToKFGroup(c, aniId, kfGroupRoot.id, i);
+                        const kfGroupChild: IKeyframeGroup = this.aniRootToKFGroup(c, aniId, kfGroupRoot, i);
                         kfGroupRoot.children.push(kfGroupChild);
                     })
                 } else {
-                    console.log('leag nodes: ', aniunitNode, aniunitNode.children);
-                    aniunitNode.children.forEach((k: any) => kfGroupRoot.keyframes.push(this.aniLeafToKF(k, aniId, kfGroupRoot.id)))
+                    const judgeMerge: any = this.mergeNode(aniunitNode.children);
+                    if (!judgeMerge.merge) {
+                        aniunitNode.children.forEach((k: any, i: number) => kfGroupRoot.keyframes.push(this.aniLeafToKF(k, i, aniId, kfGroupRoot, kfGroupRoot.marks)))
+                    } else {
+                        kfGroupRoot.keyframes.push(this.aniLeafToKF(judgeMerge.mergedNode, 0, aniId, kfGroupRoot, kfGroupRoot.marks));
+                    }
                 }
             } else {//children are keyframes
-                // if (aniunitNode.children[0].definedById) {//user defined groupby id
-                console.log('leag nodes: ', aniunitNode, aniunitNode.children);
-                aniunitNode.children.forEach((k: any) => kfGroupRoot.keyframes.push(this.aniLeafToKF(k, aniId, kfGroupRoot.id)))
-                // } else {//auto complete groupby id
+                const judgeMerge: any = this.mergeNode(aniunitNode.children);
+                if (!judgeMerge.merge) {
+                    aniunitNode.children.forEach((k: any, i: number) => kfGroupRoot.keyframes.push(this.aniLeafToKF(k, i, aniId, kfGroupRoot, kfGroupRoot.marks)))
+                } else {
+                    kfGroupRoot.keyframes.push(this.aniLeafToKF(judgeMerge.mergedNode, 0, aniId, kfGroupRoot, kfGroupRoot.marks));
+                }
+            }
+        }
+        return kfGroupRoot;
+    }
 
-                // }
+    /**
+     * if children start and end at the same time, merge them into one node
+     * @param children 
+     */
+    public static mergeNode(children: any[]): { merge: boolean, mergedNode?: any } {
+        console.log('testing merge: ', children);
+        let merge: boolean = true;
+        for (let i = 0, len = children.length; i < len; i++) {
+            const c: any = children[i];
+            if (c.start !== children[0].start || c.end !== children[0].end) {
+                merge = false;
+                break;
             }
         }
 
-        return kfGroupRoot;
+        if (merge) {
+            children.forEach((c: any) => {
+                children[0].marks = [...children[0].marks, ...c.marks];
+            })
+            return { merge: true, mergedNode: children[0] }
+        }
+
+        return { merge: false };
     }
-    public static aniLeafToKF(aniLeaf: any, aniId: string, parentId: string): IKeyframe {
+
+    /**
+     * 
+     * @param aniLeaf 
+     * @param leafIdx : leaf index in its parent, need this to determine whether to draw offset or not
+     * @param aniId 
+     * @param parentId 
+     */
+    public static aniLeafToKF(aniLeaf: any, leafIdx: number, aniId: string, parentObj: IKeyframeGroup, parentMarks: string[]): IKeyframe {
         //find the min and max duraion of kfs, in order to render kfs
         const tmpDuration: number = aniLeaf.end - aniLeaf.start;
-        if (tmpDuration > KfItem.maxDuration) {
-            KfItem.maxDuration = tmpDuration;
-        }
-        if (tmpDuration < KfItem.minDuration) {
-            KfItem.minDuration = tmpDuration;
+        KfTimingIllus.updateDurationRange(tmpDuration);
+        if (leafIdx > 0) {//delay
+            KfTimingIllus.updateOffsetRange(aniLeaf.delay);
         }
         //find all the marks animate before marks in aniLeaf
         const marksInOrder: string[] = Animation.animations.get(aniId).marksInOrder;
         let targetIdx: number = 0;
+        let minStartTime: number = 1000000;
         aniLeaf.marks.forEach((m: string) => {
             const tmpIdx: number = marksInOrder.indexOf(m);
             if (tmpIdx > targetIdx) {
                 targetIdx = tmpIdx;
+                if (Animation.allMarkAni.get(m).startTime < minStartTime) {
+                    minStartTime = Animation.allMarkAni.get(m);
+                }
             }
         })
-        const marksThisKf = Animation.animations.get(aniId).marksInOrder.slice(0, targetIdx + 1);
-        return {
+        let allCurrentMarks: string[] = [];
+        Animation.animations.forEach((ani: any, tmpAniId: string) => {
+            if (tmpAniId === aniId) {
+                allCurrentMarks = [...allCurrentMarks, ...ani.marksInOrder.slice(0, targetIdx + 1)];
+            } else {
+                for (let i = 0, len = ani.marksInOrder.length; i < len; i++) {
+                    if (Animation.allMarkAni.get(ani.marksInOrder[i]).startTime >= minStartTime) {
+                        break;
+                    }
+                    allCurrentMarks.push(ani.marksInOrder[i]);
+                }
+            }
+        })
+        allCurrentMarks = [...state.staticMarks, ...allCurrentMarks];
+        // const allCurrentMarks = Animation.animations.get(aniId).marksInOrder.slice(0, targetIdx + 1);
+
+        let drawDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousEnd;
+        if (typeof aniLeaf.alignTo !== 'undefined') {
+            drawDuration = KfItem.allKfInfo.get(aniLeaf.alignTo).durationIcon;
+        }
+
+        let tmpKf: IKeyframe = {
             id: aniLeaf.id,
-            parentId: parentId,
+            // parentObj: parentObj,
             delay: aniLeaf.delay,
-            delayIcon: aniLeaf.delay > 0,
-            duration: aniLeaf.end - aniLeaf.start,
-            durationIcon: aniLeaf.timingRef === TimingSpec.timingRef.previousEnd,
-            allCurrentMarks: marksThisKf,
+            delayIcon: aniLeaf.delay > 0 && leafIdx > 0,
+            duration: tmpDuration,
+            durationIcon: drawDuration,
+            allCurrentMarks: allCurrentMarks,
+            allGroupMarks: parentMarks,
             marksThisKf: aniLeaf.marks
         }
+        if (typeof aniLeaf.alignWith !== 'undefined') {
+            tmpKf.alignWith = aniLeaf.alignWith;
+        }
+        if (typeof aniLeaf.alignWithIds !== 'undefined') {
+            tmpKf.alignWithKfs = aniLeaf.alignWithIds;
+        }
+        if (typeof aniLeaf.alignTo !== 'undefined') {
+            tmpKf.alignTo = aniLeaf.alignTo;
+        }
+        KfItem.allKfInfo.set(tmpKf.id, tmpKf);
+        return tmpKf;
     }
 }

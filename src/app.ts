@@ -15,7 +15,7 @@ function app(): HTMLDivElement {
     outerWrapper.appendChild(nav.navContainer);
 
     const innerWrapper: IRPanel = ResizablePanel.createRPanels(false, { verticle: false });
-
+    innerWrapper.wrapper.classList.add('inner-wrapper');
     //create data panel
     const dataView: ViewWindow = new ViewWindow(ViewWindow.DATA_VIEW_TITLE);
     dataView.createView();

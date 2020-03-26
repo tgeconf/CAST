@@ -1,7 +1,29 @@
 [
     {
+        "selector": ".axis-domain",
+        "effects": [
+            {
+                "type": "grow",
+                "duration": 1000
+            }
+        ]
+    },
+    {
+        "selector": ".axis-tick, .axis-label",
+        "grouping": {
+            "groupBy": "id",
+            "delay": 100
+        },
+        "effects": [
+            {
+                "type": "fade",
+                "duration": 600
+            }
+        ]
+    },
+    {
+        "reference": "start after previous",
         "id": "yearAni",
-        "offset": 800,
         "selector": ".symbol, .text",
         "grouping": {
             "groupBy": "year",

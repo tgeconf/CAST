@@ -29,6 +29,7 @@ export interface IState {
     lottieAni: AnimationItem
     // hiddenLottie: AnimationItem
     keyframeGroups: IKeyframeGroup[]//each keyframe group correspond to one root from one aniunit
+    staticMarks: string[]
     // groupingAndTiming: any
 }
 
@@ -50,6 +51,7 @@ export class State implements IState {
     _lottieAni: AnimationItem
     _hiddenLottie: AnimationItem
     _keyframeGroups: IKeyframeGroup[]
+    _staticMarks: string[]
     // _groupingAndTiming: any
 
     set sortDataAttrs(sda: ISortDataAttr[]) {
@@ -145,7 +147,6 @@ export class State implements IState {
     // }
     set keyframeGroups(kfts: IKeyframeGroup[]) {
         if (kfts) {
-            console.log('keyframe tracks: ', kfts);
             this._keyframeGroups = kfts;
             //render keyframes
             Renderer.renderKeyframeTracks(this.keyframeGroups);
@@ -153,6 +154,13 @@ export class State implements IState {
     }
     get keyframeGroups(): IKeyframeGroup[] {
         return this._keyframeGroups;
+    }
+    set staticMarks(sm: string[]) {
+        this._staticMarks = sm;
+        Renderer.renderStaticKf(this.staticMarks);
+    }
+    get staticMarks(): string[] {
+        return this._staticMarks;
     }
     // set groupingAndTiming(gat: any) {
     //     this._groupingAndTiming = gat;

@@ -8,6 +8,10 @@ import { dragableCanvas } from '../components/widgets/dragableCanvas'
 import * as action from '../app/action'
 
 export default class Tool {
+    public static extractTransNums(translateStr: string): ICoord {
+        const transNums = translateStr.match(/[+-]?\d+(?:\.\d+)?/g).map(x => parseFloat(x));
+        return { x: transNums[0], y: transNums[1] };
+    }
     public static firstLetterUppercase(str: string): string {
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
@@ -101,15 +105,6 @@ export default class Tool {
         this.resizePlayerContainer();
     }
 
-    // public static resizeSvgContainer(svgContainerId: string = ''): void {
-    //     //resize svg containers
-    //     const svgs: HTMLElement[] = Array.from(svgContainerId === '' ? document.querySelectorAll('.view-content svg') : document.getElementById(svgContainerId).querySelectorAll('.view-content svg'));
-    //     svgs.forEach((svg) => {
-    //         const viewContent: HTMLElement = svg.parentElement;
-    //         Tool.resizeSVG(svg, viewContent.offsetWidth, viewContent.offsetHeight);
-    //     })
-    // }
-
     public static resizePlayerContainer(): void {
         //resize player
         player.resizePlayer(player.widget.clientWidth - 160);
@@ -177,7 +172,6 @@ export default class Tool {
             if (svg) {
                 scaleW = parseFloat(svg.getAttribute('width')) / document.getElementById('chartContainer').offsetWidth;
                 scaleH = parseFloat(svg.getAttribute('height')) / document.getElementById('chartContainer').offsetHeight;
-                console.log('svg scale : ', parseFloat(svg.getAttribute('width')), document.getElementById('chartContainer').offsetWidth, scaleW, scaleH);
             }
 
             const evtTarget: HTMLElement = <HTMLElement>downEvt.target;
@@ -190,11 +184,6 @@ export default class Tool {
             } else {//doing selection
                 if (svg) {
                     const svgBBox = svg.getBoundingClientRect();
-                    console.log(svgBBox);
-                    // let rectPosiPoint1 = svg.createSVGPoint();
-                    // rectPosiPoint1.x = downEvt.pageX;
-                    // rectPosiPoint1.y = downEvt.pageY;
-                    // const rectPosi1: ICoord = rectPosiPoint1.matrixTransform(svg.getScreenCTM().inverse());
                     const rectPosi1: ICoord = this.screenToSvgCoords(svg, downEvt.pageX, downEvt.pageY);
                     let lastMouseX = downEvt.pageX, lastMouseY = downEvt.pageY;
                     let isDragging: boolean = true;
@@ -202,12 +191,7 @@ export default class Tool {
                     rectangularSelection.createSelectionFrame(svg);
                     document.onmousemove = (moveEvt) => {
                         if (isDragging) {
-                            // let rectPosiPoint2 = svg.createSVGPoint();
-                            // rectPosiPoint2.x = moveEvt.pageX;
-                            // rectPosiPoint2.y = moveEvt.pageY;
-                            // const rectPosi2: ICoord = rectPosiPoint2.matrixTransform(svg.getScreenCTM().inverse());
                             const rectPosi2: ICoord = this.screenToSvgCoords(svg, moveEvt.pageX, moveEvt.pageY);
-
                             const possibleMarks: string[] = rectangularSelection.rectangularSelect({
                                 x1: rectPosi1.x,
                                 y1: rectPosi1.y,
@@ -226,7 +210,6 @@ export default class Tool {
                                 const tmpHeight = Math.abs(rectPosi1.y - rectPosi2.y);
 
                                 /* update the selection frame */
-                                console.log('selection frame: ', tmpX, tmpY);
                                 rectangularSelection.updateSelectionFrame({ x1: tmpX, y1: tmpY, x2: tmpX + tmpWidth, y2: tmpY + tmpHeight });
                             }
                         }
@@ -238,10 +221,6 @@ export default class Tool {
                         State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
                         State.saveHistory();
                         if (Tool.pointDist(lastMouseX, upEvt.pageX, lastMouseY, upEvt.pageY) > mouseMoveThsh) {//doing rect selection
-                            // let rectPosiPoint2 = svg.createSVGPoint();
-                            // rectPosiPoint2.x = upEvt.pageX;
-                            // rectPosiPoint2.y = upEvt.pageY;
-                            // const rectPosi2: ICoord = rectPosiPoint2.matrixTransform(svg.getScreenCTM().inverse());
                             const rectPosi2: ICoord = this.screenToSvgCoords(svg, upEvt.pageX, upEvt.pageY);
                             const selectedMarks: string[] = rectangularSelection.rectangularSelect({
                                 x1: rectPosi1.x,

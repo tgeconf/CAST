@@ -1,67 +1,72 @@
 @import "./scroller.scss";
 
 @font-face {
-	font-family: "geforce";
-	src: url("../font/geforce.ttf") format("ttf"), url("../font/geforce.woff") format("woff");
+    font-family: "geforce";
+    src: url("../font/geforce.ttf") format("ttf"), url("../font/geforce.woff") format("woff");
 }
 
 :root {
-	--nav-content-height: 20px;
-	--widget-font-size: 11pt;
-	--title-height: 26px;
-	--geforce-font: "geforce";
-	--gray-l1: #f2f2f2;
-	--gray-l2: #e2e2e2;
-	--gray-l3: #dadada;
-	--gray-l4: #a5a5a5;
-	--gray-l5: #a3a3a3;
-	--gray-l6: #383838;
-	--gray-l7: #484848;
-	--gray-l8: #676767;
-	--gray-l9: #e6e6e6;
-	--gray-l10: #ffffff;
-	--gray-l11: #ededed;
-	--gray-l12: #c2c2c2;
-	--gray-l13: #939393;
+    --nav-content-height: 20px;
+    --widget-font-size: 11pt;
+    --title-height: 26px;
+    --geforce-font: "geforce";
+    --gray-l1: #f2f2f2;
+    --gray-l2: #e2e2e2;
+    --gray-l3: #dadada;
+    --gray-l4: #a5a5a5;
+    --gray-l5: #a3a3a3;
+    --gray-l6: #383838;
+    --gray-l7: #484848;
+    --gray-l8: #676767;
+    --gray-l9: #e6e6e6;
+    --gray-l10: #ffffff;
+    --gray-l11: #ededed;
+    --gray-l12: #c2c2c2;
+    --gray-l13: #939393;
     --gray-l14: #000000;
     --gray-l15: #f7f7f7;
     --gray-l16: #d2d2d2;
-	--highlight-blue: #2196f3;
-	--selected-bg: #cbeaff;
+    --highlight-blue: #2196f3;
+    --selected-bg: #cbeaff;
 }
 
 .zero-margin-padding {
-	margin: 0;
-	padding: 0;
+    margin: 0;
+    padding: 0;
 }
 
 .cover-size {
-	width: 100%;
-	height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 * {
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 html,
 body {
-	@extend .zero-margin-padding;
-	@extend .cover-size;
-	background: var(--gray-l1);
+    @extend .zero-margin-padding;
+    @extend .cover-size;
+    background: var(--gray-l1);
 }
 
 .outer-wrapper {
-	@extend .zero-margin-padding;
-	@extend .cover-size;
-	display: flex;
-	flex-direction: column;
+    @extend .zero-margin-padding;
+    @extend .cover-size;
+    display: flex;
+    flex-direction: column;
 }
 
-.footer{
+.inner-wrapper {
+	flex: 1;
+	height: 500px !important;
+}
+
+.footer {
     width: 100%;
     height: 22px;
     color: var(--gray-l10);

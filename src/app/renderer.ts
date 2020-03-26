@@ -35,6 +35,7 @@ export default class Renderer {
         console.log('generated canis spec: ', canisGenerator.canisSpec);
         const lottieSpec = await canis.renderSpec(canisGenerator.canisSpec, () => {
             Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
+            Util.extractNonDataAttrValue(ChartSpec.nonDataMarkDatum);
             //save histroy before update state
             State.tmpStateBusket.push([action.UPDATE_DATA_ORDER, state.dataOrder]);
             State.tmpStateBusket.push([action.UPDATE_DATA_TABLE, state.dataTable]);
@@ -113,27 +114,28 @@ export default class Renderer {
         }));
         //start to play animation
         document.getElementById(Player.PLAY_BTN_ID).click();
-        //render the hidden lottie for keyframes
-        // console.log('rendering lottie spec: ', lottieSpec);
-        // Reducer.triger(action.UPDATE_HIDDEN_LOTTIE, Lottie.loadAnimation({
-        //     container: document.getElementById(ViewWindow.HIDDEN_LOTTIE_ID),
-        //     renderer: 'svg',
-        //     loop: false,
-        //     autoplay: false,
-        //     animationData: lottieSpec
-        // }));
-        //meanwhile render keyframes and timeline
-        // Reducer.triger(action.UPDATE_KEYFRAME_TIME_POINTS, Animation.frameTime);
+
+        //filter out the static marks
+        const animatedMarks: string[] = Array.from(Animation.allMarkAni.keys());
+        const staticMarks: string[] = [];
+        Animation.allMarks.forEach((mId: string) => {
+            if (!animatedMarks.includes(mId)) {
+                staticMarks.push(mId);
+            }
+        });
+
+        console.log('found static marks: ', staticMarks);
+        Reducer.triger(action.UPDATE_STATIC_KEYFRAME, staticMarks);
         Reducer.triger(action.UPDATE_KEYFRAME_TRACKS, Animation.animations);
-        // Reducer.triger(action.UPDATE_GEOUPING_AND_TIMING, Animation.animations);
-        console.log(Animation.animations);
     }
 
     public static renderKfContainerSliders(kfgSize: IKfGroupSize) {
+        //reset the transform of kfcontainer
+        kfContainer.resetContainerTrans();
         kfContainer.updateKfSlider(kfgSize);
     }
 
-    public static renderKeyframeTracks(kfgs: IKeyframeGroup[]): void {
+    public static renderStaticKf(staticMarks: string[]) {
         //reset
         //TODO: need to check performance
         document.getElementById(KfContainer.KF_BG).innerHTML = '';
@@ -141,47 +143,63 @@ export default class Renderer {
         KfTrack.reset();
         KfGroup.reset();
 
-        let groupTrackMapping: Map<string, KfTrack[]> = new Map();//key: aniId, value: track id array
+        const firstTrack: KfTrack = new KfTrack();
+        firstTrack.createTrack();
+        const staticKf: KfItem = new KfItem();
+        staticKf.createStaticItem(staticMarks);
+        firstTrack.container.appendChild(staticKf.container);
+    }
+
+    public static renderKeyframeTracks(kfgs: IKeyframeGroup[]): void {
+        // let groupTrackMapping: Map<string, KfTrack[]> = new Map();//key: aniId, value: track id array
         kfgs.forEach((kfg: IKeyframeGroup) => {
-            console.log('kfg: ', kfg);
             KfGroup.leafLevel = 0;
             let treeLevel = 0;//use this to decide the background color of each group
             //top-down to init group and kf
-            const rootGroup: KfGroup = this.renderKeyframeGroup(0, 1, kfg, groupTrackMapping, treeLevel);
+            const rootGroup: KfGroup = this.renderKeyframeGroup(0, 1, kfg, treeLevel);
             //bottom-up to update size and position
-            rootGroup.updateGroupPosiAndSize(0, 0, true);
-            const rootGroupBBox: DOMRect = rootGroup.container.getBoundingClientRect();
-            Reducer.triger(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, { width: rootGroupBBox.width, height: rootGroupBBox.height });
-            // Reducer.triger(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, rootGroupBBox.left + rootGroupBBox.width);
+            rootGroup.updateGroupPosiAndSize(KfTrack.aniTrackMapping.get(rootGroup.aniId)[0].availableInsert, 0, false, true);
         })
+        const rootGroupBBox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();
+        Reducer.triger(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, { width: rootGroupBBox.width, height: rootGroupBBox.height });
     }
 
-    public static renderKeyframeGroup(kfgIdx: number, totalKfgNum: number, kfg: IKeyframeGroup, groupTrackMapping: Map<string, KfTrack[]>, treeLevel: number, parentObj?: KfGroup): KfGroup {
+    public static renderKeyframeGroup(kfgIdx: number, totalKfgNum: number, kfg: IKeyframeGroup, treeLevel: number, parentObj?: KfGroup): KfGroup {
         let targetTrack: KfTrack; //foreground of the track used to put the keyframe group
         if (kfg.newTrack) {
-            console.log('creating ew track', kfg);
             targetTrack = new KfTrack();
             targetTrack.createTrack();
-            if (typeof groupTrackMapping.get(kfg.aniId) === 'undefined') {
-                groupTrackMapping.set(kfg.aniId, []);
-            }
-            groupTrackMapping.get(kfg.aniId).push(targetTrack);
         } else {
             console.log('using existing track', kfg);
-            targetTrack = groupTrackMapping.get(kfg.aniId)[0];
+            if (typeof KfTrack.aniTrackMapping.get(kfg.aniId) !== 'undefined') {
+                targetTrack = KfTrack.aniTrackMapping.get(kfg.aniId)[0];//this is the group within an existing animation
+            } else {
+                //target track is the last track
+                let maxTrackPosiY: number = 0;
+                KfTrack.allTracks.forEach((kft: KfTrack) => {
+                    if (kft.trackPosiY >= maxTrackPosiY) {
+                        maxTrackPosiY = kft.trackPosiY;
+                        targetTrack = kft;
+                    }
+                })
+            }
         }
-        console.log('track posi Y: ', targetTrack.trackPosiY);
+        if (typeof KfTrack.aniTrackMapping.get(kfg.aniId) === 'undefined') {
+            KfTrack.aniTrackMapping.set(kfg.aniId, []);
+        }
+        KfTrack.aniTrackMapping.get(kfg.aniId).push(targetTrack);
+        let minTrackPosiYThisGroup: number = KfTrack.aniTrackMapping.get(kfg.aniId)[0].trackPosiY;
 
         //draw group container
         let kfGroup: KfGroup = new KfGroup();
-        kfGroup.children = [];
-        console.log(parentObj ? 'has parentobj (group)' : 'dont have (track)');
         if (kfgIdx === 0 || kfgIdx === 1 || kfgIdx === totalKfgNum - 1) {
-            kfGroup.createGroup(kfg, parentObj ? parentObj : targetTrack, targetTrack.trackPosiY, treeLevel);
+            // let minTrackPosiYThisGroup:number = 10000;
+            // if(typeof KfTrack.aniTrackMapping.get(kfg.aniId) !== 'undefined')
+            kfGroup.createGroup(kfg, parentObj ? parentObj : targetTrack, targetTrack.trackPosiY - minTrackPosiYThisGroup, treeLevel);
         } else if (totalKfgNum > 3 && kfgIdx === totalKfgNum - 2) {
             let kfOmit: KfOmit = new KfOmit();
             kfOmit.createOmit(0, 0, parentObj, false, false);
-            parentObj.kfOmit = kfOmit;
+            parentObj.kfOmits.push(kfOmit);
         }
 
         treeLevel++;
@@ -190,29 +208,83 @@ export default class Renderer {
         }
         if (kfg.keyframes.length > 0) {
             kfGroup.kfNum = kfg.keyframes.length;
-            //rendering kf
-            console.log('rendering kf');
-            let kfPosiX = 0;
+            //choose the keyframes to draw
+            let alignWithAnis: Map<string, number[]> = new Map();
+            let alignToAni: number[] = [];
             kfg.keyframes.forEach((k: any, i: number) => {
-                if (i === 0 || i === 1 || i === kfg.keyframes.length - 1) {
-                    let kfItem: KfItem = new KfItem();
-                    kfItem.createItem(k, treeLevel, kfGroup, kfPosiX);
+                if (typeof k.alignWith !== 'undefined') {
+                    k.alignWith.forEach((aniId: string) => {
+                        if (typeof alignWithAnis.get(aniId) === 'undefined') {
+                            alignWithAnis.set(aniId, [100000, 0]);
+                        }
+                        if (i < alignWithAnis.get(aniId)[0]) {
+                            alignWithAnis.get(aniId)[0] = i;
+                        }
+                        if (i > alignWithAnis.get(aniId)[1]) {
+                            alignWithAnis.get(aniId)[1] = i;
+                        }
+                    })
+                } else if (typeof k.alignTo !== 'undefined') {
+                    if (typeof KfItem.allKfItems.get(k.alignTo) !== 'undefined') {
+                        if (KfItem.allKfItems.get(k.alignTo).rendered) {
+                            alignToAni.push(i);
+                        }
+                    }
+                }
+            })
+            let kfIdxToDraw: number[] = [0, 1, kfg.keyframes.length - 1];
+            let isAlignWith: number = 0;//0 -> neither align with nor align to, 1 -> align with, 2 -> align to 
+
+            //this group is the align target
+            if (alignWithAnis.size > 0) {
+                isAlignWith = 1;
+                alignWithAnis.forEach((se: number[], aniId: string) => {
+                    kfIdxToDraw.push(se[0]);
+                    kfIdxToDraw.push(se[1]);
+                    if (se[0] + 1 < se[1]) {
+                        kfIdxToDraw.push(se[0] + 1);
+                    }
+                })
+            } else if (alignToAni.length > 0) {
+                //this group aligns to other group
+                isAlignWith = 2;
+                kfIdxToDraw = [...kfIdxToDraw, ...alignToAni];
+            }
+
+            kfIdxToDraw = [...new Set(kfIdxToDraw)].sort((a: number, b: number) => a - b);
+
+            //rendering kf
+            let kfPosiX = kfGroup.offsetWidth;
+            kfg.keyframes.forEach((k: any, i: number) => {
+                //whether to draw this kf or not
+                if (kfIdxToDraw.includes(i)) {
+                    //whether to draw '...'
+                    if (i > 0 && kfIdxToDraw[kfIdxToDraw.indexOf(i) - 1] !== i - 1) {
+                        const omitNum: number = i - kfIdxToDraw[kfIdxToDraw.indexOf(i) - 1] - 1;
+                        if (omitNum > 0) {
+                            const kfOmit: KfOmit = new KfOmit();
+                            kfOmit.createOmit(kfPosiX, omitNum, kfGroup, kfg.keyframes[1].delayIcon, kfg.keyframes[1].durationIcon, kfGroup.children[1].kfHeight / 2);
+                            kfGroup.children.push(kfOmit);
+                            kfPosiX += KfOmit.OMIT_W;
+                        }
+                    }
+                    //draw render
+                    const kfItem: KfItem = new KfItem();
+                    if (isAlignWith === 2) {
+                        const targetSize: { w: number, h: number } = { w: KfItem.allKfItems.get(k.alignTo).kfWidth, h: KfItem.allKfItems.get(k.alignTo).kfHeight };
+                        kfItem.createItem(k, treeLevel, kfGroup, kfPosiX, targetSize);
+                    } else {
+                        kfItem.createItem(k, treeLevel, kfGroup, kfPosiX);
+                    }
+                    // KfItem.allKfItems.set(k.id, kfItem);
                     kfGroup.children.push(kfItem);
                     kfPosiX += kfItem.totalWidth;
-                } else if (kfg.keyframes.length > 3 && i === kfg.keyframes.length - 2) {//generate '...'
-                    const omitNum: number = kfGroup.kfNum - 3;
-                    if (omitNum > 0) {//omitted at least 1 kf
-                        const kfOmit: KfOmit = new KfOmit();
-                        kfOmit.createOmit(kfPosiX, omitNum, kfGroup, kfg.keyframes[0].delayIcon, kfg.keyframes[0].durationIcon, kfGroup.children[0].kfHeight / 2);
-                        kfPosiX += KfOmit.OMIT_W;
-                    }
                 }
             })
         } else if (kfg.children.length > 0) {
             //rendering kf group
-            console.log('rendering group');
             kfg.children.forEach((c: any, i: number) => {
-                const tmpKfGroup: KfGroup = this.renderKeyframeGroup(i, kfg.children.length, c, groupTrackMapping, treeLevel, kfGroup);
+                const tmpKfGroup: KfGroup = this.renderKeyframeGroup(i, kfg.children.length, c, treeLevel, kfGroup);
                 kfGroup.children.push(tmpKfGroup);
                 kfGroup.kfNum += tmpKfGroup.kfNum;
             });

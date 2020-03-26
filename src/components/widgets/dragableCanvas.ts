@@ -1,5 +1,6 @@
 import '../../assets/style/dragableCanvas.scss'
 import { ICoord } from '../../util/ds';
+import KfItem from './kfItem';
 
 export default class DragableCanvas {
     /**
@@ -10,6 +11,7 @@ export default class DragableCanvas {
      */
     public createCanvas(targetSVG: HTMLElement, targetArea: DOMRect, downCoord: ICoord) {
         targetSVG.classList.toggle('chart-when-dragging');
+        document.getElementById('highlightSelectionFrame').style.display = 'none';
         Array.from(document.getElementsByClassName('non-framed-mark')).forEach((m: HTMLElement) => m.style.display = 'none');
         const canvas: HTMLCanvasElement = document.createElement('canvas');
         canvas.className = 'drag-drop-canvas grab-selection';
@@ -17,22 +19,34 @@ export default class DragableCanvas {
         const ctx = canvas.getContext('2d');
         document.body.appendChild(canvas);
 
-        const svgX = targetSVG.getBoundingClientRect().left, svgY = targetSVG.getBoundingClientRect().top;
-        canvas.width = targetArea.width - 2;
-        canvas.height = targetArea.height - 2;
-        canvas.style.left = targetArea.left + 'px';
-        canvas.style.top = targetArea.top + 'px';
+        const svgW: number = targetSVG.getBoundingClientRect().width, svgH: number = targetSVG.getBoundingClientRect().height;
+        canvas.width = KfItem.KF_WIDTH;
+        canvas.height = KfItem.KF_HEIGHT;
+        canvas.style.left = `${downCoord.x - canvas.width / 2}px`;
+        canvas.style.top = `${downCoord.y - canvas.height / 2}px`;
         let img = new Image();
-        img.onload = () => ctx.drawImage(img, -targetArea.left + svgX - 1, -targetArea.top + svgY - 1);
+        img.onload = () => {
+            //shrink the svg size to the same size as kf
+            let dx: number = 0, dy: number = 0, scaleWidth: number = canvas.width, scaleHeight: number = canvas.width * (svgH / svgW);
+            if (scaleHeight <= canvas.height) {
+                dy = (canvas.height - scaleHeight) / 2;
+            } else {
+                scaleHeight = canvas.height;
+                scaleWidth = canvas.height * (svgW / svgH);
+                dx = (canvas.width - scaleWidth) / 2;
+            }
+            ctx.drawImage(img, dx, dy, scaleWidth, scaleHeight);
+        };
         img.src = 'data:image/svg+xml;base64,' + btoa((new XMLSerializer()).serializeToString(targetSVG));
+
+        document.getElementById('highlightSelectionFrame').style.display = 'block';
         Array.from(document.getElementsByClassName('non-framed-mark')).forEach((m: HTMLElement) => m.style.display = 'block');
-        const diffX = downCoord.x - targetArea.left, diffY = downCoord.y - targetArea.top;
         document.onmousemove = (moveEvt) => {
-            canvas.style.left = `${moveEvt.pageX - diffX}px`;
-            canvas.style.top = `${moveEvt.pageY - diffY}px`;
+            canvas.style.left = `${moveEvt.pageX - canvas.width / 2}px`;
+            canvas.style.top = `${moveEvt.pageY - canvas.height / 2}px`;
 
             //highlight kfs which can be dropped on
-            
+
         }
         document.onmouseup = (upEvt) => {
             canvas.remove();

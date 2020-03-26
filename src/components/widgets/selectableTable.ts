@@ -17,9 +17,12 @@ export default class SelectableTable {
             (<HTMLElement>std).classList.remove('selected-td');
         })
         selection.forEach(rowDataId => {
-            Array.from(document.querySelector('[dataItem="' + rowDataId + '"]').children).forEach(td => {
-                td.classList.add('selected-td');
-            })
+            const targetTr: HTMLElement = document.querySelector('[dataItem="' + rowDataId + '"]');
+            if (targetTr) {
+                Array.from(targetTr.children).forEach(td => {
+                    td.classList.add('selected-td');
+                })
+            }
         })
     }
 

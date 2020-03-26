@@ -13,21 +13,25 @@ export interface IKfGroupSize {
 }
 
 export interface IKeyframe {
-    id: string
-    parentId: string //keyframe group id
+    id: number
+    // parentObj: IKeyframeGroup //keyframe group id
     durationIcon: boolean
     duration: number
     delayIcon: boolean
     delay: number
     allCurrentMarks: string[] // marks until this kf
+    allGroupMarks: string[]
     marksThisKf: string[] //markid array
+    alignWith?: string[] //array of aniIds which are aligned to this kf
+    alignWithKfs?: number[] // array of keyframeIds which are aligned to this kf
+    alignTo?: number //align to keyframeid
 }
 
 export interface IKeyframeGroup {
     groupRef: string
-    id: string
+    id: number
     aniId: string
-    parentId: string //keyframe group id
+    // parentObj: IKeyframeGroup | {} //keyframe group id
     children?: IKeyframeGroup[]
     keyframes?: IKeyframe[]
     // numKf: number

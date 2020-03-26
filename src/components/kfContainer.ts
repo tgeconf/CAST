@@ -1,6 +1,7 @@
 import '../assets/style/keyframeContainer.scss'
 import Tool from '../util/tool';
 import { IKfGroupSize } from '../app/ds';
+import { ICoord } from '../util/ds';
 
 export class KfContainer {
     static KF_LIST_ID: string = 'kfList';
@@ -15,10 +16,12 @@ export class KfContainer {
     public xSliderBg: SVGRectElement;
     public xSlider: SVGRectElement;
     public xSliderContainerW: number = 1000;
+    public xSliderPercent: number = 1.0;
     public ySliderContainer: SVGElement;
     public ySliderBg: SVGRectElement;
     public ySlider: SVGRectElement;
     public ySliderContainerH: number = 200;
+    public ySliderPercent: number = 1.0;
 
     public createKfContainer() {
         this.kfWidgetContainer = document.createElement('div');
@@ -73,9 +76,11 @@ export class KfContainer {
 
                     //update translate of keyframe
                     if (this.keyframeTrackContainer.getAttributeNS(null, 'transform')) {
-                        let oriY: number = parseFloat(this.keyframeTrackContainer.getAttributeNS(null, 'transY'));
-                        this.keyframeTrackContainer.setAttributeNS(null, 'transY', `${oriY - 2.5 * diffY}`)
-                        this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(0, ${oriY - 2.5 * diffY})`)
+                        // let oriY: number = parseFloat(this.keyframeTrackContainer.getAttributeNS(null, 'transY'));
+                        // this.keyframeTrackContainer.setAttributeNS(null, 'transY', `${oriY - 2.5 * diffY}`)
+                        // this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(0, ${oriY - 2.5 * diffY})`)
+                        let oriTrans: ICoord = Tool.extractTransNums(this.keyframeTrackContainer.getAttributeNS(null, 'transform'));
+                        this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${oriTrans.y - diffY * this.ySliderPercent})`);
                     }
                 }
             }
@@ -113,9 +118,8 @@ export class KfContainer {
 
                     //update translate of keyframe
                     if (this.keyframeTrackContainer.getAttributeNS(null, 'transform')) {
-                        let oriY: number = parseFloat(this.keyframeTrackContainer.getAttributeNS(null, 'transY'));
-                        this.keyframeTrackContainer.setAttributeNS(null, 'transY', `${oriY - 2.5 * diffY}`)
-                        this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(0, ${oriY - 2.5 * diffY})`)
+                        let oriTrans: ICoord = Tool.extractTransNums(this.keyframeTrackContainer.getAttributeNS(null, 'transform'));
+                        this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${oriTrans.y - diffY * this.ySliderPercent})`);
                     }
                     preY = currentY;
                 }
@@ -156,15 +160,15 @@ export class KfContainer {
                 const currentSliderX: number = parseFloat(this.xSlider.getAttributeNS(null, 'x'));
                 const currentSliderW: number = parseFloat(this.xSlider.getAttributeNS(null, 'width'));
                 if (currentSliderX + diffX >= 0 && currentSliderX + diffX + currentSliderW <= this.xSliderContainerW) {
-                    console.log(currentX, preX, diffX);
                     this.xSlider.setAttributeNS(null, 'x', `${currentSliderX + diffX}`);
 
                     //update viewBox of keyframe
                     if (this.keyframeTrackContainer.getAttributeNS(null, 'transform')) {
-                        let oriX: number = parseFloat(this.keyframeTrackContainer.getAttributeNS(null, 'transX'));
-                        console.log('orix: ', oriX, oriX - diffX);
-                        this.keyframeTrackContainer.setAttributeNS(null, 'transX', `${oriX - 1.5 * diffX}`)
-                        this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriX - 1.5 * diffX}, 0)`)
+                        // let oriX: number = parseFloat(this.keyframeTrackContainer.getAttributeNS(null, 'transX'));
+                        // this.keyframeTrackContainer.setAttributeNS(null, 'transX', `${oriX - 1.5 * diffX}`)
+                        // this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriX - 1.5 * diffX}, 0)`)
+                        let oriTrans: ICoord = Tool.extractTransNums(this.keyframeTrackContainer.getAttributeNS(null, 'transform'));
+                        this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x - diffX * this.xSliderPercent}, ${oriTrans.y})`);
                     }
                     preX = currentX;
                 }
@@ -179,27 +183,33 @@ export class KfContainer {
         this.kfWidgetContainer.appendChild(this.xSliderContainer);
     }
 
+    public resetContainerTrans(): void {
+        // if (typeof this.keyframeTrackContainer.getAttributeNS(null, 'transform') !== 'undefined') {
+        this.keyframeTrackContainer.setAttributeNS(null, 'transform', 'translate(0, 0)');
+        this.ySlider.setAttributeNS(null, 'y', '0');
+        this.xSlider.setAttributeNS(null, 'x', '0');
+        // }
+    }
+
     public updateKfSlider(kfGroupSize: IKfGroupSize) {
         //update the viewBox
-        if (!this.keyframeTrackContainer.getAttributeNS(null, 'transform')) {
-            this.keyframeTrackContainer.setAttributeNS(null, 'transform', 'translate(0, 0)');
-            this.keyframeTrackContainer.setAttributeNS(null, 'transX', '0');
-            this.keyframeTrackContainer.setAttributeNS(null, 'transY', '0');
-        }
+        // this.resetContainerTrans();
 
         //update xslider and xslider track width
         this.xSliderContainerW = this.kfWidgetContainer.clientWidth;
         this.xSliderBg.setAttributeNS(null, 'width', `${this.xSliderContainerW}`);
-        if (kfGroupSize.width) {
-            this.xSlider.setAttributeNS(null, 'width', `${this.xSliderContainerW * this.xSliderContainerW / kfGroupSize.width}`);
+        if (typeof kfGroupSize.width !== 'undefined') {
+            this.xSliderPercent = (kfGroupSize.width + 100) / this.xSliderContainerW;
+            this.xSlider.setAttributeNS(null, 'width', `${this.xSliderContainerW * (this.xSliderContainerW / kfGroupSize.width)}`);
         }
 
         //update yslider and yslider track height
         this.ySliderContainerH = this.kfWidgetContainer.clientHeight;
         this.ySliderContainer.setAttribute('style', `width:${KfContainer.SLIDER_W + 4}px; margin-top:${-this.ySliderContainerH}px; margin-right:${-KfContainer.SLIDER_W - 7}`)
         this.ySliderBg.setAttributeNS(null, 'height', `${this.ySliderContainerH}`);
-        if (kfGroupSize.height) {
-            this.ySlider.setAttributeNS(null, 'height', `${this.ySliderContainerH * this.ySliderContainerH / kfGroupSize.height}`);
+        if (typeof kfGroupSize.height !== 'undefined') {
+            this.ySliderPercent = (kfGroupSize.height + 500) / this.ySliderContainerH;
+            this.ySlider.setAttributeNS(null, 'height', `${this.ySliderContainerH * (this.ySliderContainerH / kfGroupSize.height)}`);
         }
     }
 }

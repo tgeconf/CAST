@@ -108,7 +108,6 @@ export default class Slider {
                     preX = currentX;
                 }
                 if (this.callbackFunc && typeof this.callbackFunc !== 'undefined') {
-                    console.log('moving');
                     this.callbackFunc(this.reverseScale(currentSliderX));
                 }
             }

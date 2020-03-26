@@ -3,8 +3,8 @@
         "selector": ".symbol",
         "grouping": {
             "groupBy": "Surface",
-            "reference": "start after previous",
-            "delay": 500,
+            "reference": "start with previous",
+            "delay": 1000,
             "sort": {
                 "order": [
                     "Smooth",
@@ -15,7 +15,7 @@
             "grouping": {
                 "groupBy": "Odor",
                 "reference": "start after previous",
-                "delay": 1000,
+                "delay": 500,
                 "sort": {
                     "order": [
                         "Almond",

@@ -2,8 +2,11 @@ import { state } from './state'
 import { IDataItem, ISortDataAttr, IKeyframeGroup, IKfGroupSize } from './ds'
 import * as action from './action'
 import Util from './util'
-import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie'
+import { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie'
+import KfTimingIllus from '../components/widgets/kfTimingIllus'
 import KfItem from '../components/widgets/kfItem'
+import { Animation } from 'canis_toolkit'
+
 export default class Reducer {
     static list: any = {};
 
@@ -58,12 +61,18 @@ Reducer.listen(action.UPDATE_LOTTIE, (lai: AnimationItem) => {
     console.log('updating lottie');
     state.lottieAni = lai;
 })
+Reducer.listen(action.UPDATE_STATIC_KEYFRAME, (staticMarks: string[]) => {
+    state.staticMarks = staticMarks;
+})
 Reducer.listen(action.UPDATE_KEYFRAME_TRACKS, (animations: Map<string, any>) => {
-    console.log('all animations: ', animations);
     //reset the min and max duraiton of KfItem
-    KfItem.minDuration = 1000000;
-    KfItem.maxDuration = 0;
-    const rootGroup: IKeyframeGroup[] = [...animations].map((a: any) => Util.aniRootToKFGroup(a[1].root, a[0], '', -1));
+    KfTimingIllus.resetOffsetDuration();
+    KfItem.allKfItems.clear();
+    KfItem.allKfInfo.clear();
+    const rootGroup: IKeyframeGroup[] = [...animations].map((a: any) => Util.aniRootToKFGroup(a[1].root, a[0], {}, -1));
+    if (rootGroup.length > 0) {
+        rootGroup[0].newTrack = false;
+    }
     console.log('roots to generate the keyframe ', rootGroup);
     state.keyframeGroups = rootGroup;
 })

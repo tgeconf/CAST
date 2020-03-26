@@ -1,37 +1,50 @@
 [
     {
-        "selector": ".symbol",
-        "grouping": {
-            "groupBy": "Surface",
-            "reference": "start with previous",
-            "sort": {
-                "order": [
-                    "Smooth",
-                    "Scaly",
-                    "Fibrous"
-                ]
-            },
-            "grouping": {
-                "groupBy": "Odor",
-                "reference": "start after previous",
-                "sort": {
-                    "order": [
-                        "Almond",
-                        "Anise",
-                        "Creosote",
-                        "Fishy",
-                        "Foul",
-                        "None",
-                        "Pungent",
-                        "Spicy"
-                    ]
-                }
+        "selector": ".axis-domain",
+        "effects": [
+            {
+                "type": "grow",
+                "duration": 300
             }
-        },
+        ]
+    },
+    {
+        "reference": "start after previous",
+        "selector": ".axis-tick, .axis-label",
         "effects": [
             {
                 "type": "fade",
-                "duration": 600
+                "duration": 300
+            }
+        ]
+    },
+    {
+        "reference": "start after previous",
+        "selector": ".text",
+        "effects": [
+            {
+                "offset": {
+                    "field": "start",
+                    "minOffset": 600
+                },
+                "type": "wipe left",
+                "duration": 300
+            }
+        ]
+    },
+    {
+        "selector": ".rectangle",
+        "effects": [
+            {
+                "offset": {
+                    "field": "start",
+                    "minOffset": 600
+                },
+                "type": "wipe left",
+                "duration": {
+                    "field": "duration",
+                    "minDuration": 600
+                }
             }
         ]
     }

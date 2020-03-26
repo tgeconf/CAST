@@ -21,6 +21,7 @@ import ganttSpec from '../assets/tmp/ganttSpec.json'
 import osSpec from '../assets/tmp/osSpec.json'
 import purchasesSpec from '../assets/tmp/purchasesSpec.json'
 import nightingaleSpec from '../assets/tmp/nightingaleSpec.json'
+import mushroomTest1 from '../assets/tmp/mushroomTest1.json'
 /**end for test!!!!!!!!!!!!!!!!!!!!!!!! */
 
 export default class FloatingWindow {
@@ -150,7 +151,8 @@ export default class FloatingWindow {
         const specWrapper: HTMLDivElement = document.createElement('div');
         specWrapper.style.width = '100%';
         specWrapper.style.height = '30px';
-        specWrapper.appendChild(this.createTestSpecBtn('mushroomSpec',mushroomSpec));
+        specWrapper.appendChild(this.createTestSpecBtn('mushroomSpec', mushroomSpec));
+        specWrapper.appendChild(this.createTestSpecBtn('mushroomTest1', mushroomTest1));
         specWrapper.appendChild(this.createTestSpecBtn('ganttSpec', ganttSpec));
         specWrapper.appendChild(this.createTestSpecBtn('osSpec', osSpec));
         specWrapper.appendChild(this.createTestSpecBtn('purchasesSpec', purchasesSpec));

@@ -10,22 +10,37 @@ export default class KfOmit {
     public hasOffset: boolean;
     public hasDuration: boolean;
     public iconContainer: SVGGElement;
+    public parentObj: KfGroup;
+    public startX: number;
+    public startY: number;
+    public omittedKfNum: number;
     public kfIcon: SVGRectElement;
     public offsetIcon: SVGRectElement;
     public durationIcon: SVGRectElement;
     public createOmit(startX: number, omittedKfNum: number, parentObj: KfGroup, hasOffset: boolean, hasDuration: boolean, startY: number = 0): void {
-        this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        this.container.setAttributeNS(null, 'transform', `translate(${startX + KfGroup.PADDING}, ${startY - KfOmit.OMIT_H / 2})`);
-        //create thumbnail
-        this.createThumbnail(omittedKfNum, hasOffset, hasDuration);
-        //create dots
-        this.createDots();
-        parentObj.container.appendChild(this.container);
-    }
-
-    public createThumbnail(omittedKfNum: number, hasOffset: boolean, hasDuration: boolean): void {
         this.hasOffset = hasOffset;
         this.hasDuration = hasDuration;
+        this.parentObj = parentObj;
+        this.omittedKfNum = omittedKfNum;
+        this.startX = startX;
+        this.startY = startY;
+
+        if (typeof this.parentObj.container !== 'undefined') {
+            this.renderOmit();
+        }
+    }
+
+    public renderOmit() {
+        this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.container.setAttributeNS(null, 'transform', `translate(${this.startX + KfGroup.PADDING}, ${this.startY - KfOmit.OMIT_H / 2})`);
+        //create thumbnail
+        this.createThumbnail(this.omittedKfNum);
+        //create dots
+        this.createDots();
+        this.parentObj.container.appendChild(this.container);
+    }
+
+    public createThumbnail(omittedKfNum: number): void {
         this.iconContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.iconContainer.setAttributeNS(null, 'transform', `translate(${KfOmit.OMIT_W_UNIT / 2}, 0)`);
         this.kfIcon = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -44,7 +59,7 @@ export default class KfOmit {
         this.iconContainer.appendChild(this.offsetIcon);
         this.iconContainer.appendChild(this.kfIcon);
         this.iconContainer.appendChild(this.durationIcon);
-        this.updateThumbnail(hasOffset, hasDuration);
+        this.updateThumbnail(this.hasOffset, this.hasDuration);
         this.createNum(omittedKfNum);
         this.container.appendChild(this.iconContainer);
     }
@@ -87,12 +102,12 @@ export default class KfOmit {
         this.num.setAttributeNS(null, 'y', '15');
         this.num.setAttributeNS(null, 'font-size', '12px');
         this.num.setAttributeNS(null, 'text-anchor', 'middle');
-        this.num.innerHTML = `${omittedKfNum}`;
+        this.num.innerHTML = `x${omittedKfNum}`;
         this.iconContainer.appendChild(this.num);
     }
 
     public updateNum(omittedKfNum: number): void {
-        this.num.innerHTML = `${omittedKfNum}`;
+        this.num.innerHTML = `x${omittedKfNum}`;
     }
 
     public createDots(): void {
