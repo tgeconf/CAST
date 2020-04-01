@@ -3,6 +3,8 @@ import { ICoord } from '../../util/ds';
 import KfItem from './kfItem';
 import PlusBtn from './plusBtn';
 import { state } from '../../app/state';
+import { Animation } from 'canis_toolkit';
+import Tool from '../../util/tool';
 
 export default class DragableCanvas {
     /**
@@ -42,15 +44,38 @@ export default class DragableCanvas {
 
         document.getElementById('highlightSelectionFrame').style.display = 'block';
         Array.from(document.getElementsByClassName('non-framed-mark')).forEach((m: HTMLElement) => m.style.display = 'block');
-        //highlight kfs which can be dropped on
-        console.log('grabbing selection: ', state.selection);
-        PlusBtn.highlightPlusBtn();
+
+        const selectedCls: string[] = state.selection.map((mId: string) => Animation.markClass.get(mId));//find the classes of selected marks
+        PlusBtn.highlightPlusBtns([...new Set(selectedCls)]);//highlight kfs which can be dropped on
         document.onmousemove = (moveEvt) => {
             canvas.style.left = `${moveEvt.pageX - canvas.width / 2}px`;
             canvas.style.top = `${moveEvt.pageY - canvas.height / 2}px`;
+            const dragOverItem: PlusBtn | KfItem = Tool.judgeDragOver({ x: moveEvt.pageX, y: moveEvt.pageY });
+            console.log('found drag over', dragOverItem, typeof dragOverItem);
+            if (typeof dragOverItem !== 'undefined') {
+                dragOverItem.dragSelOver();
+            } else {
+                if (typeof PlusBtn.dragoverBtn !== 'undefined') {
+                    PlusBtn.dragoverBtn.dragSelOut();
+                } else if (typeof KfItem.dragoverKf !== 'undefined') {
+                    KfItem.dragoverKf.dragSelOut();
+                }
+            }
         }
         document.onmouseup = (upEvt) => {
             canvas.remove();
+            //update kf if drop on plus button or kf
+            if (typeof typeof PlusBtn.dragoverBtn !== 'undefined') {
+                console.log('drop on plusbtn');
+            } else if (typeof KfItem.dragoverKf !== 'undefined') {
+                console.log('drop on kf');
+            }
+
+
+            PlusBtn.cancelHighlightPlusBtns();
+            KfItem.cancelHighlightKfs();
+            PlusBtn.dragoverBtn = undefined;
+            KfItem.dragoverKf = undefined;
             targetSVG.classList.toggle('chart-when-dragging');
             document.onmouseup = null;
             document.onmousemove = null;

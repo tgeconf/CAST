@@ -6,7 +6,12 @@
     opacity: 0.2;
 }
 
-.highlight-kf{
+.dragover-kf{
     stroke: #e2640e;
+    stroke-dasharray: 4 3;
+}
+
+.highlight-kf{
+    stroke: #358bcb;
     stroke-dasharray: 4 3;
 }

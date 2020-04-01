@@ -6,6 +6,8 @@ import Lasso from './lasso'
 import Reducer from '../app/reducer'
 import { dragableCanvas } from '../components/widgets/dragableCanvas'
 import * as action from '../app/action'
+import PlusBtn from '../components/widgets/plusBtn'
+import KfItem from '../components/widgets/kfItem'
 
 export default class Tool {
     public static extractTransNums(translateStr: string): ICoord {
@@ -18,6 +20,11 @@ export default class Tool {
     public static pointDist(x1: number, x2: number, y1: number, y2: number): number {
         return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
     }
+    /**
+     * whether a contains b
+     * @param a 
+     * @param b 
+     */
     public static arrayContained(a: any[], b: any[]): boolean {
         if (a.length < b.length) return false;
         for (var i = 0, len = b.length; i < len; i++) {
@@ -256,6 +263,31 @@ export default class Tool {
         } else {
             node.setAttributeNS(null, 'transform', `translate(${targetTrans.x}, ${targetTrans.y})`);
         }
+    }
+
+    /**
+     * judge which plus button or kf is dragged over
+     * @param mousemovePosi 
+     */
+    public static judgeDragOver(mousePosi: ICoord): PlusBtn | KfItem {
+        let dragOverItem: PlusBtn | KfItem;
+        PlusBtn.allPlusBtn.forEach((pb: PlusBtn) => {
+            if (pb.isHighlighted) {
+                const pbBBox: DOMRect = pb.container.getBoundingClientRect();
+                if (mousePosi.x >= pbBBox.left && mousePosi.x <= pbBBox.right && mousePosi.y >= pbBBox.top && mousePosi.y <= pbBBox.bottom) {
+                    dragOverItem = pb;
+                }
+            }
+        })
+        KfItem.allKfItems.forEach((kf: KfItem) => {
+            if (kf.isHighlighted) {
+                const kfBBox: DOMRect = kf.container.getBoundingClientRect();
+                if (mousePosi.x >= kfBBox.left && mousePosi.x <= kfBBox.right && mousePosi.y >= kfBBox.top && mousePosi.y <= kfBBox.bottom) {
+                    dragOverItem = kf;
+                }
+            }
+        })
+        return dragOverItem;
     }
 
 }

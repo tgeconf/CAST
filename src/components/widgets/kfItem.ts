@@ -19,12 +19,14 @@ export default class KfItem extends KfTimingIllus {
     static PADDING: number = 6;
     static allKfInfo: Map<number, IKeyframe> = new Map();
     static allKfItems: Map<number, KfItem> = new Map();
+    static dragoverKf: KfItem;
 
     // public id: number;
     public treeLevel: number;
     public parentObj: KfGroup;
     public rendered: boolean = false;
     public idxInGroup: number = 0;
+    public isHighlighted: boolean = false;
     public kfInfo: {
         delay: number
         duration: number
@@ -42,6 +44,19 @@ export default class KfItem extends KfTimingIllus {
 
     public totalWidth: number = 0
     public chartThumbnail: SVGImageElement
+
+    public static highlightKfs(selectedCls: string[]) {
+        //filter which kf to highlight
+
+    }
+
+    public static cancelHighlightKfs() {
+        this.allKfItems.forEach((kf: KfItem) => {
+            if (kf.isHighlighted) {
+                kf.cancelHighlightKf();
+            }
+        })
+    }
 
     public createStaticItem(staticMarks: string[]): void {
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -121,7 +136,7 @@ export default class KfItem extends KfTimingIllus {
                     const currentKfOffsetW: number = KfItem.BASIC_OFFSET_DURATION_W > this.offsetWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.offsetWidth;
                     const preKfDurationW: number = KfItem.BASIC_OFFSET_DURATION_W > this.durationWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.durationWidth;
                     if (posiDiff >= currentKfOffsetW + preKfDurationW) {//show both pre duration and current offset
-                        preSibling.cancelHighlightKf();
+                        preSibling.cancelKfDragoverKf();
                         if (this.hasOffset) {
                             this.showOffset();
                         } else {
@@ -154,7 +169,7 @@ export default class KfItem extends KfTimingIllus {
                             actionInfo = {};
                         }
                     } else if (posiDiff >= preKfDurationW && posiDiff < currentKfOffsetW + preKfDurationW) {//show pre duration
-                        preSibling.cancelHighlightKf();
+                        preSibling.cancelKfDragoverKf();
                         if (this.hasOffset) {
                             this.hideOffset();
                         } else {
@@ -186,7 +201,7 @@ export default class KfItem extends KfTimingIllus {
                             actionInfo = {};
                         }
                     } else if (posiDiff < preKfDurationW && posiDiff >= 0) {//show current offset
-                        preSibling.cancelHighlightKf();
+                        preSibling.cancelKfDragoverKf();
                         if (this.hasOffset) {
                             this.showOffset();
                         } else {
@@ -219,7 +234,7 @@ export default class KfItem extends KfTimingIllus {
                             actionInfo = {};
                         }
                     } else {//highlight pre kf
-                        preSibling.highlightKf();
+                        preSibling.kfDragoverKf();
                         if (this.hasOffset) {
                             this.hideOffset();
                         } else {
@@ -306,8 +321,6 @@ export default class KfItem extends KfTimingIllus {
         }
     }
 
-
-
     public hideDuration() {
         this.durationIllus.setAttributeNS(null, 'opacity', '0');
     }
@@ -324,12 +337,12 @@ export default class KfItem extends KfTimingIllus {
         this.offsetIllus.setAttributeNS(null, 'opacity', '1');
     }
 
-    public highlightKf() {
-        this.kfBg.classList.add('highlight-kf');
+    public kfDragoverKf() {
+        this.kfBg.classList.add('dragover-kf');
     }
 
-    public cancelHighlightKf() {
-        this.kfBg.classList.remove('highlight-kf');
+    public cancelKfDragoverKf() {
+        this.kfBg.classList.remove('dragover-kf');
     }
 
     public updateAlignPosi(alignTo: number) {
@@ -458,5 +471,23 @@ export default class KfItem extends KfTimingIllus {
         this.chartThumbnail.setAttributeNS(null, 'width', `${this.kfWidth}`);
         this.chartThumbnail.setAttributeNS(null, 'height', `${this.kfHeight}`);
         this.chartThumbnail.setAttributeNS(null, 'href', imgSrc);
+    }
+
+    public highlightKf() {
+        this.kfBg.setAttributeNS(null, 'class', 'highlight-kf');
+    }
+
+    public cancelHighlightKf() {
+        this.kfBg.classList.remove('highlight-kf');
+    }
+
+    public dragSelOver() {
+        this.kfBg.setAttributeNS(null, 'class', 'dragover-kf');
+        KfItem.dragoverKf = this;
+    }
+
+    public dragSelOut() {
+        this.kfBg.classList.remove('dragover-kf');
+        KfItem.dragoverKf = undefined;
     }
 }
