@@ -6,6 +6,10 @@ import KfTimingIllus from './kfTimingIllus';
 import KfOmit from './kfOmit';
 import { ICoord } from '../../util/ds';
 import IntelliRefLine from './intelliRefLine';
+import { KfContainer } from '../kfContainer';
+import * as action from '../../app/action';
+import Reducer from '../../app/reducer';
+import { TimingSpec } from 'canis_toolkit';
 
 export default class KfItem extends KfTimingIllus {
     static KF_HEIGHT: number = 178;
@@ -16,10 +20,11 @@ export default class KfItem extends KfTimingIllus {
     static allKfInfo: Map<number, IKeyframe> = new Map();
     static allKfItems: Map<number, KfItem> = new Map();
 
-    public id: number;
+    // public id: number;
     public treeLevel: number;
     public parentObj: KfGroup;
     public rendered: boolean = false;
+    public idxInGroup: number = 0;
     public kfInfo: {
         delay: number
         duration: number
@@ -30,7 +35,7 @@ export default class KfItem extends KfTimingIllus {
     }
 
     //widgets
-    public container: SVGGElement
+    // public container: SVGGElement
     public kfHeight: number
     public kfBg: SVGRectElement
     public kfWidth: number
@@ -51,17 +56,17 @@ export default class KfItem extends KfTimingIllus {
     }
 
     public createItem(kf: IKeyframe, treeLevel: number, parentObj: KfGroup, startX: number, size?: { w: number, h: number }): void {
+        console.log('draw duration: ', kf.durationIcon);
         this.hasOffset = kf.delayIcon;
         this.hasDuration = kf.durationIcon;
         this.parentObj = parentObj;
+        this.aniId = this.parentObj.aniId;
         if (this.parentObj.kfHasOffset !== this.hasOffset || this.parentObj.kfHasDuration !== this.hasDuration) {
             this.parentObj.updateParentKfHasTiming(this.hasOffset, this.hasDuration);
         }
-
         this.id = kf.id;
         this.treeLevel = treeLevel;
-        this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        this.container.setAttributeNS(null, 'transform', `translate(${startX + KfItem.PADDING}, ${KfItem.PADDING})`);
+
         if (typeof size !== 'undefined') {
             this.kfHeight = size.h;
         } else {
@@ -79,15 +84,183 @@ export default class KfItem extends KfTimingIllus {
         }
         if (typeof parentObj.container !== 'undefined') {
             this.rendered = true;
-            this.renderItem(size);
+            this.renderItem(startX, size);
         } else {
             KfItem.allKfItems.set(this.id, this);
         }
     }
 
-    public renderItem(size?: { w: number, h: number }) {
+    public renderItem(startX: number, size?: { w: number, h: number }) {
+        this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.container.classList.add('draggable-component');
+        this.container.setAttributeNS(null, 'transform', `translate(${startX + KfItem.PADDING}, ${KfItem.PADDING})`);
+        this.container.onmousedown = (downEvt) => {
+            let oriMousePosi: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
+            this.container.setAttributeNS(null, '_transform', this.container.getAttributeNS(null, 'transform'));
+            const containerBBox: DOMRect = this.container.getBoundingClientRect();
+            this.parentObj.container.removeChild(this.container);
+            const popKfContainer: HTMLElement = document.getElementById(KfContainer.KF_POPUP);
+            const popKfContainerBbox: DOMRect = popKfContainer.getBoundingClientRect();
+            popKfContainer.appendChild(this.container);
+            //set new transform
+            this.container.setAttributeNS(null, 'transform', `translate(${containerBBox.left - popKfContainerBbox.left}, ${containerBBox.top - popKfContainerBbox.top})`);
+            let updateSpec: boolean = false;
+            let actionType: string = '';
+            let actionInfo: any = {};
+
+            document.onmousemove = (moveEvt) => {
+                const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
+                const posiDiff: ICoord = { x: currentMousePosi.x - oriMousePosi.x, y: currentMousePosi.y - oriMousePosi.y };
+                const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
+                this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + posiDiff.x}, ${oriTrans.y + posiDiff.y})`);
+                const preSibling: KfItem | KfOmit = this.parentObj.children[this.idxInGroup - 1];
+                if (this.idxInGroup > 0 && preSibling instanceof KfItem) {//this is not the first kf in group, need to check the position relation with previous kf
+                    const currentKfLeft: number = this.kfBg.getBoundingClientRect().left;
+                    const preKfRight: number = preSibling.kfBg.getBoundingClientRect().right;
+                    const posiDiff: number = currentKfLeft - preKfRight;
+                    const currentKfOffsetW: number = KfItem.BASIC_OFFSET_DURATION_W > this.offsetWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.offsetWidth;
+                    const preKfDurationW: number = KfItem.BASIC_OFFSET_DURATION_W > this.durationWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.durationWidth;
+                    if (posiDiff >= currentKfOffsetW + preKfDurationW) {//show both pre duration and current offset
+                        preSibling.cancelHighlightKf();
+                        if (this.hasOffset) {
+                            this.showOffset();
+                        } else {
+                            if (typeof this.offsetIllus === 'undefined') {
+                                this.drawOffset(KfItem.minOffset, this.kfHeight, 0, true);
+                            }
+                            this.container.appendChild(this.offsetIllus);
+                        }
+                        if (preSibling.hasDuration) {
+                            preSibling.showDuration();
+                        } else {
+                            if (typeof preSibling.durationIllus === 'undefined') {
+                                preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight);
+                            }
+                            preSibling.container.appendChild(preSibling.durationIllus);
+                        }
+                        //target actions
+                        if (!this.hasOffset && preSibling.hasDuration) {
+                            updateSpec = true;//add default offset between kfs
+                            actionType = action.UPDATE_DELAY_BETWEEN_KF;
+                            actionInfo.aniId = this.parentObj.aniId;
+                            actionInfo.delay = 300;
+                        } else if (!preSibling.hasDuration && this.hasOffset) {
+                            updateSpec = true;//change timing ref from with to after
+                            actionType = action.UPDATE_KF_TIMING_REF;
+                            actionInfo.aniId = this.parentObj.aniId;
+                            actionInfo.ref = TimingSpec.timingRef.previousEnd;
+                        } else {
+                            updateSpec = false;
+                            actionInfo = {};
+                        }
+                    } else if (posiDiff >= preKfDurationW && posiDiff < currentKfOffsetW + preKfDurationW) {//show pre duration
+                        preSibling.cancelHighlightKf();
+                        if (this.hasOffset) {
+                            this.hideOffset();
+                        } else {
+                            if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
+                                this.container.removeChild(this.offsetIllus);
+                            }
+                        }
+                        if (preSibling.hasDuration) {
+                            preSibling.showDuration();
+                        } else {
+                            if (typeof preSibling.durationIllus === 'undefined') {
+                                preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight);
+                            }
+                            preSibling.container.appendChild(preSibling.durationIllus);
+                        }
+                        //target actions
+                        if (this.hasOffset && preSibling.hasDuration) {
+                            updateSpec = true;//remove offset between kfs
+                            actionType = action.UPDATE_DELAY_BETWEEN_KF;
+                            actionInfo.aniId = this.parentObj.aniId;
+                        } else if (this.hasOffset && !preSibling.hasDuration) {
+                            updateSpec = true;//change timing ref from with to after and remove offset
+                            actionType = action.UPDATE_TIMING_REF_DELAY_KF;
+                            actionInfo.aniId = this.parentObj.aniId;
+                            actionInfo.ref = TimingSpec.timingRef.previousEnd;
+                            actionInfo.delay = 300;
+                        } else {
+                            updateSpec = false;
+                            actionInfo = {};
+                        }
+                    } else if (posiDiff < preKfDurationW && posiDiff >= 0) {//show current offset
+                        preSibling.cancelHighlightKf();
+                        if (this.hasOffset) {
+                            this.showOffset();
+                        } else {
+                            if (typeof this.offsetIllus === 'undefined') {
+                                this.drawOffset(KfItem.minOffset, this.kfHeight, 0, true);
+                            }
+                            this.container.appendChild(this.offsetIllus);
+                        }
+                        if (preSibling.hasDuration) {
+                            preSibling.hideDuration();
+                        } else {
+                            if (typeof preSibling.durationIllus !== 'undefined' && preSibling.container.contains(preSibling.durationIllus)) {
+                                preSibling.container.removeChild(preSibling.durationIllus);
+                            }
+                        }
+                        //target actions
+                        if (!this.hasOffset && preSibling.hasDuration) {
+                            updateSpec = true;//change timing ref from after to with, and add default offset
+                            actionType = action.UPDATE_TIMING_REF_DELAY_KF;
+                            actionInfo.aniId = this.parentObj.aniId;
+                            actionInfo.ref = TimingSpec.timingRef.previousStart;
+                            actionInfo.delay = 300;
+                        } else if (this.hasOffset && preSibling.hasDuration) {
+                            updateSpec = true; //change timing ref from after to with
+                            actionType = action.UPDATE_KF_TIMING_REF;
+                            actionInfo.aniId = this.parentObj.aniId;
+                            actionInfo.ref = TimingSpec.timingRef.previousStart;
+                        } else {
+                            updateSpec = false;
+                            actionInfo = {};
+                        }
+                    } else {//highlight pre kf
+                        preSibling.highlightKf();
+                        if (this.hasOffset) {
+                            this.hideOffset();
+                        } else {
+                            if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
+                                this.container.removeChild(this.offsetIllus);
+                            }
+                        }
+                        if (preSibling.hasDuration) {
+                            preSibling.hideDuration();
+                        } else {
+                            if (typeof preSibling.durationIllus !== 'undefined' && preSibling.container.contains(preSibling.durationIllus)) {
+                                preSibling.container.removeChild(preSibling.durationIllus);
+                            }
+                        }
+                        //target actions
+                        updateSpec = true;//remove lowest level grouping
+                        actionType = action.REMOVE_LOWESTGROUP;
+                        actionInfo.aniId = this.parentObj.aniId;
+                    }
+                }
+
+                oriMousePosi = currentMousePosi;
+            }
+            document.onmouseup = () => {
+                document.onmousemove = null;
+                document.onmouseup = null;
+                if (!updateSpec) {
+                    this.container.setAttributeNS(null, 'transform', this.container.getAttributeNS(null, '_transform'));
+                    if (this.treeLevel === 1) {
+                        this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
+                    } else {
+                        this.parentObj.container.appendChild(this.container);
+                    }
+                } else {
+                    Reducer.triger(actionType, actionInfo);
+                    popKfContainer.removeChild(this.container);
+                }
+            }
+        }
         if (this.hasOffset) {
-            this.drawOffset(this.kfInfo.delay, this.kfHeight);
+            this.drawOffset(this.kfInfo.delay, this.kfHeight, 0);
             this.container.appendChild(this.offsetIllus);
             this.totalWidth += this.offsetWidth;
         }
@@ -100,7 +273,11 @@ export default class KfItem extends KfTimingIllus {
         }
         this.drawChart(this.kfInfo.allCurrentMarks, this.kfInfo.allGroupMarks, this.kfInfo.marksThisKf);
         this.container.appendChild(this.chartThumbnail);
-        this.parentObj.container.appendChild(this.container);
+        if (this.treeLevel === 1) {
+            this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
+        } else {
+            this.parentObj.container.appendChild(this.container);
+        }
 
         //if this kfItem is aligned to previous kfItems, update positions
         if (typeof this.kfInfo.alignTo !== 'undefined') {
@@ -121,10 +298,38 @@ export default class KfItem extends KfTimingIllus {
             } else {// create a line
                 let refLine: IntelliRefLine = new IntelliRefLine();
                 refLine.createLine(this.kfInfo.alignTo, this.id);
+                KfItem.allKfItems.get(this.kfInfo.alignTo).parentObj.alignLines.push(refLine.id);
+                this.parentObj.alignLines.push(refLine.id);
             }
         } else {
             KfItem.allKfItems.set(this.id, this);
         }
+    }
+
+
+
+    public hideDuration() {
+        this.durationIllus.setAttributeNS(null, 'opacity', '0');
+    }
+
+    public showDuration() {
+        this.durationIllus.setAttributeNS(null, 'opacity', '1');
+    }
+
+    public hideOffset() {
+        this.offsetIllus.setAttributeNS(null, 'opacity', '0');
+    }
+
+    public showOffset() {
+        this.offsetIllus.setAttributeNS(null, 'opacity', '1');
+    }
+
+    public highlightKf() {
+        this.kfBg.classList.add('highlight-kf');
+    }
+
+    public cancelHighlightKf() {
+        this.kfBg.classList.remove('highlight-kf');
     }
 
     public updateAlignPosi(alignTo: number) {

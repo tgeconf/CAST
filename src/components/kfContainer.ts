@@ -5,8 +5,11 @@ import { ICoord } from '../util/ds';
 
 export class KfContainer {
     static KF_LIST_ID: string = 'kfList';
+    static MASK: string = 'markContainer';
     static KF_BG: string = 'kfBgG';
     static KF_FG: string = 'kfFgG';
+    static KF_POPUP: string = 'kfPopupG';
+    static KF_HINT: string = 'kfHintG';
     static SLIDER_W: number = 10;
     static WHEEL_STEP: number = 20;
 
@@ -33,19 +36,29 @@ export class KfContainer {
         this.keyframeTrackContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.keyframeTrackContainer.id = KfContainer.KF_LIST_ID;
         this.keyframeTrackContainer.setAttributeNS(null, 'class', 'kf-tracks-inner-container');
+
         const kfBgG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         kfBgG.setAttributeNS(null, 'id', KfContainer.KF_BG);
         this.keyframeTrackContainer.appendChild(kfBgG);
+
         const kfFgG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         kfFgG.setAttributeNS(null, 'id', KfContainer.KF_FG);
         this.keyframeTrackContainer.appendChild(kfFgG);
+
+        const kfPopupG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        kfPopupG.setAttributeNS(null, 'id', KfContainer.KF_POPUP);
+        this.keyframeTrackContainer.appendChild(kfPopupG);
+
+        const hintG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        hintG.setAttributeNS(null, 'id', KfContainer.KF_HINT);
+        this.keyframeTrackContainer.appendChild(hintG);
+
         keyframeTrackSVG.appendChild(this.keyframeTrackContainer);
         this.kfWidgetContainer.appendChild(keyframeTrackSVG);
         //create y slider
         this.createYSlider();
         //create x slider
         this.createXSlider();
-
 
         this.kfWidgetContainer.onmouseover = () => {
             this.updateKfSlider({});
@@ -76,9 +89,6 @@ export class KfContainer {
 
                     //update translate of keyframe
                     if (this.keyframeTrackContainer.getAttributeNS(null, 'transform')) {
-                        // let oriY: number = parseFloat(this.keyframeTrackContainer.getAttributeNS(null, 'transY'));
-                        // this.keyframeTrackContainer.setAttributeNS(null, 'transY', `${oriY - 2.5 * diffY}`)
-                        // this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(0, ${oriY - 2.5 * diffY})`)
                         let oriTrans: ICoord = Tool.extractTransNums(this.keyframeTrackContainer.getAttributeNS(null, 'transform'));
                         this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${oriTrans.y - diffY * this.ySliderPercent})`);
                     }

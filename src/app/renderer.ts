@@ -1,7 +1,7 @@
 import { state, IState, State } from './state'
 import { IDataItem, ISortDataAttr, IKeyframeGroup, IKeyframe, IKfGroupSize } from './ds'
 import { ChartSpec, Animation } from 'canis_toolkit'
-import { canisGenerator, canis } from './canisGenerator'
+import CanisGenerator, { canis, ICanisSpec } from './canisGenerator'
 import { ViewToolBtn, ViewContent } from '../components/viewWindow'
 import AttrBtn from '../components/widgets/attrBtn'
 import AttrSort from '../components/widgets/attrSort'
@@ -20,6 +20,7 @@ import KfTrack from '../components/widgets/kfTrack'
 import KfGroup from '../components/widgets/kfGroup'
 import { KfContainer, kfContainer } from '../components/kfContainer'
 import KfOmit from '../components/widgets/kfOmit'
+import PlusBtn from '../components/widgets/plusBtn'
 /** end for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 
 /**
@@ -30,10 +31,58 @@ export default class Renderer {
      * generate the canis spec and render
      * @param s : state
      */
-    public static async generateAndRenderSpec(s: IState) {
-        canisGenerator.generate(s);
-        console.log('generated canis spec: ', canisGenerator.canisSpec);
-        const lottieSpec = await canis.renderSpec(canisGenerator.canisSpec, () => {
+    // public static async generateAndRenderSpec(s: IState) {
+    //     canisGenerator.generate(s);
+    //     console.log('generated canis spec: ', canisGenerator.canisSpec);
+    //     const lottieSpec = await canis.renderSpec(canisGenerator.canisSpec, () => {
+    //         Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
+    //         Util.extractNonDataAttrValue(ChartSpec.nonDataMarkDatum);
+    //         //save histroy before update state
+    //         State.tmpStateBusket.push([action.UPDATE_DATA_ORDER, state.dataOrder]);
+    //         State.tmpStateBusket.push([action.UPDATE_DATA_TABLE, state.dataTable]);
+    //         State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
+    //         Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(Util.filteredDataTable.keys()));
+    //         Reducer.triger(action.UPDATE_DATA_TABLE, Util.filteredDataTable);
+    //         Reducer.triger(action.UPDATE_DATA_SORT, Object.keys(Util.attrType).map(attrName => {
+    //             return {
+    //                 attr: attrName,
+    //                 sort: 'dataIndex'
+    //             }
+    //         }));
+    //     });
+    //     //add highlight box on the chart
+    //     const svg: HTMLElement = document.getElementById('visChart');
+    //     if (svg) {
+    //         //create the highlight box
+    //         const highlightBox: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    //         highlightBox.setAttributeNS(null, 'id', 'highlightSelectionFrame');
+    //         highlightBox.setAttributeNS(null, 'class', 'highlight-selection-frame');
+    //         highlightBox.setAttributeNS(null, 'fill', 'rgba(255, 255, 255, 0.01)');
+    //         highlightBox.setAttributeNS(null, 'stroke', '#2196f3');
+    //         highlightBox.setAttributeNS(null, 'stroke-width', '2');
+    //         svg.appendChild(highlightBox);
+    //         // Tool.resizeSVG(svg, svg.parentElement.offsetWidth, svg.parentElement.offsetHeight);
+    //     }
+    //     //render video view
+    //     this.renderVideo(lottieSpec);
+    //     player.resetPlayer({
+    //         frameRate: canis.frameRate,
+    //         currentTime: 0,
+    //         totalTime: canis.duration()
+    //     })
+    // }
+
+    /**
+     * test rendering spec
+     * @param spec 
+     */
+    public static async renderSpec(spec: ICanisSpec) {
+        console.log('going to validate spec: ', spec);
+        //validate spec before render
+        CanisGenerator.validate(spec);
+        console.log('going to render spec: ', spec);
+
+        const lottieSpec = await canis.renderSpec(spec, () => {
             Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
             Util.extractNonDataAttrValue(ChartSpec.nonDataMarkDatum);
             //save histroy before update state
@@ -49,34 +98,6 @@ export default class Renderer {
                 }
             }));
         });
-        //add highlight box on the chart
-        const svg: HTMLElement = document.getElementById('visChart');
-        if (svg) {
-            //create the highlight box
-            const highlightBox: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            highlightBox.setAttributeNS(null, 'id', 'highlightSelectionFrame');
-            highlightBox.setAttributeNS(null, 'class', 'highlight-selection-frame');
-            highlightBox.setAttributeNS(null, 'fill', 'rgba(255, 255, 255, 0.01)');
-            highlightBox.setAttributeNS(null, 'stroke', '#2196f3');
-            highlightBox.setAttributeNS(null, 'stroke-width', '2');
-            svg.appendChild(highlightBox);
-            // Tool.resizeSVG(svg, svg.parentElement.offsetWidth, svg.parentElement.offsetHeight);
-        }
-        //render video view
-        this.renderVideo(lottieSpec);
-        player.resetPlayer({
-            frameRate: canis.frameRate,
-            currentTime: 0,
-            totalTime: canis.duration()
-        })
-    }
-
-    /**
-     * test rendering spec
-     * @param spec 
-     */
-    public static async renderSpec() {
-        const lottieSpec = await canis.renderSpec(canisGenerator.canisSpec, () => { });
         //add highlight box on the chart
         const svg: HTMLElement = document.getElementById('visChart');
         if (svg) {
@@ -254,7 +275,14 @@ export default class Renderer {
             kfIdxToDraw = [...new Set(kfIdxToDraw)].sort((a: number, b: number) => a - b);
 
             //rendering kf
+            //check whether there should be a plus btn
             let kfPosiX = kfGroup.offsetWidth;
+
+            let [addingPlusBtn, acceptableMarkClasses] = PlusBtn.detectAdding(kfg.keyframes);
+            addingPlusBtn = addingPlusBtn && kfgIdx === 0 && Util.judgeFirstKf(kfGroup.parentObj);
+            if (addingPlusBtn) {
+                kfPosiX += PlusBtn.PADDING;
+            }
             kfg.keyframes.forEach((k: any, i: number) => {
                 //whether to draw this kf or not
                 if (kfIdxToDraw.includes(i)) {
@@ -269,23 +297,47 @@ export default class Renderer {
                         }
                     }
                     //draw render
+                    let targetSize: { w: number, h: number } = { w: 0, h: 0 }
+                    let kfSize: { w: number, h: number } = { w: 0, h: 0 }
+                    if (isAlignWith === 2) {
+                        targetSize.w = KfItem.allKfItems.get(k.alignTo).kfWidth;
+                        targetSize.h = KfItem.allKfItems.get(k.alignTo).kfHeight;
+                        kfSize = targetSize;
+                    } else {
+                        kfSize = { w: KfItem.KF_WIDTH - treeLevel * KfItem.KF_W_STEP, h: KfItem.KF_HEIGHT - 2 * treeLevel * KfItem.KF_H_STEP };
+                    }
+                    if (addingPlusBtn && i === 0) {
+                        kfPosiX += PlusBtn.BTN_SIZE;
+                        const plusBtn: PlusBtn = new PlusBtn();
+                        plusBtn.createBtn(kfGroup, kfSize, acceptableMarkClasses);
+                        kfGroup.children.push(plusBtn);
+                    }
+
                     const kfItem: KfItem = new KfItem();
                     if (isAlignWith === 2) {
-                        const targetSize: { w: number, h: number } = { w: KfItem.allKfItems.get(k.alignTo).kfWidth, h: KfItem.allKfItems.get(k.alignTo).kfHeight };
                         kfItem.createItem(k, treeLevel, kfGroup, kfPosiX, targetSize);
                     } else {
                         kfItem.createItem(k, treeLevel, kfGroup, kfPosiX);
                     }
+
                     // KfItem.allKfItems.set(k.id, kfItem);
                     kfGroup.children.push(kfItem);
+                    kfItem.idxInGroup = kfGroup.children.length - 1;
                     kfPosiX += kfItem.totalWidth;
                 }
             })
+            // //render plus btn
+            // if (addingPlusBtn) {
+            //     const plusBtn: PlusBtn = new PlusBtn();
+            //     plusBtn.createBtn(kfGroup, kfSIze);
+            //     kfGroup.children.push(plusBtn);
+            // }
         } else if (kfg.children.length > 0) {
             //rendering kf group
             kfg.children.forEach((c: any, i: number) => {
                 const tmpKfGroup: KfGroup = this.renderKeyframeGroup(i, kfg.children.length, c, treeLevel, kfGroup);
                 kfGroup.children.push(tmpKfGroup);
+                tmpKfGroup.idxInGroup = kfGroup.children.length - 1;
                 kfGroup.kfNum += tmpKfGroup.kfNum;
             });
         }

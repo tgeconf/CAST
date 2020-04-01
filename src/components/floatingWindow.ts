@@ -11,7 +11,6 @@ import NightingaleImg from '../assets/img/examples/nightingale.png'
 import NightingaleChart from '../assets/charts/nightingale.svg'
 import Reducer from '../app/reducer'
 import * as action from '../app/action'
-import { canisGenerator } from '../app/canisGenerator'
 import { State, state } from '../app/state'
 
 /**for test!!!!!!!!!!!!!!!!!!!!!!!! */
@@ -162,14 +161,13 @@ export default class FloatingWindow {
         specPanel.style.width = '100%';
         specPanel.style.height = '400px';
         specPanel.id = 'specPanel';
-        specPanel.innerHTML = JSON.stringify(canisGenerator.canisSpec.animations, null, 2);
+        specPanel.innerHTML = JSON.stringify(state.spec.animations, null, 2);
         wrapper.appendChild(specPanel);
         const renderBtn: HTMLButtonElement = document.createElement('button');
         renderBtn.innerHTML = 'render spec';
         renderBtn.onclick = () => {
             let tmpSpec = JSON.parse(specPanel.value);
-            canisGenerator.canisSpec.animations = tmpSpec;
-            Renderer.renderSpec();
+            Reducer.triger(action.LOAD_ANIMATION_SPEC, tmpSpec);
             this.floatingWindow.remove();
         }
         wrapper.appendChild(renderBtn);

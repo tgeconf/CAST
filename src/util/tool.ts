@@ -166,6 +166,7 @@ export default class Tool {
     public static initRectangularSelection(containerId: string): void {
         const rectangularSelection = new Rectangular();
         document.getElementById(containerId).onmousedown = (downEvt) => {
+            downEvt.preventDefault();
             //get the scale of the chart since the size of the svg container is different from that of the chart
             let scaleW: number = 1, scaleH: number = 1;
             const svg: any = document.getElementById('visChart');
@@ -179,7 +180,6 @@ export default class Tool {
                 (evtTarget.classList.contains('mark') && state.selection.includes(evtTarget.id) && state.selection.length > 0)) {//clicked within the selection frame
                 dragableCanvas.createCanvas(
                     document.querySelector('#' + containerId + ' > svg:first-of-type'),
-                    document.getElementById('highlightSelectionFrame').getBoundingClientRect(),
                     { x: downEvt.pageX, y: downEvt.pageY });
             } else {//doing selection
                 if (svg) {
@@ -246,6 +246,15 @@ export default class Tool {
                     }
                 }
             }
+        }
+    }
+
+    public static updateTranslate(node: any, targetTrans: ICoord) {
+        if (node.getAttributeNS(null, 'transform') && typeof node.getAttributeNS(null, 'transform') !== 'undefined') {
+            const trans: ICoord = this.extractTransNums(node.getAttributeNS(null, 'transform'));
+            node.setAttributeNS(null, 'transform', `translate(${trans.x + targetTrans.x}, ${trans.y + targetTrans.y})`);
+        } else {
+            node.setAttributeNS(null, 'transform', `translate(${targetTrans.x}, ${targetTrans.y})`);
         }
     }
 

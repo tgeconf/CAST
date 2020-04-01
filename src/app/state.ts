@@ -1,4 +1,3 @@
-import { canisGenerator, canis, ICanisSpec } from './canisGenerator'
 import { ChartSpec } from 'canis_toolkit'
 import { ViewToolBtn } from '../components/viewWindow'
 import Renderer from './renderer'
@@ -8,6 +7,7 @@ import Util from './util'
 import Reducer from './reducer'
 import * as action from './action'
 import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie';
+import { ICanisSpec } from './canisGenerator'
 
 
 export interface IState {
@@ -21,6 +21,8 @@ export interface IState {
     selection: string[]
     suggestion: boolean
 
+
+    spec: ICanisSpec
     //keyframe status
     // keyframeStatus: IKeyframe
     kfGroupSize: IKfGroupSize // size of all kf groups
@@ -45,6 +47,7 @@ export class State implements IState {
     _tool: string
     _selection: string[]
     _suggestion: boolean
+    _spec: ICanisSpec
 
     _kfGroupSize: IKfGroupSize
 
@@ -98,7 +101,8 @@ export class State implements IState {
     set charts(cs: string[]) {
         //State.saveHistory(action.LOAD_CHARTS, this._charts);
         this._charts = cs;
-        Renderer.generateAndRenderSpec(this);
+        Reducer.triger(action.UPDATE_SPEC_CHARTS, this.charts);
+        // Renderer.generateAndRenderSpec(this);
     }
     get charts(): string[] {
         return this._charts;
@@ -161,6 +165,13 @@ export class State implements IState {
     }
     get staticMarks(): string[] {
         return this._staticMarks;
+    }
+    set spec(canisSpec: ICanisSpec) {
+        this._spec = canisSpec;
+        Renderer.renderSpec(this.spec);
+    }
+    get spec(): ICanisSpec {
+        return this._spec;
     }
     // set groupingAndTiming(gat: any) {
     //     this._groupingAndTiming = gat;

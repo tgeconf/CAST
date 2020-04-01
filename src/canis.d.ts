@@ -31,7 +31,8 @@ declare module 'canis_toolkit' {
         static frameTime: Map<number, boolean>;
         static animations: Map<string, any>;
         static allMarkAni: Map<string, any>;
-        static allMarks: string[]
+        static allMarks: string[];
+        static markClass: Map<string, string>;
         static alignTarget: {
             withEle: string
             withObj: string

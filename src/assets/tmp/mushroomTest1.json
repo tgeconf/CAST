@@ -2,31 +2,35 @@
     {
         "selector": ".symbol",
         "grouping": {
-            "groupBy": "Surface",
-            "reference": "start with previous",
+            "groupBy": "Odor",
+            "reference": "start after previous",
             "delay": 1000,
             "sort": {
                 "order": [
-                    "Smooth",
-                    "Scaly",
-                    "Fibrous"
+                    "Almond",
+                    "Anise",
+                    "Creosote",
+                    "Fishy",
+                    "Foul",
+                    "None",
+                    "Pungent",
+                    "Spicy"
                 ]
             },
             "grouping": {
-                "groupBy": "Odor",
+                "groupBy": "Surface",
                 "reference": "start after previous",
                 "delay": 500,
                 "sort": {
                     "order": [
-                        "Almond",
-                        "Anise",
-                        "Creosote",
-                        "Fishy",
-                        "Foul",
-                        "None",
-                        "Pungent",
-                        "Spicy"
+                        "Smooth",
+                        "Scaly",
+                        "Fibrous"
                     ]
+                },
+                "grouping": {
+                    "groupBy": "IsEdible",
+                    "reference": "start after previous"
                 }
             }
         },

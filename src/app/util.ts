@@ -5,9 +5,10 @@ import { ISortDataAttr, IDataItem, IDataDatumType, IKeyframeGroup, IKeyframe } f
 import AttrSort from '../components/widgets/attrSort';
 import KfTimingIllus from '../components/widgets/kfTimingIllus';
 import KfItem from '../components/widgets/kfItem';
+import KfGroup from '../components/widgets/kfGroup';
+import KfTrack from '../components/widgets/kfTrack';
 
 export default class Util {
-    static attrType: IDataDatumType = {};
     static NUMERIC_ATTR: string = 'numeric';
     static CATEGORICAL_ATTR: string = 'categorical';
     static DATA_SUGGESTION: string = 'dataSuggestion';
@@ -19,6 +20,8 @@ export default class Util {
 
     static filteredDataTable: Map<string, IDataItem> = new Map();//markId, dataItem
     static nonDataTable: Map<string, IDataItem> = new Map();//markId, non dataitem (for axis, legend, title)
+    static attrType: IDataDatumType = {};
+    static nonDataAttrs: string[] = [];
 
     /**
      * based on selected marks, judge perfrom which kind of suggestion
@@ -71,7 +74,7 @@ export default class Util {
      */
     public static suggestSelBasedOnData(markIds: string[]): string[] {
         //find the same and diff attributes of the selected marks
-        const [sameAttrs, diffAttrs] = this.compareAttrs(markIds);
+        const [sameAttrs, diffAttrs] = this.compareAttrs(markIds, this.filteredDataTable, Object.keys(this.attrType), true);
         //filter attributes according to the effectiveness ranking
         const filteredDiffAttrs = this.filterAttrs(diffAttrs);
         console.log('found same and diff attrs: ', sameAttrs, diffAttrs);
@@ -80,7 +83,7 @@ export default class Util {
         // this.filteredDataTable.forEach((datum, markId) => {
         //     allMarkIds.push(markId);
         // })
-        const [sections, orderedSectionIds] = this.partitionChart(sameAttrs, filteredDiffAttrs, allMarkIds);
+        const [sections, orderedSectionIds] = this.partitionChart(sameAttrs, filteredDiffAttrs, allMarkIds, this.filteredDataTable);
 
         //judge if marks from one section are selected all, otherwise repeat selection with the one with the most selected marks
         let allSelected: boolean = false, mostSelectionNumInSec: number = 0;
@@ -178,7 +181,39 @@ export default class Util {
      */
     public static suggestSelBasedOnChart(markIds: string[]): string[] {
         console.log(this.nonDataTable);
-        return markIds;
+        // let sameAttrs: string[] = Array.from(Object.keys(this.nonDataTable.get(markIds[0])));
+        // markIds.forEach((mId: string) => {
+        //     let removeIdxs: number[] = [];
+        //     sameAttrs.forEach((attrName: string, i: number) => {
+        //         if (this.nonDataTable.get(mId)[attrName] !== this.nonDataTable.get(markIds[0])[attrName]) {
+        //             removeIdxs.push(i);
+        //         }
+        //     })
+        //     if (removeIdxs.length > 0) {
+        //         for (let i = removeIdxs.length - 1; i > 0; i++) {
+        //             sameAttrs.splice(removeIdxs[i], 1);
+        //         }
+        //     }
+        // })
+        // console.log('same ')
+        const [sameAttrs, diffAttrs] = this.compareAttrs(markIds, this.nonDataTable, this.nonDataAttrs, false);
+        console.log('same and diff attrs: ', sameAttrs, diffAttrs);
+        // const allNonDataMarks: string[] = Array.from(this.nonDataTable.keys());
+        let suggestMarks: string[] = [];
+        this.nonDataTable.forEach((d: IDataItem, mId: string) => {
+            let flag = true;
+            sameAttrs.forEach((an: string) => {
+                if (d[an] !== this.nonDataTable.get(markIds[0])[an]) {
+                    flag = false;
+                }
+            })
+            if (flag) {
+                suggestMarks.push(mId);
+            }
+        })
+
+        console.log('non data suggest marks: ', suggestMarks);
+        return [...markIds, ...suggestMarks];
     }
 
     /**
@@ -188,11 +223,7 @@ export default class Util {
      * @param markIds 
      * @param hasOneMark 
      */
-    public static partitionChart(
-        sameAttrs: string[],
-        filteredDiffAttrs: string[],
-        markIds: string[],
-        hasOneMark: boolean = false): [Map<string, string[]>, string[]] {
+    public static partitionChart(sameAttrs: string[], filteredDiffAttrs: string[], markIds: string[], dataTable: Map<string, IDataItem>, hasOneMark: boolean = false): [Map<string, string[]>, string[]] {
         let sections = new Map();
         let sectionIdRecord: string[][] = [];
 
@@ -202,8 +233,8 @@ export default class Util {
             [...sameAttrs, ...filteredDiffAttrs].forEach((attr) => {
                 // sectionId += ChartSpec.dataMarkDatum.get(markId)[attr] + ',';
                 // seperateSecId.push(ChartSpec.dataMarkDatum.get(markId)[attr]);
-                sectionId += this.filteredDataTable.get(markId)[attr] + ',';
-                seperateSecId.push(this.filteredDataTable.get(markId)[attr].toString());
+                sectionId += dataTable.get(markId)[attr] + ',';
+                seperateSecId.push(dataTable.get(markId)[attr].toString());
             })
             if (hasOneMark) {
                 sectionId += markId + ',';
@@ -260,26 +291,30 @@ export default class Util {
      * @param markIds 
      * @param markData 
      */
-    public static compareAttrs(markIds: string[]): string[][] {
+    public static compareAttrs(markIds: string[], dataTable: Map<string, IDataItem>, allAttrs: string[], isDataAttr: boolean): string[][] {
         let sameAttr: string[] = [], diffAttrs: string[] = [];
-        for (let attrName in this.attrType) {
+        allAttrs.forEach((attrName: string) => {
             let sameAttrType = true;
-            const firstMarkType = this.filteredDataTable.get(markIds[0])[attrName];
+            const firstMarkType = dataTable.get(markIds[0])[attrName];
             for (let i = 1, len = markIds.length; i < len; i++) {
                 // if (ChartSpec.dataMarkDatum.get(markIds[i])[attrName] !== firstMarkType) {
-                if (this.filteredDataTable.get(markIds[i])[attrName] !== firstMarkType) {
+                if (dataTable.get(markIds[i])[attrName] !== firstMarkType) {
                     sameAttrType = false;
                     break;
                 }
             }
-            if (!this.EXCLUDED_DATA_ATTR.includes(attrName) && this.attrType[attrName] === this.CATEGORICAL_ATTR) {
-                if (sameAttrType) {
-                    sameAttr.push(attrName);
-                } else if (!sameAttrType) {
-                    diffAttrs.push(attrName);
-                }
+            if ((isDataAttr && !this.EXCLUDED_DATA_ATTR.includes(attrName) && this.attrType[attrName] === this.CATEGORICAL_ATTR) || !isDataAttr) {
+                sameAttrType ? sameAttr.push(attrName) : diffAttrs.push(attrName);
+                // if (sameAttrType) {
+                //     sameAttr.push(attrName);
+                // } else {
+                //     diffAttrs.push(attrName);
+                // }
             }
-        }
+
+        })
+        // for (let attrName in this.attrType) {
+
         return [sameAttr, diffAttrs];
     }
 
@@ -305,15 +340,46 @@ export default class Util {
 
     public static extractNonDataAttrValue(markData: Map<string, IDataItem>) {
         this.nonDataTable.clear();
+        this.nonDataAttrs = [];
+
+        let lastType: string = '';
+        let typeCount: Map<string, number> = new Map();//key: type value , value: number of times this kind of type shows in a sequence
+        typeCount.set('', 0);
         markData.forEach((dataDatum: IDataItem, markId: string) => {
             let tmpDataItem: IDataItem = {};
             for (const key in dataDatum) {
-                
-                tmpDataItem[key] = dataDatum[key];
+                if (key === '_TYPE' && `${dataDatum[key]}`.includes('-')) {
+                    const typeValue: string = `${dataDatum[key]}`;
+                    if (typeof typeCount.get(typeValue) === 'undefined') {
+                        typeCount.set(typeValue, 0);
+                    }
+                    if (typeValue !== lastType) {
+                        typeCount.set(lastType, typeCount.get(lastType) + 1);
+                        lastType = typeValue;
+                    }
+                    const attrValues: string[] = typeValue.split('-');
+                    attrValues.forEach((av: string, i: number) => {
+                        if (i === 0) {
+                            tmpDataItem._TYPE = `${av}`;
+                            this.nonDataAttrs.push('_TYPE');
+                            tmpDataItem._TYPE_IDX = `${typeCount.get(typeValue)}`;
+                            this.nonDataAttrs.push('_TYPE_IDX');
+                        } else {
+                            tmpDataItem[`_TYPE${i}`] = av;
+                            this.nonDataAttrs.push(`_TYPE${i}`);
+                        }
+                    })
+                } else {
+                    tmpDataItem[key] = dataDatum[key];
+                    this.nonDataAttrs.push(key);
+                }
             }
             this.nonDataTable.set(markId, tmpDataItem);
         })
+        this.nonDataAttrs = [...new Set(this.nonDataAttrs)];
     }
+
+
 
     public static filterDataSort(dataSort: ISortDataAttr[]): ISortDataAttr[] {
         return dataSort.filter(ds => !Util.EXCLUDED_DATA_ATTR.includes(ds.attr));
@@ -389,16 +455,19 @@ export default class Util {
                 || (aniunitNode.timingRef === TimingSpec.timingRef.previousStart && parentChildIdx !== 0)
         }
         console.log(aniId, 'new track: ', kfGroupRoot.newTrack);
-        KfTimingIllus.updateOffsetRange(aniunitNode.delay);
+        // KfTimingIllus.updateOffsetRange(aniunitNode.delay);
         if (typeof aniunitNode.offset !== 'undefined') {
             kfGroupRoot.delay = aniunitNode.offset;
             // kfGroupRoot.offset = aniunitNode.offset;
             // kfGroupRoot.offsetIcon = aniunitNode.offset > 0;
-            KfTimingIllus.updateOffsetRange(aniunitNode.offset);
+            // KfTimingIllus.updateOffsetRange(aniunitNode.offset);
         }
         if (typeof aniunitNode.align !== 'undefined') {
             kfGroupRoot.alignType = aniunitNode.align.type;
             kfGroupRoot.alignTarget = aniunitNode.align.target;
+        }
+        if (typeof aniunitNode.refValue !== 'undefined') {
+            kfGroupRoot.refValue = aniunitNode.refValue;
         }
         kfGroupRoot.children = [];
         kfGroupRoot.keyframes = [];
@@ -470,10 +539,11 @@ export default class Util {
     public static aniLeafToKF(aniLeaf: any, leafIdx: number, aniId: string, parentObj: IKeyframeGroup, parentMarks: string[]): IKeyframe {
         //find the min and max duraion of kfs, in order to render kfs
         const tmpDuration: number = aniLeaf.end - aniLeaf.start;
-        KfTimingIllus.updateDurationRange(tmpDuration);
-        if (leafIdx > 0) {//delay
-            KfTimingIllus.updateOffsetRange(aniLeaf.delay);
-        }
+        aniLeaf.marks = [...new Set(aniLeaf.marks)];
+        // KfTimingIllus.updateDurationRange(tmpDuration);
+        // if (leafIdx > 0) {//delay
+        //     KfTimingIllus.updateOffsetRange(aniLeaf.delay);
+        // }
         //find all the marks animate before marks in aniLeaf
         const marksInOrder: string[] = Animation.animations.get(aniId).marksInOrder;
         let targetIdx: number = 0;
@@ -503,7 +573,8 @@ export default class Util {
         allCurrentMarks = [...state.staticMarks, ...allCurrentMarks];
         // const allCurrentMarks = Animation.animations.get(aniId).marksInOrder.slice(0, targetIdx + 1);
 
-        let drawDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousEnd;
+        console.log('test', parentObj.marks, aniLeaf.marks);
+        let drawDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousEnd || parentObj.marks.length === aniLeaf.marks.length;
         if (typeof aniLeaf.alignTo !== 'undefined') {
             drawDuration = KfItem.allKfInfo.get(aniLeaf.alignTo).durationIcon;
         }
@@ -530,5 +601,35 @@ export default class Util {
         }
         KfItem.allKfInfo.set(tmpKf.id, tmpKf);
         return tmpKf;
+    }
+    public static judgeFirstKf(kfg: KfGroup | KfTrack): boolean {
+        // let flag = true;
+        // while (kfg.parentObj instanceof KfGroup) {
+        //     let firstKfg: KfGroup;
+        //     for (let i = 0, len = kfg.parentObj.children.length; i < len; i++) {
+        //         if (kfg.parentObj.children[i] instanceof KfGroup) {
+        //             firstKfg = kfg.parentObj.children[i];
+        //             break;
+        //         }
+        //     }
+        //     console.log(kfg.parentObj.children, firstKfg);
+        //     if (kfg.id !== firstKfg.id) {
+        //         flag = false;
+        //     }
+        //     kfg = kfg.parentObj;
+        // }
+        // return flag;
+        // if(typeof kfg !== 'undefined'){
+
+        // }
+        let flag = true;
+        while (kfg instanceof KfGroup) {
+            if (kfg.idxInGroup !== 0) {
+                flag = false
+                break;
+            }
+            kfg = kfg.parentObj;
+        }
+        return flag;
     }
 }

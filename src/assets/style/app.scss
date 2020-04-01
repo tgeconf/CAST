@@ -5,11 +5,17 @@
     src: url("../font/geforce.ttf") format("ttf"), url("../font/geforce.woff") format("woff");
 }
 
+@font-face {
+    font-family: "mono";
+    src: url("../font/UbuntuMono-Regular.ttf") format("ttf");
+}
+
 :root {
     --nav-content-height: 20px;
     --widget-font-size: 11pt;
     --title-height: 26px;
     --geforce-font: "geforce";
+    --mono-font: "mono";
     --gray-l1: #f2f2f2;
     --gray-l2: #e2e2e2;
     --gray-l3: #dadada;
@@ -62,8 +68,8 @@ body {
 }
 
 .inner-wrapper {
-	flex: 1;
-	height: 500px !important;
+    flex: 1;
+    height: 500px !important;
 }
 
 .footer {
@@ -71,4 +77,35 @@ body {
     height: 22px;
     color: var(--gray-l10);
     background: var(--highlight-blue);
+}
+
+.ease-transform {
+    transition: transform 0.04s cubic-bezier(0.445, 0.05, 0.55, 0.95);
+}
+
+.ease-fade {
+    transition: opacity 0.1s cubic-bezier(0.445, 0.05, 0.55, 0.95);
+}
+
+.draggable-component {
+    cursor: move;
+}
+
+.stretchable-component {
+    cursor: ew-resize;
+}
+.fadein-ele {
+    opacity: 0;
+}
+
+.fadein-ele:hover {
+    opacity: 1;
+}
+
+.monospace-font {
+    font-family: var(--mono-font);
+}
+
+.small-font {
+    font-size: 9pt;
 }

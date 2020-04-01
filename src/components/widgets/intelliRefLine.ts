@@ -3,7 +3,7 @@ import KfItem from "./kfItem";
 
 export default class IntelliRefLine {
     static HIGHLIGHT_STROKE_COLOR: string = '#0e89e5';
-    static STROKE_COLOR: string = '#595757';
+    static STROKE_COLOR: string = '#676767';
     static idx: number = 0;
     static allLines: Map<number, IntelliRefLine> = new Map();//key: line id, value: IntelliRefLine Obj
     static kfLineMapping: Map<number, { theOtherEnd: number, lineId: number }> = new Map();//key: kf id, value: {theOtherEnd: kf on the other end of this line, lineId: id of the IntelliRefLine obj}
@@ -35,7 +35,6 @@ export default class IntelliRefLine {
     public static updateLine(kfId: number) {
         console.log(IntelliRefLine.allLines, IntelliRefLine.kfLineMapping);
         if (typeof IntelliRefLine.kfLineMapping.get(kfId) !== 'undefined') {
-            console.log('line end: ', kfId, IntelliRefLine.kfLineMapping.get(kfId));
             const lineItem: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kfId).lineId);
             const containerBBox: DOMRect = lineItem.container.getBoundingClientRect();
             const alignKf1BBox: DOMRect = KfItem.allKfItems.get(kfId).container.getBoundingClientRect();
@@ -45,5 +44,9 @@ export default class IntelliRefLine {
             lineItem.line.setAttributeNS(null, 'y1', `${alignKf1BBox.top < alignKf2BBox.top ? (alignKf1BBox.top - containerBBox.top) : (alignKf2BBox.top - containerBBox.top)}`);
             lineItem.line.setAttributeNS(null, 'y2', `${alignKf1BBox.top < alignKf2BBox.top ? (alignKf2BBox.bottom - containerBBox.top) : (alignKf1BBox.bottom - containerBBox.top)}`);
         }
+    }
+
+    public hideLine(): void {
+        this.line.setAttributeNS(null, 'opacity', '0');
     }
 }

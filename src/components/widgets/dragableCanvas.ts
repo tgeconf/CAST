@@ -1,15 +1,16 @@
 import '../../assets/style/dragableCanvas.scss'
 import { ICoord } from '../../util/ds';
 import KfItem from './kfItem';
+import PlusBtn from './plusBtn';
+import { state } from '../../app/state';
 
 export default class DragableCanvas {
     /**
      * create a canvas when grabing the selected marks from the chart
      * @param targetSVG : svg chart being selected
-     * @param targetArea : selected area in the chart
      * @param downCoord : mouse down position
      */
-    public createCanvas(targetSVG: HTMLElement, targetArea: DOMRect, downCoord: ICoord) {
+    public createCanvas(targetSVG: HTMLElement, downCoord: ICoord) {
         targetSVG.classList.toggle('chart-when-dragging');
         document.getElementById('highlightSelectionFrame').style.display = 'none';
         Array.from(document.getElementsByClassName('non-framed-mark')).forEach((m: HTMLElement) => m.style.display = 'none');
@@ -41,12 +42,12 @@ export default class DragableCanvas {
 
         document.getElementById('highlightSelectionFrame').style.display = 'block';
         Array.from(document.getElementsByClassName('non-framed-mark')).forEach((m: HTMLElement) => m.style.display = 'block');
+        //highlight kfs which can be dropped on
+        console.log('grabbing selection: ', state.selection);
+        PlusBtn.highlightPlusBtn();
         document.onmousemove = (moveEvt) => {
             canvas.style.left = `${moveEvt.pageX - canvas.width / 2}px`;
             canvas.style.top = `${moveEvt.pageY - canvas.height / 2}px`;
-
-            //highlight kfs which can be dropped on
-
         }
         document.onmouseup = (upEvt) => {
             canvas.remove();

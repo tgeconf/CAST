@@ -93,7 +93,7 @@ export default class KfOmit {
     }
 
     public updateTrans(startX: number, startY: number): void {
-        this.container.setAttributeNS(null, 'transform', `translate(${startX + KfGroup.PADDING}, ${startY - KfOmit.OMIT_H / 2})`);
+        this.container.setAttributeNS(null, 'transform', `translate(${startX}, ${startY - KfOmit.OMIT_H / 2})`);
     }
 
     public createNum(omittedKfNum: number): void {

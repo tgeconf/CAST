@@ -29,6 +29,7 @@ export interface IKeyframe {
 
 export interface IKeyframeGroup {
     groupRef: string
+    refValue?: string
     id: number
     aniId: string
     // parentObj: IKeyframeGroup | {} //keyframe group id
