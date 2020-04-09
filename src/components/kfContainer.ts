@@ -1,11 +1,12 @@
 import '../assets/style/keyframeContainer.scss'
 import Tool from '../util/tool';
-import { IKfGroupSize } from '../app/ds';
+import { IKfGroupSize } from '../app/core/ds';
 import { ICoord } from '../util/ds';
 
 export class KfContainer {
+    static KF_CONTAINER: string = 'kfTracksContainer';
     static KF_LIST_ID: string = 'kfList';
-    static MASK: string = 'markContainer';
+    // static MASK: string = 'markContainer';
     static KF_BG: string = 'kfBgG';
     static KF_FG: string = 'kfFgG';
     static KF_POPUP: string = 'kfPopupG';
@@ -32,6 +33,7 @@ export class KfContainer {
 
         //create kf container
         const keyframeTrackSVG: SVGElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        keyframeTrackSVG.setAttributeNS(null, 'id', KfContainer.KF_CONTAINER);
         keyframeTrackSVG.setAttributeNS(null, 'class', 'kf-tracks-container');
         this.keyframeTrackContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.keyframeTrackContainer.id = KfContainer.KF_LIST_ID;

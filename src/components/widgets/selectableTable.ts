@@ -1,6 +1,6 @@
 import '../../assets/style/selectableTable.scss'
 import { state, State } from '../../app/state'
-import { IDataItem } from '../../app/ds';
+import { IDataItem } from '../../app/core/ds';
 import Reducer from '../../app/reducer';
 import * as action from '../../app/action'
 

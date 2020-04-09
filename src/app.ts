@@ -22,7 +22,7 @@ function app(): HTMLDivElement {
     innerWrapper.panel1.appendChild(dataView.view);
 
     //create main panels
-    const mainWrapper: IRPanel = ResizablePanel.createRPanels(true, { p1: 6, p2: 4, verticle: true });//chart & video, keyframe
+    const mainWrapper: IRPanel = ResizablePanel.createRPanels(true, { p1: 5.5, p2: 4.5, verticle: true });//chart & video, keyframe
     const chartVideoPanels: IRPanel = ResizablePanel.createRPanels(true, { p1: 5, p2: 5, verticle: false });
     //create chart view
     const chartView: ViewWindow = new ViewWindow(ViewWindow.CHART_VIEW_TITLE);

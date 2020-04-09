@@ -1,5 +1,6 @@
-import { KfContainer } from "../kfContainer";
+import { KfContainer, kfContainer } from "../kfContainer";
 import KfItem from "./kfItem";
+import { ICoord } from "../../util/ds";
 
 export default class IntelliRefLine {
     static HIGHLIGHT_STROKE_COLOR: string = '#0e89e5';
@@ -9,10 +10,11 @@ export default class IntelliRefLine {
     static kfLineMapping: Map<number, { theOtherEnd: number, lineId: number }> = new Map();//key: kf id, value: {theOtherEnd: kf on the other end of this line, lineId: id of the IntelliRefLine obj}
 
     public id: number;
-    public container: HTMLElement = document.getElementById(KfContainer.KF_FG);
+    public container: HTMLElement;
     public line: SVGLineElement;
 
     public createLine(alignWithKfId: number, alignToKfId: number) {
+        this.container = document.getElementById(KfContainer.KF_FG);
         this.id = IntelliRefLine.idx;
         IntelliRefLine.idx++;
         this.line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -24,7 +26,6 @@ export default class IntelliRefLine {
         IntelliRefLine.kfLineMapping.set(alignWithKfId, { theOtherEnd: alignToKfId, lineId: this.id });
         IntelliRefLine.kfLineMapping.set(alignToKfId, { theOtherEnd: alignWithKfId, lineId: this.id });
 
-        console.log('created line: ', this.id);
         IntelliRefLine.updateLine(alignWithKfId);
     }
 
@@ -33,7 +34,6 @@ export default class IntelliRefLine {
      * @param kfId : either alignwith kf or alignto kf
      */
     public static updateLine(kfId: number) {
-        console.log(IntelliRefLine.allLines, IntelliRefLine.kfLineMapping);
         if (typeof IntelliRefLine.kfLineMapping.get(kfId) !== 'undefined') {
             const lineItem: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kfId).lineId);
             const containerBBox: DOMRect = lineItem.container.getBoundingClientRect();
@@ -49,4 +49,31 @@ export default class IntelliRefLine {
     public hideLine(): void {
         this.line.setAttributeNS(null, 'opacity', '0');
     }
+
+    public hintInsert(targetPosi: ICoord, targetHeight: number, vertical: boolean = true) {
+        this.container = document.getElementById(KfContainer.KF_FG);
+        const containerBBox: DOMRect = document.getElementById(KfContainer.KF_CONTAINER).getBoundingClientRect();
+        if (typeof this.line === 'undefined') {
+            this.line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        }
+        if (!this.container.contains(this.line)) {
+            this.container.appendChild(this.line);
+        }
+        this.line.setAttributeNS(null, 'stroke', IntelliRefLine.HIGHLIGHT_STROKE_COLOR);
+        this.line.setAttributeNS(null, 'stroke-width', '4');
+        if (vertical) {
+            this.line.setAttributeNS(null, 'x1', `${targetPosi.x - containerBBox.left}`);
+            this.line.setAttributeNS(null, 'y1', `${targetPosi.y - containerBBox.top}`);
+            this.line.setAttributeNS(null, 'x2', `${targetPosi.x - containerBBox.left}`);
+            this.line.setAttributeNS(null, 'y2', `${targetPosi.y - containerBBox.top + targetHeight}`);
+        }
+    }
+
+    public removeHintInsert() {
+        if (this.container.contains(this.line)) {
+            this.container.removeChild(this.line);
+        }
+    }
 }
+
+export let hintDrop: IntelliRefLine = new IntelliRefLine();

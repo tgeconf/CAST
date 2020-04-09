@@ -80,7 +80,7 @@ body {
 }
 
 .ease-transform {
-    transition: transform 0.04s cubic-bezier(0.445, 0.05, 0.55, 0.95);
+    transition: transform 0.1s cubic-bezier(0.445, 0.05, 0.55, 0.95);
 }
 
 .ease-fade {
@@ -91,15 +91,28 @@ body {
     cursor: move;
 }
 
+.clickable-component {
+    cursor: pointer;
+}
+
 .stretchable-component {
     cursor: ew-resize;
 }
+
 .fadein-ele {
     opacity: 0;
 }
 
 .fadein-ele:hover {
     opacity: 1;
+}
+
+.show-ele {
+    opacity: 1;
+}
+
+.hide-ele {
+    opacity: 0;
 }
 
 .monospace-font {

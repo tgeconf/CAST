@@ -1,11 +1,11 @@
 import KfTrack from "./kfTrack";
-import { IKeyframeGroup } from "../../app/ds";
+import { IKeyframeGroup } from "../../app/core/ds";
 import KfOmit from "./kfOmit";
 import KfTimingIllus from "./kfTimingIllus";
 import KfItem from "./kfItem";
 import Tool from "../../util/tool";
 import { ICoord } from "../../util/ds";
-import IntelliRefLine from "./intelliRefLine";
+import IntelliRefLine, { hintDrop } from "./intelliRefLine";
 
 import '../../assets/style/keyframeGroup.scss'
 import { KfContainer } from "../kfContainer";
@@ -26,6 +26,7 @@ export default class KfGroup extends KfTimingIllus {
     static TITLE_PADDING: number = 4;
     static TITLE_HEIHGT: number = 18;
     static allActions: Map<string, any> = new Map();//key: aniId, value: action
+    static allAniGroups: Map<string, KfGroup> = new Map();//key: aniId, value: kfgroup corresponds to animation
 
     // public id: number;
     // public aniId: string;
@@ -36,6 +37,7 @@ export default class KfGroup extends KfTimingIllus {
     public title: string;
     public fullTitle: string;
     public rendered: boolean = false;
+    public targetTrackId: string;
     public idxInGroup: number = 0;
     public groupRef: string = '';
     public timingRef: string = TimingSpec.timingRef.previousStart;
@@ -48,7 +50,7 @@ export default class KfGroup extends KfTimingIllus {
     public isDragging: boolean = false;
     public groupBg: SVGRectElement;
     public groupMenu: GroupMenu;
-    public groupMenuMask: SVGMaskElement;
+    // public groupMenuMask: SVGMaskElement;
     public groupTitle: SVGGElement;
     public children: any[] = [];
     public kfNum: number = 0;
@@ -59,7 +61,7 @@ export default class KfGroup extends KfTimingIllus {
     set offsetDiff(od: number) {//for dragging the offset stretch bar
         this._offsetDiff = od;
         // this.hideLinesInGroup();
-        this.transKfDragOffset();
+        Tool.transNodeElements(this.container, od, true);
         this.translateWholeGroup(od);
     }
     get offsetDiff(): number {
@@ -82,13 +84,13 @@ export default class KfGroup extends KfTimingIllus {
      * @param g : container of this group, could be track or another group
      * @param p : init position of the root group
      */
-    public createGroup(kfg: IKeyframeGroup, parentObj: KfGroup | KfTrack, posiY: number, treeLevel: number): void {
-        console.log('create group: ', kfg, treeLevel);
+    public createGroup(kfg: IKeyframeGroup, parentObj: KfGroup | KfTrack, posiY: number, treeLevel: number, targetTrackId: string): void {
         this.id = kfg.id;
         this.aniId = kfg.aniId;
         this.marks = kfg.marks;
         this.groupRef = kfg.groupRef;
         this.timingRef = kfg.timingRef;
+        this.targetTrackId = targetTrackId;
         this.newTrack = kfg.newTrack;
         this.treeLevel = treeLevel;
         this.posiY = posiY;
@@ -117,10 +119,26 @@ export default class KfGroup extends KfTimingIllus {
         }
     }
 
+    public createBlankKfg(parentObj: KfTrack, startX: number): void {
+        this.parentObj = parentObj;
+        this.treeLevel = 0;
+        this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.posiY = 2;
+        this.container.setAttributeNS(null, 'transform', `translate(${startX}, ${this.posiY})`);
+        this.parentObj.children.push(this);
+        this.groupBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        this.groupBg.setAttributeNS(null, 'stroke', '#898989');
+        this.groupBg.setAttributeNS(null, 'fill', `rgb(${KfGroup.BASIC_GRAY - KfGroup.GRAY_STEP},${KfGroup.BASIC_GRAY - KfGroup.GRAY_STEP},${KfGroup.BASIC_GRAY - KfGroup.GRAY_STEP})`);
+        this.groupBg.setAttributeNS(null, 'stroke-width', '1');
+        this.groupBg.setAttributeNS(null, 'rx', `${KfGroup.GROUP_RX}`);
+        this.groupBg.setAttributeNS(null, 'x', '0');
+        this.container.appendChild(this.groupBg);
+        this.parentObj.container.appendChild(this.container);
+    }
+
     public renderGroup() {
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.container.setAttributeNS(null, 'id', `group${this.id}`);
-        // this.container.classList.add('ease-transform');
         if (this.parentObj instanceof KfTrack) {
             this.posiY = 1;
             const transX: number = this.parentObj.availableInsert;
@@ -164,7 +182,6 @@ export default class KfGroup extends KfTimingIllus {
                 if (this.treeLevel === 0) {
                     this.groupMenu.hideMenu();
                 }
-                // this.container.onmouseout = null;
             }
         }
     }
@@ -263,126 +280,9 @@ export default class KfGroup extends KfTimingIllus {
                 this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + posiDiff.x}, ${oriTrans.y + posiDiff.y})`);
                 const preSibling: KfGroup = this.parentObj.children[this.idxInGroup - 1];
                 if (this.idxInGroup > 0 && preSibling.rendered && this.groupRef !== 'root') {//group within animation
-                    const currentGroupBBox: DOMRect = this.groupBg.getBoundingClientRect();
-                    const preGroupBBox: DOMRect = preSibling.groupBg.getBoundingClientRect();
-                    const posiYDiff: number = currentGroupBBox.top - preGroupBBox.top;
-                    const posiXRightDiff: number = currentGroupBBox.left - preGroupBBox.right;
-                    const posiXLeftDiff: number = currentGroupBBox.left - preGroupBBox.left;
-                    const currentKfOffsetW: number = KfGroup.BASIC_OFFSET_DURATION_W > this.offsetWidth ? KfGroup.BASIC_OFFSET_DURATION_W : this.offsetWidth;
-                    let correctTimingRef: boolean = true;
-                    let compareXDiff: number = posiXRightDiff;
-                    let updateTimingRef: string = '';
-                    if (posiYDiff <= this.groupBg.getBoundingClientRect().height) {//timing ref should be start after
-                        if (this.timingRef !== TimingSpec.timingRef.previousEnd) {
-                            correctTimingRef = false;
-                            updateTimingRef = TimingSpec.timingRef.previousEnd;
-                        }
-                    } else {//create new track and change timing ref to start with
-                        if (this.timingRef !== TimingSpec.timingRef.previousStart) {
-                            correctTimingRef = false;
-                            updateTimingRef = TimingSpec.timingRef.previousStart;
-                        }
-                        compareXDiff = posiXLeftDiff;
-                    }
-                    if (compareXDiff >= currentKfOffsetW) {//show delay
-                        preSibling.cancelHighlightGroup();
-                        if (!this.hasOffset) {//add default delay
-                            if (typeof this.offsetIllus === 'undefined') {
-                                this.drawOffset(KfGroup.minOffset, this.groupBg.getBoundingClientRect().height, KfGroup.GROUP_RX, true);
-                            }
-                            this.container.prepend(this.offsetIllus);
-
-                            updateSpec = true;
-                            actionInfo.aniId = this.aniId;
-                            actionInfo.groupRef = this.groupRef;
-                            actionInfo.delay = 300;
-                            if (correctTimingRef) {
-                                actionType = action.UPDATE_DELAY_BETWEEN_GROUP;
-                            } else {
-                                actionType = action.UPDATE_DELAY_TIMING_REF_BETWEEN_GROUP;
-                                actionInfo.ref = updateTimingRef;
-                            }
-                        } else {
-                            this.showOffset();
-                            if (correctTimingRef) {
-                                updateSpec = false
-                                actionInfo = {};
-                            } else {
-                                updateSpec = true;
-                                actionType = action.UPDATE_TIMEING_REF_BETWEEN_GROUP;
-                                actionInfo.aniId = this.aniId;
-                                actionInfo.groupRef = this.groupRef;
-                                actionInfo.ref = updateTimingRef;
-                            }
-                        }
-                    } else if (compareXDiff < currentKfOffsetW && compareXDiff >= 0) {//remove delay
-                        preSibling.cancelHighlightGroup();
-                        if (this.hasOffset) {//remove delay
-                            this.hideOffset();
-
-                            updateSpec = true;
-                            actionInfo.aniId = this.aniId;
-                            actionInfo.groupRef = this.groupRef;
-                            if (correctTimingRef) {
-                                actionType = action.REMOVE_DELAY_BETWEEN_GROUP;
-                            } else {
-                                actionType = action.REMOVE_DELAY_UPDATE_TIMING_REF_GROUP;
-                                actionInfo.ref = updateTimingRef;
-                            }
-                        } else {
-                            if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
-                                this.container.removeChild(this.offsetIllus);
-                            }
-                            if (correctTimingRef) {
-                                updateSpec = false
-                                actionInfo = {};
-                            } else {
-                                updateSpec = true;
-                                actionType = action.UPDATE_TIMEING_REF_BETWEEN_GROUP;
-                                actionInfo.aniId = this.aniId;
-                                actionInfo.groupRef = this.groupRef;
-                                actionInfo.ref = updateTimingRef;
-                            }
-                        }
-                    } else {//
-                        if (posiYDiff <= this.groupBg.getBoundingClientRect().height) {//timing ref should be start after
-                            preSibling.highlightGroup();
-                            updateSpec = true;
-                            actionType = action.MERGE_GROUP;
-                            actionInfo.aniId = this.aniId;
-                            actionInfo.groupRef = this.groupRef;
-                        } else {//create new track and change timing ref to start with
-                            preSibling.cancelHighlightGroup();
-                            if (this.hasOffset) {//remove delay
-                                this.hideOffset();
-
-                                updateSpec = true;
-                                actionInfo.aniId = this.aniId;
-                                actionInfo.groupRef = this.groupRef;
-                                if (correctTimingRef) {
-                                    actionType = action.REMOVE_DELAY_BETWEEN_GROUP;
-                                } else {
-                                    actionType = action.REMOVE_DELAY_UPDATE_TIMING_REF_GROUP;
-                                    actionInfo.ref = updateTimingRef;
-                                }
-                            } else {
-                                if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
-                                    this.container.removeChild(this.offsetIllus);
-                                }
-                                if (correctTimingRef) {
-                                    updateSpec = false
-                                    actionInfo = {};
-                                } else {
-                                    updateSpec = true;
-                                    actionType = action.UPDATE_TIMEING_REF_BETWEEN_GROUP;
-                                    actionInfo.aniId = this.aniId;
-                                    actionInfo.groupRef = this.groupRef;
-                                    actionInfo.ref = updateTimingRef;
-                                }
-                            }
-                        }
-
-                    }
+                    [updateSpec, actionType, actionInfo] = this.dragInnerGroup(preSibling);
+                } else {
+                    this.dragAniGroup();
                 }
                 oriMousePosi = currentMousePosi;
             }
@@ -417,6 +317,191 @@ export default class KfGroup extends KfTimingIllus {
         }
     }
 
+    public dragAniGroup() {
+        let updateSpec: boolean = false;
+        let actionType: String = '';
+        let actionInfo: any = {};
+        const currentGBBox: DOMRect = this.groupBg.getBoundingClientRect();
+        const currentGPosi: ICoord = { x: currentGBBox.left, y: currentGBBox.top };
+        let targetAnis: { aniGroup?: KfGroup, alignType?: string, firstKfInGroup?: KfItem };
+        for (let i = 0, len = [...KfGroup.allAniGroups].length; i < len; i++) {
+            const aniGroup: KfGroup = [...KfGroup.allAniGroups][i][1];
+            if (this.id !== aniGroup.id) {
+                const firstKf: KfItem = aniGroup.fetchFirstKf();
+                const alignTargetGroup: boolean = typeof KfItem.allKfInfo.get(firstKf.id).alignTo === 'undefined';
+                console.log('kf info: ', KfItem.allKfInfo.get(firstKf.id), alignTargetGroup);
+                console.log('ani group: ', aniGroup, firstKf);
+                //judge the relative position between this one and aniGroup & the first Kf in aniGroup
+                const aniGroupBBox: DOMRect = aniGroup.groupBg.getBoundingClientRect();
+                const firstKfBBox: DOMRect = firstKf.container.getBoundingClientRect();
+                console.log('positions: ', currentGPosi, aniGroupBBox, firstKfBBox);
+                if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + 20 && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
+                    console.log('after group!!!!!!!!!');
+                    targetAnis = { aniGroup: aniGroup, alignType: 'afterGroup' };//after group has higher priority
+                    hintDrop.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height);
+                    break;
+                } else {
+                    if (currentGPosi.x >= aniGroupBBox.left && currentGPosi.x < aniGroupBBox.left + 6 && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
+                        console.log('with group!!!!!!!!!');
+                        targetAnis = { aniGroup: aniGroup, alignType: 'withGroup' };
+                        hintDrop.hintInsert({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height);
+                    } else if (currentGPosi.x >= firstKfBBox.left && currentGPosi.x < firstKfBBox.left + 6 && alignTargetGroup) {
+                        console.log('with kf!!!!!!!!!');
+                        targetAnis = { aniGroup: aniGroup, alignType: 'withKf', firstKfInGroup: firstKf };
+                        hintDrop.hintInsert({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height);
+                    } else if (currentGPosi.x >= firstKfBBox.right && currentGPosi.x < firstKfBBox.right + 6 && alignTargetGroup) {
+                        console.log('after kf!!!!!!!!!');
+                        targetAnis = { aniGroup: aniGroup, alignType: 'afterKf', firstKfInGroup: firstKf };
+                        hintDrop.hintInsert({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height);
+                    }
+                    // else {
+                    //     console.log('nothing!!!!!!!!!');
+                    //     targetAnis = {};
+                    // }
+                }
+            }
+        }
+        console.log('target Ani when dragging: ', targetAnis);
+        if (typeof targetAnis === 'undefined') {
+            hintDrop.removeHintInsert();
+        }
+    }
+
+    public dragInnerGroup(preSibling: KfGroup): [boolean, string, any] {
+        let updateSpec: boolean = false;
+        let actionType: string = '';
+        let actionInfo: any = {};
+        const currentGroupBBox: DOMRect = this.groupBg.getBoundingClientRect();
+        const preGroupBBox: DOMRect = preSibling.groupBg.getBoundingClientRect();
+        const posiYDiff: number = currentGroupBBox.top - preGroupBBox.top;
+        const posiXRightDiff: number = currentGroupBBox.left - preGroupBBox.right;
+        const posiXLeftDiff: number = currentGroupBBox.left - preGroupBBox.left;
+        const currentKfOffsetW: number = KfGroup.BASIC_OFFSET_DURATION_W > this.offsetWidth ? KfGroup.BASIC_OFFSET_DURATION_W : this.offsetWidth;
+        let correctTimingRef: boolean = true;
+        let compareXDiff: number = posiXRightDiff;
+        let updateTimingRef: string = '';
+        if (posiYDiff <= this.groupBg.getBoundingClientRect().height) {//timing ref should be start after
+            if (this.timingRef !== TimingSpec.timingRef.previousEnd) {
+                correctTimingRef = false;
+                updateTimingRef = TimingSpec.timingRef.previousEnd;
+            }
+        } else {//create new track and change timing ref to start with
+            if (this.timingRef !== TimingSpec.timingRef.previousStart) {
+                correctTimingRef = false;
+                updateTimingRef = TimingSpec.timingRef.previousStart;
+            }
+            compareXDiff = posiXLeftDiff;
+        }
+        if (compareXDiff >= currentKfOffsetW) {//show delay
+            preSibling.cancelHighlightGroup();
+            if (!this.hasOffset) {//add default delay
+                if (typeof this.offsetIllus === 'undefined') {
+                    this.drawOffset(KfGroup.minOffset, this.groupBg.getBoundingClientRect().height, KfGroup.GROUP_RX, true);
+                }
+                this.container.prepend(this.offsetIllus);
+
+                updateSpec = true;
+                actionInfo.aniId = this.aniId;
+                actionInfo.groupRef = this.groupRef;
+                actionInfo.delay = 300;
+                if (correctTimingRef) {
+                    actionType = action.UPDATE_DELAY_BETWEEN_GROUP;
+                } else {
+                    actionType = action.UPDATE_DELAY_TIMING_REF_BETWEEN_GROUP;
+                    actionInfo.ref = updateTimingRef;
+                }
+            } else {
+                this.showOffset();
+                if (correctTimingRef) {
+                    updateSpec = false
+                    actionInfo = {};
+                } else {
+                    updateSpec = true;
+                    actionType = action.UPDATE_TIMEING_REF_BETWEEN_GROUP;
+                    actionInfo.aniId = this.aniId;
+                    actionInfo.groupRef = this.groupRef;
+                    actionInfo.ref = updateTimingRef;
+                }
+            }
+        } else if (compareXDiff < currentKfOffsetW && compareXDiff >= 0) {//remove delay
+            preSibling.cancelHighlightGroup();
+            if (this.hasOffset) {//remove delay
+                this.hideOffset();
+
+                updateSpec = true;
+                actionInfo.aniId = this.aniId;
+                actionInfo.groupRef = this.groupRef;
+                if (correctTimingRef) {
+                    actionType = action.REMOVE_DELAY_BETWEEN_GROUP;
+                } else {
+                    actionType = action.REMOVE_DELAY_UPDATE_TIMING_REF_GROUP;
+                    actionInfo.ref = updateTimingRef;
+                }
+            } else {
+                if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
+                    this.container.removeChild(this.offsetIllus);
+                }
+                if (correctTimingRef) {
+                    updateSpec = false
+                    actionInfo = {};
+                } else {
+                    updateSpec = true;
+                    actionType = action.UPDATE_TIMEING_REF_BETWEEN_GROUP;
+                    actionInfo.aniId = this.aniId;
+                    actionInfo.groupRef = this.groupRef;
+                    actionInfo.ref = updateTimingRef;
+                }
+            }
+        } else {//
+            if (posiYDiff <= this.groupBg.getBoundingClientRect().height) {//timing ref should be start after
+                preSibling.highlightGroup();
+                updateSpec = true;
+                actionType = action.MERGE_GROUP;
+                actionInfo.aniId = this.aniId;
+                actionInfo.groupRef = this.groupRef;
+            } else {//create new track and change timing ref to start with
+                preSibling.cancelHighlightGroup();
+                if (this.hasOffset) {//remove delay
+                    this.hideOffset();
+
+                    updateSpec = true;
+                    actionInfo.aniId = this.aniId;
+                    actionInfo.groupRef = this.groupRef;
+                    if (correctTimingRef) {
+                        actionType = action.REMOVE_DELAY_BETWEEN_GROUP;
+                    } else {
+                        actionType = action.REMOVE_DELAY_UPDATE_TIMING_REF_GROUP;
+                        actionInfo.ref = updateTimingRef;
+                    }
+                } else {
+                    if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
+                        this.container.removeChild(this.offsetIllus);
+                    }
+                    if (correctTimingRef) {
+                        updateSpec = false
+                        actionInfo = {};
+                    } else {
+                        updateSpec = true;
+                        actionType = action.UPDATE_TIMEING_REF_BETWEEN_GROUP;
+                        actionInfo.aniId = this.aniId;
+                        actionInfo.groupRef = this.groupRef;
+                        actionInfo.ref = updateTimingRef;
+                    }
+                }
+            }
+        }
+
+        return [updateSpec, actionType, actionInfo];
+    }
+
+    public fetchFirstKf(): KfItem {
+        if (this.children[0] instanceof KfItem) {
+            return this.children[0];
+        } else {
+            return this.children[0].fetchFirstKf();
+        }
+    }
+
     public hideOffset() {
         this.offsetIllus.setAttributeNS(null, 'opacity', '0');
     }
@@ -437,7 +522,11 @@ export default class KfGroup extends KfTimingIllus {
      * when this group translates, translate the aligned elements: refLine, kfs and their group
      * @param transX 
      */
-    public translateWholeGroup(transX: number) {
+    public translateWholeGroup(transX: number, currentOneIncluded: boolean = false) {
+        if (currentOneIncluded) {
+            const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
+            this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + transX}, ${oriTrans.y})`);
+        }
         //find all group ids in current group
         let allGroupIds: number[] = [];
         this.findAllGroups(allGroupIds);
@@ -485,9 +574,15 @@ export default class KfGroup extends KfTimingIllus {
      * @param transX 
      * @param updateAlignedKfs 
      */
-    public translateGroup(startTransItem: KfItem | PlusBtn, transX: number, updateAlignedKfs: boolean = false): void {
+    public translateGroup(startTransItem: KfItem | PlusBtn | KfOmit, transX: number, updateAlignedKfs: boolean, extraInfo: { lastItem: boolean, extraWidth: number } = { lastItem: false, extraWidth: 0 }): void {
+        console.log(startTransItem, extraInfo.lastItem);
         //translate kfitems after the input one within the same group
-        const currentTransX: number = Tool.extractTransNums(startTransItem.container.getAttributeNS(null, 'transform')).x;
+        let currentTransX: number = 0;
+        if (!extraInfo.lastItem) {
+            currentTransX = Tool.extractTransNums(startTransItem.container.getAttributeNS(null, 'transform')).x;
+        } else {
+            currentTransX = Tool.extractTransNums(startTransItem.container.getAttributeNS(null, 'transform')).x + startTransItem.container.getBoundingClientRect().width;
+        }
         let count: number = 0;
         this.children.forEach((k: KfItem | KfOmit) => {
             const tmpTrans: ICoord = Tool.extractTransNums(k.container.getAttributeNS(null, 'transform'));
@@ -499,7 +594,7 @@ export default class KfGroup extends KfTimingIllus {
                         KfItem.allKfInfo.get(k.id).alignWithKfs.forEach((kfId: number) => {
                             const tmpKfItem = KfItem.allKfItems.get(kfId);
                             if (typeof tmpKfItem !== 'undefined') {
-                                tmpKfItem.parentObj.translateGroup(tmpKfItem, transX);
+                                tmpKfItem.parentObj.translateGroup(tmpKfItem, transX, updateAlignedKfs);
                             }
                         })
                     }
@@ -508,7 +603,8 @@ export default class KfGroup extends KfTimingIllus {
             }
         })
         //update the group size and position
-        this.updateSize();
+        let extraWidth: number = extraInfo.lastItem ? extraInfo.extraWidth : 0;
+        this.updateSize(extraWidth);
 
         //update parent group and siblings
         this.updateSiblingAndParentSizePosi(transX, updateAlignedKfs);
@@ -533,7 +629,7 @@ export default class KfGroup extends KfTimingIllus {
                                             const tmpKfItem: KfItem = KfItem.allKfItems.get(kfId);
                                             if (typeof tmpKfItem !== 'undefined') {
                                                 if (tmpKfItem.container.getBoundingClientRect().left !== tmpAlignTargetLeft) {//this kf together with its group need to be updated
-                                                    tmpKfItem.parentObj.translateGroup(tmpKfItem, tmpAlignTargetLeft - tmpKfItem.container.getBoundingClientRect().left);
+                                                    tmpKfItem.parentObj.translateGroup(tmpKfItem, tmpAlignTargetLeft - tmpKfItem.container.getBoundingClientRect().left, false);
                                                 }
                                             }
                                         })
@@ -555,7 +651,7 @@ export default class KfGroup extends KfTimingIllus {
         }
     }
 
-    public updateSize(): [number, number, number] {
+    public updateSize(extraWidth: number = 0): [number, number, number] {
         //get size of all children (kfgroup or kfitem)
         let maxBoundry: {
             top: number
@@ -569,7 +665,7 @@ export default class KfGroup extends KfTimingIllus {
             const currentTransX: number = Tool.extractTransNums(this.children[0].container.getAttributeNS(null, 'transform')).x;
             diffX = this.hasOffset ? currentTransX - KfGroup.PADDING - this.offsetWidth : currentTransX - KfGroup.PADDING;
         }
-        this.children.forEach((c: KfGroup | KfItem | KfOmit) => {
+        [...this.kfOmits, ...this.children].forEach((c: KfGroup | KfItem | KfOmit) => {
             if (typeof c.container !== 'undefined') {
                 if (c instanceof KfItem || c instanceof KfOmit) {
                     const currentTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
@@ -590,10 +686,8 @@ export default class KfGroup extends KfTimingIllus {
                 }
             }
         })
-        let currentGroupWidth: number = maxBoundry.right - maxBoundry.left + 2 * KfGroup.PADDING;
+        let currentGroupWidth: number = maxBoundry.right - maxBoundry.left + 2 * KfGroup.PADDING + extraWidth;
         let childHeight: number = maxBoundry.bottom - maxBoundry.top + 2 * KfGroup.PADDING;
-
-        //TODO consider size of suggestion frame
 
         //update size
         this.groupBg.setAttributeNS(null, 'height', `${childHeight}`);
@@ -623,7 +717,7 @@ export default class KfGroup extends KfTimingIllus {
                         this.kfOmits.forEach((kfO: KfOmit) => {
                             kfO.updateThumbnail(this.kfHasOffset, this.kfHasDuration);
                             kfO.updateNum(this.kfNum - 3);
-                            kfO.updateTrans(this.children[1].posiX + this.children[1].width, KfGroup.PADDING + this.children[1].container.getBoundingClientRect().height / 2);
+                            kfO.updateTrans(this.children[1].posiX + this.children[1].width, KfGroup.PADDING + this.children[1].posiY + this.children[1].container.getBoundingClientRect().height / 2);
                         })
                     }
                     this.alignLines = [...this.alignLines, ...c.alignLines];
@@ -663,6 +757,14 @@ export default class KfGroup extends KfTimingIllus {
         }
     }
 
+    public marksThisAni(): string[] {
+        if (this.parentObj instanceof KfGroup) {
+            return this.parentObj.marksThisAni();
+        } else {
+            return this.marks;
+        }
+    }
+
 }
 
 export class GroupMenu {
@@ -690,7 +792,7 @@ export class GroupMenu {
     public action: any;
     public groupId: number;
     public container: SVGGElement;
-    public mask: SVGRectElement;
+    // public mask: SVGRectElement;
 
     constructor(action: any, groupId: number) {
         this.action = action;
@@ -706,7 +808,6 @@ export class GroupMenu {
         menuBg.setAttributeNS(null, 'd', `M0,0 H${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING},${GroupMenu.MENU_RX} V${3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX},${3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING} H0 Z`)
         this.container.appendChild(menuBg);
 
-        console.log(this.action);
         const effectTypeBtn: SVGGElement = this.createBtn(this.action.animationType);
         effectTypeBtn.setAttributeNS(null, 'transform', `translate(${GroupMenu.PADDING_LEFT}, ${GroupMenu.PADDING})`);
         this.container.appendChild(effectTypeBtn);

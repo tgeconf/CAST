@@ -19,7 +19,7 @@ export default class ViewWindow {
     static CHART_VIEW_TITLE: string = 'chart';
     static VIDEO_VIEW_TITLE: string = 'animation';
     static HIDDEN_LOTTIE_ID: string = 'hiddenLottie';
-    static KF_VIEW_TITLE: string = '';
+    static KF_VIEW_TITLE: string = 'keyframe';
 
     viewTitle: string;
     view: HTMLDivElement;
@@ -47,9 +47,9 @@ export default class ViewWindow {
 
         //append view widgets
         switch (this.viewTitle) {
-            case ViewWindow.CHART_VIEW_TITLE:
-                this.view.appendChild(this.createChartWidget());
-                break;
+            // case ViewWindow.CHART_VIEW_TITLE:
+            //     this.view.appendChild(this.createChartWidget());
+            //     break;
             case ViewWindow.VIDEO_VIEW_TITLE:
                 this.view.appendChild(this.createPlayerWidget());
                 // this.view.appendChild(this.createHiddenCanvasContainer());
@@ -60,6 +60,7 @@ export default class ViewWindow {
         switch (this.viewTitle) {
             case ViewWindow.CHART_VIEW_TITLE:
                 viewTitleContainer.appendChild(this.createSelectionTools());
+                // viewTitleContainer.appendChild(this.createChartWidget());
                 break;
             case ViewWindow.VIDEO_VIEW_TITLE:
                 break;
@@ -85,12 +86,12 @@ export default class ViewWindow {
             iconClass: 'lasso-icon'
         }));
         toolContainer.appendChild(this.createSeparator());
-        // toolContainer.appendChild(this.createBtn({
-        //     title: 'Select from Data',
-        //     clickEvtType: ViewToolBtn.DATA,
-        //     iconClass: 'table-icon'
-        // }));
-        // toolContainer.appendChild(this.createSeparator());
+        toolContainer.appendChild(this.createBtn({
+            title: 'Selection Suggestion',
+            clickEvtType: ViewToolBtn.SUGGEST,
+            iconClass: 'selection-suggestion-icon'
+        }));
+
         return toolContainer;
     }
 
@@ -184,6 +185,7 @@ export class ViewToolBtn {
     static LASSO: string = 'lasso';
     static DATA: string = 'data';
     static ZOOM: string = 'zoom';
+    static SUGGEST: string = 'suggest';
     static ZOOM_OUT: string = 'zoomOut';
     static ZOOM_IN: string = 'zoomIn';
 
@@ -193,6 +195,9 @@ export class ViewToolBtn {
         if (props.title) {
             btn.title = props.title;
         }
+        const btnIcon: HTMLSpanElement = document.createElement('span');
+        btnIcon.className = 'svg-icon ' + props.iconClass;
+        btn.appendChild(btnIcon);
 
         switch (props.clickEvtType) {
             case ViewToolBtn.SINGLE:
@@ -201,9 +206,10 @@ export class ViewToolBtn {
             case ViewToolBtn.LASSO:
                 btn.onclick = () => this.lassoSelect();
                 break;
-            // case ViewToolBtn.DATA:
-            //     btn.onclick = () => this.dataSelect();
-            //     break;
+            case ViewToolBtn.SUGGEST:
+                btnIcon.classList.add('no-hover-icon');
+                btn.onclick = () => this.suggestSelection(btnIcon);
+                break;
             case ViewToolBtn.ZOOM:
                 btn.setAttribute('disabled', 'true');
                 break;
@@ -217,13 +223,33 @@ export class ViewToolBtn {
                 break;
         }
 
-        const btnIcon: HTMLSpanElement = document.createElement('span');
-        btnIcon.className = 'svg-icon ' + props.iconClass;
-        btn.appendChild(btnIcon);
+
         return btn;
     }
 
     // btn listeners
+    public suggestSelection(btnIcon: HTMLSpanElement): void {
+        State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, state.suggestion]);
+        State.saveHistory();
+        console.log('state suggestion: ', state.suggestion);
+        if (state.suggestion) {
+            console.log('adding-');
+            btnIcon.classList.add('selection-non-suggestion-icon');
+            btnIcon.classList.remove('selection-suggestion-icon');
+            Reducer.triger(action.TOGGLE_SUGGESTION, false);
+        } else {
+            console.log('remove');
+            btnIcon.classList.remove('selection-non-suggestion-icon');
+            btnIcon.classList.add('selection-suggestion-icon');
+            Reducer.triger(action.TOGGLE_SUGGESTION, true);
+        }
+        // if ((<HTMLInputElement>evt.target).checked) {
+        //     Reducer.triger(action.TOGGLE_SUGGESTION, true);
+        // } else {
+        //     Reducer.triger(action.TOGGLE_SUGGESTION, false);
+        // }
+    }
+
     public singleSelect(): void {
         if (!document.getElementById('chartContainer').classList.contains('single-select')) {
             //change cursor
@@ -254,10 +280,6 @@ export class ViewToolBtn {
             Tool.initLassoSelection('chartContainer');
         }
     }
-
-    // public dataSelect(): void {
-    //     console.log('toggle data selection!');
-    // }
 
     public zoomIn(): void {
         console.log('zoom in!');

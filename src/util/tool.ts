@@ -32,14 +32,19 @@ export default class Tool {
         }
         return true;
     }
-    // public static resizeSVG(svg: HTMLElement, w: number, h: number): void {
-    //     if (svg.getAttribute('viewBox')) {
-    //         let oriViewbox: string[] = svg.getAttribute('viewBox').split(' ');
-    //         svg.setAttribute('width', w.toString());
-    //         svg.setAttribute('height', h.toString())
-    //         svg.setAttribute('viewBox', oriViewbox[0] + ' ' + oriViewbox[1] + ' ' + w + ' ' + h);
-    //     }
-    // }
+    /**
+     * check whether b is an item in a
+     * @param a 
+     * @param b 
+     */
+    public static Array2DItem(a: any[][], b: any[]): boolean {
+        for (let i = 0, len = a.length; i < len; i++) {
+            if (Tool.identicalArrays(a[i], b)) {
+                return true;
+            }
+        }
+        return false;
+    }
     public static formatTime(time: number): string {
         const minute: number = Math.floor(time / 60000);
         const second: number = Math.floor((time - minute * 60000) / 1000);
@@ -50,24 +55,9 @@ export default class Tool {
         return minStr + ':' + secStr + '.' + msStr;
     }
     public static svg2url(svgElement: HTMLElement): string {
-        // const svgString = new XMLSerializer().serializeToString(svgElement);
         const svgString = svgElement.outerHTML;
-        // const img = new Image();
         const svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
         const url = URL.createObjectURL(svg);
-        // img.onload = function () {
-        //     let dx = 0, dy = 0, scaleWidth = canvas.width, scaleHeight = canvas.width * (img.height / img.width);
-        //     if (scaleHeight <= canvas.height) {
-        //         dy = (canvas.height - scaleHeight) / 2;
-        //     } else {
-        //         scaleHeight = canvas.height;
-        //         scaleWidth = canvas.height * (img.width / img.height);
-        //         dx = (canvas.width - scaleWidth) / 2;
-        //     }
-        //     ctx.drawImage(img, dx, dy, scaleWidth, scaleHeight);
-        //     URL.revokeObjectURL(url);
-        // };
-        // img.src = url;
         return url;
     }
 
@@ -185,9 +175,7 @@ export default class Tool {
             const evtTarget: HTMLElement = <HTMLElement>downEvt.target;
             if (evtTarget.id === 'highlightSelectionFrame' ||
                 (evtTarget.classList.contains('mark') && state.selection.includes(evtTarget.id) && state.selection.length > 0)) {//clicked within the selection frame
-                dragableCanvas.createCanvas(
-                    document.querySelector('#' + containerId + ' > svg:first-of-type'),
-                    { x: downEvt.pageX, y: downEvt.pageY });
+                dragableCanvas.createCanvas(document.querySelector('#' + containerId + ' > svg:first-of-type'), { x: downEvt.pageX, y: downEvt.pageY });
             } else {//doing selection
                 if (svg) {
                     const svgBBox = svg.getBoundingClientRect();
@@ -287,7 +275,45 @@ export default class Tool {
                 }
             }
         })
+        if (typeof KfItem.staticKf !== 'undefined') {
+            const kfBBox: DOMRect = KfItem.staticKf.container.getBoundingClientRect();
+            if (mousePosi.x >= kfBBox.left && mousePosi.x <= kfBBox.right && mousePosi.y >= kfBBox.top && mousePosi.y <= kfBBox.bottom) {
+                dragOverItem = KfItem.staticKf;
+            }
+        }
         return dragOverItem;
     }
 
+    public static clearDragOver() {
+        PlusBtn.dragoverBtn = undefined;
+        KfItem.dragoverKf = undefined;
+    }
+
+    /**
+     * translate the elements in kf or kfgroup
+     * @param rootNode : root dom node
+     * @param transX 
+     * @param transOffset : whether this is called when dragging offset
+     */
+    public static transNodeElements(rootNode: any, transX: number, transOffset: boolean = false) {
+        const allNodeElements: any[] = transOffset ? Array.from(rootNode.childNodes).slice(1) : Array.from(rootNode.childNodes);
+        allNodeElements.forEach((c: any) => {
+            console.log('translating !!!!!!', c);
+            let isEasingNode: boolean = false;
+            if (c.classList.contains('ease-transform')) {
+                isEasingNode = true;
+                c.classList.remove('ease-transform');
+                console.log(c, 'has easing');
+            }
+            if (c.getAttributeNS(null, 'transform')) {
+                const oriTrans: ICoord = Tool.extractTransNums(c.getAttributeNS(null, 'transform'));
+                c.setAttributeNS(null, 'transform', `translate(${oriTrans.x + transX}, ${oriTrans.y})`);
+            } else {
+                c.setAttributeNS(null, 'transform', `translate(${transX}, 0)`);
+            }
+            if (isEasingNode) {
+                c.classList.add('ease-transform');
+            }
+        })
+    }
 }

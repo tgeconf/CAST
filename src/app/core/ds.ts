@@ -51,3 +51,11 @@ export interface IKeyframeGroup {
 export interface IDataDatumType {
     [key: string]: string | number
 }
+
+export interface IPath {
+    attrComb: string[]
+    sortedAttrValueComb: string[]
+    kfMarks: string[][]
+    firstKfMarks: string[]
+    lastKfMarks: string[]
+}

@@ -1,14 +1,18 @@
 import { state } from './state'
-import { IDataItem, ISortDataAttr, IKeyframeGroup, IKfGroupSize } from './ds'
+import { IDataItem, ISortDataAttr, IKeyframeGroup, IKfGroupSize, IPath, IKeyframe } from './core/ds'
 import * as action from './action'
-import Util from './util'
+import Util from './core/util'
 import { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie'
 import KfTimingIllus from '../components/widgets/kfTimingIllus'
 import KfItem from '../components/widgets/kfItem'
-import { Animation, TimingSpec } from 'canis_toolkit'
+import Canis, { Animation, TimingSpec } from 'canis_toolkit'
 import KfGroup from '../components/widgets/kfGroup'
-import CanisGenerator, { IChartSpec, ICanisSpec, IAnimationSpec, canis } from './canisGenerator'
+import CanisGenerator, { IChartSpec, ICanisSpec, IAnimationSpec, canis, IGrouping } from './core/canisGenerator'
 import PlusBtn from '../components/widgets/plusBtn'
+import Suggest from './core/suggest'
+import Tool from '../util/tool'
+import KfOmit from '../components/widgets/kfOmit'
+import Renderer from './renderer'
 
 export default class Reducer {
     static list: any = {};
@@ -31,13 +35,18 @@ export default class Reducer {
     }
 }
 
+Reducer.listen(action.RESET_STATE, () => {
+    Reducer.triger(action.UPDATE_SELECTION, []);
+    state.spec = { charts: state.spec.charts, animations: [] };
+})
+
 Reducer.listen(action.UPDATE_DATA_SORT, (sdaArr: ISortDataAttr[]) => {
     console.log('updating data sort!', sdaArr);
     //filter the attributes, remove the ones that are not data attributes
     state.sortDataAttrs = Util.filterDataSort(sdaArr);
 })
 Reducer.listen(action.UPDATE_DATA_ORDER, (dord: string[]) => {
-    console.log('updating data order!');
+    console.log('updating data order!', dord);
     state.dataOrder = dord;
 })
 Reducer.listen(action.UPDATE_DATA_TABLE, (dt: Map<string, IDataItem>) => {
@@ -73,6 +82,7 @@ Reducer.listen(action.UPDATE_KEYFRAME_TRACKS, (animations: Map<string, any>) => 
     KfItem.allKfItems.clear();
     KfItem.allKfInfo.clear();
     KfGroup.allActions.clear();
+    KfGroup.allAniGroups.clear();
     console.log('all canis animations: ', animations);
     const rootGroup: IKeyframeGroup[] = [];
     [...animations].forEach((a: any) => {
@@ -240,5 +250,89 @@ Reducer.listen(action.UPDATE_ANI_OFFSET, (actionInfo: { aniId: string, offset: n
             CanisGenerator.updateAniOffset(a, actionInfo.offset);
         }
     })
+    state.spec = { ...state.spec, animations: animations };
+})
+
+Reducer.listen(action.UPDATE_STATIC_SELECTOR, (addStaticMarks: string[]) => {
+    const animations: IAnimationSpec[] = state.spec.animations;
+    let emptyAniRecorder: number[] = [];
+    animations.forEach((a: IAnimationSpec, idx: number) => {
+        console.log('add static mark is: ', addStaticMarks);
+        CanisGenerator.updateStaticSelector(a, addStaticMarks);
+        // if (emptyAni) {
+        //     emptyAniRecorder.push(idx);
+        // }
+    })
+    // for (let i = emptyAniRecorder.length - 1; i >= 0; i--) {
+    //     animations.splice(emptyAniRecorder[i], 1);
+    // }
+    state.spec = { ...state.spec, animations: animations };
+})
+
+Reducer.listen(action.UPDATE_SUGGESTION_PATH, (actionInfo: { ap: IPath[], kfIdxInPath: number, startKf: KfItem, suggestOnFirstKf: boolean, selectedMarks: string[] }) => {
+    state.allPaths = actionInfo.ap;
+    Renderer.renderSuggestKfs(actionInfo.kfIdxInPath, actionInfo.startKf, actionInfo.suggestOnFirstKf, actionInfo.selectedMarks);
+})
+
+Reducer.listen(action.UPDATE_SPEC_SELECTOR, (actionInfo: { aniId: string, selector: string }) => {
+    const animations: IAnimationSpec[] = state.spec.animations;
+    animations.forEach((a: IAnimationSpec) => {
+        if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
+            a.selector = actionInfo.selector;
+        }
+    })
+    state.spec = { ...state.spec, animations: animations };
+})
+
+Reducer.listen(action.UPDATE_SPEC_GROUPING, (actionInfo: { aniId: string, attrComb: string[], attrValueSort: string[][] }) => {
+    if (actionInfo.attrComb.length > 0) {
+        const animations: IAnimationSpec[] = state.spec.animations;
+        animations.forEach((a: IAnimationSpec) => {
+            if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
+                CanisGenerator.updateGrouping(a, actionInfo.attrComb, actionInfo.attrValueSort);
+            }
+        })
+        state.spec = { ...state.spec, animations: animations };
+    }
+})
+
+Reducer.listen(action.SPLIT_CREATE_ONE_ANI, (actionInfo: { aniId: string, newAniSelector: string, attrComb: string[], attrValueSort: string[][] }) => {
+    console.log('attrcomb', actionInfo.attrComb, actionInfo.attrValueSort);
+    const animations: IAnimationSpec[] = state.spec.animations;
+    for (let i = 0, len = animations.length; i < len; i++) {
+        let a: IAnimationSpec = animations[i];
+        if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
+            const newAni: IAnimationSpec = {
+                selector: actionInfo.newAniSelector,
+                effects: a.effects,
+                chartIdx: a.chartIdx
+            }
+            if (typeof a.reference !== 'undefined') {
+                newAni.reference = a.reference;
+            }
+            if (typeof a.offset !== 'undefined') {
+                newAni.offset = a.offset;
+            }
+            if (actionInfo.attrComb.length > 0) {
+                CanisGenerator.createGrouping(newAni, actionInfo.attrComb, actionInfo.attrValueSort);
+            }
+            a.reference = TimingSpec.timingRef.previousEnd;
+            CanisGenerator.removeMarksFromSelector(a, actionInfo.newAniSelector.split(', '));
+            animations.splice(i, 0, newAni);
+            break;
+        }
+    }
+    state.spec = { ...state.spec, animations: animations };
+})
+
+Reducer.listen(action.APPEND_SPEC_GROUPING, (actionInfo: { aniId: string, attrComb: string[], attrValueSort: string[][] }) => {
+    const animations: IAnimationSpec[] = state.spec.animations;
+    for (let i = 0, len = animations.length; i < len; i++) {
+        let a: IAnimationSpec = animations[i];
+        if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
+            CanisGenerator.appendGrouping(a, actionInfo.attrComb, actionInfo.attrValueSort);
+            break;
+        }
+    }
     state.spec = { ...state.spec, animations: animations };
 })

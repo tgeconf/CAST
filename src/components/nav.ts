@@ -2,6 +2,8 @@ import '../assets/style/nav.scss'
 import LogoImg from '../assets/img/logo.png'
 import Tool from '../util/tool'
 import FloatingWindow from './floatingWindow'
+import Reducer from '../app/reducer';
+import * as action from '../app/action';
 
 export default class Nav {
     navContainer: HTMLDivElement;
@@ -64,6 +66,13 @@ export default class Nav {
             evtType: NavBtn.REDO
         }));
         this.navContainer.appendChild(this.createSeparator());
+        this.navContainer.appendChild(new NavBtn().createNavBtn({
+            classNameStr: 'reset',
+            title: 'reset',
+            evtType: NavBtn.RESET
+        }));
+        this.navContainer.appendChild(this.createSeparator());
+
         const testBtn: HTMLButtonElement = document.createElement('button');
         testBtn.innerHTML = 'testSpec';
         testBtn.onclick = () => {
@@ -95,6 +104,7 @@ class NavBtn {
     static EXPORT_PROJECT: string = 'exportProject';
     static REVERT: string = 'revert';
     static REDO: string = 'redo';
+    static RESET: string = 'reset';
 
     /**
      * create buttons whose event listeners are not file related
@@ -116,6 +126,9 @@ class NavBtn {
                 break;
             case NavBtn.REDO:
                 btn.onclick = () => this.redo();
+                break;
+            case NavBtn.RESET:
+                btn.onclick = () => this.reset();
                 break;
         }
 
@@ -189,6 +202,10 @@ class NavBtn {
 
     public redo(): void {
         console.log('step forward');
+    }
+
+    public reset(): void {
+        Reducer.triger(action.RESET_STATE, {});
     }
 
     public static testSpec(): void {

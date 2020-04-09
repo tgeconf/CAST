@@ -1,0 +1,30 @@
+[
+    {
+        "id": "yearAni",
+        "offset": 800,
+        "selector": ".symbol, .text",
+        "grouping": {
+            "groupBy": "year",
+            "reference": "start after previous"
+        },
+        "effects": [
+            {
+                "type": "fade",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "selector": ".link",
+        "align": {
+            "target": "yearAni",
+            "type": "element"
+        },
+        "effects": [
+            {
+                "type": "grow",
+                "duration": 600
+            }
+        ]
+    }
+]

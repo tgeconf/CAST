@@ -1,11 +1,11 @@
 import { state, IState, State } from './state'
-import { IDataItem, ISortDataAttr, IKeyframeGroup, IKeyframe, IKfGroupSize } from './ds'
+import { IDataItem, ISortDataAttr, IKeyframeGroup, IKeyframe, IKfGroupSize, IPath } from './core/ds'
 import { ChartSpec, Animation } from 'canis_toolkit'
-import CanisGenerator, { canis, ICanisSpec } from './canisGenerator'
+import CanisGenerator, { canis, ICanisSpec } from './core/canisGenerator'
 import { ViewToolBtn, ViewContent } from '../components/viewWindow'
 import AttrBtn from '../components/widgets/attrBtn'
 import AttrSort from '../components/widgets/attrSort'
-import Util from './util'
+import Util from './core/util'
 import Reducer from './reducer'
 import * as action from './action'
 import SelectableTable from '../components/widgets/selectableTable'
@@ -21,6 +21,9 @@ import KfGroup from '../components/widgets/kfGroup'
 import { KfContainer, kfContainer } from '../components/kfContainer'
 import KfOmit from '../components/widgets/kfOmit'
 import PlusBtn from '../components/widgets/plusBtn'
+import Suggest from './core/suggest'
+import Tool from '../util/tool'
+import { suggestBox, SuggestBox } from '../components/widgets/suggestBox'
 /** end for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 
 /**
@@ -77,18 +80,17 @@ export default class Renderer {
      * @param spec 
      */
     public static async renderSpec(spec: ICanisSpec) {
-        console.log('going to validate spec: ', spec);
-        //validate spec before render
-        CanisGenerator.validate(spec);
         console.log('going to render spec: ', spec);
 
         const lottieSpec = await canis.renderSpec(spec, () => {
             Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
             Util.extractNonDataAttrValue(ChartSpec.nonDataMarkDatum);
+
             //save histroy before update state
             State.tmpStateBusket.push([action.UPDATE_DATA_ORDER, state.dataOrder]);
             State.tmpStateBusket.push([action.UPDATE_DATA_TABLE, state.dataTable]);
             State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
+            console.log('going to update data order: ', Array.from(Util.filteredDataTable.keys()));
             Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(Util.filteredDataTable.keys()));
             Reducer.triger(action.UPDATE_DATA_TABLE, Util.filteredDataTable);
             Reducer.triger(action.UPDATE_DATA_SORT, Object.keys(Util.attrType).map(attrName => {
@@ -97,6 +99,10 @@ export default class Renderer {
                     sort: 'dataIndex'
                 }
             }));
+
+            if (spec.animations[0].selector === '.mark') {
+                Reducer.triger(action.UPDATE_SPEC_SELECTOR, { aniId: `${spec.animations[0].chartIdx}_${spec.animations[0].selector}`, selector: `#${Animation.allMarks.join(', #')}` });
+            }
         });
         //add highlight box on the chart
         const svg: HTMLElement = document.getElementById('visChart');
@@ -179,47 +185,94 @@ export default class Renderer {
             //top-down to init group and kf
             const rootGroup: KfGroup = this.renderKeyframeGroup(0, 1, kfg, treeLevel);
             //bottom-up to update size and position
-            rootGroup.updateGroupPosiAndSize(KfTrack.aniTrackMapping.get(rootGroup.aniId)[0].availableInsert, 0, false, true);
+            rootGroup.updateGroupPosiAndSize([...KfTrack.aniTrackMapping.get(rootGroup.aniId)][0].availableInsert, 0, false, true);
+            KfGroup.allAniGroups.set(rootGroup.aniId, rootGroup);
         })
         const rootGroupBBox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();
         Reducer.triger(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, { width: rootGroupBBox.width, height: rootGroupBBox.height });
     }
 
     public static renderKeyframeGroup(kfgIdx: number, totalKfgNum: number, kfg: IKeyframeGroup, treeLevel: number, parentObj?: KfGroup): KfGroup {
-        let targetTrack: KfTrack; //foreground of the track used to put the keyframe group
-        if (kfg.newTrack) {
-            targetTrack = new KfTrack();
-            targetTrack.createTrack();
-        } else {
-            console.log('using existing track', kfg);
-            if (typeof KfTrack.aniTrackMapping.get(kfg.aniId) !== 'undefined') {
-                targetTrack = KfTrack.aniTrackMapping.get(kfg.aniId)[0];//this is the group within an existing animation
-            } else {
-                //target track is the last track
-                let maxTrackPosiY: number = 0;
-                KfTrack.allTracks.forEach((kft: KfTrack) => {
-                    if (kft.trackPosiY >= maxTrackPosiY) {
-                        maxTrackPosiY = kft.trackPosiY;
-                        targetTrack = kft;
-                    }
-                })
-            }
-        }
-        if (typeof KfTrack.aniTrackMapping.get(kfg.aniId) === 'undefined') {
-            KfTrack.aniTrackMapping.set(kfg.aniId, []);
-        }
-        KfTrack.aniTrackMapping.get(kfg.aniId).push(targetTrack);
-        let minTrackPosiYThisGroup: number = KfTrack.aniTrackMapping.get(kfg.aniId)[0].trackPosiY;
-
         //draw group container
         let kfGroup: KfGroup = new KfGroup();
         if (kfgIdx === 0 || kfgIdx === 1 || kfgIdx === totalKfgNum - 1) {
-            // let minTrackPosiYThisGroup:number = 10000;
-            // if(typeof KfTrack.aniTrackMapping.get(kfg.aniId) !== 'undefined')
-            kfGroup.createGroup(kfg, parentObj ? parentObj : targetTrack, targetTrack.trackPosiY - minTrackPosiYThisGroup, treeLevel);
+            let targetTrack: KfTrack; //foreground of the track used to put the keyframe group
+            if (kfg.newTrack) {
+                //judge whether the new track is already in this animation
+                if (typeof parentObj !== 'undefined') {
+                    let lastChild: KfGroup;
+                    for (let i = parentObj.children.length - 1; i >= 0; i--) {
+                        if (parentObj.children[i] instanceof KfGroup) {
+                            lastChild = parentObj.children[i];
+                            break;
+                        }
+                    }
+                    let allTracksThisAni: KfTrack[] = [...KfTrack.aniTrackMapping.get(kfg.aniId)];
+                    let lastTrack: KfTrack = KfTrack.allTracks.get(lastChild.targetTrackId);
+                    console.log('last track in this group is: ', lastTrack);
+                    if (typeof lastTrack !== 'undefined') {
+                        allTracksThisAni.forEach((kft: KfTrack) => {
+                            console.log(kft, kft.trackPosiY - lastTrack.trackPosiY);
+                            if (kft.trackPosiY - lastTrack.trackPosiY > 0 && kft.trackPosiY - lastTrack.trackPosiY <= KfTrack.TRACK_HEIGHT) {
+                                targetTrack = kft;
+                            }
+                        })
+                    }
+                    if (typeof targetTrack === 'undefined') {
+                        console.log('not found track');
+                        targetTrack = new KfTrack();
+                        targetTrack.createTrack();
+                    }
+                } else {
+                    targetTrack = new KfTrack();
+                    targetTrack.createTrack();
+                }
+            } else {
+                console.log('using existing track', kfg);
+                if (typeof KfTrack.aniTrackMapping.get(kfg.aniId) !== 'undefined') {
+                    targetTrack = [...KfTrack.aniTrackMapping.get(kfg.aniId)][0];//this is the group within an existing animation
+                } else {
+                    //target track is the last track
+                    let maxTrackPosiY: number = 0;
+                    KfTrack.allTracks.forEach((kft: KfTrack, trackId: string) => {
+                        if (kft.trackPosiY >= maxTrackPosiY) {
+                            maxTrackPosiY = kft.trackPosiY;
+                            targetTrack = kft;
+                        }
+                    })
+                }
+            }
+            if (typeof KfTrack.aniTrackMapping.get(kfg.aniId) === 'undefined') {
+                KfTrack.aniTrackMapping.set(kfg.aniId, new Set());
+            }
+            KfTrack.aniTrackMapping.get(kfg.aniId).add(targetTrack);
+            let minTrackPosiYThisGroup: number = [...KfTrack.aniTrackMapping.get(kfg.aniId)][0].trackPosiY;
+
+            console.log('target track: ', targetTrack, minTrackPosiYThisGroup);
+            //check whether this is the group of animation, and whether to add a plus button or not
+            let plusBtn: PlusBtn, addedPlusBtn: boolean = false;
+            if (treeLevel === 0) {//this is the root group
+                //find the keyframes of the first group
+                const tmpKfs: IKeyframe[] = Util.findFirstKfs(kfg);
+                console.log('keyframes first group: ', tmpKfs);
+                let [addingPlusBtn, acceptableMarkClasses] = PlusBtn.detectAdding(tmpKfs);
+                if (addingPlusBtn) {
+                    addedPlusBtn = addingPlusBtn;
+                    plusBtn = new PlusBtn()
+                    plusBtn.createBtn(kfGroup, tmpKfs, targetTrack, targetTrack.availableInsert, { w: KfItem.KF_WIDTH - KfItem.KF_W_STEP, h: KfItem.KF_HEIGHT - 2 * KfItem.KF_H_STEP }, acceptableMarkClasses);
+                    targetTrack.availableInsert += PlusBtn.PADDING * 3 + PlusBtn.BTN_SIZE;
+                }
+            }
+
+            kfGroup.createGroup(kfg, parentObj ? parentObj : targetTrack, targetTrack.trackPosiY - minTrackPosiYThisGroup, treeLevel, targetTrack.trackId);
+            if (treeLevel === 0 && addedPlusBtn) {
+                plusBtn.fakeKfg.marks = kfGroup.marks;
+                plusBtn.fakeKfg.aniId = kfGroup.aniId;
+            }
         } else if (totalKfgNum > 3 && kfgIdx === totalKfgNum - 2) {
             let kfOmit: KfOmit = new KfOmit();
             kfOmit.createOmit(0, 0, parentObj, false, false);
+            // parentObj.children.push(kfOmit);
             parentObj.kfOmits.push(kfOmit);
         }
 
@@ -278,11 +331,11 @@ export default class Renderer {
             //check whether there should be a plus btn
             let kfPosiX = kfGroup.offsetWidth;
 
-            let [addingPlusBtn, acceptableMarkClasses] = PlusBtn.detectAdding(kfg.keyframes);
-            addingPlusBtn = addingPlusBtn && kfgIdx === 0 && Util.judgeFirstKf(kfGroup.parentObj);
-            if (addingPlusBtn) {
-                kfPosiX += PlusBtn.PADDING;
-            }
+            // let [addingPlusBtn, acceptableMarkClasses] = PlusBtn.detectAdding(kfg.keyframes);
+            // addingPlusBtn = addingPlusBtn && kfgIdx === 0 && Util.judgeFirstKf(kfGroup.parentObj);
+            // if (addingPlusBtn) {
+            //     kfPosiX += PlusBtn.PADDING;
+            // }
             kfg.keyframes.forEach((k: any, i: number) => {
                 //whether to draw this kf or not
                 if (kfIdxToDraw.includes(i)) {
@@ -293,6 +346,7 @@ export default class Renderer {
                             const kfOmit: KfOmit = new KfOmit();
                             kfOmit.createOmit(kfPosiX, omitNum, kfGroup, kfg.keyframes[1].delayIcon, kfg.keyframes[1].durationIcon, kfGroup.children[1].kfHeight / 2);
                             kfGroup.children.push(kfOmit);
+                            kfGroup.kfOmits.push(kfOmit);
                             kfPosiX += KfOmit.OMIT_W;
                         }
                     }
@@ -306,12 +360,12 @@ export default class Renderer {
                     } else {
                         kfSize = { w: KfItem.KF_WIDTH - treeLevel * KfItem.KF_W_STEP, h: KfItem.KF_HEIGHT - 2 * treeLevel * KfItem.KF_H_STEP };
                     }
-                    if (addingPlusBtn && i === 0) {
-                        kfPosiX += PlusBtn.BTN_SIZE;
-                        const plusBtn: PlusBtn = new PlusBtn();
-                        plusBtn.createBtn(kfGroup, kfSize, acceptableMarkClasses);
-                        kfGroup.children.push(plusBtn);
-                    }
+                    // if (addingPlusBtn && i === 0 && kfGroup.rendered) {
+                    //     kfPosiX += PlusBtn.BTN_SIZE;
+                    //     const plusBtn: PlusBtn = new PlusBtn();
+                    //     plusBtn.createBtn(kfGroup, kfSize, acceptableMarkClasses);
+                    //     // kfGroup.children.push(plusBtn);
+                    // }
 
                     const kfItem: KfItem = new KfItem();
                     if (isAlignWith === 2) {
@@ -373,8 +427,11 @@ export default class Renderer {
      * render the suggestion checkbox status
      * @param suggesting 
      */
-    public static renderSuggestionCheckbox(suggesting: boolean): void {
-        (<HTMLInputElement>document.getElementById('suggestBox')).checked = suggesting;
+    // public static renderSuggestionCheckbox(suggesting: boolean): void {
+    //     (<HTMLInputElement>document.getElementById('suggestBox')).checked = suggesting;
+    // }
+    public static renderSuggestionIcon(suggesting: boolean): void {
+
     }
 
     /**
@@ -438,5 +495,101 @@ export default class Renderer {
             }
         }
 
+    }
+
+    public static renderSuggestKfs(kfIdxInPath: number, startKf: KfItem, suggestOnFirstKf: boolean, selectedMarks: string[]) {
+        const nextUniqueKfIdx: number = Suggest.findNextUniqueKf(state.allPaths, kfIdxInPath);
+        console.log('next unitque kf idx: ', nextUniqueKfIdx, state.allPaths, suggestOnFirstKf);
+        if (nextUniqueKfIdx === -1) {//render groups
+            console.log('current path: ', state.allPaths);
+            const targetPath: IPath = state.allPaths[0];
+
+            if (typeof targetPath === 'undefined') {
+                //create one animation
+                Reducer.triger(action.SPLIT_CREATE_ONE_ANI, { aniId: startKf.aniId, newAniSelector: `#${selectedMarks.join(', #')}`, attrComb: [], attrValueSort: [] });
+            } else {
+                //extract attr value order
+                console.log(startKf, startKf.parentObj);
+                const attrValueSort: string[][] = Util.extractAttrValueOrder(targetPath.sortedAttrValueComb);
+                const clsOfMarksInPath: string[] = Util.extractClsFromMarks(targetPath.lastKfMarks);
+                const clsOfMarksThisAni: string[] = Util.extractClsFromMarks(startKf.parentObj.marksThisAni());
+
+                if (!suggestOnFirstKf) {//the suggestion is based on all marks in this animation as the last kf
+                    if (Tool.identicalArrays(clsOfMarksInPath, clsOfMarksThisAni)) {//marks in current path have the same classes as those in current animation 
+                        if (clsOfMarksInPath.length > 1) {//create multiple animations
+
+                        } else {//create grouping
+                            Reducer.triger(action.UPDATE_SPEC_GROUPING, { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort });
+                        }
+                    } else {//marks in current path don't have the same classes as those in current animation 
+                        if (clsOfMarksInPath.length > 1) {//create multiple animations
+
+                        } else {//create one animation
+                            Reducer.triger(action.SPLIT_CREATE_ONE_ANI, { aniId: startKf.aniId, newAniSelector: `#${targetPath.lastKfMarks.join(', #')}`, attrComb: targetPath.attrComb, attrValueSort: attrValueSort });
+                        }
+                    }
+                } else {//the suggestion is based on all marks in current first  kf as the last kf
+                    if (clsOfMarksInPath.length > 1) {//change timing of marks of different classes
+
+                    } else {//append grouping to current animation
+                        // Reducer.triger(action.UPDATE_SPEC_GROUPING, { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort });
+                        Reducer.triger(action.APPEND_SPEC_GROUPING, { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort })
+                    }
+                }
+            }
+        } else {//there are still multiple paths
+            let insertIdx: number = 0;
+            for (let j = 0, len = startKf.parentObj.children.length; j < len; j++) {
+                if (startKf.parentObj.children[j] instanceof KfItem && startKf.parentObj.children[j].id === startKf.id) {
+                    insertIdx = j + 1;
+                    break;
+                }
+            }
+            const nextKf: KfItem = startKf.parentObj.children[insertIdx];
+
+            let kfBeforeSuggestBox: KfItem = startKf;
+            const numKfToRender: number = nextUniqueKfIdx - kfIdxInPath - 1;
+            let transX: number = 0;
+            for (let i = 0; i < numKfToRender; i++) {
+                if (i === 0 || i === numKfToRender - 1) {
+                    if (i === numKfToRender - 1 && numKfToRender > 2) {//render omit first
+                        const kfOmit: KfOmit = new KfOmit();
+                        const omitStartX: number = Tool.extractTransNums(startKf.container.getAttributeNS(null, 'transform')).x + startKf.kfWidth + transX;
+                        kfOmit.createOmit(omitStartX, numKfToRender - 2, startKf.parentObj, false, true, startKf.kfHeight / 2);
+                        startKf.parentObj.children.push(kfOmit);
+                        startKf.parentObj.kfOmits.push(kfOmit);
+                        insertIdx++;
+                        transX += KfOmit.OMIT_W + 2 * KfItem.PADDING;
+                    }
+                    //render kf
+                    const startKfInfo: IKeyframe = KfItem.allKfInfo.get(startKf.id);
+                    const tmpKfInfo: IKeyframe = KfItem.createKfInfo(state.allPaths[0].kfMarks[kfIdxInPath + 1 + i],
+                        {
+                            duration: startKfInfo.duration,
+                            allCurrentMarks: startKfInfo.allCurrentMarks,
+                            allGroupMarks: startKfInfo.allGroupMarks
+                        });
+                    KfItem.allKfInfo.set(tmpKfInfo.id, tmpKfInfo);
+                    let tmpKf: KfItem = new KfItem();
+                    const startX: number = Tool.extractTransNums(startKf.container.getAttributeNS(null, 'transform')).x + startKf.totalWidth + transX;
+                    tmpKf.createItem(tmpKfInfo, startKf.parentObj.treeLevel + 1, startKf.parentObj, startX);
+                    startKf.parentObj.children.splice(insertIdx, 0, tmpKf);
+                    insertIdx++;
+                    transX += tmpKf.kfWidth;
+                    kfBeforeSuggestBox = tmpKf;
+                }
+            }
+            //render suggestion box
+            suggestBox.createSuggestBox(kfBeforeSuggestBox, nextUniqueKfIdx, suggestOnFirstKf);
+            transX += suggestBox.boxWidth + 3 * SuggestBox.PADDING + suggestBox.menuWidth + 2;
+
+            //translate the ori group
+            console.log('render path trans kf: ', startKf, transX);
+            if (typeof nextKf === 'undefined') {
+                startKf.parentObj.translateGroup(startKf, transX, true, { lastItem: true, extraWidth: suggestBox.boxWidth + SuggestBox.PADDING + suggestBox.menuWidth });
+            } else {
+                startKf.parentObj.translateGroup(nextKf, transX, true);
+            }
+        }
     }
 }

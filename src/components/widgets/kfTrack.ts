@@ -6,8 +6,8 @@ export default class KfTrack {
     static TRACK_PADDING_TOP: number = 16;
     static TRACK_HEIGHT: number = 180;
     static trackIdx: number = 0;
-    static allTracks: KfTrack[] = [];
-    static aniTrackMapping: Map<string, KfTrack[]> = new Map();//key: aniId, value: tracks this animation possesses
+    static allTracks: Map<string, KfTrack> = new Map();//key:id, value: kftrack
+    static aniTrackMapping: Map<string, Set<KfTrack>> = new Map();//key: aniId, value: tracks this animation possesses
 
     public trackId: string;
     public trackBgContainer: SVGGElement;
@@ -21,7 +21,7 @@ export default class KfTrack {
 
     public static reset() {
         this.trackIdx = 0;
-        this.allTracks = [];
+        this.allTracks.clear();
         this.aniTrackMapping.clear();
     }
 
@@ -68,7 +68,7 @@ export default class KfTrack {
         this.splitLineBottom.setAttributeNS(null, 'stroke', '#c9c9c9');
         this.trackBgContainer.appendChild(this.splitLineBottom);
 
-        KfTrack.allTracks.push(this);
+        KfTrack.allTracks.set(this.trackId, this);
     }
 
     // public hightLightTrack() {

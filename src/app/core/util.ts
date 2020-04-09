@@ -1,12 +1,12 @@
 import { ChartSpec, TimingSpec, Animation } from 'canis_toolkit'
-import { state } from './state'
-import Tool from '../util/tool'
+import { state } from '../state'
+import Tool from '../../util/tool'
 import { ISortDataAttr, IDataItem, IDataDatumType, IKeyframeGroup, IKeyframe } from './ds';
-import AttrSort from '../components/widgets/attrSort';
-import KfTimingIllus from '../components/widgets/kfTimingIllus';
-import KfItem from '../components/widgets/kfItem';
-import KfGroup from '../components/widgets/kfGroup';
-import KfTrack from '../components/widgets/kfTrack';
+import AttrSort from '../../components/widgets/attrSort';
+import KfTimingIllus from '../../components/widgets/kfTimingIllus';
+import KfItem from '../../components/widgets/kfItem';
+import KfGroup from '../../components/widgets/kfGroup';
+import KfTrack from '../../components/widgets/kfTrack';
 
 export default class Util {
     static NUMERIC_ATTR: string = 'numeric';
@@ -17,11 +17,16 @@ export default class Util {
     static NUMERIC_CATEGORICAL_ATTR: string[] = ['Year', 'year', 'Month', 'month', 'Day', 'day'];
     static EFFECTIVENESS_RANKING: string[] = ['position', 'color', 'shape'];
     static EXCLUDED_DATA_ATTR: string[] = ['_TYPE', 'text', '_x', '_y', '_id', '_MARKID'];
+    static TIME_ATTR_VALUE: string[] = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 
     static filteredDataTable: Map<string, IDataItem> = new Map();//markId, dataItem
     static nonDataTable: Map<string, IDataItem> = new Map();//markId, non dataitem (for axis, legend, title)
     static attrType: IDataDatumType = {};
-    static nonDataAttrs: string[] = [];
+    static dataAttrs: string[];
+    static timeAttrs: string[];
+    static dataValues: Map<string, Array<string | number>> = new Map();//key: attr name, value: all values of this attr
+    static nonDataAttrs: string[] = [];//same as those in nonDataTable
+    static nonDataValues: Map<string, Array<string | number>> = new Map();//key: attr name, value: all values
 
     /**
      * based on selected marks, judge perfrom which kind of suggestion
@@ -297,7 +302,6 @@ export default class Util {
             let sameAttrType = true;
             const firstMarkType = dataTable.get(markIds[0])[attrName];
             for (let i = 1, len = markIds.length; i < len; i++) {
-                // if (ChartSpec.dataMarkDatum.get(markIds[i])[attrName] !== firstMarkType) {
                 if (dataTable.get(markIds[i])[attrName] !== firstMarkType) {
                     sameAttrType = false;
                     break;
@@ -305,15 +309,9 @@ export default class Util {
             }
             if ((isDataAttr && !this.EXCLUDED_DATA_ATTR.includes(attrName) && this.attrType[attrName] === this.CATEGORICAL_ATTR) || !isDataAttr) {
                 sameAttrType ? sameAttr.push(attrName) : diffAttrs.push(attrName);
-                // if (sameAttrType) {
-                //     sameAttr.push(attrName);
-                // } else {
-                //     diffAttrs.push(attrName);
-                // }
             }
 
         })
-        // for (let attrName in this.attrType) {
 
         return [sameAttr, diffAttrs];
     }
@@ -324,18 +322,29 @@ export default class Util {
      */
     public static extractAttrValueAndDeterminType(markData: Map<string, IDataItem>) {
         this.filteredDataTable.clear();
+        this.dataAttrs = [];
+        this.timeAttrs = [];
+        this.dataValues.clear();
         this.attrType = {};
         markData.forEach((dataDatum: IDataItem, markId: string) => {
             let tmpDataItem: IDataItem = {};
             for (const key in dataDatum) {
-                let tmpAttrType: string = (!isNaN(Number(dataDatum[key])) && dataDatum[key] !== '') ? this.NUMERIC_ATTR : this.CATEGORICAL_ATTR;
+                let tmpAttrType: string = (!isNaN(Number(dataDatum[key])) && dataDatum[key] !== '' && !this.NUMERIC_CATEGORICAL_ATTR.includes(key)) ? this.NUMERIC_ATTR : this.CATEGORICAL_ATTR;
                 this.attrType[key] = tmpAttrType;
                 if (!this.EXCLUDED_DATA_ATTR.includes(key)) {
                     tmpDataItem[key] = dataDatum[key];
+                    this.dataAttrs.push(key);
+                    if (typeof this.dataValues.get(key) === 'undefined') {
+                        this.dataValues.set(key, []);
+                    }
+                    this.dataValues.get(key).push(dataDatum[key]);
                 }
             }
             this.filteredDataTable.set(markId, tmpDataItem);
         })
+        this.dataAttrs = [...new Set(this.dataAttrs)];
+        //sort data values
+        this.sortAttrValues(this.dataValues);
     }
 
     public static extractNonDataAttrValue(markData: Map<string, IDataItem>) {
@@ -362,24 +371,58 @@ export default class Util {
                         if (i === 0) {
                             tmpDataItem._TYPE = `${av}`;
                             this.nonDataAttrs.push('_TYPE');
+                            if (typeof this.nonDataValues.get('_TYPE') === 'undefined') {
+                                this.nonDataValues.set('_TYPE', []);
+                            }
+                            this.nonDataValues.get('_TYPE').push(`${av}`);
+
                             tmpDataItem._TYPE_IDX = `${typeCount.get(typeValue)}`;
                             this.nonDataAttrs.push('_TYPE_IDX');
+                            if (typeof this.nonDataValues.get('_TYPE_IDX') === 'undefined') {
+                                this.nonDataValues.set('_TYPE_IDX', []);
+                            }
+                            this.nonDataValues.get('_TYPE_IDX').push(`${typeCount.get(typeValue)}`);
                         } else {
                             tmpDataItem[`_TYPE${i}`] = av;
                             this.nonDataAttrs.push(`_TYPE${i}`);
+                            if (typeof this.nonDataValues.get(`_TYPE${i}`) === 'undefined') {
+                                this.nonDataValues.set(`_TYPE${i}`, []);
+                            }
+                            this.nonDataValues.get(`_TYPE${i}`).push(av);
                         }
                     })
                 } else {
                     tmpDataItem[key] = dataDatum[key];
                     this.nonDataAttrs.push(key);
+                    if (typeof this.nonDataValues.get(key) === 'undefined') {
+                        this.nonDataValues.set(key, []);
+                    }
+                    this.nonDataValues.get(key).push(dataDatum[key]);
                 }
             }
             this.nonDataTable.set(markId, tmpDataItem);
         })
         this.nonDataAttrs = [...new Set(this.nonDataAttrs)];
+
+        //sort data values
+        this.sortAttrValues(this.nonDataValues);
     }
 
-
+    public static sortAttrValues(values: Map<string, Array<string | number>>) {
+        values.forEach((v: Array<string | number>, aName: string) => {
+            v = [...new Set(v)];
+            if (this.judgeTimeAttr(v)) {
+                this.timeAttrs.push(aName);
+            }
+            v.sort((a, b) => {
+                if (b > a) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            })
+        })
+    }
 
     public static filterDataSort(dataSort: ISortDataAttr[]): ISortDataAttr[] {
         return dataSort.filter(ds => !Util.EXCLUDED_DATA_ATTR.includes(ds.attr));
@@ -388,8 +431,10 @@ export default class Util {
     /**
      * find out to sort with which attr
      */
-    public static findUpdatedAttrOrder(sda: ISortDataAttr[]) {
+    public static findUpdatedAttrOrder(sda: ISortDataAttr[]): [boolean, ISortDataAttr] {
+        console.log('sda: ', sda);
         let result: ISortDataAttr = { attr: '', sort: '' };
+        let flag = false;
         for (let i = 0, len = state.sortDataAttrs.length; i < len; i++) {
             let found: boolean = false;
             for (let j = 0; j < len; j++) {
@@ -405,8 +450,9 @@ export default class Util {
             if (found) {
                 break;
             }
+            flag = flag || found;
         }
-        return result;
+        return [flag, result];
     }
     public static sortDataTable(attrOrder: ISortDataAttr): string[] {
         let result: string[] = [];
@@ -440,6 +486,18 @@ export default class Util {
         }
         return result;
     }
+
+    /**
+     * find the first group of keyframes in a keyframe group, for plus button functions
+     */
+    public static findFirstKfs(kfg: IKeyframeGroup): IKeyframe[] {
+        if (kfg.keyframes.length > 0) {
+            return kfg.keyframes;
+        } else {
+            return this.findFirstKfs(kfg.children[0]);
+        }
+    }
+
     public static aniRootToKFGroup(aniunitNode: any, aniId: string, parentObj: {} | IKeyframeGroup, parentChildIdx: number): IKeyframeGroup {
         console.log('aniunit node: ', aniunitNode);
         let kfGroupRoot: IKeyframeGroup = {
@@ -537,6 +595,7 @@ export default class Util {
      * @param parentId 
      */
     public static aniLeafToKF(aniLeaf: any, leafIdx: number, aniId: string, parentObj: IKeyframeGroup, parentMarks: string[]): IKeyframe {
+        console.log('creating kf info: ', aniLeaf, aniLeaf.marks, parentMarks);
         //find the min and max duraion of kfs, in order to render kfs
         const tmpDuration: number = aniLeaf.end - aniLeaf.start;
         aniLeaf.marks = [...new Set(aniLeaf.marks)];
@@ -546,21 +605,20 @@ export default class Util {
         // }
         //find all the marks animate before marks in aniLeaf
         const marksInOrder: string[] = Animation.animations.get(aniId).marksInOrder;
-        let targetIdx: number = 0;
-        let minStartTime: number = 1000000;
+        let targetIdx: number = -1;
+        let minStartTime: number = 100000;//min start time of marks in this leaf
         aniLeaf.marks.forEach((m: string) => {
             const tmpIdx: number = marksInOrder.indexOf(m);
-            if (tmpIdx > targetIdx) {
+            if (Animation.allMarkAni.get(m).startTime < minStartTime) {
+                minStartTime = Animation.allMarkAni.get(m).startTime;
                 targetIdx = tmpIdx;
-                if (Animation.allMarkAni.get(m).startTime < minStartTime) {
-                    minStartTime = Animation.allMarkAni.get(m);
-                }
             }
         })
         let allCurrentMarks: string[] = [];
+        console.log('marks in order: ', marksInOrder, targetIdx);
         Animation.animations.forEach((ani: any, tmpAniId: string) => {
             if (tmpAniId === aniId) {
-                allCurrentMarks = [...allCurrentMarks, ...ani.marksInOrder.slice(0, targetIdx + 1)];
+                allCurrentMarks = [...allCurrentMarks, ...ani.marksInOrder.slice(0, targetIdx)];
             } else {
                 for (let i = 0, len = ani.marksInOrder.length; i < len; i++) {
                     if (Animation.allMarkAni.get(ani.marksInOrder[i]).startTime >= minStartTime) {
@@ -571,9 +629,8 @@ export default class Util {
             }
         })
         allCurrentMarks = [...state.staticMarks, ...allCurrentMarks];
-        // const allCurrentMarks = Animation.animations.get(aniId).marksInOrder.slice(0, targetIdx + 1);
+        console.log('all current marks before this kf: ', allCurrentMarks);
 
-        console.log('test', parentObj.marks, aniLeaf.marks);
         let drawDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousEnd || parentObj.marks.length === aniLeaf.marks.length;
         if (typeof aniLeaf.alignTo !== 'undefined') {
             drawDuration = KfItem.allKfInfo.get(aniLeaf.alignTo).durationIcon;
@@ -603,33 +660,176 @@ export default class Util {
         return tmpKf;
     }
     public static judgeFirstKf(kfg: KfGroup | KfTrack): boolean {
-        // let flag = true;
-        // while (kfg.parentObj instanceof KfGroup) {
-        //     let firstKfg: KfGroup;
-        //     for (let i = 0, len = kfg.parentObj.children.length; i < len; i++) {
-        //         if (kfg.parentObj.children[i] instanceof KfGroup) {
-        //             firstKfg = kfg.parentObj.children[i];
-        //             break;
-        //         }
-        //     }
-        //     console.log(kfg.parentObj.children, firstKfg);
-        //     if (kfg.id !== firstKfg.id) {
-        //         flag = false;
-        //     }
-        //     kfg = kfg.parentObj;
-        // }
-        // return flag;
-        // if(typeof kfg !== 'undefined'){
-
-        // }
-        let flag = true;
         while (kfg instanceof KfGroup) {
-            if (kfg.idxInGroup !== 0) {
-                flag = false
-                break;
+            if (kfg.parentObj instanceof KfTrack) {
+                return true
+            } else {
+                if (typeof kfg.parentObj !== 'undefined') {
+                    for (let i = 0; i < kfg.parentObj.children.length; i++) {
+                        if (kfg.parentObj.children[i] instanceof KfGroup) {
+                            if (kfg.parentObj.children[i].id !== kfg.id) {
+                                return false;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+                kfg = kfg.parentObj;
             }
-            kfg = kfg.parentObj;
         }
+        return true;
+    }
+
+    /*
+    全排列（非递归回溯）算法
+    1、建立位置数组，即对位置进行排列，排列成功后转换为元素的排列；
+    2、第n个位置搜索方式与八皇后问题类似。
+    */
+    public static seek(index: any[], n: number): boolean {
+        var flag = false, m = n; //flag为找到位置排列的标志，m保存正在搜索哪个位置  
+        do {
+            index[n]++;
+            if (index[n] == index.length) //已无位置可用  
+                index[n--] = -1; //重置当前位置，回退到上一个位置  
+            else if (!(function () {
+                for (var i = 0; i < n; i++)
+                    if (index[i] == index[n]) return true;
+                return false;
+            })()) //该位置未被选择  
+                if (m == n) //当前位置搜索完成  
+                    flag = true;
+                else
+                    n++;
+        } while (!flag && n >= 0)
         return flag;
+    }
+    public static perm(arr: any[]): any[][] {
+        let result: any[][] = [];
+        var index = new Array(arr.length);
+        for (var i = 0; i < index.length; i++) {
+            index[i] = -1;
+        }
+        for (i = 0; i < index.length - 1; i++) {
+            this.seek(index, i);
+        }
+        while (this.seek(index, index.length - 1)) {
+            var temp = [];
+            for (i = 0; i < index.length; i++) {
+                temp.push(arr[index[i]]);
+            }
+            result.push(temp);
+        }
+        return result;
+    }
+
+    public static checkConti(attrCombs: string[][], targetAttrs: string[]): string[][] {
+        const tmpAttrCombs: string[] = attrCombs.map(x => x.join(','));
+        let combTargetAttrs = this.perm(targetAttrs);
+        let combTargetAttrStrs: string[] = combTargetAttrs.map(x => x.join(','));
+        for (let i = 0; i < tmpAttrCombs.length;) {
+            let flag: boolean = false;
+            for (let j = 0, len2 = combTargetAttrStrs.length; j < len2; j++) {
+                if (tmpAttrCombs[i].includes(combTargetAttrStrs[j])) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) {//this combination breaks the continuity of the target attrs
+                tmpAttrCombs.splice(i, 1);
+            } else {
+                i++
+            }
+        }
+        attrCombs = tmpAttrCombs.map(x => x.split(','));
+        return attrCombs;
+    }
+
+    /**
+     * judge whether one attr is time attr according to its values 
+     * @param {*} aValues 
+     */
+    public static judgeTimeAttr(aValues: Array<string | number>): boolean {
+        console.log('judge time attr: ', aValues);
+        for (let i = 0, len = aValues.length; i < len; i++) {
+            if (!this.TIME_ATTR_VALUE.includes(`${aValues[i]}`.toLowerCase())) {
+                console.log('is not time', aValues[i]);
+                return false;
+            }
+        }
+        console.log('is time');
+        return true;
+    }
+
+    public static fetchTimeNum(timeStr: string): number {
+        switch (timeStr) {
+            case 'jan':
+            case 'january':
+                return 1;
+            case 'feb':
+            case 'february':
+                return 2;
+            case 'mar':
+            case 'march':
+                return 3;
+            case 'apr':
+            case 'april':
+                return 4;
+            case 'may':
+                return 5;
+            case 'jun':
+            case 'june':
+                return 6;
+            case 'jul':
+            case 'july':
+                return 7;
+            case 'aug':
+            case 'august':
+                return 8;
+            case 'sep':
+            case 'september':
+                return 9;
+            case 'oct':
+            case 'october':
+                return 10;
+            case 'nov':
+            case 'november':
+                return 11;
+            case 'dec':
+            case 'december':
+                return 12;
+        }
+    }
+
+    public static extractAttrValueOrder(sortedValues: string[]): string[][] {
+        let valueOrderRecord: Map<number, Set<string>> = new Map();
+        sortedValues.forEach((valComb: string) => {
+            const values: string[] = valComb.split(',');
+            values.forEach((v: string, idx: number) => {
+                if (v !== '') {
+                    if (typeof valueOrderRecord.get(idx) === 'undefined') {
+                        valueOrderRecord.set(idx, new Set());
+                    }
+                    valueOrderRecord.get(idx).add(v);
+                }
+            })
+        })
+        let result: string[][] = [];
+        valueOrderRecord.forEach((valueSort: Set<string>, idx: number) => {
+            result[idx] = [...valueSort];
+        })
+        return result;
+    }
+
+    /**
+     * extract class names from the given marks
+     * @param markArr 
+     */
+    public static extractClsFromMarks(markArr: string[]): string[] {
+        const clsOfMarks: Set<string> = new Set();
+        markArr.forEach((mId: string) => {
+            clsOfMarks.add(Animation.markClass.get(mId));
+        })
+        return [...clsOfMarks];
     }
 }

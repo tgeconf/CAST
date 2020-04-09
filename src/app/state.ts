@@ -2,12 +2,12 @@ import { ChartSpec } from 'canis_toolkit'
 import { ViewToolBtn } from '../components/viewWindow'
 import Renderer from './renderer'
 import Tool from '../util/tool'
-import { ISortDataAttr, IDataItem, IKeyframeGroup, IKfGroupSize } from './ds'
-import Util from './util'
+import { ISortDataAttr, IDataItem, IKeyframeGroup, IKfGroupSize, IPath } from './core/ds'
+import Util from './core/util'
 import Reducer from './reducer'
 import * as action from './action'
 import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie';
-import { ICanisSpec } from './canisGenerator'
+import CanisGenerator, { ICanisSpec } from './core/canisGenerator'
 
 
 export interface IState {
@@ -23,6 +23,7 @@ export interface IState {
 
 
     spec: ICanisSpec
+    allPaths: IPath[]//for kf suggestion
     //keyframe status
     // keyframeStatus: IKeyframe
     kfGroupSize: IKfGroupSize // size of all kf groups
@@ -48,7 +49,7 @@ export class State implements IState {
     _selection: string[]
     _suggestion: boolean
     _spec: ICanisSpec
-
+    _allPaths: IPath[]
     _kfGroupSize: IKfGroupSize
 
     _lottieAni: AnimationItem
@@ -72,10 +73,13 @@ export class State implements IState {
             Renderer.renderDataAttrs(sda);
         } else {
             //find sort reference
-            const attrAndOrder: ISortDataAttr = Util.findUpdatedAttrOrder(sda);
+            const [found, attrAndOrder] = Util.findUpdatedAttrOrder(sda);
             //reorder data items
-            Reducer.triger(action.UPDATE_DATA_ORDER, Util.sortDataTable(attrAndOrder));
-            Renderer.renderDataTable(this.dataTable);
+            if (found) {
+                Reducer.triger(action.UPDATE_DATA_ORDER, Util.sortDataTable(attrAndOrder));
+                Renderer.renderDataTable(this.dataTable);
+            }
+
 
         }
         //State.saveHistory(action.UPDATE_DATA_SORT, this._sortDataAttrs);
@@ -125,7 +129,7 @@ export class State implements IState {
     set suggestion(sug: boolean) {
         //State.saveHistory(action.TOGGLE_SUGGESTION, this._suggestion);
         this._suggestion = sug;
-        Renderer.renderSuggestionCheckbox(this.suggestion);
+        // Renderer.renderSuggestionCheckbox(this.suggestion);
     }
     get suggestion(): boolean {
         return this._suggestion;
@@ -167,20 +171,23 @@ export class State implements IState {
         return this._staticMarks;
     }
     set spec(canisSpec: ICanisSpec) {
-        this._spec = canisSpec;
-        Renderer.renderSpec(this.spec);
+        console.log('going to validate spec: ', canisSpec);
+        //validate spec before render
+        const validSpec: boolean = CanisGenerator.validate(canisSpec);
+        if (validSpec) {
+            this._spec = canisSpec;
+            Renderer.renderSpec(this.spec);
+        }
     }
     get spec(): ICanisSpec {
         return this._spec;
     }
-    // set groupingAndTiming(gat: any) {
-    //     this._groupingAndTiming = gat;
-    //     //render timeline
-    //     Renderer.renderTimeline(this.groupingAndTiming);
-    // }
-    // get groupingAndTiming(): any {
-    //     return this._groupingAndTiming;
-    // }
+    set allPaths(ap: IPath[]) {
+        this._allPaths = ap;
+    }
+    get allPaths(): IPath[] {
+        return this._allPaths;
+    }
 
     public reset(): void {
         this.sortDataAttrs = [];

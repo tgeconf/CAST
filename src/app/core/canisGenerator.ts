@@ -1,6 +1,6 @@
-import { IState } from './state'
-import Canis from 'canis_toolkit';
-import { ActionSpec } from 'canis_toolkit';
+import { IState } from '../state'
+import Canis, { TimingSpec } from 'canis_toolkit';
+import { ActionSpec, Animation } from 'canis_toolkit';
 
 export let canis = new Canis();
 
@@ -56,24 +56,6 @@ export interface ICanisSpec {
 }
 
 export default class CanisGenerator {
-    // public canisSpec: ICanisSpec;
-
-    // constructor() {
-    //     this.canisSpec = {
-    //         charts: [],
-    //         animations: []
-    //     }
-    // }
-
-    // public generate(state: IState): void {
-    //     console.log('generating spec: ', state);
-    //     this.resetSpec();
-    //     this.generateChartSpec(state.charts);//generate chart spec 
-    //     this.generateAnimationSpec();
-    //     this.validate();
-    //     console.log(this.canisSpec);
-    // }
-
     public static generateChartSpec(charts: string[]): IChartSpec[] {
         let chartSpecs: IChartSpec[] = [];
         for (let i = 0; i < charts.length; i++) {
@@ -90,9 +72,20 @@ export default class CanisGenerator {
 
     }
 
-    public static validate(spec: ICanisSpec): void {
+    public static validate(spec: ICanisSpec): boolean {
         if (spec.charts.length === 0) {
             console.warn('there are no input charts!');
+            return false;
+        }
+        if (spec.animations.length > 0) {
+            //remove empty animations
+            let i = spec.animations.length;
+            while (i--) {
+                const tmpAni: IAnimationSpec = spec.animations[i];
+                if (tmpAni.selector === '' || tmpAni.selector === '#') {
+                    spec.animations.splice(i, 1);
+                }
+            }
         }
         if (spec.animations.length === 0) {
             const animationSpec: IAnimationSpec = {
@@ -101,6 +94,11 @@ export default class CanisGenerator {
             }
             spec.animations.push(animationSpec);
         }
+        return true;
+    }
+
+    public static resetSpec(spec: ICanisSpec): void {
+        spec.animations = [];
     }
 
     public static updateKfDelay(groupingSpec: IGrouping, delay: number): void {
@@ -224,9 +222,84 @@ export default class CanisGenerator {
         actionSpec.duration = duration;
     }
 
-    public static updateAniOffset(ani: IAnimationSpec, offset: number) {
+    public static updateAniOffset(ani: IAnimationSpec, offset: number): void {
         ani.offset = offset;
     }
+
+    public static updateStaticSelector(ani: IAnimationSpec, staticMarks: string[]): void {
+        let currentSelectedMarks: string[] = [];
+        if (ani.selector === '.mark') {
+            Animation.markClass.forEach((clsName: string, mId: string) => {
+                if (!staticMarks.includes(mId)) {
+                    currentSelectedMarks.push(`#${mId}`);
+                }
+            })
+        } else {
+            console.log('selector is: ', ani.selector);
+            ani.selector.split(', ').forEach((s: string) => {
+                const mId: string = s.substring(1);
+                if (!staticMarks.includes(mId)) {
+                    currentSelectedMarks.push(`#${mId}`);
+                }
+            });
+            console.log('selector: ', currentSelectedMarks);
+        }
+        console.log('updated selector:', currentSelectedMarks.join(', '));
+        ani.selector = currentSelectedMarks.join(', ');
+        // return ani.selector === '';
+    }
+
+    public static updateGrouping(parent: IAnimationSpec | IGrouping, attrComb: string[], attrValueSort?: string[][]) {
+        if (typeof parent.grouping !== 'undefined') {
+            parent.grouping.groupBy = attrComb[0];
+        } else {
+            parent.grouping = { groupBy: attrComb[0] };
+        }
+        if (typeof attrValueSort !== 'undefined') {
+            parent.grouping.sort = {
+                order: attrValueSort[0]
+            }
+            attrValueSort.splice(0, 1);
+        }
+        attrComb.splice(0, 1);
+        if (attrComb.length > 0) {
+            this.updateGrouping(parent.grouping, attrComb, attrValueSort);
+        }
+    }
+
+    public static createGrouping(parent: IAnimationSpec | IGrouping, attrComb: string[], attrValueSort?: string[][]) {
+        parent.grouping = { groupBy: attrComb[0], reference: TimingSpec.timingRef.previousEnd };
+        if (typeof attrValueSort !== 'undefined') {
+            parent.grouping.sort = {
+                order: attrValueSort[0]
+            }
+            attrValueSort.splice(0, 1);
+        }
+        attrComb.splice(0, 1);
+        if (attrComb.length > 0) {
+            this.createGrouping(parent.grouping, attrComb, attrValueSort);
+        }
+    }
+
+    public static appendGrouping(parent: IAnimationSpec | IGrouping, attrComb: string[], attrValueSort?: string[][]) {
+        if (typeof parent.grouping !== 'undefined') {
+            this.appendGrouping(parent.grouping, attrComb, attrValueSort);
+        } else {
+            this.createGrouping(parent, attrComb, attrValueSort);
+        }
+    }
+
+    public static removeMarksFromSelector(ani: IAnimationSpec, targetMarks: string[]) {
+        let currentMarks: string[] = ani.selector.split(', ');
+        let filteredMarks: string[] = [];
+        currentMarks.forEach((mSelector: string) => {
+            if (!targetMarks.includes(mSelector)) {
+                filteredMarks.push(mSelector);
+            }
+        })
+        ani.selector = filteredMarks.join(', ');
+    }
+
 
     // public static removeGrouping()
     // public resetSpec(): void {

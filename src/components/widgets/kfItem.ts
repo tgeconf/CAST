@@ -1,6 +1,6 @@
 import '../../assets/style/keyframeItem.scss'
 import Tool from '../../util/tool'
-import { IKeyframe } from '../../app/ds';
+import { IKeyframe } from '../../app/core/ds';
 import KfGroup from './kfGroup';
 import KfTimingIllus from './kfTimingIllus';
 import KfOmit from './kfOmit';
@@ -10,6 +10,7 @@ import { KfContainer } from '../kfContainer';
 import * as action from '../../app/action';
 import Reducer from '../../app/reducer';
 import { TimingSpec } from 'canis_toolkit';
+import { state } from '../../app/state';
 
 export default class KfItem extends KfTimingIllus {
     static KF_HEIGHT: number = 178;
@@ -17,9 +18,12 @@ export default class KfItem extends KfTimingIllus {
     static KF_H_STEP: number = 6;
     static KF_W_STEP: number = 8;
     static PADDING: number = 6;
-    static allKfInfo: Map<number, IKeyframe> = new Map();
-    static allKfItems: Map<number, KfItem> = new Map();
+    static STATIC_KF_ID: number = -100;
+    static allKfInfo: Map<number, IKeyframe> = new Map();//contains both fake and real info
+    static allKfItems: Map<number, KfItem> = new Map();//contains both fake and real kf
+    static staticKf: KfItem;
     static dragoverKf: KfItem;
+    static fadeKfIdx: number = 10000;
 
     // public id: number;
     public treeLevel: number;
@@ -45,12 +49,29 @@ export default class KfItem extends KfTimingIllus {
     public totalWidth: number = 0
     public chartThumbnail: SVGImageElement
 
+    set durationDiff(df: number) {
+        this._durationDiff = df;
+        this.transNextKf(df);
+    }
+
+    get durationDiff(): number {
+        return this._durationDiff;
+    }
+
     public static highlightKfs(selectedCls: string[]) {
+        //highlight static kf
+        // if (typeof KfItem.staticKf !== 'undefined') {
+        //     KfItem.staticKf.highlightKf();
+        // }
         //filter which kf to highlight
 
     }
 
     public static cancelHighlightKfs() {
+        //cancel highlight static kf
+        // if (typeof KfItem.staticKf !== 'undefined') {
+        //     KfItem.staticKf.cancelHighlightKf();
+        // }
         this.allKfItems.forEach((kf: KfItem) => {
             if (kf.isHighlighted) {
                 kf.cancelHighlightKf();
@@ -58,7 +79,22 @@ export default class KfItem extends KfTimingIllus {
         })
     }
 
+    public static createKfInfo(selectedMarks: string[], basicInfo: { duration: number, allCurrentMarks: string[], allGroupMarks: string[] }): IKeyframe {
+        KfItem.fadeKfIdx++;
+        return {
+            id: KfItem.fadeKfIdx,
+            duration: basicInfo.duration,
+            allCurrentMarks: basicInfo.allCurrentMarks,
+            allGroupMarks: basicInfo.allGroupMarks,
+            marksThisKf: selectedMarks,
+            durationIcon: true,
+            delay: 0,
+            delayIcon: false
+        }
+    }
+
     public createStaticItem(staticMarks: string[]): void {
+        this.id = KfItem.STATIC_KF_ID;
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.container.setAttributeNS(null, 'transform', `translate(${KfItem.PADDING}, ${KfItem.PADDING})`);
         this.kfHeight = KfItem.KF_HEIGHT - 2 * KfItem.PADDING;
@@ -68,10 +104,21 @@ export default class KfItem extends KfTimingIllus {
             this.drawStaticChart(staticMarks);
             this.container.appendChild(this.chartThumbnail);
         }
+        KfItem.staticKf = this;
+    }
+
+    public createOptionKfItem(allCurrentMarks: string[], allGroupMarks: string[], marksThisKf: string[], kfWidth: number, kfHeight: number) {
+        this.kfWidth = kfWidth;
+        this.kfHeight = kfHeight;
+        this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.container.setAttributeNS(null, 'transform', `translate(${KfItem.PADDING}, ${KfItem.PADDING})`);
+        this.drawKfBg(-1, { w: kfWidth, h: kfHeight });
+        this.container.appendChild(this.kfBg);
+        this.drawChart(allCurrentMarks, allGroupMarks, marksThisKf);
+        this.container.appendChild(this.chartThumbnail);
     }
 
     public createItem(kf: IKeyframe, treeLevel: number, parentObj: KfGroup, startX: number, size?: { w: number, h: number }): void {
-        console.log('draw duration: ', kf.durationIcon);
         this.hasOffset = kf.delayIcon;
         this.hasDuration = kf.durationIcon;
         this.parentObj = parentObj;
@@ -289,7 +336,11 @@ export default class KfItem extends KfTimingIllus {
         this.drawChart(this.kfInfo.allCurrentMarks, this.kfInfo.allGroupMarks, this.kfInfo.marksThisKf);
         this.container.appendChild(this.chartThumbnail);
         if (this.treeLevel === 1) {
-            this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
+            if (typeof this.parentObj.groupMenu === 'undefined') {//fake groups
+                this.parentObj.container.appendChild(this.container);
+            } else {
+                this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
+            }
         } else {
             this.parentObj.container.appendChild(this.container);
         }
@@ -367,7 +418,7 @@ export default class KfItem extends KfTimingIllus {
                 alignedKfInfo.alignWithKfs.forEach((kfId: number) => {
                     const tmpKfItem = KfItem.allKfItems.get(kfId);
                     if (typeof tmpKfItem !== 'undefined') {
-                        tmpKfItem.parentObj.translateGroup(tmpKfItem, bgDiffX);
+                        tmpKfItem.parentObj.translateGroup(tmpKfItem, bgDiffX, false);
                         const tmpKfItemBBox: DOMRect = tmpKfItem.container.getBoundingClientRect();
                         if (tmpKfItemBBox.right > posiXForNextKf) {
                             posiXForNextKf = tmpKfItemBBox.right;
@@ -474,14 +525,35 @@ export default class KfItem extends KfTimingIllus {
     }
 
     public highlightKf() {
+        this.isHighlighted = true;
         this.kfBg.setAttributeNS(null, 'class', 'highlight-kf');
     }
 
     public cancelHighlightKf() {
+        this.isHighlighted = false;
         this.kfBg.classList.remove('highlight-kf');
     }
 
+    public transNextKf(transX: number) {
+        let nextKf: KfItem | KfOmit;
+        for (let i = 0, len = this.parentObj.children.length; i < len; i++) {
+            if (this.parentObj.children[i].id === this.id) {
+                nextKf = this.parentObj.children[i + 1];
+                break;
+            }
+        }
+        // this.parentObj.translateGroup(nextKf, transX, true);
+        const oriTrans: ICoord = Tool.extractTransNums(nextKf.container.getAttributeNS(null, 'transform'));
+        nextKf.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + transX}, ${oriTrans.y})`);
+        this.parentObj.updateSize();
+    }
+
+    public startAdjustingTime() {
+        this.parentObj.hideTitle();
+    }
+
     public dragSelOver() {
+        Tool.clearDragOver();
         this.kfBg.setAttributeNS(null, 'class', 'dragover-kf');
         KfItem.dragoverKf = this;
     }
@@ -489,5 +561,16 @@ export default class KfItem extends KfTimingIllus {
     public dragSelOut() {
         this.kfBg.classList.remove('dragover-kf');
         KfItem.dragoverKf = undefined;
+    }
+
+    public dropSelOn() {
+        let currentSelection: string[] = state.selection;
+        Reducer.triger(action.UPDATE_SELECTION, []);
+        if (this.id === KfItem.STATIC_KF_ID) {
+            //update static marks
+            Reducer.triger(action.UPDATE_STATIC_SELECTOR, currentSelection);
+        } else {
+
+        }
     }
 }

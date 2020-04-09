@@ -5,6 +5,8 @@ import PlusBtn from './plusBtn';
 import { state } from '../../app/state';
 import { Animation } from 'canis_toolkit';
 import Tool from '../../util/tool';
+import Reducer from '../../app/reducer';
+import * as action from '../../app/action';
 
 export default class DragableCanvas {
     /**
@@ -51,7 +53,6 @@ export default class DragableCanvas {
             canvas.style.left = `${moveEvt.pageX - canvas.width / 2}px`;
             canvas.style.top = `${moveEvt.pageY - canvas.height / 2}px`;
             const dragOverItem: PlusBtn | KfItem = Tool.judgeDragOver({ x: moveEvt.pageX, y: moveEvt.pageY });
-            console.log('found drag over', dragOverItem, typeof dragOverItem);
             if (typeof dragOverItem !== 'undefined') {
                 dragOverItem.dragSelOver();
             } else {
@@ -63,12 +64,15 @@ export default class DragableCanvas {
             }
         }
         document.onmouseup = (upEvt) => {
+            console.log('drag overs: ', PlusBtn.dragoverBtn, KfItem.dragoverKf);
             canvas.remove();
             //update kf if drop on plus button or kf
-            if (typeof typeof PlusBtn.dragoverBtn !== 'undefined') {
+            if (typeof PlusBtn.dragoverBtn !== 'undefined') {
                 console.log('drop on plusbtn');
+                PlusBtn.dragoverBtn.dropSelOn();
             } else if (typeof KfItem.dragoverKf !== 'undefined') {
                 console.log('drop on kf');
+                KfItem.dragoverKf.dropSelOn();
             }
 
 
