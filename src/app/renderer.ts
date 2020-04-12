@@ -31,57 +31,11 @@ import { suggestBox, SuggestBox } from '../components/widgets/suggestBox'
  */
 export default class Renderer {
     /**
-     * generate the canis spec and render
-     * @param s : state
-     */
-    // public static async generateAndRenderSpec(s: IState) {
-    //     canisGenerator.generate(s);
-    //     console.log('generated canis spec: ', canisGenerator.canisSpec);
-    //     const lottieSpec = await canis.renderSpec(canisGenerator.canisSpec, () => {
-    //         Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
-    //         Util.extractNonDataAttrValue(ChartSpec.nonDataMarkDatum);
-    //         //save histroy before update state
-    //         State.tmpStateBusket.push([action.UPDATE_DATA_ORDER, state.dataOrder]);
-    //         State.tmpStateBusket.push([action.UPDATE_DATA_TABLE, state.dataTable]);
-    //         State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
-    //         Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(Util.filteredDataTable.keys()));
-    //         Reducer.triger(action.UPDATE_DATA_TABLE, Util.filteredDataTable);
-    //         Reducer.triger(action.UPDATE_DATA_SORT, Object.keys(Util.attrType).map(attrName => {
-    //             return {
-    //                 attr: attrName,
-    //                 sort: 'dataIndex'
-    //             }
-    //         }));
-    //     });
-    //     //add highlight box on the chart
-    //     const svg: HTMLElement = document.getElementById('visChart');
-    //     if (svg) {
-    //         //create the highlight box
-    //         const highlightBox: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    //         highlightBox.setAttributeNS(null, 'id', 'highlightSelectionFrame');
-    //         highlightBox.setAttributeNS(null, 'class', 'highlight-selection-frame');
-    //         highlightBox.setAttributeNS(null, 'fill', 'rgba(255, 255, 255, 0.01)');
-    //         highlightBox.setAttributeNS(null, 'stroke', '#2196f3');
-    //         highlightBox.setAttributeNS(null, 'stroke-width', '2');
-    //         svg.appendChild(highlightBox);
-    //         // Tool.resizeSVG(svg, svg.parentElement.offsetWidth, svg.parentElement.offsetHeight);
-    //     }
-    //     //render video view
-    //     this.renderVideo(lottieSpec);
-    //     player.resetPlayer({
-    //         frameRate: canis.frameRate,
-    //         currentTime: 0,
-    //         totalTime: canis.duration()
-    //     })
-    // }
-
-    /**
      * test rendering spec
      * @param spec 
      */
     public static async renderSpec(spec: ICanisSpec) {
         console.log('going to render spec: ', spec);
-
         const lottieSpec = await canis.renderSpec(spec, () => {
             Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
             Util.extractNonDataAttrValue(ChartSpec.nonDataMarkDatum);
@@ -90,7 +44,6 @@ export default class Renderer {
             State.tmpStateBusket.push([action.UPDATE_DATA_ORDER, state.dataOrder]);
             State.tmpStateBusket.push([action.UPDATE_DATA_TABLE, state.dataTable]);
             State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
-            console.log('going to update data order: ', Array.from(Util.filteredDataTable.keys()));
             Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(Util.filteredDataTable.keys()));
             Reducer.triger(action.UPDATE_DATA_TABLE, Util.filteredDataTable);
             Reducer.triger(action.UPDATE_DATA_SORT, Object.keys(Util.attrType).map(attrName => {
@@ -115,7 +68,6 @@ export default class Renderer {
             highlightBox.setAttributeNS(null, 'stroke', '#2196f3');
             highlightBox.setAttributeNS(null, 'stroke-width', '2');
             svg.appendChild(highlightBox);
-            // Tool.resizeSVG(svg, svg.parentElement.offsetWidth, svg.parentElement.offsetHeight);
         }
         //render video view
         this.renderVideo(lottieSpec);
@@ -151,7 +103,6 @@ export default class Renderer {
             }
         });
 
-        console.log('found static marks: ', staticMarks);
         Reducer.triger(action.UPDATE_STATIC_KEYFRAME, staticMarks);
         Reducer.triger(action.UPDATE_KEYFRAME_TRACKS, Animation.animations);
     }
@@ -167,8 +118,14 @@ export default class Renderer {
         //TODO: need to check performance
         document.getElementById(KfContainer.KF_BG).innerHTML = '';
         document.getElementById(KfContainer.KF_FG).innerHTML = '';
+        const placeHolder: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        placeHolder.setAttributeNS(null, 'width', '1');
+        placeHolder.setAttributeNS(null, 'height', '18');
+        placeHolder.setAttributeNS(null, 'fill', '#00000000');
+        document.getElementById(KfContainer.KF_FG).appendChild(placeHolder);
         KfTrack.reset();
         KfGroup.reset();
+        KfOmit.reset();
 
         const firstTrack: KfTrack = new KfTrack();
         firstTrack.createTrack();
@@ -209,17 +166,14 @@ export default class Renderer {
                     }
                     let allTracksThisAni: KfTrack[] = [...KfTrack.aniTrackMapping.get(kfg.aniId)];
                     let lastTrack: KfTrack = KfTrack.allTracks.get(lastChild.targetTrackId);
-                    console.log('last track in this group is: ', lastTrack);
                     if (typeof lastTrack !== 'undefined') {
                         allTracksThisAni.forEach((kft: KfTrack) => {
-                            console.log(kft, kft.trackPosiY - lastTrack.trackPosiY);
                             if (kft.trackPosiY - lastTrack.trackPosiY > 0 && kft.trackPosiY - lastTrack.trackPosiY <= KfTrack.TRACK_HEIGHT) {
                                 targetTrack = kft;
                             }
                         })
                     }
                     if (typeof targetTrack === 'undefined') {
-                        console.log('not found track');
                         targetTrack = new KfTrack();
                         targetTrack.createTrack();
                     }
@@ -228,7 +182,6 @@ export default class Renderer {
                     targetTrack.createTrack();
                 }
             } else {
-                console.log('using existing track', kfg);
                 if (typeof KfTrack.aniTrackMapping.get(kfg.aniId) !== 'undefined') {
                     targetTrack = [...KfTrack.aniTrackMapping.get(kfg.aniId)][0];//this is the group within an existing animation
                 } else {
@@ -254,16 +207,15 @@ export default class Renderer {
             if (treeLevel === 0) {//this is the root group
                 //find the keyframes of the first group
                 const tmpKfs: IKeyframe[] = Util.findFirstKfs(kfg);
-                console.log('keyframes first group: ', tmpKfs);
                 let [addingPlusBtn, acceptableMarkClasses] = PlusBtn.detectAdding(tmpKfs);
                 if (addingPlusBtn) {
                     addedPlusBtn = addingPlusBtn;
                     plusBtn = new PlusBtn()
                     plusBtn.createBtn(kfGroup, tmpKfs, targetTrack, targetTrack.availableInsert, { w: KfItem.KF_WIDTH - KfItem.KF_W_STEP, h: KfItem.KF_HEIGHT - 2 * KfItem.KF_H_STEP }, acceptableMarkClasses);
-                    targetTrack.availableInsert += PlusBtn.PADDING * 3 + PlusBtn.BTN_SIZE;
+                    targetTrack.availableInsert += PlusBtn.PADDING * 4 + PlusBtn.BTN_SIZE;
                 }
             }
-
+            console.log('all ani groups: ', KfGroup.allAniGroups);
             kfGroup.createGroup(kfg, parentObj ? parentObj : targetTrack, targetTrack.trackPosiY - minTrackPosiYThisGroup, treeLevel, targetTrack.trackId);
             if (treeLevel === 0 && addedPlusBtn) {
                 plusBtn.fakeKfg.marks = kfGroup.marks;
@@ -272,7 +224,7 @@ export default class Renderer {
         } else if (totalKfgNum > 3 && kfgIdx === totalKfgNum - 2) {
             let kfOmit: KfOmit = new KfOmit();
             kfOmit.createOmit(0, 0, parentObj, false, false);
-            // parentObj.children.push(kfOmit);
+            parentObj.children.push(kfOmit);//why comment this out!!!!
             parentObj.kfOmits.push(kfOmit);
         }
 
@@ -324,18 +276,11 @@ export default class Renderer {
                 isAlignWith = 2;
                 kfIdxToDraw = [...kfIdxToDraw, ...alignToAni];
             }
-
             kfIdxToDraw = [...new Set(kfIdxToDraw)].sort((a: number, b: number) => a - b);
 
             //rendering kf
             //check whether there should be a plus btn
             let kfPosiX = kfGroup.offsetWidth;
-
-            // let [addingPlusBtn, acceptableMarkClasses] = PlusBtn.detectAdding(kfg.keyframes);
-            // addingPlusBtn = addingPlusBtn && kfgIdx === 0 && Util.judgeFirstKf(kfGroup.parentObj);
-            // if (addingPlusBtn) {
-            //     kfPosiX += PlusBtn.PADDING;
-            // }
             kfg.keyframes.forEach((k: any, i: number) => {
                 //whether to draw this kf or not
                 if (kfIdxToDraw.includes(i)) {
@@ -360,12 +305,6 @@ export default class Renderer {
                     } else {
                         kfSize = { w: KfItem.KF_WIDTH - treeLevel * KfItem.KF_W_STEP, h: KfItem.KF_HEIGHT - 2 * treeLevel * KfItem.KF_H_STEP };
                     }
-                    // if (addingPlusBtn && i === 0 && kfGroup.rendered) {
-                    //     kfPosiX += PlusBtn.BTN_SIZE;
-                    //     const plusBtn: PlusBtn = new PlusBtn();
-                    //     plusBtn.createBtn(kfGroup, kfSize, acceptableMarkClasses);
-                    //     // kfGroup.children.push(plusBtn);
-                    // }
 
                     const kfItem: KfItem = new KfItem();
                     if (isAlignWith === 2) {
@@ -380,12 +319,6 @@ export default class Renderer {
                     kfPosiX += kfItem.totalWidth;
                 }
             })
-            // //render plus btn
-            // if (addingPlusBtn) {
-            //     const plusBtn: PlusBtn = new PlusBtn();
-            //     plusBtn.createBtn(kfGroup, kfSIze);
-            //     kfGroup.children.push(plusBtn);
-            // }
         } else if (kfg.children.length > 0) {
             //rendering kf group
             kfg.children.forEach((c: any, i: number) => {
@@ -395,7 +328,6 @@ export default class Renderer {
                 kfGroup.kfNum += tmpKfGroup.kfNum;
             });
         }
-
         return kfGroup;
     }
 
@@ -421,17 +353,6 @@ export default class Renderer {
             document.getElementById('dataTabelContainer').appendChild(dataTable.createTable(dt));
             SelectableTable.renderSelection(state.selection);
         }
-    }
-
-    /**
-     * render the suggestion checkbox status
-     * @param suggesting 
-     */
-    // public static renderSuggestionCheckbox(suggesting: boolean): void {
-    //     (<HTMLInputElement>document.getElementById('suggestBox')).checked = suggesting;
-    // }
-    public static renderSuggestionIcon(suggesting: boolean): void {
-
     }
 
     /**
@@ -499,9 +420,7 @@ export default class Renderer {
 
     public static renderSuggestKfs(kfIdxInPath: number, startKf: KfItem, suggestOnFirstKf: boolean, selectedMarks: string[]) {
         const nextUniqueKfIdx: number = Suggest.findNextUniqueKf(state.allPaths, kfIdxInPath);
-        console.log('next unitque kf idx: ', nextUniqueKfIdx, state.allPaths, suggestOnFirstKf);
         if (nextUniqueKfIdx === -1) {//render groups
-            console.log('current path: ', state.allPaths);
             const targetPath: IPath = state.allPaths[0];
 
             if (typeof targetPath === 'undefined') {
@@ -509,7 +428,6 @@ export default class Renderer {
                 Reducer.triger(action.SPLIT_CREATE_ONE_ANI, { aniId: startKf.aniId, newAniSelector: `#${selectedMarks.join(', #')}`, attrComb: [], attrValueSort: [] });
             } else {
                 //extract attr value order
-                console.log(startKf, startKf.parentObj);
                 const attrValueSort: string[][] = Util.extractAttrValueOrder(targetPath.sortedAttrValueComb);
                 const clsOfMarksInPath: string[] = Util.extractClsFromMarks(targetPath.lastKfMarks);
                 const clsOfMarksThisAni: string[] = Util.extractClsFromMarks(startKf.parentObj.marksThisAni());
@@ -584,8 +502,8 @@ export default class Renderer {
             transX += suggestBox.boxWidth + 3 * SuggestBox.PADDING + suggestBox.menuWidth + 2;
 
             //translate the ori group
-            console.log('render path trans kf: ', startKf, transX);
             if (typeof nextKf === 'undefined') {
+                console.log('going to translate group', startKf, transX);
                 startKf.parentObj.translateGroup(startKf, transX, true, { lastItem: true, extraWidth: suggestBox.boxWidth + SuggestBox.PADDING + suggestBox.menuWidth });
             } else {
                 startKf.parentObj.translateGroup(nextKf, transX, true);

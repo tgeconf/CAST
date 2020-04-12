@@ -58,6 +58,7 @@ body {
     @extend .zero-margin-padding;
     @extend .cover-size;
     background: var(--gray-l1);
+    font-family: "Lato", "Lucida Grande", "Segoe UI", sans-serif;
 }
 
 .outer-wrapper {

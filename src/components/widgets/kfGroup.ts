@@ -1,5 +1,5 @@
 import KfTrack from "./kfTrack";
-import { IKeyframeGroup } from "../../app/core/ds";
+import { IKeyframeGroup, IKeyframe } from "../../app/core/ds";
 import KfOmit from "./kfOmit";
 import KfTimingIllus from "./kfTimingIllus";
 import KfItem from "./kfItem";
@@ -46,6 +46,10 @@ export default class KfGroup extends KfTimingIllus {
     public width: number = 0;
     public marks: string[];
     public treeLevel: number;
+    public alignTarget: string;
+    public alignId: string;
+    public alignType: string;
+    public alignMerge: boolean = false;
     // public container: SVGGElement;
     public isDragging: boolean = false;
     public groupBg: SVGRectElement;
@@ -97,6 +101,12 @@ export default class KfGroup extends KfTimingIllus {
         this.hasOffset = kfg.delayIcon;
         this.parentObj = parentObj;
         this.delay = kfg.delay;
+        this.alignId = kfg.alignId;
+        this.alignTarget = kfg.alignTarget;
+        this.alignType = kfg.alignType;
+        if (typeof kfg.merge !== 'undefined') {
+            this.alignMerge = kfg.merge;
+        }
         if (typeof kfg.refValue === 'undefined') {
             let classRecorder: Set<string> = new Set();
             this.marks.forEach((m: string) => {
@@ -141,6 +151,17 @@ export default class KfGroup extends KfTimingIllus {
         this.container.setAttributeNS(null, 'id', `group${this.id}`);
         if (this.parentObj instanceof KfTrack) {
             this.posiY = 1;
+            if (this.alignMerge) {
+                //find the aligned group
+                let alignedGroup: KfGroup;
+                KfGroup.allAniGroups.forEach((aniGroup: KfGroup, aniId: string) => {
+                    if (aniGroup.alignId === this.alignTarget) {
+                        alignedGroup = aniGroup;
+                    }
+                })
+                const transY: number = this.parentObj.container.getBoundingClientRect().top - alignedGroup.container.getBoundingClientRect().top;
+                this.posiY -= transY;
+            }
             const transX: number = this.parentObj.availableInsert;
             this.container.setAttributeNS(null, 'transform', `translate(${transX}, ${this.posiY})`);
             this.parentObj.children.push(this);
@@ -151,13 +172,11 @@ export default class KfGroup extends KfTimingIllus {
             this.container.appendChild(this.offsetIllus);
         }
         this.drawGroupBg();
-        this.container.appendChild(this.groupTitle);
-        this.container.appendChild(this.groupBg);
 
         if (this.treeLevel === 1 && this.parentObj instanceof KfGroup) {
             this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
         } else {
-            if (this.treeLevel === 0) {
+            if (this.treeLevel === 0 && !this.alignMerge) {
                 this.drawGroupMenu();
                 this.container.appendChild(this.groupMenu.container);
                 this.container.onmouseover = () => {
@@ -187,7 +206,6 @@ export default class KfGroup extends KfTimingIllus {
     }
 
     public drawGroupMenu(): void {
-        console.log(KfGroup.allActions, this.aniId, this.id);
         this.groupMenu = new GroupMenu(KfGroup.allActions.get(this.aniId), this.id);
         this.groupMenu.createAndRenderMenu();
     }
@@ -203,16 +221,20 @@ export default class KfGroup extends KfTimingIllus {
     }
 
     public showTitle(): void {
-        const oriTransX: number = Tool.extractTransNums(this.groupTitle.getAttributeNS(null, 'transform')).x;
-        if (this.parentObj instanceof KfGroup) {
-            this.parentObj.hideTitle();
+        if(typeof this.groupTitle !== 'undefined'){
+            const oriTransX: number = Tool.extractTransNums(this.groupTitle.getAttributeNS(null, 'transform')).x;
+            if (this.parentObj instanceof KfGroup) {
+                this.parentObj.hideTitle();
+            }
+            this.groupTitle.setAttributeNS(null, 'transform', `translate(${oriTransX}, ${-KfGroup.TITLE_HEIHGT})`);
         }
-        this.groupTitle.setAttributeNS(null, 'transform', `translate(${oriTransX}, ${-KfGroup.TITLE_HEIHGT})`);
     }
 
     public hideTitle(): void {
-        const oriTransX: number = Tool.extractTransNums(this.groupTitle.getAttributeNS(null, 'transform')).x;
-        this.groupTitle.setAttributeNS(null, 'transform', `translate(${oriTransX}, 0)`);
+        if(typeof this.groupTitle !== 'undefined'){
+            const oriTransX: number = Tool.extractTransNums(this.groupTitle.getAttributeNS(null, 'transform')).x;
+            this.groupTitle.setAttributeNS(null, 'transform', `translate(${oriTransX}, 0)`);
+        }
     }
 
     public bindTitleHover(): void {
@@ -233,137 +255,134 @@ export default class KfGroup extends KfTimingIllus {
      * draw group bg as well as title
      */
     public drawGroupBg(): void {
-        this.groupTitle = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        this.groupTitle.classList.add('ease-transform');
-        this.groupTitle.classList.add('draggable-component');
-        this.groupTitle.setAttributeNS(null, 'transform', `translate(${this.offsetWidth}, 0)`);
-        const groupTitleBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        groupTitleBg.setAttributeNS(null, 'x', '0');
-        groupTitleBg.setAttributeNS(null, 'y', '0');
-        groupTitleBg.setAttributeNS(null, 'width', `${KfGroup.TITLE_CHAR_WIDTH * this.title.length + 2 * KfGroup.TITLE_PADDING}`);
-        groupTitleBg.setAttributeNS(null, 'height', '30');
-        groupTitleBg.setAttributeNS(null, 'fill', '#676767');
-        groupTitleBg.setAttributeNS(null, 'rx', `${KfGroup.GROUP_RX}`);
-        this.groupTitle.appendChild(groupTitleBg);
-        const groupTitleContent: SVGTextElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        groupTitleContent.innerHTML = this.title;
-        groupTitleContent.setAttributeNS(null, 'x', '6');
-        groupTitleContent.setAttributeNS(null, 'y', `${KfGroup.TITLE_HEIHGT - 4}`);
-        groupTitleContent.setAttributeNS(null, 'fill', '#fff');
-        groupTitleContent.classList.add('monospace-font');
-        groupTitleContent.setAttributeNS(null, 'font-size', '10pt');
-        this.groupTitle.appendChild(groupTitleContent);
+        if (!this.alignMerge) {
+            this.groupTitle = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            this.groupTitle.classList.add('ease-transform');
+            this.groupTitle.classList.add('draggable-component');
+            this.groupTitle.setAttributeNS(null, 'transform', `translate(${this.offsetWidth}, 0)`);
+            const groupTitleBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            groupTitleBg.setAttributeNS(null, 'x', '0');
+            groupTitleBg.setAttributeNS(null, 'y', '0');
+            groupTitleBg.setAttributeNS(null, 'width', `${KfGroup.TITLE_CHAR_WIDTH * this.title.length + 2 * KfGroup.TITLE_PADDING}`);
+            groupTitleBg.setAttributeNS(null, 'height', '30');
+            groupTitleBg.setAttributeNS(null, 'fill', '#676767');
+            groupTitleBg.setAttributeNS(null, 'rx', `${KfGroup.GROUP_RX}`);
+            this.groupTitle.appendChild(groupTitleBg);
+            const groupTitleContent: SVGTextElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            groupTitleContent.innerHTML = this.title;
+            groupTitleContent.setAttributeNS(null, 'x', '6');
+            groupTitleContent.setAttributeNS(null, 'y', `${KfGroup.TITLE_HEIHGT - 4}`);
+            groupTitleContent.setAttributeNS(null, 'fill', '#fff');
+            groupTitleContent.classList.add('monospace-font');
+            groupTitleContent.setAttributeNS(null, 'font-size', '10pt');
+            this.groupTitle.appendChild(groupTitleContent);
 
-        this.bindTitleHover();
+            this.bindTitleHover();
 
-        this.groupTitle.onmousedown = (downEvt) => {
-            this.isDragging = true;
-            hintTag.removeHint();
-            this.unbindTitleHover();
-            let oriMousePosi: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
-            this.container.setAttributeNS(null, '_transform', this.container.getAttributeNS(null, 'transform'));
-            const containerBBox: DOMRect = this.container.getBoundingClientRect();
-            this.parentObj.container.removeChild(this.container);
-            const popKfContainer: HTMLElement = document.getElementById(KfContainer.KF_POPUP);
-            const popKfContainerBbox: DOMRect = popKfContainer.getBoundingClientRect();
-            popKfContainer.appendChild(this.container);
-            //set new transform
-            this.container.setAttributeNS(null, 'transform', `translate(${containerBBox.left - popKfContainerBbox.left}, ${containerBBox.top - popKfContainerBbox.top + KfGroup.TITLE_HEIHGT})`);
+            this.groupTitle.onmousedown = (downEvt) => {
+                this.isDragging = true;
+                hintTag.removeHint();
+                this.unbindTitleHover();
+                let oriMousePosi: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
+                this.container.setAttributeNS(null, '_transform', this.container.getAttributeNS(null, 'transform'));
+                const containerBBox: DOMRect = this.container.getBoundingClientRect();
+                this.parentObj.container.removeChild(this.container);
+                const popKfContainer: HTMLElement = document.getElementById(KfContainer.KF_POPUP);
+                const popKfContainerBbox: DOMRect = popKfContainer.getBoundingClientRect();
+                popKfContainer.appendChild(this.container);
+                //set new transform
+                this.container.setAttributeNS(null, 'transform', `translate(${containerBBox.left - popKfContainerBbox.left}, ${containerBBox.top - popKfContainerBbox.top + KfGroup.TITLE_HEIHGT})`);
 
-            let updateSpec: boolean = false;
-            let actionType: string = '';
-            let actionInfo: any = {};
-            document.onmousemove = (moveEvt) => {
-                const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
-                const posiDiff: ICoord = { x: currentMousePosi.x - oriMousePosi.x, y: currentMousePosi.y - oriMousePosi.y };
-                const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
-                this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + posiDiff.x}, ${oriTrans.y + posiDiff.y})`);
-                const preSibling: KfGroup = this.parentObj.children[this.idxInGroup - 1];
-                if (this.idxInGroup > 0 && preSibling.rendered && this.groupRef !== 'root') {//group within animation
-                    [updateSpec, actionType, actionInfo] = this.dragInnerGroup(preSibling);
-                } else {
-                    this.dragAniGroup();
-                }
-                oriMousePosi = currentMousePosi;
-            }
-
-            document.onmouseup = () => {
-                document.onmousemove = null;
-                document.onmouseup = null;
-                this.bindTitleHover();
-                this.isDragging = false;
-                if (!updateSpec) {
-                    this.container.setAttributeNS(null, 'transform', this.container.getAttributeNS(null, '_transform'));
-                    if (this.treeLevel === 1 && this.parentObj instanceof KfGroup) {
-                        this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
+                let updateSpec: boolean = false;
+                let actionType: string = '';
+                let actionInfo: any = {};
+                document.onmousemove = (moveEvt) => {
+                    const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
+                    const posiDiff: ICoord = { x: currentMousePosi.x - oriMousePosi.x, y: currentMousePosi.y - oriMousePosi.y };
+                    const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
+                    this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + posiDiff.x}, ${oriTrans.y + posiDiff.y})`);
+                    const preSibling: KfGroup = this.parentObj.children[this.idxInGroup - 1];
+                    if (this.idxInGroup > 0 && preSibling.rendered && this.groupRef !== 'root') {//group within animation
+                        [updateSpec, actionType, actionInfo] = this.dragInnerGroup(preSibling);
                     } else {
-                        this.parentObj.container.appendChild(this.container);
+                        [updateSpec, actionType, actionInfo] = this.dragAniGroup();
                     }
-                } else {
-                    //triger action
-                    Reducer.triger(actionType, actionInfo);
-                    popKfContainer.removeChild(this.container);
+                    oriMousePosi = currentMousePosi;
+                }
+
+                document.onmouseup = () => {
+                    document.onmousemove = null;
+                    document.onmouseup = null;
+                    this.bindTitleHover();
+                    this.isDragging = false;
+                    if (!updateSpec) {
+                        this.container.setAttributeNS(null, 'transform', this.container.getAttributeNS(null, '_transform'));
+                        if (this.treeLevel === 1 && this.parentObj instanceof KfGroup) {
+                            this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
+                        } else {
+                            this.parentObj.container.appendChild(this.container);
+                        }
+                    } else {
+                        //triger action
+                        Reducer.triger(actionType, actionInfo);
+                        popKfContainer.removeChild(this.container);
+                    }
                 }
             }
+            this.container.appendChild(this.groupTitle);
         }
 
         this.groupBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        this.groupBg.setAttributeNS(null, 'stroke', '#898989');
+        this.groupBg.setAttributeNS(null, 'stroke', this.alignMerge ? '#00000000' : '#898989');
         this.groupBg.setAttributeNS(null, 'stroke-width', '1');
         this.groupBg.setAttributeNS(null, 'rx', `${KfGroup.GROUP_RX}`);
         this.groupBg.setAttributeNS(null, 'x', `${this.offsetWidth}`);
         this.groupBg.onmouseover = () => {
             this.showTitle();
         }
+        this.container.appendChild(this.groupBg);
     }
 
-    public dragAniGroup() {
-        let updateSpec: boolean = false;
-        let actionType: String = '';
-        let actionInfo: any = {};
+    /**
+     * returns: updateSpec:boolean, actionType: string, actionInfo: any
+     */
+    public dragAniGroup(): [boolean, string, any] {
+        const currentAniId: string = this.aniId;
         const currentGBBox: DOMRect = this.groupBg.getBoundingClientRect();
         const currentGPosi: ICoord = { x: currentGBBox.left, y: currentGBBox.top };
-        let targetAnis: { aniGroup?: KfGroup, alignType?: string, firstKfInGroup?: KfItem };
+        let targetAni: { targetAniId: string, currentAniId: string, actionType: string };
         for (let i = 0, len = [...KfGroup.allAniGroups].length; i < len; i++) {
             const aniGroup: KfGroup = [...KfGroup.allAniGroups][i][1];
             if (this.id !== aniGroup.id) {
                 const firstKf: KfItem = aniGroup.fetchFirstKf();
                 const alignTargetGroup: boolean = typeof KfItem.allKfInfo.get(firstKf.id).alignTo === 'undefined';
-                console.log('kf info: ', KfItem.allKfInfo.get(firstKf.id), alignTargetGroup);
-                console.log('ani group: ', aniGroup, firstKf);
                 //judge the relative position between this one and aniGroup & the first Kf in aniGroup
                 const aniGroupBBox: DOMRect = aniGroup.groupBg.getBoundingClientRect();
                 const firstKfBBox: DOMRect = firstKf.container.getBoundingClientRect();
-                console.log('positions: ', currentGPosi, aniGroupBBox, firstKfBBox);
+                const targetAniId: string = aniGroup.aniId;
                 if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + 20 && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
-                    console.log('after group!!!!!!!!!');
-                    targetAnis = { aniGroup: aniGroup, alignType: 'afterGroup' };//after group has higher priority
+                    targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_ANI };//after group has higher priority
                     hintDrop.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height);
                     break;
                 } else {
                     if (currentGPosi.x >= aniGroupBBox.left && currentGPosi.x < aniGroupBBox.left + 6 && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
-                        console.log('with group!!!!!!!!!');
-                        targetAnis = { aniGroup: aniGroup, alignType: 'withGroup' };
+                        targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_WITH_ANI };
                         hintDrop.hintInsert({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height);
                     } else if (currentGPosi.x >= firstKfBBox.left && currentGPosi.x < firstKfBBox.left + 6 && alignTargetGroup) {
-                        console.log('with kf!!!!!!!!!');
-                        targetAnis = { aniGroup: aniGroup, alignType: 'withKf', firstKfInGroup: firstKf };
+                        targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_WITH_KF };
                         hintDrop.hintInsert({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height);
                     } else if (currentGPosi.x >= firstKfBBox.right && currentGPosi.x < firstKfBBox.right + 6 && alignTargetGroup) {
-                        console.log('after kf!!!!!!!!!');
-                        targetAnis = { aniGroup: aniGroup, alignType: 'afterKf', firstKfInGroup: firstKf };
+                        targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_KF };
                         hintDrop.hintInsert({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height);
                     }
-                    // else {
-                    //     console.log('nothing!!!!!!!!!');
-                    //     targetAnis = {};
-                    // }
                 }
             }
         }
-        console.log('target Ani when dragging: ', targetAnis);
-        if (typeof targetAnis === 'undefined') {
+        if (typeof targetAni === 'undefined') {
             hintDrop.removeHintInsert();
+            return [false, '', {}];
+        } else {//triger action
+            return [true, targetAni.actionType, { targetAni: targetAni.targetAniId, currentAni: targetAni.currentAniId }];
         }
     }
 
@@ -567,7 +586,6 @@ export default class KfGroup extends KfTimingIllus {
         })
     }
 
-
     /**
      * translate from a given kf in group, update size of this group, and size and position of siblings and parents
      * @param startTransItem 
@@ -575,7 +593,6 @@ export default class KfGroup extends KfTimingIllus {
      * @param updateAlignedKfs 
      */
     public translateGroup(startTransItem: KfItem | PlusBtn | KfOmit, transX: number, updateAlignedKfs: boolean, extraInfo: { lastItem: boolean, extraWidth: number } = { lastItem: false, extraWidth: 0 }): void {
-        console.log(startTransItem, extraInfo.lastItem);
         //translate kfitems after the input one within the same group
         let currentTransX: number = 0;
         if (!extraInfo.lastItem) {
@@ -583,13 +600,17 @@ export default class KfGroup extends KfTimingIllus {
         } else {
             currentTransX = Tool.extractTransNums(startTransItem.container.getAttributeNS(null, 'transform')).x + startTransItem.container.getBoundingClientRect().width;
         }
+        console.log('current x: ', currentTransX, transX);
         let count: number = 0;
+        let comingThroughOmit: boolean = false;
         this.children.forEach((k: KfItem | KfOmit) => {
             const tmpTrans: ICoord = Tool.extractTransNums(k.container.getAttributeNS(null, 'transform'));
-            if (tmpTrans.x >= currentTransX && !(count === 0 && k instanceof KfOmit) && !(count === 0 && k instanceof PlusBtn)) {//translate this kf or omit
+            if (tmpTrans.x >= currentTransX && !(count === 0 && k instanceof KfOmit)) {//translate this kf or omit
                 k.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transX}, ${tmpTrans.y})`);
+                console.log('translated: ', k, tmpTrans.x + transX);
                 if (k instanceof KfItem) {
                     if (updateAlignedKfs && typeof KfItem.allKfInfo.get(k.id).alignWithKfs !== 'undefined') {
+                        console.log('translating those kfs align to current one');
                         IntelliRefLine.updateLine(k.id);//k is a alignwith kf, update refline
                         KfItem.allKfInfo.get(k.id).alignWithKfs.forEach((kfId: number) => {
                             const tmpKfItem = KfItem.allKfItems.get(kfId);
@@ -601,47 +622,66 @@ export default class KfGroup extends KfTimingIllus {
                 }
                 count++;
             }
+            if (k instanceof KfOmit) {
+                comingThroughOmit = true;
+                transX += KfOmit.OMIT_W + KfGroup.PADDING;
+            } else if (k instanceof KfItem && comingThroughOmit) {
+                comingThroughOmit = false;
+                transX -= (KfOmit.OMIT_W + KfGroup.PADDING);
+            }
         })
         //update the group size and position
         let extraWidth: number = extraInfo.lastItem ? extraInfo.extraWidth : 0;
-        this.updateSize(extraWidth);
+        let [diffX, currentGroupWidth, childHeight] = this.updateSize(extraWidth);
+        console.log('testing : ', diffX, transX);
+        const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
+        this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + diffX}, ${oriTrans.y})`);
 
         //update parent group and siblings
         this.updateSiblingAndParentSizePosi(transX, updateAlignedKfs);
     }
 
     public updateSiblingAndParentSizePosi(transX: number, updateAlignedKfs: boolean) {
-        //translate siblings
-        let flag: boolean = false;
+        console.log('updating sibling: ', this);
+        const currentGroupBBox: DOMRect = this.container.getBoundingClientRect();
         this.parentObj.children.forEach((c: KfGroup | KfOmit) => {
-            if (flag) {
+            const tmpGroupBBox: DOMRect = c.container.getBoundingClientRect();
+            if (tmpGroupBBox.left >= currentGroupBBox.left && c.id !== this.id) {
                 if (c instanceof KfOmit || (c instanceof KfGroup && c.rendered)) {
                     const tmpTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
                     c.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transX}, ${tmpTrans.y})`);
+                    console.log('updating ::', c, tmpTrans.x + transX, transX);
+
                     if (c instanceof KfGroup) {
                         if (c.children[0] instanceof KfItem && updateAlignedKfs) {//need to update the aligned kfs and their group
                             c.children.forEach((cc: KfItem | KfOmit) => {
                                 if (cc instanceof KfItem) {
                                     const tmpAlignTargetLeft: number = cc.kfBg.getBoundingClientRect().left;
+                                    const tmpAlignTargetRight: number = cc.container.getBoundingClientRect().right;
                                     if (typeof KfItem.allKfInfo.get(cc.id).alignWithKfs !== 'undefined') {
-                                        IntelliRefLine.updateLine(cc.id);//cc is a alignwith kf, update refline
                                         KfItem.allKfInfo.get(cc.id).alignWithKfs.forEach((kfId: number) => {
                                             const tmpKfItem: KfItem = KfItem.allKfItems.get(kfId);
+                                            const tmpKfItemInfo: IKeyframe = KfItem.allKfInfo.get(kfId);
+                                            console.log('updating aligned: ', tmpKfItem, tmpKfItemInfo);
                                             if (typeof tmpKfItem !== 'undefined') {
-                                                if (tmpKfItem.container.getBoundingClientRect().left !== tmpAlignTargetLeft) {//this kf together with its group need to be updated
-                                                    tmpKfItem.parentObj.translateGroup(tmpKfItem, tmpAlignTargetLeft - tmpKfItem.container.getBoundingClientRect().left, false);
+                                                if (tmpKfItemInfo.timingRef === TimingSpec.timingRef.previousEnd) {
+                                                    if (tmpKfItem.container.getBoundingClientRect().left !== tmpAlignTargetRight) {//this kf together with its group need to be updated
+                                                        tmpKfItem.parentObj.translateGroup(tmpKfItem, tmpAlignTargetRight - tmpKfItem.container.getBoundingClientRect().left, false);
+                                                    }
+                                                } else {
+                                                    if (tmpKfItem.container.getBoundingClientRect().left !== tmpAlignTargetLeft) {//this kf together with its group need to be updated
+                                                        tmpKfItem.parentObj.translateGroup(tmpKfItem, tmpAlignTargetLeft - tmpKfItem.container.getBoundingClientRect().left, false);
+                                                    }
                                                 }
                                             }
                                         })
+                                        IntelliRefLine.updateLine(cc.id);//cc is a alignwith kf, update refline
                                     }
                                 }
                             })
                         }
                     }
                 }
-            }
-            if (c instanceof KfGroup) {
-                flag = c.id === this.id
             }
         })
         //update size and position of parent
@@ -663,9 +703,11 @@ export default class KfGroup extends KfTimingIllus {
         let diffX: number = 0;
         if (this.children[0] instanceof KfItem) {
             const currentTransX: number = Tool.extractTransNums(this.children[0].container.getAttributeNS(null, 'transform')).x;
+            console.log('resetting kf transx: ', this.children[0], currentTransX);
             diffX = this.hasOffset ? currentTransX - KfGroup.PADDING - this.offsetWidth : currentTransX - KfGroup.PADDING;
         }
-        [...this.kfOmits, ...this.children].forEach((c: KfGroup | KfItem | KfOmit) => {
+        // [...this.kfOmits, ...this.children].forEach((c: KfGroup | KfItem | KfOmit) => {
+        this.children.forEach((c: KfGroup | KfItem | KfOmit) => {
             if (typeof c.container !== 'undefined') {
                 if (c instanceof KfItem || c instanceof KfOmit) {
                     const currentTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
@@ -720,7 +762,9 @@ export default class KfGroup extends KfTimingIllus {
                             kfO.updateTrans(this.children[1].posiX + this.children[1].width, KfGroup.PADDING + this.children[1].posiY + this.children[1].container.getBoundingClientRect().height / 2);
                         })
                     }
-                    this.alignLines = [...this.alignLines, ...c.alignLines];
+                    if (c instanceof KfGroup) {
+                        this.alignLines = [...this.alignLines, ...c.alignLines];
+                    }
                 })
 
             }
@@ -741,7 +785,7 @@ export default class KfGroup extends KfTimingIllus {
 
             //update background color
             const grayColor: number = KfGroup.BASIC_GRAY - KfGroup.GRAY_STEP * (KfGroup.leafLevel - this.treeLevel);
-            this.groupBg.setAttributeNS(null, 'fill', `rgba(${grayColor}, ${grayColor}, ${grayColor}, 1)`);
+            this.groupBg.setAttributeNS(null, 'fill', this.alignMerge ? 'none' : `rgb(${grayColor}, ${grayColor}, ${grayColor})`);
 
             //update position
             const transPosiY = rootGroup ? this.posiY + 1 : this.posiY + KfGroup.PADDING;
@@ -824,11 +868,15 @@ export class GroupMenu {
     }
 
     public showMenu() {
-        this.container.setAttributeNS(null, 'opacity', '1');
+        if (typeof this.container !== 'undefined') {
+            this.container.setAttributeNS(null, 'opacity', '1');
+        }
     }
 
     public hideMenu() {
-        this.container.setAttributeNS(null, 'opacity', '0');
+        if (typeof this.container !== 'undefined') {
+            this.container.setAttributeNS(null, 'opacity', '0');
+        }
     }
 
     public updatePosition(parentOffset: number, parentHeight: number) {

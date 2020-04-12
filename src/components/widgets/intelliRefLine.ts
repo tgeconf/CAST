@@ -1,6 +1,8 @@
 import { KfContainer, kfContainer } from "../kfContainer";
 import KfItem from "./kfItem";
 import { ICoord } from "../../util/ds";
+import { IKeyframe } from "../../app/core/ds";
+import { TimingSpec } from "canis_toolkit";
 
 export default class IntelliRefLine {
     static HIGHLIGHT_STROKE_COLOR: string = '#0e89e5';
@@ -36,13 +38,41 @@ export default class IntelliRefLine {
     public static updateLine(kfId: number) {
         if (typeof IntelliRefLine.kfLineMapping.get(kfId) !== 'undefined') {
             const lineItem: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kfId).lineId);
+            // const containerBBox: DOMRect = document.getElementById(KfContainer.KF_BG).getBoundingClientRect();
             const containerBBox: DOMRect = lineItem.container.getBoundingClientRect();
-            const alignKf1BBox: DOMRect = KfItem.allKfItems.get(kfId).container.getBoundingClientRect();
-            const alignKf2BBox: DOMRect = KfItem.allKfItems.get(IntelliRefLine.kfLineMapping.get(kfId).theOtherEnd).container.getBoundingClientRect();
-            lineItem.line.setAttributeNS(null, 'x1', `${alignKf1BBox.left - containerBBox.left}`);
-            lineItem.line.setAttributeNS(null, 'x2', `${alignKf1BBox.left - containerBBox.left}`);
-            lineItem.line.setAttributeNS(null, 'y1', `${alignKf1BBox.top < alignKf2BBox.top ? (alignKf1BBox.top - containerBBox.top) : (alignKf2BBox.top - containerBBox.top)}`);
-            lineItem.line.setAttributeNS(null, 'y2', `${alignKf1BBox.top < alignKf2BBox.top ? (alignKf2BBox.bottom - containerBBox.top) : (alignKf1BBox.bottom - containerBBox.top)}`);
+            const alignKf1: IKeyframe = KfItem.allKfInfo.get(kfId);
+            const alignKf2: IKeyframe = KfItem.allKfInfo.get(IntelliRefLine.kfLineMapping.get(kfId).theOtherEnd);
+            let alignWithKfBBox: DOMRect, alignWithKfInfo: IKeyframe, alignToKfBBox: DOMRect, alignToKfInfo: IKeyframe;
+            let testWith, testTo;
+            if (typeof alignKf1.alignTo === 'undefined') {
+                testWith = KfItem.allKfItems.get(alignKf1.id);
+                testTo = KfItem.allKfItems.get(alignKf2.id);
+                alignWithKfBBox = KfItem.allKfItems.get(alignKf1.id).container.getBoundingClientRect();
+                alignToKfBBox = KfItem.allKfItems.get(alignKf2.id).container.getBoundingClientRect();
+                alignWithKfInfo = alignKf1;
+                alignToKfInfo = alignKf2;
+            } else {
+                testWith = KfItem.allKfItems.get(alignKf2.id);
+                testTo = KfItem.allKfItems.get(alignKf1.id);
+                alignWithKfBBox = KfItem.allKfItems.get(alignKf2.id).container.getBoundingClientRect();
+                alignToKfBBox = KfItem.allKfItems.get(alignKf1.id).container.getBoundingClientRect();
+                alignWithKfInfo = alignKf2;
+                alignToKfInfo = alignKf1;
+            }
+            console.log('updating ref line: ', testWith, testTo, alignWithKfBBox, containerBBox, alignWithKfBBox.right - containerBBox.left, kfContainer.transDistance);
+
+            if (alignToKfInfo.timingRef === TimingSpec.timingRef.previousEnd) {
+                lineItem.line.setAttributeNS(null, 'x1', `${alignWithKfBBox.right - containerBBox.left}`);
+                lineItem.line.setAttributeNS(null, 'x2', `${alignWithKfBBox.right - containerBBox.left}`);
+            } else {
+                lineItem.line.setAttributeNS(null, 'x1', `${alignWithKfBBox.left - containerBBox.left}`);
+                lineItem.line.setAttributeNS(null, 'x2', `${alignWithKfBBox.left - containerBBox.left}`);
+            }
+
+            // lineItem.line.setAttributeNS(null, 'y1', `${24}`);
+            lineItem.line.setAttributeNS(null, 'y1', `${alignWithKfBBox.top - containerBBox.top}`);
+            lineItem.line.setAttributeNS(null, 'y2', `${alignToKfBBox.bottom - containerBBox.top}`);
+            lineItem.line.setAttributeNS(null, 'transform', '');
         }
     }
 
@@ -62,10 +92,10 @@ export default class IntelliRefLine {
         this.line.setAttributeNS(null, 'stroke', IntelliRefLine.HIGHLIGHT_STROKE_COLOR);
         this.line.setAttributeNS(null, 'stroke-width', '4');
         if (vertical) {
-            this.line.setAttributeNS(null, 'x1', `${targetPosi.x - containerBBox.left}`);
-            this.line.setAttributeNS(null, 'y1', `${targetPosi.y - containerBBox.top}`);
-            this.line.setAttributeNS(null, 'x2', `${targetPosi.x - containerBBox.left}`);
-            this.line.setAttributeNS(null, 'y2', `${targetPosi.y - containerBBox.top + targetHeight}`);
+            this.line.setAttributeNS(null, 'x1', `${targetPosi.x - containerBBox.left - kfContainer.transDistance.w}`);
+            this.line.setAttributeNS(null, 'y1', `${targetPosi.y - containerBBox.top - kfContainer.transDistance.h}`);
+            this.line.setAttributeNS(null, 'x2', `${targetPosi.x - containerBBox.left - kfContainer.transDistance.w}`);
+            this.line.setAttributeNS(null, 'y2', `${targetPosi.y - containerBBox.top + targetHeight - kfContainer.transDistance.h}`);
         }
     }
 

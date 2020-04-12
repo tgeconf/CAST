@@ -49,6 +49,10 @@ function app(): HTMLDivElement {
     return outerWrapper;
 }
 
+//cancel right click
+document.oncontextmenu = () => {
+    return false;
+}
 
 document.body.appendChild(app());
 //init styles

@@ -64,17 +64,13 @@ export default class DragableCanvas {
             }
         }
         document.onmouseup = (upEvt) => {
-            console.log('drag overs: ', PlusBtn.dragoverBtn, KfItem.dragoverKf);
             canvas.remove();
             //update kf if drop on plus button or kf
             if (typeof PlusBtn.dragoverBtn !== 'undefined') {
-                console.log('drop on plusbtn');
                 PlusBtn.dragoverBtn.dropSelOn();
             } else if (typeof KfItem.dragoverKf !== 'undefined') {
-                console.log('drop on kf');
                 KfItem.dragoverKf.dropSelOn();
             }
-
 
             PlusBtn.cancelHighlightPlusBtns();
             KfItem.cancelHighlightKfs();

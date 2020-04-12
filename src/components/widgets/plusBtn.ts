@@ -9,7 +9,7 @@ import * as action from "../../app/action";
 import Suggest from "../../app/core/suggest";
 import Util from "../../app/core/util";
 import KfTrack from "./kfTrack";
-import { ICoord } from "../../util/ds";
+import { ICoord, ISize } from "../../util/ds";
 
 export default class PlusBtn {
     static BTN_SIZE: number = 16;
@@ -27,7 +27,7 @@ export default class PlusBtn {
     public firstKfArrInTargetKfg: IKeyframe[];
     public fakeKfg: KfGroup;
     public id: number;
-    public kfSize: { w: number, h: number }
+    public kfSize: ISize
     public acceptableCls: string[];
     public isHighlighted: boolean = false;
     public container: SVGGElement;
@@ -40,21 +40,19 @@ export default class PlusBtn {
             if (Tool.arrayContained(pb.acceptableCls, selectedCls)) {
                 pb.highlightBtn();
                 let transX: number = pb.kfSize.w - this.BTN_SIZE;
-                // pb.parentObj.translateGroup(pb, transX, true);
-                console.log('translating whole group:', pb.targetKfg, transX);
                 pb.targetKfg.translateWholeGroup(transX, true);
             }
         })
     }
 
     public static cancelHighlightPlusBtns() {
-        console.log('in cancel highlight pb: ', this.allPlusBtn);
+        console.log('cancel highlight plu btn: ', this.allPlusBtn);
         this.allPlusBtn.forEach((pb: PlusBtn) => {
             if (pb.isHighlighted) {
                 pb.cancelHighlightBtn();
                 let transX: number = pb.kfSize.w - this.BTN_SIZE;
+                console.log('transalteing target kfg: ', pb.targetKfg, -transX);
                 pb.targetKfg.translateWholeGroup(-transX, true);
-                // pb.parentObj.translateGroup(pb, -transX, true);
             }
         })
     }
@@ -104,10 +102,10 @@ export default class PlusBtn {
      * @param kfSize 
      * @param acceptableCls 
      */
-    public createBtn(targetKfg: KfGroup, firstKfArrInTargetKfg: IKeyframe[], parentTrack: KfTrack, startX: number, kfSize: { w: number, h: number }, acceptableCls: string[]) {
+    public createBtn(targetKfg: KfGroup, firstKfArrInTargetKfg: IKeyframe[], parentTrack: KfTrack, startX: number, kfSize: ISize, acceptableCls: string[]) {
         //create a blank kfg
         this.fakeKfg = new KfGroup();
-        this.fakeKfg.createBlankKfg(parentTrack, startX);
+        this.fakeKfg.createBlankKfg(parentTrack, startX + KfGroup.PADDING);
 
         this.targetKfg = targetKfg;
         this.firstKfArrInTargetKfg = firstKfArrInTargetKfg;
@@ -131,7 +129,7 @@ export default class PlusBtn {
         this.btnIcon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         this.btnIcon.setAttributeNS(null, 'text-anchor', 'middle');
         this.btnIcon.setAttributeNS(null, 'x', `${PlusBtn.BTN_SIZE / 2}`);
-        this.btnIcon.setAttributeNS(null, 'y', `${PlusBtn.BTN_SIZE / 2 + 6}`);
+        this.btnIcon.setAttributeNS(null, 'y', `${PlusBtn.BTN_SIZE / 2 + 7}`);
         this.btnIcon.setAttributeNS(null, 'fill', `${PlusBtn.BTN_COLOR}`);
         this.btnIcon.setAttributeNS(null, 'font-size', '16pt');
         this.btnIcon.innerHTML = '+';
@@ -143,20 +141,15 @@ export default class PlusBtn {
     }
 
     public removeBtn() {
-        console.log('before remove pb: ', PlusBtn.allPlusBtn);
         for (let i = 0, len = PlusBtn.allPlusBtn.length; i < len; i++) {
-            console.log(PlusBtn.allPlusBtn[i].id, this.id);
             if (PlusBtn.allPlusBtn[i].id === this.id) {
                 PlusBtn.allPlusBtn.splice(i, 1);
                 break;
             }
         }
-        console.log('after remove pb: ', PlusBtn.allPlusBtn);
         if (this.fakeKfg.container.contains(this.container)) {
             this.fakeKfg.container.removeChild(this.container);
         }
-
-        // this.parentObj.children.shift();
     }
 
     public highlightBtn() {
@@ -199,7 +192,6 @@ export default class PlusBtn {
     public dropSelOn() {
         let selectedMarks: string[] = state.selection;
         let firstKfInfoInParent: IKeyframe = this.firstKfArrInTargetKfg[0];
-        console.log('first kf info: ', firstKfInfoInParent);
         const tmpKfInfo: IKeyframe = KfItem.createKfInfo(selectedMarks,
             {
                 duration: firstKfInfoInParent.duration,
@@ -207,7 +199,6 @@ export default class PlusBtn {
                 allGroupMarks: firstKfInfoInParent.allGroupMarks
             });
         KfItem.allKfInfo.set(tmpKfInfo.id, tmpKfInfo);
-        console.log('createed kfinfo: ', tmpKfInfo);
         Reducer.triger(action.UPDATE_SELECTION, []);//reset state selection
 
         //create a kf and replace the plus btn
@@ -215,16 +206,12 @@ export default class PlusBtn {
         this.removeBtn();
         let tmpKf: KfItem = new KfItem();
         tmpKf.createItem(tmpKfInfo, 1, this.fakeKfg, btnX);
-        // const preKf: KfItem = this.parentObj.children[0];
         this.fakeKfg.children.unshift(tmpKf);
         this.fakeKfg.updateSize();
-        // this.parentObj.translateGroup(preKf, tmpKf.durationWidth, true);
 
         //create suggestion list if there is one, judge whether to use current last kf as last kf or the current first as last kf
-        console.log('dropped: ', selectedMarks, firstKfInfoInParent.marksThisKf);
         const clsSelMarks: string[] = Util.extractClsFromMarks(selectedMarks);
         const clsFirstKf: string[] = Util.extractClsFromMarks(firstKfInfoInParent.marksThisKf);
-        console.log('found classes: ', clsSelMarks, clsFirstKf);
         let suggestOnFirstKf: boolean = false;
         if (Tool.arrayContained(firstKfInfoInParent.marksThisKf, selectedMarks) && Tool.identicalArrays(clsSelMarks, clsFirstKf)) {//suggest based on first kf in animation
             suggestOnFirstKf = true;

@@ -11,3 +11,8 @@ export interface ICoord {
     y: number
     z?: number
 }
+
+export interface ISize {
+    w: number
+    h: number
+}

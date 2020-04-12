@@ -211,7 +211,7 @@ export class State implements IState {
         this.stateHistory.push(this.tmpStateBusket);
         this.stateHistoryIdx++;
         this.tmpStateBusket = [];
-        console.log('current history: ', this.stateHistory);
+        // console.log('current history: ', this.stateHistory);
     }
 
     public static revertHistory() {

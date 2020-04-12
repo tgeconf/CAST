@@ -86,7 +86,6 @@ export default class Suggest {
      * @param attrArr 
      */
     public static filterAttrs(attrArr: string[]): string[] {
-        console.log('chart understanding: ', ChartSpec.chartUnderstanding);
         let filteredAttrs: string[] = [];
         let typeRecorder: string = '';
         Util.EFFECTIVENESS_RANKING.forEach((channel: string) => {
@@ -106,11 +105,9 @@ export default class Suggest {
      * @param attrArr 
      */
     public static sortAttrs(attrArr: string[]): Map<string, string[]> {
-        console.log('before ordering attributes: ', attrArr);
         let orderedAttrs: Map<string, string[]> = new Map();
         Util.EFFECTIVENESS_RANKING.forEach((channel: string) => {
             attrArr.forEach((aName: string) => {
-                console.log(channel, aName, ChartSpec.chartUnderstanding[aName]);
                 let tmpAttrChannel: string = ChartSpec.chartUnderstanding[aName];
                 if (tmpAttrChannel === channel) {
                     if (typeof orderedAttrs.get(channel) === 'undefined') {
@@ -134,7 +131,6 @@ export default class Suggest {
             }
             channelAttrs.get(tmpAttrChannel).push(aName);
         })
-        console.log('assigned channel name: ', channelAttrs);
         return channelAttrs;
     }
 
@@ -145,8 +141,6 @@ export default class Suggest {
     public static generateAttrCombs(sortedAttrs: Map<string, string[]>) {
         let visualChannelNum: number = sortedAttrs.size;
         let allCombinations: string[][] = [];
-        console.log('/****************************** getting combinations  **********************/');
-        console.log('getting combinations: ', sortedAttrs, visualChannelNum);
         while (visualChannelNum > 0) {
             let count: number = 0;
             let candidateAttrs: string[] = [];
@@ -162,7 +156,6 @@ export default class Suggest {
                     if (multiPosiAttrs) {//check for attr continuity
                         tmpCombRecord = Util.checkConti(tmpCombRecord, positionAttrs);
                     }
-                    //console.log(tmpCombRecord.join(','));
                     allCombinations = [...allCombinations, ...tmpCombRecord];
                     break;
                 }
@@ -202,13 +195,11 @@ export default class Suggest {
             })
         })
         valuesFirstKf = [...new Set(valuesFirstKf)];
-        console.log('values 1st kf: ', valuesFirstKf);
 
         allCombinations.forEach((attrComb: string[]) => {
             let sections: Map<string, string[]> = new Map();//key: section id, value: mark array
             let sectionIdRecord: string[][] = [];
             let timeSecIdx: number[] = [];
-            console.log('time attrs:', Util.timeAttrs);
             let tmpValueIdx: Map<number, number> = new Map();
             attrComb.forEach((aName: string, idx: number) => {
                 tmpValueIdx.set(idx, valueIdx.get(aName));
@@ -382,7 +373,6 @@ export default class Suggest {
                     uniqueKf.push(compareKfIdx);
                 }
             }
-            //console.log(i, uniqueKf);
             pathWithUniqueAndMissingKfs.push(uniqueKf);
         }
         return pathWithUniqueAndMissingKfs;
@@ -393,7 +383,6 @@ export default class Suggest {
         console.log('1st kf marks: ', firstKfMarks, 'last kf marks: ', lastKfMarks);
         const sepFirstKfMarks: { dataMarks: string[], nonDataMarks: string[] } = this.separateDataAndNonDataMarks(firstKfMarks);
         const sepLastKfMarks: { dataMarks: string[], nonDataMarks: string[] } = this.separateDataAndNonDataMarks(lastKfMarks);
-        console.log('1st sep: ', sepFirstKfMarks, sepLastKfMarks);
         if (sepFirstKfMarks.dataMarks.length > 0 && sepFirstKfMarks.nonDataMarks.length > 0) {//there are both data encoded and non data encoded marks in the first kf
             //no suggestion
             
@@ -434,7 +423,6 @@ export default class Suggest {
                 const oneMarkInFirstKf: boolean = firstKfDataMarks.length === 1;
                 let allPossibleKfs = this.generateRepeatKfs(sortedAttrs, valueIdx, firstKfDataMarks, lastKfDataMarks, oneMarkInFirstKf);
                 let repeatKfRecord: any[] = [];
-                console.log('.....................................................generating repeat kfs.................................................');
                 let filterAllPaths: number[] = [], count = 0;//record the index of the path that should be removed: not all selected & not one mark in 1st kf
                 allPossibleKfs.forEach((possiblePath: any[]) => {
                     let attrComb: string[] = possiblePath[0];
@@ -495,13 +483,6 @@ export default class Suggest {
                     }
 
                     let samePath = false;
-                    // for (let i = 0; i < repeatKfRecord.length; i++) {
-                    //     if (Tool.identicalArrays(repeatKfs, repeatKfRecord[i])) {
-                    //         samePath = true;
-                    //         break;
-                    //     }
-                    // }
-                    // repeatKfRecord.push(repeatKfs);
                     for (let i = 0; i < this.allPaths.length; i++) {
                         if (Tool.identicalArrays(repeatKfs, this.allPaths[i].kfMarks)) {
                             samePath = true;
@@ -518,21 +499,6 @@ export default class Suggest {
                     count++;
                 })
 
-                //push kfs into paths
-                // repeatKfRecord.forEach((pathMarks: string[][], idx: number) => {
-                //     this.allPaths[idx].push(pathMarks);
-                // })
-
-                //find unique keyframes for the paths
-                // let uniqueAndMissingKfs: number[][] = this.findUniqueKfs(repeatKfRecord);
-
-                // //push the unique kfs into the result
-                // for (let i = 0, len = this.allPaths.length; i < len; i++) {
-                //     this.allPaths[i].push(repeatKfRecord[i]);
-                //     this.allPaths[i].push(uniqueAndMissingKfs[i]);//unique keyframes
-                // }
-
-                console.log(filterAllPaths, this.allPaths);
                 //filter all paths
                 filterAllPaths.sort(function (a, b) {
                     return b - a;

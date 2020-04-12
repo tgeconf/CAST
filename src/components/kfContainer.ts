@@ -1,7 +1,7 @@
 import '../assets/style/keyframeContainer.scss'
 import Tool from '../util/tool';
 import { IKfGroupSize } from '../app/core/ds';
-import { ICoord } from '../util/ds';
+import { ICoord, ISize } from '../util/ds';
 
 export class KfContainer {
     static KF_CONTAINER: string = 'kfTracksContainer';
@@ -26,6 +26,7 @@ export class KfContainer {
     public ySlider: SVGRectElement;
     public ySliderContainerH: number = 200;
     public ySliderPercent: number = 1.0;
+    public transDistance: ISize = { w: 0, h: 0 };
 
     public createKfContainer() {
         this.kfWidgetContainer = document.createElement('div');
@@ -45,6 +46,11 @@ export class KfContainer {
 
         const kfFgG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         kfFgG.setAttributeNS(null, 'id', KfContainer.KF_FG);
+        const placeHolder: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        placeHolder.setAttributeNS(null, 'width', '1');
+        placeHolder.setAttributeNS(null, 'height', '18');
+        placeHolder.setAttributeNS(null, 'fill', '#00000000');
+        kfFgG.appendChild(placeHolder);
         this.keyframeTrackContainer.appendChild(kfFgG);
 
         const kfPopupG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -92,6 +98,7 @@ export class KfContainer {
                     //update translate of keyframe
                     if (this.keyframeTrackContainer.getAttributeNS(null, 'transform')) {
                         let oriTrans: ICoord = Tool.extractTransNums(this.keyframeTrackContainer.getAttributeNS(null, 'transform'));
+                        this.transDistance.h = oriTrans.y - diffY * this.ySliderPercent;
                         this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${oriTrans.y - diffY * this.ySliderPercent})`);
                     }
                 }
@@ -128,10 +135,11 @@ export class KfContainer {
                 if (currentSliderY + diffY >= 0 && currentSliderY + diffY + currentSliderH <= this.ySliderContainerH) {
                     this.ySlider.setAttributeNS(null, 'y', `${currentSliderY + diffY}`);
 
-                    //update translate of keyframe
+                    //update translate of keyframe tracks
                     if (this.keyframeTrackContainer.getAttributeNS(null, 'transform')) {
                         let oriTrans: ICoord = Tool.extractTransNums(this.keyframeTrackContainer.getAttributeNS(null, 'transform'));
-                        this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${oriTrans.y - diffY * this.ySliderPercent})`);
+                        this.transDistance.h = oriTrans.y - diffY * this.ySliderPercent;
+                        this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${this.transDistance.h})`);
                     }
                     preY = currentY;
                 }
@@ -176,10 +184,8 @@ export class KfContainer {
 
                     //update viewBox of keyframe
                     if (this.keyframeTrackContainer.getAttributeNS(null, 'transform')) {
-                        // let oriX: number = parseFloat(this.keyframeTrackContainer.getAttributeNS(null, 'transX'));
-                        // this.keyframeTrackContainer.setAttributeNS(null, 'transX', `${oriX - 1.5 * diffX}`)
-                        // this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriX - 1.5 * diffX}, 0)`)
                         let oriTrans: ICoord = Tool.extractTransNums(this.keyframeTrackContainer.getAttributeNS(null, 'transform'));
+                        this.transDistance.w = oriTrans.x - diffX * this.xSliderPercent;
                         this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x - diffX * this.xSliderPercent}, ${oriTrans.y})`);
                     }
                     preX = currentX;
@@ -196,17 +202,13 @@ export class KfContainer {
     }
 
     public resetContainerTrans(): void {
-        // if (typeof this.keyframeTrackContainer.getAttributeNS(null, 'transform') !== 'undefined') {
         this.keyframeTrackContainer.setAttributeNS(null, 'transform', 'translate(0, 0)');
+        this.transDistance = { w: 0, h: 0 };
         this.ySlider.setAttributeNS(null, 'y', '0');
         this.xSlider.setAttributeNS(null, 'x', '0');
-        // }
     }
 
     public updateKfSlider(kfGroupSize: IKfGroupSize) {
-        //update the viewBox
-        // this.resetContainerTrans();
-
         //update xslider and xslider track width
         this.xSliderContainerW = this.kfWidgetContainer.clientWidth;
         this.xSliderBg.setAttributeNS(null, 'width', `${this.xSliderContainerW}`);

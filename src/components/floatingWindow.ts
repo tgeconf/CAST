@@ -64,7 +64,7 @@ export default class FloatingWindow {
         windowContent.className = 'content-wrapper';
         switch (id) {
             case FloatingWindow.TYPE_EXAMPLE:
-                titleContent.innerHTML = 'examples';
+                titleContent.innerHTML = '';
                 windowContent.appendChild(this.createExampleList());
                 break;
             case FloatingWindow.TYPE_SPEC:
@@ -82,18 +82,31 @@ export default class FloatingWindow {
     public createExampleList(): HTMLDivElement {
         const exampleList: HTMLDivElement = document.createElement('div');
         exampleList.className = 'example-list';
-        const projectTitle: HTMLHeadingElement = document.createElement('h5');
-        projectTitle.innerText = 'projects';
+        const projectTitle: HTMLHeadingElement = document.createElement('h3');
+        projectTitle.innerText = 'Open Local Project';
         exampleList.appendChild(projectTitle);
-        const chartTitle: HTMLHeadingElement = document.createElement('h5');
-        chartTitle.innerText = 'charts';
+        const clickableArea: HTMLDivElement = document.createElement('div');
+        clickableArea.className = 'click-to-open-area';
+        clickableArea.innerHTML = 'Drop Your File Here (or Click)';
+        const uploadIcon: HTMLDivElement = document.createElement('div');
+        uploadIcon.className = 'upload-icon';
+        clickableArea.appendChild(uploadIcon);
+        exampleList.appendChild(clickableArea);
+        const chartTitle: HTMLHeadingElement = document.createElement('h3');
+        chartTitle.innerText = 'Load Example Projects';
         exampleList.appendChild(chartTitle);
         //add chart examples
-        exampleList.appendChild(this.createExampleItem(FloatingWindow.MUSHROOM_CHART, 'Mushroom'));
-        exampleList.appendChild(this.createExampleItem(FloatingWindow.GANTT_CHART, 'Gantt'));
-        exampleList.appendChild(this.createExampleItem(FloatingWindow.OS_CHART, 'Mobile OS'));
-        exampleList.appendChild(this.createExampleItem(FloatingWindow.PURCHASE_CHART, 'Doughnut Purchases'));
-        exampleList.appendChild(this.createExampleItem(FloatingWindow.NIGHTINGALE_CHART, 'Nightingale'));
+        const exampleItemContainer1: HTMLDivElement = document.createElement('div');
+        exampleItemContainer1.className = 'list-item-container';
+        exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.MUSHROOM_CHART, 'Mushroom'));
+        exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.GANTT_CHART, 'Gantt'));
+        exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.OS_CHART, 'Mobile OS'));
+        exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.PURCHASE_CHART, 'Doughnut Purchases'));
+        exampleList.appendChild(exampleItemContainer1);
+        const exampleItemContainer2: HTMLDivElement = document.createElement('div');
+        exampleItemContainer2.className = 'list-item-container';
+        exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.NIGHTINGALE_CHART, 'Nightingale'));
+        exampleList.appendChild(exampleItemContainer2);
         return exampleList;
     }
 

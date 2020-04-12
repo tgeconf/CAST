@@ -1,10 +1,6 @@
 [
     {
-        "selector": ".symbol",
-        "grouping": {
-            "groupBy": "year",
-            "reference": "start after previous"
-        },
+        "selector": ".axis-domain, .axis-tick, .axis-label",
         "effects": [
             {
                 "type": "fade",
@@ -14,7 +10,8 @@
     },
     {
         "reference": "start after previous",
-        "selector": ".text",
+        "id": "yearAni",
+        "selector": ".symbol, .text",
         "grouping": {
             "groupBy": "year",
             "reference": "start after previous"
@@ -29,9 +26,10 @@
     {
         "reference": "start after previous",
         "selector": ".link",
-        "grouping": {
-            "groupBy": "year",
-            "reference": "start after previous"
+        "align": {
+            "target": "yearAni",
+            "type": "element",
+            "merge": true
         },
         "effects": [
             {

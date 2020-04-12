@@ -13,6 +13,8 @@ import Suggest from './core/suggest'
 import Tool from '../util/tool'
 import KfOmit from '../components/widgets/kfOmit'
 import Renderer from './renderer'
+import { kfContainer, KfContainer } from '../components/kfContainer'
+import { suggestBox } from '../components/widgets/suggestBox'
 
 export default class Reducer {
     static list: any = {};
@@ -33,44 +35,91 @@ export default class Reducer {
             fn.apply(this, [prop]);
         }
     }
+
+    public static updateAniAlign(actionType: string, actionInfo: { targetAni: string, currentAni: string }) {
+        const animations: IAnimationSpec[] = state.spec.animations;
+        let currentAni: IAnimationSpec;
+        let currentAniIdx: number;
+        let targetAni: IAnimationSpec;
+        let targetAniIdx: number;
+        for (let i = 0, len = animations.length; i < len; i++) {
+            let a: IAnimationSpec = animations[i];
+            if (`${a.chartIdx}_${a.selector}` === actionInfo.currentAni) {
+                currentAni = a;
+                currentAniIdx = i;
+            } else if (`${a.chartIdx}_${a.selector}` === actionInfo.targetAni) {
+                targetAni = a;
+                targetAniIdx = i;
+            }
+        }
+        let targetAniId: string;
+        switch (actionType) {
+            case action.UPDATE_ANI_ALIGN_AFTER_ANI:
+                currentAni.reference = TimingSpec.timingRef.previousEnd;
+                break;
+            case action.UPDATE_ANI_ALIGN_WITH_ANI:
+                currentAni.reference = TimingSpec.timingRef.previousStart;
+                break;
+            case action.UPDATE_ANI_ALIGN_AFTER_KF:
+                if (typeof targetAni.id === 'undefined') {
+                    targetAni.id = actionInfo.targetAni
+                }
+                animations[targetAniIdx] = targetAni;
+                targetAniId = targetAni.id;
+                currentAni.align = { type: 'element', target: targetAniId, merge: false };
+                currentAni.reference = TimingSpec.timingRef.previousEnd;
+                break;
+            case action.UPDATE_ANI_ALIGN_WITH_KF:
+                if (typeof targetAni.id === 'undefined') {
+                    targetAni.id = actionInfo.targetAni
+                }
+                animations[targetAniIdx] = targetAni;
+                targetAniId = targetAni.id;
+                currentAni.align = { type: 'element', target: targetAniId, merge: false };
+                currentAni.reference = TimingSpec.timingRef.previousStart;
+                break;
+        }
+        animations.splice(currentAniIdx, 1);
+        for (let i = 0, len = animations.length; i < len; i++) {
+            let a: IAnimationSpec = animations[i];
+            if (`${a.chartIdx}_${a.selector}` === actionInfo.targetAni) {
+                animations.splice(i + 1, 0, currentAni);
+                break;
+            }
+        }
+        state.spec = { ...state.spec, animations: animations };
+    }
 }
 
 Reducer.listen(action.RESET_STATE, () => {
     Reducer.triger(action.UPDATE_SELECTION, []);
     state.spec = { charts: state.spec.charts, animations: [] };
+    suggestBox.removeSuggestBox();
 })
 
 Reducer.listen(action.UPDATE_DATA_SORT, (sdaArr: ISortDataAttr[]) => {
-    console.log('updating data sort!', sdaArr);
-    //filter the attributes, remove the ones that are not data attributes
     state.sortDataAttrs = Util.filterDataSort(sdaArr);
 })
 Reducer.listen(action.UPDATE_DATA_ORDER, (dord: string[]) => {
-    console.log('updating data order!', dord);
     state.dataOrder = dord;
 })
 Reducer.listen(action.UPDATE_DATA_TABLE, (dt: Map<string, IDataItem>) => {
-    console.log('updating data table!', dt);
     state.dataTable = dt;
 })
 Reducer.listen(action.LOAD_CHARTS, (chartContent: string[]) => {
-    console.log('loading charts!', chartContent);
     document.getElementById('chartContainer').innerHTML = '';
     state.charts = chartContent;
 })
 Reducer.listen(action.TOGGLE_SUGGESTION, (suggestion: boolean) => {
-    console.log('updating suggestion!');
     state.suggestion = suggestion;
 })
 Reducer.listen(action.UPDATE_SELECTION, (selection: string[]) => {
-    console.log('updating selection!');
     if (state.suggestion && selection.length > 0) {
         selection = Util.suggestSelection(selection);
     }
     state.selection = selection;
 })
 Reducer.listen(action.UPDATE_LOTTIE, (lai: AnimationItem) => {
-    console.log('updating lottie');
     state.lottieAni = lai;
 })
 Reducer.listen(action.UPDATE_STATIC_KEYFRAME, (staticMarks: string[]) => {
@@ -92,7 +141,6 @@ Reducer.listen(action.UPDATE_KEYFRAME_TRACKS, (animations: Map<string, any>) => 
     if (rootGroup.length > 0) {
         rootGroup[0].newTrack = false;
     }
-    console.log('roots to generate the keyframe ', rootGroup);
     state.keyframeGroups = rootGroup;
 })
 Reducer.listen(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, (kfGroupSize: IKfGroupSize) => {
@@ -109,11 +157,19 @@ Reducer.listen(action.UPDATE_SPEC_CHARTS, (charts: string[]) => {
     state.spec = tmpSpec;
 })
 
+
 Reducer.listen(action.UPDATE_DELAY_BETWEEN_KF, (actionInfo: { aniId: string, delay: number }) => {
     const animations: IAnimationSpec[] = state.spec.animations;
     animations.forEach((a: IAnimationSpec) => {
         if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
-            CanisGenerator.updateKfDelay(a.grouping, actionInfo.delay);
+            if (typeof a.grouping === 'undefined') {
+                a.grouping = {
+                    groupBy: 'id',
+                    delay: actionInfo.delay
+                }
+            } else {
+                CanisGenerator.updateKfDelay(a.grouping, actionInfo.delay);
+            }
         }
     })
     state.spec = { ...state.spec, animations: animations };
@@ -257,15 +313,8 @@ Reducer.listen(action.UPDATE_STATIC_SELECTOR, (addStaticMarks: string[]) => {
     const animations: IAnimationSpec[] = state.spec.animations;
     let emptyAniRecorder: number[] = [];
     animations.forEach((a: IAnimationSpec, idx: number) => {
-        console.log('add static mark is: ', addStaticMarks);
         CanisGenerator.updateStaticSelector(a, addStaticMarks);
-        // if (emptyAni) {
-        //     emptyAniRecorder.push(idx);
-        // }
     })
-    // for (let i = emptyAniRecorder.length - 1; i >= 0; i--) {
-    //     animations.splice(emptyAniRecorder[i], 1);
-    // }
     state.spec = { ...state.spec, animations: animations };
 })
 
@@ -297,7 +346,6 @@ Reducer.listen(action.UPDATE_SPEC_GROUPING, (actionInfo: { aniId: string, attrCo
 })
 
 Reducer.listen(action.SPLIT_CREATE_ONE_ANI, (actionInfo: { aniId: string, newAniSelector: string, attrComb: string[], attrValueSort: string[][] }) => {
-    console.log('attrcomb', actionInfo.attrComb, actionInfo.attrValueSort);
     const animations: IAnimationSpec[] = state.spec.animations;
     for (let i = 0, len = animations.length; i < len; i++) {
         let a: IAnimationSpec = animations[i];
@@ -335,4 +383,20 @@ Reducer.listen(action.APPEND_SPEC_GROUPING, (actionInfo: { aniId: string, attrCo
         }
     }
     state.spec = { ...state.spec, animations: animations };
+})
+
+Reducer.listen(action.UPDATE_ANI_ALIGN_AFTER_ANI, (actionInfo: { targetAni: string, currentAni: string }) => {
+    Reducer.updateAniAlign(action.UPDATE_ANI_ALIGN_AFTER_ANI, actionInfo);
+})
+
+Reducer.listen(action.UPDATE_ANI_ALIGN_WITH_ANI, (actionInfo: { targetAni: string, currentAni: string }) => {
+    Reducer.updateAniAlign(action.UPDATE_ANI_ALIGN_WITH_ANI, actionInfo);
+})
+
+Reducer.listen(action.UPDATE_ANI_ALIGN_AFTER_KF, (actionInfo: { targetAni: string, currentAni: string }) => {
+    Reducer.updateAniAlign(action.UPDATE_ANI_ALIGN_AFTER_KF, actionInfo);
+})
+
+Reducer.listen(action.UPDATE_ANI_ALIGN_WITH_KF, (actionInfo: { targetAni: string, currentAni: string }) => {
+    Reducer.updateAniAlign(action.UPDATE_ANI_ALIGN_WITH_KF, actionInfo);
 })

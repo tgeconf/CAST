@@ -14,6 +14,7 @@ export interface IKfGroupSize {
 
 export interface IKeyframe {
     id: number
+    timingRef: string;
     // parentObj: IKeyframeGroup //keyframe group id
     durationIcon: boolean
     duration: number
@@ -43,8 +44,10 @@ export interface IKeyframeGroup {
     delay: number
     offsetIcon?: boolean
     offset?: number // for aniunit only
+    alignId?: string
     alignType?: string
     alignTarget?: string //target at an animation id
+    merge?: boolean
     newTrack: boolean;
 }
 

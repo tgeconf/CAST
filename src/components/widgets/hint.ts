@@ -94,7 +94,6 @@ export class Hint {
         this.hintBg.setAttributeNS(null, 'width', `${newW}`);
         this.container.setAttributeNS(null, 'transform', `translate(${containerTrans.x + diffX - diffW / 2}, ${containerTrans.y})`);
         this.pointer.setAttributeNS(null, 'transform', `translate(${newW / 2 - 6}, ${Hint.HINT_HEIGHT + 2 * Hint.PADDING})`);
-        console.log('hint width: ', oriW, newW);
     }
 
     public removeTimingHint() {

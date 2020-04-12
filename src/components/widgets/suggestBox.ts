@@ -53,7 +53,6 @@ export class SuggestBox {
             this.menuWidth = SuggestBox.MENU_WIDTH;
             let suggestMenu: SuggestMenu = new SuggestMenu();
             suggestMenu.createMenu({ x: this.boxWidth, y: this.kfHeight / 2 + SuggestBox.PADDING }, this);
-            // suggestMenu.createMenu({ x: this.boxWidth, y: ((this.kfHeight + 2 * SuggestBox.PADDING) * this.numShown) / 2 }, this);
             this.container.appendChild(suggestMenu.container);
         }
 
@@ -259,7 +258,6 @@ export class OptionItem {
             })
 
             //remove suggest box and create a new kf
-            console.log('kf before suggest box: ', suggestBox.kfBeforeSuggestBox);
             const startKfInfo: IKeyframe = KfItem.allKfInfo.get(suggestBox.kfBeforeSuggestBox.id);
             const tmpKfInfo: IKeyframe = KfItem.createKfInfo(optionInfo.marks,
                 {
@@ -269,7 +267,6 @@ export class OptionItem {
                 });
             KfItem.allKfInfo.set(tmpKfInfo.id, tmpKfInfo);
             let tmpKf: KfItem = new KfItem();
-            console.log('testing: ', Tool.extractTransNums(suggestBox.kfBeforeSuggestBox.container.getAttributeNS(null, 'transform')).x, suggestBox.kfBeforeSuggestBox.totalWidth);
             const startX: number = Tool.extractTransNums(suggestBox.kfBeforeSuggestBox.container.getAttributeNS(null, 'transform')).x + suggestBox.kfBeforeSuggestBox.totalWidth - KfItem.PADDING;
             tmpKf.createItem(tmpKfInfo, suggestBox.kfBeforeSuggestBox.parentObj.treeLevel + 1, suggestBox.kfBeforeSuggestBox.parentObj, startX);
             let insertIdx: number = 0;
@@ -289,8 +286,7 @@ export class OptionItem {
             }
             suggestBox.removeSuggestBox();
 
-            //triger actions
-            console.log('render again: ', tmpKf);
+            //triger actions to render again
             Reducer.triger(action.UPDATE_SUGGESTION_PATH, { ap: tmpAllPaths, kfIdxInPath: suggestBox.uniqueKfIdx, startKf: tmpKf, suggestOnFirstKf: optionInfo.suggestOnFirstKf, selectedMarks: optionInfo.marks });
         }
     }

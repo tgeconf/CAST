@@ -41,8 +41,16 @@ export interface IAction {
     duration?: number | IDuration
 }
 
+export interface IAlign {
+    target: string
+    type: string
+    merge: boolean
+}
+
 export interface IAnimationSpec {
+    id?: string
     reference?: string
+    align?: IAlign
     offset?: number | IOffset
     selector: string
     grouping?: IGrouping
@@ -197,14 +205,9 @@ export default class CanisGenerator {
     }
 
     public static mergeGroup(groupingSpec: IGrouping, groupRef: string, parentGrouping?: IGrouping): IGrouping {
-        console.log('input grouping : ', groupingSpec);
         if (groupingSpec.groupBy === groupRef) {
             if (typeof groupingSpec.grouping !== 'undefined') {
-                // if (typeof parentGrouping !== 'undefined') {
-                //     parentGrouping.grouping = groupingSpec.grouping;
-                // } else {
                 return groupingSpec.grouping;
-                // }
             } else {
                 // delete parentGrouping.grouping;
                 return undefined;
@@ -235,18 +238,14 @@ export default class CanisGenerator {
                 }
             })
         } else {
-            console.log('selector is: ', ani.selector);
             ani.selector.split(', ').forEach((s: string) => {
                 const mId: string = s.substring(1);
                 if (!staticMarks.includes(mId)) {
                     currentSelectedMarks.push(`#${mId}`);
                 }
             });
-            console.log('selector: ', currentSelectedMarks);
         }
-        console.log('updated selector:', currentSelectedMarks.join(', '));
         ani.selector = currentSelectedMarks.join(', ');
-        // return ani.selector === '';
     }
 
     public static updateGrouping(parent: IAnimationSpec | IGrouping, attrComb: string[], attrValueSort?: string[][]) {
@@ -299,19 +298,4 @@ export default class CanisGenerator {
         })
         ani.selector = filteredMarks.join(', ');
     }
-
-
-    // public static removeGrouping()
-    // public resetSpec(): void {
-    //     this.canisSpec = {
-    //         charts: [],
-    //         animations: []
-    //     }
-    // }
-
-    // public static replaceAnimationSpec(){
-
-    // }
 }
-
-// export let canisGenerator = new CanisGenerator();

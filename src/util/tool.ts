@@ -245,6 +245,7 @@ export default class Tool {
     }
 
     public static updateTranslate(node: any, targetTrans: ICoord) {
+        console.log('test update translateing ', node);
         if (node.getAttributeNS(null, 'transform') && typeof node.getAttributeNS(null, 'transform') !== 'undefined') {
             const trans: ICoord = this.extractTransNums(node.getAttributeNS(null, 'transform'));
             node.setAttributeNS(null, 'transform', `translate(${trans.x + targetTrans.x}, ${trans.y + targetTrans.y})`);
@@ -298,12 +299,11 @@ export default class Tool {
     public static transNodeElements(rootNode: any, transX: number, transOffset: boolean = false) {
         const allNodeElements: any[] = transOffset ? Array.from(rootNode.childNodes).slice(1) : Array.from(rootNode.childNodes);
         allNodeElements.forEach((c: any) => {
-            console.log('translating !!!!!!', c);
-            let isEasingNode: boolean = false;
+        console.log('test translating: ', c);
+        let isEasingNode: boolean = false;
             if (c.classList.contains('ease-transform')) {
                 isEasingNode = true;
                 c.classList.remove('ease-transform');
-                console.log(c, 'has easing');
             }
             if (c.getAttributeNS(null, 'transform')) {
                 const oriTrans: ICoord = Tool.extractTransNums(c.getAttributeNS(null, 'transform'));

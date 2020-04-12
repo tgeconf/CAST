@@ -5,7 +5,6 @@ import Tool from '../util/tool'
 import { state, State } from '../app/state'
 import * as action from '../app/action'
 import Reducer from '../app/reducer'
-import Timeline from './widgets/timeline'
 import { kfContainer } from './kfContainer'
 
 interface IViewBtnProp {
@@ -52,7 +51,6 @@ export default class ViewWindow {
             //     break;
             case ViewWindow.VIDEO_VIEW_TITLE:
                 this.view.appendChild(this.createPlayerWidget());
-                // this.view.appendChild(this.createHiddenCanvasContainer());
                 break;
         }
 
@@ -164,18 +162,6 @@ export default class ViewWindow {
         container.appendChild(player.widget);
         return container;
     }
-
-    // public createHiddenCanvasContainer(): HTMLDivElement {
-    //     const canvasContainer: HTMLDivElement = document.createElement('div');
-    //     canvasContainer.id = ViewWindow.HIDDEN_LOTTIE_ID;
-    //     // canvasContainer.style.width = '800px';
-    //     // canvasContainer.style.height = '600px';
-    //     // canvasContainer.style.position = 'absolute';
-    //     canvasContainer.style.display = 'none';
-    //     // canvasContainer.style.top = '300px';
-    //     // canvasContainer.style.left = '0';
-    //     return canvasContainer;
-    // }
 }
 
 
@@ -223,7 +209,6 @@ export class ViewToolBtn {
                 break;
         }
 
-
         return btn;
     }
 
@@ -231,23 +216,15 @@ export class ViewToolBtn {
     public suggestSelection(btnIcon: HTMLSpanElement): void {
         State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, state.suggestion]);
         State.saveHistory();
-        console.log('state suggestion: ', state.suggestion);
         if (state.suggestion) {
-            console.log('adding-');
             btnIcon.classList.add('selection-non-suggestion-icon');
             btnIcon.classList.remove('selection-suggestion-icon');
             Reducer.triger(action.TOGGLE_SUGGESTION, false);
         } else {
-            console.log('remove');
             btnIcon.classList.remove('selection-non-suggestion-icon');
             btnIcon.classList.add('selection-suggestion-icon');
             Reducer.triger(action.TOGGLE_SUGGESTION, true);
         }
-        // if ((<HTMLInputElement>evt.target).checked) {
-        //     Reducer.triger(action.TOGGLE_SUGGESTION, true);
-        // } else {
-        //     Reducer.triger(action.TOGGLE_SUGGESTION, false);
-        // }
     }
 
     public singleSelect(): void {
@@ -266,7 +243,6 @@ export class ViewToolBtn {
     }
 
     public lassoSelect(): void {
-        console.log('toggle lasso selection!');
         if (!document.getElementById('chartContainer').classList.contains('lasso-select')) {
             //change cursor
             document.getElementById('chartContainer').classList.remove('single-select');
@@ -318,7 +294,6 @@ export class ViewContent {
             case ViewWindow.KF_VIEW_TITLE:
                 this.createViewContainer(ViewContent.KF_VIEW_CONTENT_ID, ViewContent.KF_VIEW_CONTENT_CLS);
                 this.container.appendChild(this.createKeyframeListContainer());
-                // this.container.appendChild(this.createTimelineContainer());
                 break;
         }
     }
@@ -336,24 +311,6 @@ export class ViewContent {
         keyframePanel.appendChild(kfContainer.kfWidgetContainer);
 
         return keyframePanel;
-    }
-
-    public createTimelineContainer(): HTMLDivElement {
-        const timelineContainer: HTMLDivElement = document.createElement('div');
-        timelineContainer.className = 'timeline-container';
-        const timelineSvgWrapper: HTMLDivElement = document.createElement('div');
-        timelineSvgWrapper.className = 'timeline-svg-wrapper';
-        const svgContent: SVGSVGElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svgContent.id = 'timelineSvg';
-        Timeline.initTimeline(svgContent);
-        timelineSvgWrapper.appendChild(svgContent);
-        timelineContainer.appendChild(timelineSvgWrapper);
-        const timeSvgWrapper: HTMLDivElement = document.createElement('div');
-        timeSvgWrapper.className = 'time-svg-wrapper';
-        const timeSvg: SVGSVGElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        timeSvgWrapper.appendChild(timeSvg);
-        timelineContainer.appendChild(timeSvgWrapper);
-        return timelineContainer;
     }
 
     public createDataDashboard() {
@@ -384,7 +341,6 @@ export class ViewContent {
 
         //data table container
         const dataTableWrapper: HTMLDivElement = document.createElement('div');
-        // dataTableWrapper.id = 'dataTableWrapper';
         dataTableWrapper.className = 'data-table-wrapper';
         const dataTableTitle: HTMLDivElement = document.createElement('div');
         dataTableTitle.className = 'data-table-title';

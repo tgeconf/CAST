@@ -1,29 +1,43 @@
 import KfGroup from "./kfGroup";
 import KfItem from "./kfItem";
+import { ICoord } from "../../util/ds";
+import Tool from "../../util/tool";
 
 export default class KfOmit {
     static OMIT_W: number = 36;
     static OMIT_W_UNIT: number = KfOmit.OMIT_W / 6;
     static OMIT_H: number = 20;
+    static omitIdx: number = 0;
+
+    public id: string;
     public container: SVGGElement;
     public num: SVGTextElement;
     public hasOffset: boolean;
     public hasDuration: boolean;
     public iconContainer: SVGGElement;
     public parentObj: KfGroup;
+    public preItem: KfItem | KfGroup;
     public startX: number;
     public startY: number;
     public omittedKfNum: number;
     public kfIcon: SVGRectElement;
     public offsetIcon: SVGRectElement;
     public durationIcon: SVGRectElement;
+
+    public static reset() {
+        this.omitIdx = 0;
+    }
+
     public createOmit(startX: number, omittedKfNum: number, parentObj: KfGroup, hasOffset: boolean, hasDuration: boolean, startY: number = 0): void {
         this.hasOffset = hasOffset;
         this.hasDuration = hasDuration;
         this.parentObj = parentObj;
+        this.preItem = this.parentObj.children[this.parentObj.children.length - 1];
         this.omittedKfNum = omittedKfNum;
         this.startX = startX;
         this.startY = startY;
+        this.id = `kfOmit${KfOmit.omitIdx}`;
+        KfOmit.omitIdx++;
 
         if (typeof this.parentObj.container !== 'undefined') {
             this.renderOmit();
@@ -38,6 +52,9 @@ export default class KfOmit {
         //create dots
         this.createDots();
         this.parentObj.container.appendChild(this.container);
+        if (this.parentObj.children[this.parentObj.children.length - 1] instanceof KfItem) {
+            this.correctTrans(this.startY - KfOmit.OMIT_H / 2);
+        }
     }
 
     public createThumbnail(omittedKfNum: number): void {
@@ -90,6 +107,15 @@ export default class KfOmit {
                 this.durationIcon.setAttributeNS(null, 'width', '0');
             }
         }
+    }
+
+    /**
+     * when this group is aligned to other groups, then the startX is not correct
+     */
+    public correctTrans(currentTransY: number): void {
+        const preKfTrans: ICoord = Tool.extractTransNums(this.preItem.container.getAttributeNS(null, 'transform'));
+        const preKfBBox: DOMRect = this.preItem.container.getBoundingClientRect();
+        this.container.setAttributeNS(null, 'transform', `translate(${preKfTrans.x + preKfBBox.width}, ${currentTransY})`);
     }
 
     public updateTrans(startX: number, startY: number): void {

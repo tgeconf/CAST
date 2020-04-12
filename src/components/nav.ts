@@ -33,13 +33,12 @@ export default class Nav {
             title: 'new project',
             evtType: NavBtn.CREATE_NEW
         }));
+        // this.navContainer.appendChild(new NavBtn().createNavBtn({
+        //     classNameStr: 'open-eg',
+        //     title: 'load example',
+        //     evtType: NavBtn.LOAD_EXAMPLES
+        // }));
         this.navContainer.appendChild(new NavBtn().createNavBtn({
-            classNameStr: 'open-eg',
-            title: 'load example',
-            evtType: NavBtn.LOAD_EXAMPLES
-        }));
-        this.navContainer.appendChild(new NavBtn().createNavFileBtn({
-            inputId: 'openProject',
             classNameStr: 'open',
             title: 'open project',
             evtType: NavBtn.OPEN_PROJECT
@@ -115,8 +114,8 @@ class NavBtn {
         btn.className = 'nav-btn';
         btn.setAttribute('title', Tool.firstLetterUppercase(props.title));
         switch (props.evtType) {
-            case NavBtn.LOAD_EXAMPLES:
-                btn.onclick = () => this.loadExamples();
+            case NavBtn.OPEN_PROJECT:
+                btn.onclick = () => this.openProject();
                 break;
             case NavBtn.EXPORT_PROJECT:
                 btn.onclick = () => this.exportProject();
@@ -160,9 +159,9 @@ class NavBtn {
             case NavBtn.CREATE_NEW:
                 input.onchange = () => this.createNew();
                 break;
-            case NavBtn.OPEN_PROJECT:
-                input.onchange = () => this.openProject();
-                break;
+            // case NavBtn.OPEN_PROJECT:
+            //     input.onchange = () => this.openProject();
+            //     break;
         }
         btn.appendChild(input);
 
@@ -179,14 +178,16 @@ class NavBtn {
     }
 
     public openProject() {
-        console.log('open existing project');
-    }
-
-    public loadExamples() {
         const floatingWindow: FloatingWindow = new FloatingWindow();
         floatingWindow.createFloatingWindow(FloatingWindow.TYPE_EXAMPLE);
         document.getElementById('appWrapper').appendChild(floatingWindow.floatingWindow);
     }
+
+    // public loadExamples() {
+    //     const floatingWindow: FloatingWindow = new FloatingWindow();
+    //     floatingWindow.createFloatingWindow(FloatingWindow.TYPE_EXAMPLE);
+    //     document.getElementById('appWrapper').appendChild(floatingWindow.floatingWindow);
+    // }
 
     public saveProject() {
         console.log('save project');

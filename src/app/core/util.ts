@@ -82,12 +82,8 @@ export default class Util {
         const [sameAttrs, diffAttrs] = this.compareAttrs(markIds, this.filteredDataTable, Object.keys(this.attrType), true);
         //filter attributes according to the effectiveness ranking
         const filteredDiffAttrs = this.filterAttrs(diffAttrs);
-        console.log('found same and diff attrs: ', sameAttrs, diffAttrs);
         //list all data-encoded marks
         let allMarkIds: string[] = Array.from(this.filteredDataTable.keys());
-        // this.filteredDataTable.forEach((datum, markId) => {
-        //     allMarkIds.push(markId);
-        // })
         const [sections, orderedSectionIds] = this.partitionChart(sameAttrs, filteredDiffAttrs, allMarkIds, this.filteredDataTable);
 
         //judge if marks from one section are selected all, otherwise repeat selection with the one with the most selected marks
@@ -102,7 +98,6 @@ export default class Util {
             })
             mostSelectionNumInSec = tmpCount > mostSelectionNumInSec ? tmpCount : mostSelectionNumInSec;
         })
-        console.log('allselected: ', allSelected, mostSelectionNumInSec);
 
         //for each section, select the same most number of marks or all of the marks
         //create container for each section, and push in the selected marks first
@@ -185,22 +180,6 @@ export default class Util {
      * the selected marks are non data encoded marks
      */
     public static suggestSelBasedOnChart(markIds: string[]): string[] {
-        console.log(this.nonDataTable);
-        // let sameAttrs: string[] = Array.from(Object.keys(this.nonDataTable.get(markIds[0])));
-        // markIds.forEach((mId: string) => {
-        //     let removeIdxs: number[] = [];
-        //     sameAttrs.forEach((attrName: string, i: number) => {
-        //         if (this.nonDataTable.get(mId)[attrName] !== this.nonDataTable.get(markIds[0])[attrName]) {
-        //             removeIdxs.push(i);
-        //         }
-        //     })
-        //     if (removeIdxs.length > 0) {
-        //         for (let i = removeIdxs.length - 1; i > 0; i++) {
-        //             sameAttrs.splice(removeIdxs[i], 1);
-        //         }
-        //     }
-        // })
-        // console.log('same ')
         const [sameAttrs, diffAttrs] = this.compareAttrs(markIds, this.nonDataTable, this.nonDataAttrs, false);
         console.log('same and diff attrs: ', sameAttrs, diffAttrs);
         // const allNonDataMarks: string[] = Array.from(this.nonDataTable.keys());
@@ -236,8 +215,6 @@ export default class Util {
             let sectionId: string = '';
             let seperateSecId: string[] = [];//for ordering section ids
             [...sameAttrs, ...filteredDiffAttrs].forEach((attr) => {
-                // sectionId += ChartSpec.dataMarkDatum.get(markId)[attr] + ',';
-                // seperateSecId.push(ChartSpec.dataMarkDatum.get(markId)[attr]);
                 sectionId += dataTable.get(markId)[attr] + ',';
                 seperateSecId.push(dataTable.get(markId)[attr].toString());
             })
@@ -268,7 +245,6 @@ export default class Util {
             }
         })
         const orderedSectionIds = sectionIdRecord.map(a => a.join(',') + ',');
-        console.log('partition sections: ', sections);
         return [sections, orderedSectionIds];
     }
 
@@ -432,7 +408,6 @@ export default class Util {
      * find out to sort with which attr
      */
     public static findUpdatedAttrOrder(sda: ISortDataAttr[]): [boolean, ISortDataAttr] {
-        console.log('sda: ', sda);
         let result: ISortDataAttr = { attr: '', sort: '' };
         let flag = false;
         for (let i = 0, len = state.sortDataAttrs.length; i < len; i++) {
@@ -499,12 +474,11 @@ export default class Util {
     }
 
     public static aniRootToKFGroup(aniunitNode: any, aniId: string, parentObj: {} | IKeyframeGroup, parentChildIdx: number): IKeyframeGroup {
-        console.log('aniunit node: ', aniunitNode);
+        console.log('aniunit node: ', aniunitNode, KfGroup.allAniGroups);
         let kfGroupRoot: IKeyframeGroup = {
             groupRef: aniunitNode.groupRef,
             id: aniunitNode.id,
             aniId: aniId,
-            // parentObj: parentObj,
             marks: aniunitNode.marks,
             timingRef: aniunitNode.timingRef,
             delay: aniunitNode.delay,
@@ -512,17 +486,19 @@ export default class Util {
             newTrack: (typeof aniunitNode.align === 'undefined' && aniunitNode.groupRef === 'root')
                 || (aniunitNode.timingRef === TimingSpec.timingRef.previousStart && parentChildIdx !== 0)
         }
-        console.log(aniId, 'new track: ', kfGroupRoot.newTrack);
-        // KfTimingIllus.updateOffsetRange(aniunitNode.delay);
+        if (typeof aniunitNode.aniId !== 'undefined') {
+            kfGroupRoot.alignId = aniunitNode.aniId;
+        }
         if (typeof aniunitNode.offset !== 'undefined') {
             kfGroupRoot.delay = aniunitNode.offset;
-            // kfGroupRoot.offset = aniunitNode.offset;
-            // kfGroupRoot.offsetIcon = aniunitNode.offset > 0;
-            // KfTimingIllus.updateOffsetRange(aniunitNode.offset);
         }
         if (typeof aniunitNode.align !== 'undefined') {
+            if (aniunitNode.align.type === 'element') {
+                kfGroupRoot.newTrack = true;
+            }
             kfGroupRoot.alignType = aniunitNode.align.type;
             kfGroupRoot.alignTarget = aniunitNode.align.target;
+            kfGroupRoot.merge = aniunitNode.align.merge;
         }
         if (typeof aniunitNode.refValue !== 'undefined') {
             kfGroupRoot.refValue = aniunitNode.refValue;
@@ -567,7 +543,6 @@ export default class Util {
      * @param children 
      */
     public static mergeNode(children: any[]): { merge: boolean, mergedNode?: any } {
-        console.log('testing merge: ', children);
         let merge: boolean = true;
         for (let i = 0, len = children.length; i < len; i++) {
             const c: any = children[i];
@@ -599,10 +574,6 @@ export default class Util {
         //find the min and max duraion of kfs, in order to render kfs
         const tmpDuration: number = aniLeaf.end - aniLeaf.start;
         aniLeaf.marks = [...new Set(aniLeaf.marks)];
-        // KfTimingIllus.updateDurationRange(tmpDuration);
-        // if (leafIdx > 0) {//delay
-        //     KfTimingIllus.updateOffsetRange(aniLeaf.delay);
-        // }
         //find all the marks animate before marks in aniLeaf
         const marksInOrder: string[] = Animation.animations.get(aniId).marksInOrder;
         let targetIdx: number = -1;
@@ -615,7 +586,6 @@ export default class Util {
             }
         })
         let allCurrentMarks: string[] = [];
-        console.log('marks in order: ', marksInOrder, targetIdx);
         Animation.animations.forEach((ani: any, tmpAniId: string) => {
             if (tmpAniId === aniId) {
                 allCurrentMarks = [...allCurrentMarks, ...ani.marksInOrder.slice(0, targetIdx)];
@@ -629,7 +599,6 @@ export default class Util {
             }
         })
         allCurrentMarks = [...state.staticMarks, ...allCurrentMarks];
-        console.log('all current marks before this kf: ', allCurrentMarks);
 
         let drawDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousEnd || parentObj.marks.length === aniLeaf.marks.length;
         if (typeof aniLeaf.alignTo !== 'undefined') {
@@ -638,7 +607,7 @@ export default class Util {
 
         let tmpKf: IKeyframe = {
             id: aniLeaf.id,
-            // parentObj: parentObj,
+            timingRef: aniLeaf.timingRef,
             delay: aniLeaf.delay,
             delayIcon: aniLeaf.delay > 0 && leafIdx > 0,
             duration: tmpDuration,
@@ -655,6 +624,7 @@ export default class Util {
         }
         if (typeof aniLeaf.alignTo !== 'undefined') {
             tmpKf.alignTo = aniLeaf.alignTo;
+            tmpKf.timingRef = parentObj.timingRef;
         }
         KfItem.allKfInfo.set(tmpKf.id, tmpKf);
         return tmpKf;
@@ -750,14 +720,11 @@ export default class Util {
      * @param {*} aValues 
      */
     public static judgeTimeAttr(aValues: Array<string | number>): boolean {
-        console.log('judge time attr: ', aValues);
         for (let i = 0, len = aValues.length; i < len; i++) {
             if (!this.TIME_ATTR_VALUE.includes(`${aValues[i]}`.toLowerCase())) {
-                console.log('is not time', aValues[i]);
                 return false;
             }
         }
-        console.log('is time');
         return true;
     }
 
