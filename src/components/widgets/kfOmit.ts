@@ -23,6 +23,7 @@ export default class KfOmit {
     public kfIcon: SVGRectElement;
     public offsetIcon: SVGRectElement;
     public durationIcon: SVGRectElement;
+    public rendered: boolean = true;
 
     public static reset() {
         this.omitIdx = 0;
@@ -144,5 +145,17 @@ export default class KfOmit {
         dots.setAttributeNS(null, 'text-anchor', 'middle');
         dots.innerHTML = '...';
         this.container.appendChild(dots);
+    }
+
+    public showOmit(): void {
+        if (typeof this.container !== 'undefined') {
+            this.container.setAttributeNS(null, 'opacity', '1');
+        }
+    }
+
+    public hideOmit(): void {
+        if (typeof this.container !== 'undefined') {
+            this.container.setAttributeNS(null, 'opacity', '0');
+        }
     }
 }

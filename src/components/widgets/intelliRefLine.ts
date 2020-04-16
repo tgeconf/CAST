@@ -3,6 +3,7 @@ import KfItem from "./kfItem";
 import { ICoord } from "../../util/ds";
 import { IKeyframe } from "../../app/core/ds";
 import { TimingSpec } from "canis_toolkit";
+import KfGroup from "./kfGroup";
 
 export default class IntelliRefLine {
     static HIGHLIGHT_STROKE_COLOR: string = '#0e89e5';
@@ -16,6 +17,9 @@ export default class IntelliRefLine {
     public line: SVGLineElement;
 
     public createLine(alignWithKfId: number, alignToKfId: number) {
+        //judge whether the alignto kfgroup is merged to alignwith group
+        const alignToKfGroup: KfGroup = KfItem.allKfItems.get(alignToKfId).parentObj.fetchAniGroup();
+        console.log('alito group: ', alignToKfGroup);
         this.container = document.getElementById(KfContainer.KF_FG);
         this.id = IntelliRefLine.idx;
         IntelliRefLine.idx++;
@@ -29,6 +33,9 @@ export default class IntelliRefLine {
         IntelliRefLine.kfLineMapping.set(alignToKfId, { theOtherEnd: alignWithKfId, lineId: this.id });
 
         IntelliRefLine.updateLine(alignWithKfId);
+        if (alignToKfGroup.alignMerge) {
+            this.hideLine();
+        }
     }
 
     /**
@@ -59,7 +66,6 @@ export default class IntelliRefLine {
                 alignWithKfInfo = alignKf2;
                 alignToKfInfo = alignKf1;
             }
-            console.log('updating ref line: ', testWith, testTo, alignWithKfBBox, containerBBox, alignWithKfBBox.right - containerBBox.left, kfContainer.transDistance);
 
             if (alignToKfInfo.timingRef === TimingSpec.timingRef.previousEnd) {
                 lineItem.line.setAttributeNS(null, 'x1', `${alignWithKfBBox.right - containerBBox.left}`);
@@ -78,6 +84,10 @@ export default class IntelliRefLine {
 
     public hideLine(): void {
         this.line.setAttributeNS(null, 'opacity', '0');
+    }
+
+    public showLine(): void {
+        this.line.setAttributeNS(null, 'opacity', '1');
     }
 
     public hintInsert(targetPosi: ICoord, targetHeight: number, vertical: boolean = true) {
@@ -100,8 +110,10 @@ export default class IntelliRefLine {
     }
 
     public removeHintInsert() {
-        if (this.container.contains(this.line)) {
-            this.container.removeChild(this.line);
+        if (typeof this.container !== 'undefined') {
+            if (this.container.contains(this.line)) {
+                this.container.removeChild(this.line);
+            }
         }
     }
 }

@@ -41,7 +41,6 @@ export default class Lasso {
         lassoPath.setAttributeNS(null, 'id', Lasso.LASSO_PATH_ID);
         lassoPath.setAttributeNS(null, 'stroke', '#505050');
         lassoPath.setAttributeNS(null, 'fill-opacity', '.05');
-        console.log(origin.x, origin.y, 'M' + origin.x + ',' + origin.y);
         lassoPath.setAttributeNS(null, 'd', 'M' + origin.x + ',' + origin.y);
         this.polygon.push([origin.x, origin.y]);
         return lassoPath;

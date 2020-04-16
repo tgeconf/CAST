@@ -1,17 +1,7 @@
 [
     {
-        "selector": ".axis-domain, .axis-tick, .axis-label",
-        "effects": [
-            {
-                "type": "fade",
-                "duration": 200
-            }
-        ]
-    },
-    {
-        "reference": "start after previous",
-        "id": "yearAni",
-        "selector": ".symbol, .text",
+        "id": "symbol",
+        "selector": ".symbol",
         "grouping": {
             "groupBy": "year",
             "reference": "start after previous"
@@ -19,7 +9,21 @@
         "effects": [
             {
                 "type": "fade",
-                "duration": 200
+                "duration": 1000
+            }
+        ]
+    },
+    {
+        "reference": "start after previous",
+        "selector": ".text",
+        "align": {
+            "target": "symbol",
+            "type": "element"
+        },
+        "effects": [
+            {
+                "type": "fade",
+                "duration": 1000
             }
         ]
     },
@@ -27,14 +31,13 @@
         "reference": "start after previous",
         "selector": ".link",
         "align": {
-            "target": "yearAni",
-            "type": "element",
-            "merge": true
+            "target": "symbol",
+            "type": "element"
         },
         "effects": [
             {
                 "type": "grow",
-                "duration": 600
+                "duration": 3000
             }
         ]
     }

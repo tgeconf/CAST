@@ -213,7 +213,7 @@ export class KfContainer {
         this.xSliderContainerW = this.kfWidgetContainer.clientWidth;
         this.xSliderBg.setAttributeNS(null, 'width', `${this.xSliderContainerW}`);
         if (typeof kfGroupSize.width !== 'undefined') {
-            this.xSliderPercent = (kfGroupSize.width + 100) / this.xSliderContainerW;
+            this.xSliderPercent = (kfGroupSize.width + 2000) / this.xSliderContainerW;
             this.xSlider.setAttributeNS(null, 'width', `${this.xSliderContainerW * (this.xSliderContainerW / kfGroupSize.width)}`);
         }
 

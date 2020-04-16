@@ -175,11 +175,19 @@ export default class Renderer {
                     }
                     if (typeof targetTrack === 'undefined') {
                         targetTrack = new KfTrack();
-                        targetTrack.createTrack();
+                        let createFakeTrack: boolean = false;
+                        if (typeof kfg.merge !== 'undefined') {
+                            createFakeTrack = kfg.merge;
+                        }
+                        targetTrack.createTrack(createFakeTrack);
                     }
                 } else {
                     targetTrack = new KfTrack();
-                    targetTrack.createTrack();
+                    let createFakeTrack: boolean = false;
+                    if (typeof kfg.merge !== 'undefined') {
+                        createFakeTrack = kfg.merge;
+                    }
+                    targetTrack.createTrack(createFakeTrack);
                 }
             } else {
                 if (typeof KfTrack.aniTrackMapping.get(kfg.aniId) !== 'undefined') {
@@ -296,18 +304,12 @@ export default class Renderer {
                         }
                     }
                     //draw render
-                    let targetSize: { w: number, h: number } = { w: 0, h: 0 }
-                    let kfSize: { w: number, h: number } = { w: 0, h: 0 }
-                    if (isAlignWith === 2) {
-                        targetSize.w = KfItem.allKfItems.get(k.alignTo).kfWidth;
-                        targetSize.h = KfItem.allKfItems.get(k.alignTo).kfHeight;
-                        kfSize = targetSize;
-                    } else {
-                        kfSize = { w: KfItem.KF_WIDTH - treeLevel * KfItem.KF_W_STEP, h: KfItem.KF_HEIGHT - 2 * treeLevel * KfItem.KF_H_STEP };
-                    }
-
                     const kfItem: KfItem = new KfItem();
+                    let targetSize: { w: number, h: number } = { w: 0, h: 0 }
                     if (isAlignWith === 2) {
+                        const alignedKf: DOMRect = KfItem.allKfItems.get(k.alignTo).kfBg.getBoundingClientRect();
+                        targetSize.w = alignedKf.width;
+                        targetSize.h = alignedKf.height;
                         kfItem.createItem(k, treeLevel, kfGroup, kfPosiX, targetSize);
                     } else {
                         kfItem.createItem(k, treeLevel, kfGroup, kfPosiX);
@@ -435,22 +437,21 @@ export default class Renderer {
                 if (!suggestOnFirstKf) {//the suggestion is based on all marks in this animation as the last kf
                     if (Tool.identicalArrays(clsOfMarksInPath, clsOfMarksThisAni)) {//marks in current path have the same classes as those in current animation 
                         if (clsOfMarksInPath.length > 1) {//create multiple animations
-
+                            console.log('same cls have different kinds of marks: ', targetPath.attrComb, attrValueSort);
                         } else {//create grouping
                             Reducer.triger(action.UPDATE_SPEC_GROUPING, { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort });
                         }
                     } else {//marks in current path don't have the same classes as those in current animation 
                         if (clsOfMarksInPath.length > 1) {//create multiple animations
-
+                            console.log('diff cls have different kinds of marks: ', targetPath.attrComb, attrValueSort);
                         } else {//create one animation
                             Reducer.triger(action.SPLIT_CREATE_ONE_ANI, { aniId: startKf.aniId, newAniSelector: `#${targetPath.lastKfMarks.join(', #')}`, attrComb: targetPath.attrComb, attrValueSort: attrValueSort });
                         }
                     }
                 } else {//the suggestion is based on all marks in current first  kf as the last kf
                     if (clsOfMarksInPath.length > 1) {//change timing of marks of different classes
-
+                        console.log('diff cls first kf as last: ', targetPath.attrComb, attrValueSort);
                     } else {//append grouping to current animation
-                        // Reducer.triger(action.UPDATE_SPEC_GROUPING, { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort });
                         Reducer.triger(action.APPEND_SPEC_GROUPING, { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort })
                     }
                 }
@@ -468,6 +469,7 @@ export default class Renderer {
             let kfBeforeSuggestBox: KfItem = startKf;
             const numKfToRender: number = nextUniqueKfIdx - kfIdxInPath - 1;
             let transX: number = 0;
+            let lastKf: KfItem;
             for (let i = 0; i < numKfToRender; i++) {
                 if (i === 0 || i === numKfToRender - 1) {
                     if (i === numKfToRender - 1 && numKfToRender > 2) {//render omit first
@@ -489,24 +491,25 @@ export default class Renderer {
                         });
                     KfItem.allKfInfo.set(tmpKfInfo.id, tmpKfInfo);
                     let tmpKf: KfItem = new KfItem();
-                    const startX: number = Tool.extractTransNums(startKf.container.getAttributeNS(null, 'transform')).x + startKf.totalWidth + transX;
+                    const startX: number = Tool.extractTransNums(startKf.container.getAttributeNS(null, 'transform')).x + startKf.totalWidth + transX - KfGroup.PADDING;
                     tmpKf.createItem(tmpKfInfo, startKf.parentObj.treeLevel + 1, startKf.parentObj, startX);
+                    lastKf = tmpKf;
                     startKf.parentObj.children.splice(insertIdx, 0, tmpKf);
                     insertIdx++;
-                    transX += tmpKf.kfWidth;
+                    transX += tmpKf.totalWidth;
                     kfBeforeSuggestBox = tmpKf;
                 }
             }
             //render suggestion box
             suggestBox.createSuggestBox(kfBeforeSuggestBox, nextUniqueKfIdx, suggestOnFirstKf);
-            transX += suggestBox.boxWidth + 3 * SuggestBox.PADDING + suggestBox.menuWidth + 2;
+            transX += (suggestBox.boxWidth + 3 * SuggestBox.PADDING + suggestBox.menuWidth + 2);
 
             //translate the ori group
             if (typeof nextKf === 'undefined') {
-                console.log('going to translate group', startKf, transX);
-                startKf.parentObj.translateGroup(startKf, transX, true, { lastItem: true, extraWidth: suggestBox.boxWidth + SuggestBox.PADDING + suggestBox.menuWidth });
+                let transStartKf: KfItem = typeof lastKf === 'undefined' ? startKf : lastKf;
+                startKf.parentObj.translateGroup(transStartKf, transX, false, false, false, { lastItem: true, extraWidth: suggestBox.boxWidth + SuggestBox.PADDING + suggestBox.menuWidth });
             } else {
-                startKf.parentObj.translateGroup(nextKf, transX, true);
+                startKf.parentObj.translateGroup(nextKf, transX, false, false, false);
             }
         }
     }

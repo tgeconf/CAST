@@ -88,7 +88,6 @@ export class SuggestBox {
 
     public createOptionKfs(allCurrentMarks: string[], allGroupMarks: string[], suggestOnFirstKf: boolean): void {
         let uniqueKfRecorder: string[][] = [];//record unique kfs
-
         state.allPaths.forEach((path: IPath) => {
             const marksThisKf: string[] = path.kfMarks[this.uniqueKfIdx];
             if (!Tool.Array2DItem(uniqueKfRecorder, marksThisKf)) {
@@ -96,7 +95,7 @@ export class SuggestBox {
                 let optionInfo: IOptionInfo = {
                     kfIdx: this.uniqueKfIdx,
                     attrs: path.attrComb,
-                    values: path.sortedAttrValueComb[this.uniqueKfIdx].split(','),
+                    values: path.sortedAttrValueComb[this.uniqueKfIdx + 1].split(','),
                     marks: marksThisKf,
                     allCurrentMarks: allCurrentMarks,
                     allGroupMarks: allGroupMarks,
@@ -280,9 +279,9 @@ export class OptionItem {
             suggestBox.kfBeforeSuggestBox.parentObj.children.splice(insertIdx, 0, tmpKf);
             let transX: number = tmpKf.totalWidth - (suggestBox.boxWidth + 3 * SuggestBox.PADDING + suggestBox.menuWidth + 2);
             if (typeof nextKf === 'undefined') {
-                suggestBox.kfBeforeSuggestBox.parentObj.translateGroup(tmpKf, transX, true, { lastItem: true, extraWidth: suggestBox.boxWidth + SuggestBox.PADDING + suggestBox.menuWidth });
+                suggestBox.kfBeforeSuggestBox.parentObj.translateGroup(tmpKf, transX, false, false, false, { lastItem: true, extraWidth: suggestBox.boxWidth + SuggestBox.PADDING + suggestBox.menuWidth });
             } else {
-                suggestBox.kfBeforeSuggestBox.parentObj.translateGroup(nextKf, transX, true);
+                suggestBox.kfBeforeSuggestBox.parentObj.translateGroup(nextKf, transX, false, false, false);
             }
             suggestBox.removeSuggestBox();
 

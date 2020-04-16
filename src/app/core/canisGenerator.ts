@@ -298,4 +298,8 @@ export default class CanisGenerator {
         })
         ani.selector = filteredMarks.join(', ');
     }
+
+    public static updateMerge(ani: IAnimationSpec, merge: boolean) {
+        ani.align.merge = merge;
+    }
 }

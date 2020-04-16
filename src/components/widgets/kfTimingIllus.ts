@@ -54,8 +54,8 @@ export default class KfTimingIllus {
         return this._offsetDiff;
     }
 
-    set durationDiff(df: number) {
-        this._durationDiff = df;
+    set durationDiff(dd: number) {
+        this._durationDiff = dd;
     }
 
     get durationDiff(): number {

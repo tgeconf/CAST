@@ -47,10 +47,12 @@
         ]
     },
     {
+        "reference": "start after previous",
         "selector": ".link",
         "align": {
             "target": "bar",
-            "type": "element"
+            "type": "element",
+            "merge": true
         },
         "effects": [
             {

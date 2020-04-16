@@ -570,7 +570,7 @@ export default class Util {
      * @param parentId 
      */
     public static aniLeafToKF(aniLeaf: any, leafIdx: number, aniId: string, parentObj: IKeyframeGroup, parentMarks: string[]): IKeyframe {
-        console.log('creating kf info: ', aniLeaf, aniLeaf.marks, parentMarks);
+        console.log('creating kf info: ', aniLeaf, Animation.animations);
         //find the min and max duraion of kfs, in order to render kfs
         const tmpDuration: number = aniLeaf.end - aniLeaf.start;
         aniLeaf.marks = [...new Set(aniLeaf.marks)];
@@ -603,6 +603,9 @@ export default class Util {
         let drawDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousEnd || parentObj.marks.length === aniLeaf.marks.length;
         if (typeof aniLeaf.alignTo !== 'undefined') {
             drawDuration = KfItem.allKfInfo.get(aniLeaf.alignTo).durationIcon;
+        }
+        if (Animation.animations.get(aniId).actions[0].oriActionType === 'appear') {
+            drawDuration = false;
         }
 
         let tmpKf: IKeyframe = {

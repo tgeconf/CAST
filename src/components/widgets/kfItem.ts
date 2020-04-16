@@ -11,6 +11,7 @@ import * as action from '../../app/action';
 import Reducer from '../../app/reducer';
 import { TimingSpec } from 'canis_toolkit';
 import { state } from '../../app/state';
+import KfTrack from './kfTrack';
 
 export default class KfItem extends KfTimingIllus {
     static KF_HEIGHT: number = 178;
@@ -19,6 +20,7 @@ export default class KfItem extends KfTimingIllus {
     static KF_W_STEP: number = 8;
     static PADDING: number = 6;
     static STATIC_KF_ID: number = -100;
+    static FRAME_COLOR: string = '#676767';
     static allKfInfo: Map<number, IKeyframe> = new Map();//contains both fake and real info
     static allKfItems: Map<number, KfItem> = new Map();//contains both fake and real kf
     static staticKf: KfItem;
@@ -45,13 +47,26 @@ export default class KfItem extends KfTimingIllus {
     public kfHeight: number
     public kfBg: SVGRectElement
     public kfWidth: number
-
+    public alignFrame: SVGRectElement
     public totalWidth: number = 0
     public chartThumbnail: SVGImageElement
 
-    set durationDiff(df: number) {
-        this._durationDiff = df;
-        this.transNextKf(df);
+    set offsetDiff(od: number) {
+        this._offsetDiff = od;
+        Tool.transNodeElements(this.container, od, true);
+        this.parentObj.translateGroup(this, od, true, false, true);
+    }
+
+    get offsetDiff(): number {
+        return this._offsetDiff;
+    }
+
+    set durationDiff(dd: number) {
+        this._durationDiff = dd;
+        // this.transNextKf(df);
+        // this.parentObj.translateGroup(this, df, true, { lastItem: true, extraWidth: 0 });
+        this.parentObj.translateGroup(this, dd, true, false, true);
+
     }
 
     get durationDiff(): number {
@@ -131,6 +146,7 @@ export default class KfItem extends KfTimingIllus {
         this.treeLevel = treeLevel;
 
         if (typeof size !== 'undefined') {
+            console.log('alignto level: ', treeLevel);
             this.kfHeight = size.h;
         } else {
             this.kfHeight = KfItem.KF_HEIGHT - 2 * treeLevel * KfItem.KF_H_STEP;
@@ -148,6 +164,12 @@ export default class KfItem extends KfTimingIllus {
         if (typeof parentObj.container !== 'undefined') {
             this.rendered = true;
             this.renderItem(startX, size);
+            if (typeof this.kfInfo.alignTo !== 'undefined') {//this kf is align to others
+                const aniGroup: KfGroup = this.parentObj.fetchAniGroup();
+                if (aniGroup.alignMerge) {
+                    this.showAlignFrame();
+                }
+            }
         } else {
             KfItem.allKfItems.set(this.id, this);
         }
@@ -157,43 +179,108 @@ export default class KfItem extends KfTimingIllus {
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.container.classList.add('draggable-component');
         this.container.setAttributeNS(null, 'transform', `translate(${startX + KfItem.PADDING}, ${KfItem.PADDING})`);
+        if (typeof this.kfInfo.alignTo !== 'undefined') {//this kf is align to others
+            const aniGroup: KfGroup = this.parentObj.fetchAniGroup();
+            this.container.onmouseover = () => {
+                aniGroup.transShowTitle();
+            }
+            this.container.onmouseout = () => {
+                aniGroup.transHideTitle();
+            }
+        }
         this.container.onmousedown = (downEvt) => {
             let oriMousePosi: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
-            this.container.setAttributeNS(null, '_transform', this.container.getAttributeNS(null, 'transform'));
-            const containerBBox: DOMRect = this.container.getBoundingClientRect();
-            this.parentObj.container.removeChild(this.container);
+            const targetMoveItem: KfGroup | KfItem = typeof this.kfInfo.alignTo !== 'undefined' ? this.parentObj.fetchAniGroup() : this;
+            //move the entire group
+            // const aniGroup: KfGroup = this.parentObj.fetchAniGroup();
+            targetMoveItem.container.setAttributeNS(null, '_transform', targetMoveItem.container.getAttributeNS(null, 'transform'));
+            const containerBBox: DOMRect = targetMoveItem.container.getBoundingClientRect();
+            if (targetMoveItem.parentObj.container.contains(targetMoveItem.container)) {
+                targetMoveItem.parentObj.container.removeChild(targetMoveItem.container);
+            }
             const popKfContainer: HTMLElement = document.getElementById(KfContainer.KF_POPUP);
             const popKfContainerBbox: DOMRect = popKfContainer.getBoundingClientRect();
-            popKfContainer.appendChild(this.container);
+            popKfContainer.appendChild(targetMoveItem.container);
             //set new transform
-            this.container.setAttributeNS(null, 'transform', `translate(${containerBBox.left - popKfContainerBbox.left}, ${containerBBox.top - popKfContainerBbox.top})`);
+            targetMoveItem.container.setAttributeNS(null, 'transform', `translate(${containerBBox.left - popKfContainerBbox.left}, ${containerBBox.top - popKfContainerBbox.top})`);
+
             let updateSpec: boolean = false;
             let actionType: string = '';
             let actionInfo: any = {};
-            if (typeof this.kfInfo.alignTo !== 'undefined') {//this kf is align to others
+            if (targetMoveItem instanceof KfGroup) {//this kf is align to others
+                //find all kfs in this kfgroup
+                const allKfItems: KfItem[] = targetMoveItem.fetchAllKfs();
+
+                //set visible
+                targetMoveItem.showGroupBg();
+                targetMoveItem.hideTitle();
+                targetMoveItem.hideMenu();
                 document.onmousemove = (moveEvt) => {
+                    const alignWithGroupBBox: DOMRect = targetMoveItem.fetchAlignWithGroup().container.getBoundingClientRect();
                     const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
                     const posiDiff: ICoord = { x: currentMousePosi.x - oriMousePosi.x, y: currentMousePosi.y - oriMousePosi.y };
-                    const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
-                    this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + posiDiff.x}, ${oriTrans.y + posiDiff.y})`);
+                    const oriTrans: ICoord = Tool.extractTransNums(targetMoveItem.container.getAttributeNS(null, 'transform'));
+                    targetMoveItem.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${oriTrans.y + posiDiff.y})`);
+
+                    const currentBBox: DOMRect = targetMoveItem.container.getBoundingClientRect();
+                    if (currentBBox.top - alignWithGroupBBox.top <= KfTrack.TRACK_HEIGHT * 0.6 && currentBBox.top - alignWithGroupBBox.top >= 0) {//set merge to true
+                        //change ref line to align frame
+                        allKfItems.forEach((kf: KfItem) => {
+                            kf.showAlignFrame();
+                            const corresRefLine: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kf.id).lineId);
+                            if (typeof corresRefLine !== 'undefined') {
+                                corresRefLine.hideLine();
+                            }
+                        })
+                        //triger action
+                        if (targetMoveItem.alignMerge) {
+                            updateSpec = false;
+                        } else {
+                            updateSpec = true;
+                            actionType = action.UPDATE_ALIGN_MERGE;
+                            actionInfo = { aniId: this.aniId, merge: true }
+                        }
+                    } else if (currentBBox.top - alignWithGroupBBox.top >= KfTrack.TRACK_HEIGHT * 0.6) {//set merge to false
+                        //change align frame to ref line
+                        allKfItems.forEach((kf: KfItem) => {
+                            kf.hideAlignFrame();
+                            const corresRefLine: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kf.id).lineId);
+                            if (typeof corresRefLine !== 'undefined') {
+                                corresRefLine.showLine();
+                            }
+                        })
+                        //triger action
+                        if (targetMoveItem.alignMerge) {
+                            updateSpec = true;
+                            actionType = action.UPDATE_ALIGN_MERGE;
+                            actionInfo = { aniId: this.aniId, merge: false }
+                        } else {
+                            updateSpec = false;
+                        }
+                    }
+
                     oriMousePosi = currentMousePosi;
                 }
                 document.onmouseup = () => {
                     document.onmousemove = null;
                     document.onmouseup = null;
                     if (!updateSpec) {
-                        this.container.setAttributeNS(null, 'transform', this.container.getAttributeNS(null, '_transform'));
-                        if (this.treeLevel === 1 && typeof this.parentObj.groupMenu !== 'undefined') {
-                            this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
+                        targetMoveItem.container.setAttributeNS(null, 'transform', targetMoveItem.container.getAttributeNS(null, '_transform'));
+                        targetMoveItem.parentObj.container.appendChild(targetMoveItem.container);
+                        if (targetMoveItem.alignMerge) {
+                            targetMoveItem.hideGroupBg();
+                            targetMoveItem.showTitle();
                         } else {
-                            this.parentObj.container.appendChild(this.container);
+                            targetMoveItem.rerenderGroupBg();
+                            targetMoveItem.showTitle();
+                            targetMoveItem.showMenu();
                         }
                     } else {
                         Reducer.triger(actionType, actionInfo);
-                        popKfContainer.removeChild(this.container);
+                        popKfContainer.removeChild(targetMoveItem.container);
                     }
                 }
-            } else {
+            } else {//this kf is not aligned to others
                 document.onmousemove = (moveEvt) => {
                     const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
                     const posiDiff: ICoord = { x: currentMousePosi.x - oriMousePosi.x, y: currentMousePosi.y - oriMousePosi.y };
@@ -398,6 +485,28 @@ export default class KfItem extends KfTimingIllus {
         }
     }
 
+    public showAlignFrame() {
+        if (typeof this.alignFrame === 'undefined') {
+            const itemBBox: DOMRect = this.container.getBoundingClientRect();
+            this.alignFrame = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            this.alignFrame.setAttributeNS(null, 'width', `${itemBBox.width}`);
+            this.alignFrame.setAttributeNS(null, 'height', `${itemBBox.height}`);
+            this.alignFrame.setAttributeNS(null, 'stroke', KfItem.FRAME_COLOR);
+            this.alignFrame.setAttributeNS(null, 'stroke-width', '1');
+            this.alignFrame.setAttributeNS(null, 'stroke-dasharray', '4 2');
+            this.alignFrame.setAttributeNS(null, 'fill', 'none');
+            this.container.appendChild(this.alignFrame);
+        } else {
+            this.alignFrame.setAttributeNS(null, 'opacity', '1');
+        }
+    }
+
+    public hideAlignFrame() {
+        if (typeof this.alignFrame !== 'undefined') {
+            this.alignFrame.setAttributeNS(null, 'opacity', '0');
+        }
+    }
+
     public hideDuration() {
         this.durationIllus.setAttributeNS(null, 'opacity', '0');
     }
@@ -428,101 +537,111 @@ export default class KfItem extends KfTimingIllus {
         const currentKfInfo: IKeyframe = KfItem.allKfInfo.get(this.id);
         const alignedKfInfo: IKeyframe = KfItem.allKfInfo.get(alignTo);
         const alignedKfItem: KfItem = KfItem.allKfItems.get(alignTo);
-        let alignedKfBgX: number = 0;
-        if (currentKfInfo.timingRef === TimingSpec.timingRef.previousStart) {
-            alignedKfBgX = alignedKfItem.kfBg.getBoundingClientRect().left;
-        } else {
-            alignedKfBgX = alignedKfItem.container.getBoundingClientRect().right;
+        console.log('in kf update align posi: ', this, alignedKfItem);
+        if (alignedKfItem.rendered) {
+            let alignedKfBgX: number = 0;
+            if (currentKfInfo.timingRef === TimingSpec.timingRef.previousStart) {
+                alignedKfBgX = alignedKfItem.kfBg.getBoundingClientRect().left;
+            } else {
+                alignedKfBgX = alignedKfItem.container.getBoundingClientRect().right;
+            }
+            const bgDiffX: number = Math.abs(currentPosiX - alignedKfBgX);
+            console.log('calculate bg diff: ', alignedKfBgX, currentPosiX, bgDiffX);
+            if (currentPosiX > alignedKfBgX) { //translate aligned kf and its group
+                console.log('translating alignwith kf');
+                let posiXForNextKf: number = this.container.getBoundingClientRect().right;
+
+                //update aligned kfs, together with those kfs after it, and those in its parent group
+                const currentAlignedKfTransX: number = Tool.extractTransNums(alignedKfItem.container.getAttributeNS(null, 'transform')).x;
+                alignedKfItem.container.setAttributeNS(null, 'transform', `translate(${currentAlignedKfTransX + bgDiffX}, ${KfItem.PADDING})`);
+                const alignedKfItemBBox: DOMRect = alignedKfItem.container.getBoundingClientRect();
+                if (alignedKfItemBBox.right > posiXForNextKf) {
+                    posiXForNextKf = alignedKfItemBBox.right;
+                }
+                //update kfs and their groups aligned to alignedKfItem
+                if (typeof alignedKfInfo.alignWithKfs !== 'undefined') {
+                    alignedKfInfo.alignWithKfs.forEach((kfId: number) => {
+                        const tmpKfItem = KfItem.allKfItems.get(kfId);
+                        if (typeof tmpKfItem !== 'undefined') {
+                            tmpKfItem.parentObj.translateGroup(tmpKfItem, bgDiffX, false, true, true);
+                            const tmpKfItemBBox: DOMRect = tmpKfItem.container.getBoundingClientRect();
+                            if (tmpKfItemBBox.right > posiXForNextKf) {
+                                posiXForNextKf = tmpKfItemBBox.right;
+                            }
+                        }
+                    })
+                }
+                //find the next kf in aligned group
+                let flag: boolean = false;
+                let transXForNextKf: number = 0;
+                let nextKf: KfItem;
+                for (let i: number = 0, len: number = alignedKfItem.parentObj.children.length; i < len; i++) {
+                    const c: KfItem | KfOmit = alignedKfItem.parentObj.children[i];
+                    if (flag) {
+                        if (c instanceof KfOmit) {
+                            transXForNextKf = bgDiffX;
+                            const tmpTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
+                            c.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transXForNextKf}, ${tmpTrans.y})`);
+                            console.log('going to update transx: ');
+                        } else {
+                            if (c.container.getBoundingClientRect().left + transXForNextKf < posiXForNextKf) {
+                                transXForNextKf = posiXForNextKf - c.container.getBoundingClientRect().left;
+                            }
+                            nextKf = c;
+                            break;
+                        }
+                    }
+                    if (c instanceof KfItem) {
+                        flag = c.id === alignedKfItem.id
+                    }
+                }
+
+                //update position of next kf in aligned group
+                if (transXForNextKf > 0) {
+                    console.log('translating nex kf: ', nextKf, transXForNextKf);
+                    nextKf.parentObj.translateGroup(nextKf, transXForNextKf, true, true, true);
+                }
+            } else {//translate current kf
+                console.log('translating current alignto kf');
+                const currentTransX: number = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform')).x;
+                this.container.setAttributeNS(null, 'transform', `translate(${currentTransX + bgDiffX}, ${KfItem.PADDING})`);
+                console.log('updating translate: ', currentTransX, bgDiffX, currentTransX + bgDiffX);
+                this.totalWidth += bgDiffX;
+
+                //find the next kf in aligned group
+                let reachTarget: boolean = false;
+                let transXForNextKf: number = 0;
+                let nextKf: KfItem;
+                for (let i: number = 0, len: number = alignedKfItem.parentObj.children.length; i < len; i++) {
+                    const c: KfItem | KfOmit = alignedKfItem.parentObj.children[i];
+                    if (reachTarget) {
+                        if (c instanceof KfOmit) {
+                            // transXForNextKf += KfOmit.OMIT_W + KfGroup.PADDING;
+                        } else {
+                            if (c.container.getBoundingClientRect().left < this.container.getBoundingClientRect().right) {
+                                transXForNextKf = this.container.getBoundingClientRect().right - c.container.getBoundingClientRect().left;
+                            }
+                            nextKf = c;
+                            break;
+                        }
+                    }
+                    if (c instanceof KfItem) {
+                        reachTarget = c.id === alignedKfItem.id
+                    }
+                }
+
+                //update position of next kf in aligned group
+                if (transXForNextKf > 0) {
+                    alignedKfItem.parentObj.translateGroup(nextKf, transXForNextKf, true, true, true);
+                }
+            }
+            //update the refline
+            IntelliRefLine.updateLine(alignTo);
         }
-        const bgDiffX: number = Math.abs(currentPosiX - alignedKfBgX);
-        if (currentPosiX > alignedKfBgX) { //translate aligned kf and its group
-            let posiXForNextKf: number = this.container.getBoundingClientRect().right;
-
-            //update aligned kfs, together with those kfs after it, and those in its parent group
-            const currentAlignedKfTransX: number = Tool.extractTransNums(alignedKfItem.container.getAttributeNS(null, 'transform')).x;
-            alignedKfItem.container.setAttributeNS(null, 'transform', `translate(${currentAlignedKfTransX + bgDiffX}, ${KfItem.PADDING})`);
-            const alignedKfItemBBox: DOMRect = alignedKfItem.container.getBoundingClientRect();
-            if (alignedKfItemBBox.right > posiXForNextKf) {
-                posiXForNextKf = alignedKfItemBBox.right;
-            }
-            //update kfs and their groups aligned to alignedKfItem
-            if (typeof alignedKfInfo.alignWithKfs !== 'undefined') {
-                alignedKfInfo.alignWithKfs.forEach((kfId: number) => {
-                    const tmpKfItem = KfItem.allKfItems.get(kfId);
-                    if (typeof tmpKfItem !== 'undefined') {
-                        tmpKfItem.parentObj.translateGroup(tmpKfItem, bgDiffX, false);
-                        const tmpKfItemBBox: DOMRect = tmpKfItem.container.getBoundingClientRect();
-                        if (tmpKfItemBBox.right > posiXForNextKf) {
-                            posiXForNextKf = tmpKfItemBBox.right;
-                        }
-                    }
-                })
-            }
-            //find the next kf in aligned group
-            let flag: boolean = false;
-            let transXForNextKf: number = 0;
-            let nextKf: KfItem;
-            for (let i: number = 0, len: number = alignedKfItem.parentObj.children.length; i < len; i++) {
-                const c: KfItem | KfOmit = alignedKfItem.parentObj.children[i];
-                if (flag) {
-                    if (c instanceof KfOmit) {
-                        transXForNextKf = bgDiffX;
-                        const tmpTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
-                        c.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transXForNextKf}, ${tmpTrans.y})`);
-                    } else {
-                        if (c.container.getBoundingClientRect().left + transXForNextKf < posiXForNextKf) {
-                            transXForNextKf = posiXForNextKf - c.container.getBoundingClientRect().left;
-                        }
-                        nextKf = c;
-                        break;
-                    }
-                }
-                if (c instanceof KfItem) {
-                    flag = c.id === alignedKfItem.id
-                }
-            }
-
-            //update position of next kf in aligned group
-            if (transXForNextKf > 0) {
-                nextKf.parentObj.translateGroup(nextKf, transXForNextKf, true);
-            }
-        } else {//translate current kf
-            const currentTransX: number = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform')).x;
-            this.container.setAttributeNS(null, 'transform', `translate(${currentTransX + bgDiffX}, ${KfItem.PADDING})`);
-            this.totalWidth += bgDiffX;
-
-            //find the next kf in aligned group
-            let reachTarget: boolean = false;
-            let transXForNextKf: number = 0;
-            let nextKf: KfItem;
-            for (let i: number = 0, len: number = alignedKfItem.parentObj.children.length; i < len; i++) {
-                const c: KfItem | KfOmit = alignedKfItem.parentObj.children[i];
-                if (reachTarget) {
-                    if (c instanceof KfOmit) {
-
-                    } else {
-                        if (c.container.getBoundingClientRect().left < this.container.getBoundingClientRect().right) {
-                            transXForNextKf = this.container.getBoundingClientRect().right - c.container.getBoundingClientRect().left;
-                        }
-                        nextKf = c;
-                        break;
-                    }
-                }
-                if (c instanceof KfItem) {
-                    reachTarget = c.id === alignedKfItem.id
-                }
-            }
-
-            //update position of next kf in aligned group
-            if (transXForNextKf > 0) {
-                alignedKfItem.parentObj.translateGroup(nextKf, transXForNextKf, true);
-            }
-        }
-        //update the refline
-        IntelliRefLine.updateLine(alignTo);
     }
 
     public drawKfBg(treeLevel: number, size?: ISize): void {
+        console.log("size is: ", size);
         if (typeof size !== 'undefined') {
             this.kfWidth = size.w;
         } else {
@@ -608,7 +727,7 @@ export default class KfItem extends KfTimingIllus {
     }
 
     public startAdjustingTime() {
-        this.parentObj.hideTitle();
+        this.parentObj.transHideTitle();
     }
 
     public dragSelOver() {
@@ -630,6 +749,36 @@ export default class KfItem extends KfTimingIllus {
             Reducer.triger(action.UPDATE_STATIC_SELECTOR, currentSelection);
         } else {
 
+        }
+    }
+
+    /**
+     * translate kfs and groups aligned to this kf
+     * @param transX 
+     * @param updateAlignedKfs: might further influence other aligned elements 
+     */
+    public translateAlignedGroups(transX: number, updateAlignedKfs: boolean) {
+        if (typeof KfItem.allKfInfo.get(this.id).alignWithKfs !== 'undefined') {
+            IntelliRefLine.updateLine(this.id);//k is a alignwith kf, update refline
+            KfItem.allKfInfo.get(this.id).alignWithKfs.forEach((kfId: number) => {
+                const tmpKfItem = KfItem.allKfItems.get(kfId);
+                if (typeof tmpKfItem !== 'undefined') {
+                    // tmpKfItem.parentObj.translateGroup(tmpKfItem, transX, updateAlignedKfs, true, true);
+                    const tmpTrans: ICoord = Tool.extractTransNums(tmpKfItem.container.getAttributeNS(null, 'transform'));
+                    tmpKfItem.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transX}, ${tmpTrans.y})`);
+                    let [diffX, currentGroupWidth, childHeight] = tmpKfItem.parentObj.updateSize();
+                    const oriTrans: ICoord = Tool.extractTransNums(tmpKfItem.parentObj.container.getAttributeNS(null, 'transform'));
+                    tmpKfItem.parentObj.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + diffX}, ${oriTrans.y})`);
+                    //check whether need to update omit
+                    tmpKfItem.parentObj.kfOmits.forEach((kfo: KfOmit) => {
+                        const omitTrans: ICoord = Tool.extractTransNums(kfo.container.getAttributeNS(null, 'transform'));
+                        if (omitTrans.x >= tmpTrans.x) {
+                            let omitTransX: number = diffX === 0 ? transX : 0;
+                            kfo.container.setAttributeNS(null, 'transform', `translate(${omitTrans.x + omitTransX}, ${omitTrans.y})`)
+                        }
+                    })
+                }
+            })
         }
     }
 }

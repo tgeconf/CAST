@@ -1,35 +1,6 @@
 [
     {
-        "selector": ".axis-domain",
-        "effects": [
-            {
-                "type": "grow",
-                "duration": 1000
-            }
-        ]
-    },
-    {
-        "selector": ".axis-tick, .axis-label",
-        "effects": [
-            {
-                "type": "fade",
-                "duration": 1000
-            }
-        ]
-    },
-    {
-        "reference": "start after previous",
-        "selector": ".text",
-        "effects": [
-            {
-                "type": "fade",
-                "duration": 400
-            }
-        ]
-    },
-    {
         "id": "bar",
-        "reference": "start after previous",
         "selector": ".rectangle",
         "grouping": {
             "groupBy": "OperatingSystem",
@@ -47,10 +18,12 @@
         ]
     },
     {
+        "reference": "start after previous",
         "selector": ".link",
         "align": {
             "target": "bar",
-            "type": "element"
+            "type": "element",
+            "merge": false
         },
         "effects": [
             {

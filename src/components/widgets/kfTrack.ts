@@ -25,7 +25,7 @@ export default class KfTrack {
         this.aniTrackMapping.clear();
     }
 
-    public createTrack(): void {
+    public createTrack(fake: boolean = false): void {
         //TODO: consider insert new tracks
         const numExistTracks: number = document.getElementsByClassName('kf-track').length;
         this.trackPosiY = numExistTracks * KfTrack.TRACK_HEIGHT + KfTrack.TRACK_PADDING_TOP;
@@ -48,27 +48,30 @@ export default class KfTrack {
         this.trackBg.setAttributeNS(null, 'x', '0');
         this.trackBg.setAttributeNS(null, 'y', '0');
         this.trackBg.setAttributeNS(null, 'width', '20000');
-        this.trackBg.setAttributeNS(null, 'height', `${KfTrack.TRACK_HEIGHT}`);
+        this.trackBg.setAttributeNS(null, 'height', fake ? '0' : `${KfTrack.TRACK_HEIGHT}`);
         this.trackBg.setAttributeNS(null, 'fill', '#efefef');
         this.trackBgContainer.appendChild(this.trackBg);
 
-        //draw split line
-        this.splitLineTop = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        this.splitLineTop.setAttributeNS(null, 'x1', '0');
-        this.splitLineTop.setAttributeNS(null, 'x2', '20000');
-        this.splitLineTop.setAttributeNS(null, 'y1', '0');
-        this.splitLineTop.setAttributeNS(null, 'y2', '0');
-        this.splitLineTop.setAttributeNS(null, 'stroke', '#c9c9c9');
-        this.trackBgContainer.appendChild(this.splitLineTop);
-        this.splitLineBottom = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        this.splitLineBottom.setAttributeNS(null, 'x1', '0');
-        this.splitLineBottom.setAttributeNS(null, 'x2', '20000');
-        this.splitLineBottom.setAttributeNS(null, 'y1', `${KfTrack.TRACK_HEIGHT}`);
-        this.splitLineBottom.setAttributeNS(null, 'y2', `${KfTrack.TRACK_HEIGHT}`);
-        this.splitLineBottom.setAttributeNS(null, 'stroke', '#c9c9c9');
-        this.trackBgContainer.appendChild(this.splitLineBottom);
+        if (!fake) {
+            //draw split line
+            this.splitLineTop = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            this.splitLineTop.setAttributeNS(null, 'x1', '0');
+            this.splitLineTop.setAttributeNS(null, 'x2', '20000');
+            this.splitLineTop.setAttributeNS(null, 'y1', '0');
+            this.splitLineTop.setAttributeNS(null, 'y2', '0');
+            this.splitLineTop.setAttributeNS(null, 'stroke', '#c9c9c9');
+            this.trackBgContainer.appendChild(this.splitLineTop);
+            this.splitLineBottom = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            this.splitLineBottom.setAttributeNS(null, 'x1', '0');
+            this.splitLineBottom.setAttributeNS(null, 'x2', '20000');
+            this.splitLineBottom.setAttributeNS(null, 'y1', `${KfTrack.TRACK_HEIGHT}`);
+            this.splitLineBottom.setAttributeNS(null, 'y2', `${KfTrack.TRACK_HEIGHT}`);
+            this.splitLineBottom.setAttributeNS(null, 'stroke', '#c9c9c9');
+            this.trackBgContainer.appendChild(this.splitLineBottom);
 
-        KfTrack.allTracks.set(this.trackId, this);
+            KfTrack.allTracks.set(this.trackId, this);
+        }
+
     }
 
     // public hightLightTrack() {

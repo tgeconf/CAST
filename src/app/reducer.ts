@@ -132,7 +132,6 @@ Reducer.listen(action.UPDATE_KEYFRAME_TRACKS, (animations: Map<string, any>) => 
     KfItem.allKfInfo.clear();
     KfGroup.allActions.clear();
     KfGroup.allAniGroups.clear();
-    console.log('all canis animations: ', animations);
     const rootGroup: IKeyframeGroup[] = [];
     [...animations].forEach((a: any) => {
         rootGroup.push(Util.aniRootToKFGroup(a[1].root, a[0], {}, -1));
@@ -152,10 +151,13 @@ Reducer.listen(action.LOAD_ANIMATION_SPEC, (animationSpec: any) => {
 })
 
 Reducer.listen(action.UPDATE_SPEC_CHARTS, (charts: string[]) => {
+    document.getElementById(KfContainer.KF_POPUP).innerHTML = '';
     const chartSpecs: IChartSpec[] = CanisGenerator.generateChartSpec(charts);
     let tmpSpec: ICanisSpec = { charts: chartSpecs, animations: [] };
     state.spec = tmpSpec;
 })
+
+
 
 
 Reducer.listen(action.UPDATE_DELAY_BETWEEN_KF, (actionInfo: { aniId: string, delay: number }) => {
@@ -379,6 +381,18 @@ Reducer.listen(action.APPEND_SPEC_GROUPING, (actionInfo: { aniId: string, attrCo
         let a: IAnimationSpec = animations[i];
         if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
             CanisGenerator.appendGrouping(a, actionInfo.attrComb, actionInfo.attrValueSort);
+            break;
+        }
+    }
+    state.spec = { ...state.spec, animations: animations };
+})
+
+Reducer.listen(action.UPDATE_ALIGN_MERGE, (actionInfo: { aniId: string, merge: boolean }) => {
+    const animations: IAnimationSpec[] = state.spec.animations;
+    for (let i = 0, len = animations.length; i < len; i++) {
+        let a: IAnimationSpec = animations[i];
+        if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
+            CanisGenerator.updateMerge(a, actionInfo.merge);
             break;
         }
     }
