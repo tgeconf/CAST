@@ -157,6 +157,10 @@ Reducer.listen(action.UPDATE_SPEC_CHARTS, (charts: string[]) => {
     state.spec = tmpSpec;
 })
 
+Reducer.listen(action.UPDATE_MOUSE_MOVING, (mm: boolean) => {
+    state.mousemoving = mm;
+})
+
 
 
 

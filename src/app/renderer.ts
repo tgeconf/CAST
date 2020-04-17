@@ -129,9 +129,9 @@ export default class Renderer {
 
         const firstTrack: KfTrack = new KfTrack();
         firstTrack.createTrack();
-        const staticKf: KfItem = new KfItem();
-        staticKf.createStaticItem(staticMarks);
-        firstTrack.container.appendChild(staticKf.container);
+        // const staticKf: KfItem = new KfItem();
+        // staticKf.createStaticItem(staticMarks);
+        // firstTrack.container.appendChild(staticKf.container);
     }
 
     public static renderKeyframeTracks(kfgs: IKeyframeGroup[]): void {

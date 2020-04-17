@@ -2,6 +2,9 @@ import '../assets/style/keyframeContainer.scss'
 import Tool from '../util/tool';
 import { IKfGroupSize } from '../app/core/ds';
 import { ICoord, ISize } from '../util/ds';
+import Reducer from '../app/reducer';
+import * as action from '../app/action';
+import { state } from '../app/state';
 
 export class KfContainer {
     static KF_CONTAINER: string = 'kfTracksContainer';
@@ -69,12 +72,14 @@ export class KfContainer {
         this.createXSlider();
 
         this.kfWidgetContainer.onmouseover = () => {
-            this.updateKfSlider({});
-            if (parseFloat(this.xSlider.getAttributeNS(null, 'width')) < parseFloat(this.xSliderBg.getAttributeNS(null, 'width'))) {
-                this.xSliderContainer.setAttribute('style', `height:${KfContainer.SLIDER_W + 4}px; margin-top:${-KfContainer.SLIDER_W}px`);
-            }
-            if (parseFloat(this.ySlider.getAttributeNS(null, 'height')) < parseFloat(this.ySliderBg.getAttributeNS(null, 'height'))) {
-                this.ySliderContainer.setAttribute('style', `width:${KfContainer.SLIDER_W + 4}px; margin-top:${-this.ySliderContainerH}px;`);
+            if (!state.mousemoving) {
+                this.updateKfSlider({});
+                if (parseFloat(this.xSlider.getAttributeNS(null, 'width')) < parseFloat(this.xSliderBg.getAttributeNS(null, 'width'))) {
+                    this.xSliderContainer.setAttribute('style', `height:${KfContainer.SLIDER_W + 4}px; margin-top:${-KfContainer.SLIDER_W}px`);
+                }
+                if (parseFloat(this.ySlider.getAttributeNS(null, 'height')) < parseFloat(this.ySliderBg.getAttributeNS(null, 'height'))) {
+                    this.ySliderContainer.setAttribute('style', `width:${KfContainer.SLIDER_W + 4}px; margin-top:${-this.ySliderContainerH}px;`);
+                }
             }
         }
         this.kfWidgetContainer.onmouseout = () => {
@@ -126,6 +131,7 @@ export class KfContainer {
         this.ySlider.setAttributeNS(null, 'rx', `${KfContainer.SLIDER_W / 2}`);
         this.ySlider.setAttributeNS(null, 'fill', '#f2f2f2');
         this.ySlider.onmousedown = (downEvt) => {
+            Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
             let preY: number = downEvt.pageY;
             document.onmousemove = (moveEvt) => {
                 const currentY: number = moveEvt.pageY;
@@ -147,6 +153,7 @@ export class KfContainer {
             document.onmouseup = (upEvt) => {
                 document.onmousemove = null;
                 document.onmouseup = null;
+                Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
             }
         }
         this.ySliderContainer.appendChild(this.ySlider);
@@ -173,6 +180,7 @@ export class KfContainer {
         this.xSlider.setAttributeNS(null, 'rx', `${KfContainer.SLIDER_W / 2}`);
         this.xSlider.setAttributeNS(null, 'fill', '#f2f2f2');
         this.xSlider.onmousedown = (downEvt) => {
+            Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
             let preX: number = downEvt.pageX;
             document.onmousemove = (moveEvt) => {
                 const currentX: number = moveEvt.pageX;
@@ -195,6 +203,7 @@ export class KfContainer {
             document.onmouseup = (upEvt) => {
                 document.onmousemove = null;
                 document.onmouseup = null;
+                Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
             }
         }
         this.xSliderContainer.appendChild(this.xSlider);
@@ -213,8 +222,9 @@ export class KfContainer {
         this.xSliderContainerW = this.kfWidgetContainer.clientWidth;
         this.xSliderBg.setAttributeNS(null, 'width', `${this.xSliderContainerW}`);
         if (typeof kfGroupSize.width !== 'undefined') {
-            this.xSliderPercent = (kfGroupSize.width + 2000) / this.xSliderContainerW;
-            this.xSlider.setAttributeNS(null, 'width', `${this.xSliderContainerW * (this.xSliderContainerW / kfGroupSize.width)}`);
+            const widthWithExtra: number = this.xSliderContainerW - 100;
+            this.xSliderPercent = (kfGroupSize.width) / widthWithExtra;
+            this.xSlider.setAttributeNS(null, 'width', `${widthWithExtra * (widthWithExtra / kfGroupSize.width)}`);
         }
 
         //update yslider and yslider track height
@@ -222,8 +232,9 @@ export class KfContainer {
         this.ySliderContainer.setAttribute('style', `width:${KfContainer.SLIDER_W + 4}px; margin-top:${-this.ySliderContainerH}px; margin-right:${-KfContainer.SLIDER_W - 7}`)
         this.ySliderBg.setAttributeNS(null, 'height', `${this.ySliderContainerH}`);
         if (typeof kfGroupSize.height !== 'undefined') {
-            this.ySliderPercent = (kfGroupSize.height + 500) / this.ySliderContainerH;
-            this.ySlider.setAttributeNS(null, 'height', `${this.ySliderContainerH * (this.ySliderContainerH / kfGroupSize.height)}`);
+            const heightWithExtra: number = this.ySliderContainerH - 60;
+            this.ySliderPercent = (kfGroupSize.height) / heightWithExtra;
+            this.ySlider.setAttributeNS(null, 'height', `${heightWithExtra * (heightWithExtra / kfGroupSize.height)}`);
         }
     }
 }

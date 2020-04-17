@@ -242,7 +242,9 @@ export class OptionItem {
         this.container.appendChild(this.optionKf.container);
         this.container.appendChild(text);
         this.container.onmouseover = () => {
-            bg.classList.remove('hide-ele');
+            if (!state.mousemoving) {
+                bg.classList.remove('hide-ele');
+            }
         }
         this.container.onmouseout = () => {
             bg.classList.add('hide-ele');

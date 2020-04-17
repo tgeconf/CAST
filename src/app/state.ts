@@ -34,6 +34,9 @@ export interface IState {
     keyframeGroups: IKeyframeGroup[]//each keyframe group correspond to one root from one aniunit
     staticMarks: string[]
     // groupingAndTiming: any
+
+    //status
+    mousemoving: boolean
 }
 
 /**
@@ -57,6 +60,8 @@ export class State implements IState {
     _keyframeGroups: IKeyframeGroup[]
     _staticMarks: string[]
     // _groupingAndTiming: any
+
+    _mousemoving: boolean = false
 
     set sortDataAttrs(sda: ISortDataAttr[]) {
         //compare incoming
@@ -187,6 +192,12 @@ export class State implements IState {
     }
     get allPaths(): IPath[] {
         return this._allPaths;
+    }
+    set mousemoving(mm: boolean) {
+        this._mousemoving = mm;
+    }
+    get mousemoving(): boolean {
+        return this._mousemoving;
     }
 
     public reset(): void {

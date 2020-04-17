@@ -1,5 +1,7 @@
 import '../assets/style/resizablePanel.scss'
 import Tool from '../util/tool';
+import Reducer from '../app/reducer';
+import * as action from '../app/action'
 
 export interface IRPanel {
     wrapper: HTMLDivElement,
@@ -24,7 +26,7 @@ export default class ResizablePanel {
         const panel1 = this.createPanel(resizable, props.verticle, props.p1, !resizable);
         const panel2 = this.createPanel(resizable, props.verticle, props.p2);
         if (props.verticle) {
-            panel2.style.marginTop = resizable? '-3px': '0px';
+            panel2.style.marginTop = resizable ? '-3px' : '0px';
         } else {
             panel2.style.marginLeft = resizable ? '-3px' : '0px';
         }
@@ -81,6 +83,7 @@ export default class ResizablePanel {
             resizer.className = verticle ? 'v-resizer' : 'h-resizer';
             resizer.setAttribute('title', 'drag to resize');
             resizer.onmousedown = (downEvt) => {
+                Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
                 const wrapperBBox = {
                     width: resizer.parentElement.offsetWidth,
                     height: resizer.parentElement.offsetHeight
@@ -120,6 +123,7 @@ export default class ResizablePanel {
                 document.onmouseup = (upEvt) => {
                     document.onmouseup = null;
                     document.onmousemove = null;
+                    Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
 
                     //resize the svg in view-content
                     this.resizeViewContentSVG(panelId1, panelId2);

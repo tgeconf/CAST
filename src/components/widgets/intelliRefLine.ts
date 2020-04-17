@@ -7,6 +7,7 @@ import KfGroup from "./kfGroup";
 
 export default class IntelliRefLine {
     static HIGHLIGHT_STROKE_COLOR: string = '#0e89e5';
+    static TRIGER_STROKE_COLOR: string = '#e2640e';
     static STROKE_COLOR: string = '#676767';
     static idx: number = 0;
     static allLines: Map<number, IntelliRefLine> = new Map();//key: line id, value: IntelliRefLine Obj
@@ -82,6 +83,32 @@ export default class IntelliRefLine {
         }
     }
 
+    public static hintAniPosis(kfGroup: KfGroup): IntelliRefLine[] {
+        let hintLines: IntelliRefLine[] = [];
+        for (let i = 0, len = [...KfGroup.allAniGroups].length; i < len; i++) {
+            const aniGroup: KfGroup = [...KfGroup.allAniGroups][i][1];
+            if (kfGroup.id !== aniGroup.id) {
+                const firstKf: KfItem = aniGroup.fetchFirstKf();
+                const aniGroupBBox: DOMRect = aniGroup.groupBg.getBoundingClientRect();
+                const firstKfBBox: DOMRect = firstKf.container.getBoundingClientRect();
+
+                const tmpHintLine1: IntelliRefLine = new IntelliRefLine();
+                tmpHintLine1.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height, true, false);
+                hintLines.push(tmpHintLine1);
+                const tmpHintLine2: IntelliRefLine = new IntelliRefLine();
+                tmpHintLine2.hintAlign({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height, false);
+                hintLines.push(tmpHintLine2);
+                const tmpHintLine3: IntelliRefLine = new IntelliRefLine();
+                tmpHintLine3.hintAlign({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height, false);
+                hintLines.push(tmpHintLine3);
+                const tmpHintLine4: IntelliRefLine = new IntelliRefLine();
+                tmpHintLine4.hintAlign({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height, false);
+                hintLines.push(tmpHintLine4);
+            }
+        }
+        return hintLines;
+    }
+
     public hideLine(): void {
         this.line.setAttributeNS(null, 'opacity', '0');
     }
@@ -90,7 +117,7 @@ export default class IntelliRefLine {
         this.line.setAttributeNS(null, 'opacity', '1');
     }
 
-    public hintInsert(targetPosi: ICoord, targetHeight: number, vertical: boolean = true) {
+    public hintAlign(targetPosi: ICoord, targetHeight: number, highlight: boolean) {
         this.container = document.getElementById(KfContainer.KF_FG);
         const containerBBox: DOMRect = document.getElementById(KfContainer.KF_CONTAINER).getBoundingClientRect();
         if (typeof this.line === 'undefined') {
@@ -99,7 +126,25 @@ export default class IntelliRefLine {
         if (!this.container.contains(this.line)) {
             this.container.appendChild(this.line);
         }
-        this.line.setAttributeNS(null, 'stroke', IntelliRefLine.HIGHLIGHT_STROKE_COLOR);
+        this.line.setAttributeNS(null, 'stroke', highlight ? IntelliRefLine.TRIGER_STROKE_COLOR : IntelliRefLine.HIGHLIGHT_STROKE_COLOR);
+        this.line.setAttributeNS(null, 'stroke-width', '2');
+        this.line.setAttributeNS(null, 'stroke-dasharray', '4 2');
+        this.line.setAttributeNS(null, 'x1', `${targetPosi.x - containerBBox.left - kfContainer.transDistance.w}`);
+        this.line.setAttributeNS(null, 'y1', `${targetPosi.y - containerBBox.top - kfContainer.transDistance.h}`);
+        this.line.setAttributeNS(null, 'x2', `${targetPosi.x - containerBBox.left - kfContainer.transDistance.w}`);
+        this.line.setAttributeNS(null, 'y2', `${targetPosi.y - containerBBox.top + targetHeight - kfContainer.transDistance.h}`);
+    }
+
+    public hintInsert(targetPosi: ICoord, targetHeight: number, vertical: boolean, highlight: boolean) {
+        this.container = document.getElementById(KfContainer.KF_FG);
+        const containerBBox: DOMRect = document.getElementById(KfContainer.KF_CONTAINER).getBoundingClientRect();
+        if (typeof this.line === 'undefined') {
+            this.line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        }
+        if (!this.container.contains(this.line)) {
+            this.container.appendChild(this.line);
+        }
+        this.line.setAttributeNS(null, 'stroke', highlight ? IntelliRefLine.TRIGER_STROKE_COLOR : IntelliRefLine.HIGHLIGHT_STROKE_COLOR);
         this.line.setAttributeNS(null, 'stroke-width', '4');
         if (vertical) {
             this.line.setAttributeNS(null, 'x1', `${targetPosi.x - containerBBox.left - kfContainer.transDistance.w}`);
@@ -109,7 +154,7 @@ export default class IntelliRefLine {
         }
     }
 
-    public removeHintInsert() {
+    public removeHintLine() {
         if (typeof this.container !== 'undefined') {
             if (this.container.contains(this.line)) {
                 this.container.removeChild(this.line);

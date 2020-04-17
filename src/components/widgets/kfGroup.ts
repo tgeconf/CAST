@@ -14,6 +14,7 @@ import Reducer from "../../app/reducer";
 import { TimingSpec, Animation } from 'canis_toolkit';
 import PlusBtn from "./plusBtn";
 import { hintTag } from "./hint";
+import { state } from "../../app/state";
 
 export default class KfGroup extends KfTimingIllus {
     static groupIdx: number = 0;
@@ -182,7 +183,7 @@ export default class KfGroup extends KfTimingIllus {
                 this.drawGroupMenu();
                 this.container.appendChild(this.groupMenu.container);
                 this.container.onmouseover = () => {
-                    if (typeof this.groupMenu !== 'undefined') {
+                    if (typeof this.groupMenu !== 'undefined' && !state.mousemoving) {
                         this.groupMenu.showMenu();
                     }
                 }
@@ -267,7 +268,9 @@ export default class KfGroup extends KfTimingIllus {
 
     public bindTitleHover(): void {
         this.groupTitle.onmouseover = (overEvt) => {
-            hintTag.createHint({ x: overEvt.pageX, y: overEvt.pageY }, `Marks this group: ${this.fullTitle}`);
+            if (!state.mousemoving) {
+                hintTag.createHint({ x: overEvt.pageX, y: overEvt.pageY }, `Marks this group: ${this.fullTitle}`);
+            }
         }
         this.groupTitle.onmouseout = () => {
             hintTag.removeHint();
@@ -308,6 +311,7 @@ export default class KfGroup extends KfTimingIllus {
         this.bindTitleHover();
 
         this.groupTitle.onmousedown = (downEvt) => {
+            Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
             this.isDragging = true;
             hintTag.removeHint();
             this.unbindTitleHover();
@@ -324,12 +328,19 @@ export default class KfGroup extends KfTimingIllus {
             let updateSpec: boolean = false;
             let actionType: string = '';
             let actionInfo: any = {};
+            const preSibling: KfGroup = this.parentObj.children[this.idxInGroup - 1];
+
+            //if dragging ani group, create hint lines
+            let hintLines: IntelliRefLine[] = [];
+            if (this.groupRef === 'root') {
+                hintLines = IntelliRefLine.hintAniPosis(this);
+            }
+
             document.onmousemove = (moveEvt) => {
                 const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
                 const posiDiff: ICoord = { x: currentMousePosi.x - oriMousePosi.x, y: currentMousePosi.y - oriMousePosi.y };
                 const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
                 this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + posiDiff.x}, ${oriTrans.y + posiDiff.y})`);
-                const preSibling: KfGroup = this.parentObj.children[this.idxInGroup - 1];
                 if (this.idxInGroup > 0 && preSibling.rendered && this.groupRef !== 'root') {//group within animation
                     [updateSpec, actionType, actionInfo] = this.dragInnerGroup(preSibling);
                 } else {
@@ -341,9 +352,13 @@ export default class KfGroup extends KfTimingIllus {
             document.onmouseup = () => {
                 document.onmousemove = null;
                 document.onmouseup = null;
+                Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
                 this.bindTitleHover();
                 this.isDragging = false;
                 if (!updateSpec) {
+                    hintLines.forEach((hl: IntelliRefLine) => {
+                        hl.removeHintLine();
+                    })
                     this.container.setAttributeNS(null, 'transform', this.container.getAttributeNS(null, '_transform'));
                     if (this.treeLevel === 1 && this.parentObj instanceof KfGroup) {
                         this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
@@ -368,7 +383,6 @@ export default class KfGroup extends KfTimingIllus {
             groupTitleWrapper.appendChild(this.groupTitleCover);
         }
         this.container.appendChild(groupTitleWrapper);
-        // }
 
         this.groupBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         this.groupBg.setAttributeNS(null, 'stroke', this.alignMerge ? '#00000000' : '#898989');
@@ -376,7 +390,9 @@ export default class KfGroup extends KfTimingIllus {
         this.groupBg.setAttributeNS(null, 'rx', `${KfGroup.GROUP_RX}`);
         this.groupBg.setAttributeNS(null, 'x', `${this.offsetWidth}`);
         this.groupBg.onmouseover = () => {
-            this.transShowTitle();
+            if (!state.mousemoving) {
+                this.transShowTitle();
+            }
         }
         this.container.appendChild(this.groupBg);
     }
@@ -398,26 +414,29 @@ export default class KfGroup extends KfTimingIllus {
                 const aniGroupBBox: DOMRect = aniGroup.groupBg.getBoundingClientRect();
                 const firstKfBBox: DOMRect = firstKf.container.getBoundingClientRect();
                 const targetAniId: string = aniGroup.aniId;
+
+                //add orange lines according to drag position
                 if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + 20 && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
                     targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_ANI };//after group has higher priority
-                    hintDrop.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height);
+                    hintDrop.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height, true, true);
                     break;
                 } else {
                     if (currentGPosi.x >= aniGroupBBox.left && currentGPosi.x < aniGroupBBox.left + 6 && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
                         targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_WITH_ANI };
-                        hintDrop.hintInsert({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height);
+                        hintDrop.hintAlign({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height, true);
                     } else if (currentGPosi.x >= firstKfBBox.left && currentGPosi.x < firstKfBBox.left + 6 && alignTargetGroup) {
                         targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_WITH_KF };
-                        hintDrop.hintInsert({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height);
+                        hintDrop.hintAlign({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height, true);
                     } else if (currentGPosi.x >= firstKfBBox.right && currentGPosi.x < firstKfBBox.right + 6 && alignTargetGroup) {
                         targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_KF };
-                        hintDrop.hintInsert({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height);
+                        hintDrop.hintAlign({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height, true);
                     }
                 }
             }
         }
         if (typeof targetAni === 'undefined') {
-            hintDrop.removeHintInsert();
+            hintDrop.removeHintLine();
+
             return [false, '', {}];
         } else {//triger action
             return [true, targetAni.actionType, { targetAni: targetAni.targetAniId, currentAni: targetAni.currentAniId }];
@@ -1000,8 +1019,9 @@ export class GroupMenu {
         const icon: SVGPathElement = this.createBtnIcon(btnType);
         btnContainer.appendChild(icon);
         btnContainer.onmouseover = () => {
-            icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_HIGHLIGHT_COLOR);
-            //
+            if (!state.mousemoving) {
+                icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_HIGHLIGHT_COLOR);
+            }
         }
         btnContainer.onmouseout = () => {
             icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);

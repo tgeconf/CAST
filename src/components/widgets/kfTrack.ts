@@ -16,7 +16,8 @@ export default class KfTrack {
     public trackBg: SVGRectElement;
     public splitLineTop: SVGLineElement;
     public splitLineBottom: SVGLineElement;
-    public availableInsert: number = KfItem.KF_WIDTH + KfItem.PADDING;
+    public availableInsert: number = KfItem.PADDING;
+    // public availableInsert: number = KfItem.KF_WIDTH + KfItem.PADDING;
     public children: KfGroup[] = [];
 
     public static reset() {

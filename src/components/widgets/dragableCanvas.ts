@@ -64,6 +64,7 @@ export default class DragableCanvas {
             }
         }
         document.onmouseup = (upEvt) => {
+            Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
             canvas.remove();
             //update kf if drop on plus button or kf
             if (typeof PlusBtn.dragoverBtn !== 'undefined') {

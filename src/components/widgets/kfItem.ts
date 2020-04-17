@@ -79,14 +79,9 @@ export default class KfItem extends KfTimingIllus {
         //     KfItem.staticKf.highlightKf();
         // }
         //filter which kf to highlight
-
     }
 
     public static cancelHighlightKfs() {
-        //cancel highlight static kf
-        // if (typeof KfItem.staticKf !== 'undefined') {
-        //     KfItem.staticKf.cancelHighlightKf();
-        // }
         this.allKfItems.forEach((kf: KfItem) => {
             if (kf.isHighlighted) {
                 kf.cancelHighlightKf();
@@ -109,19 +104,19 @@ export default class KfItem extends KfTimingIllus {
         }
     }
 
-    public createStaticItem(staticMarks: string[]): void {
-        this.id = KfItem.STATIC_KF_ID;
-        this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        this.container.setAttributeNS(null, 'transform', `translate(${KfItem.PADDING}, ${KfItem.PADDING})`);
-        this.kfHeight = KfItem.KF_HEIGHT - 2 * KfItem.PADDING;
-        this.drawKfBg(0);
-        this.container.appendChild(this.kfBg);
-        if (staticMarks.length > 0) {
-            this.drawStaticChart(staticMarks);
-            this.container.appendChild(this.chartThumbnail);
-        }
-        KfItem.staticKf = this;
-    }
+    // public createStaticItem(staticMarks: string[]): void {
+    //     this.id = KfItem.STATIC_KF_ID;
+    //     this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    //     this.container.setAttributeNS(null, 'transform', `translate(${KfItem.PADDING}, ${KfItem.PADDING})`);
+    //     this.kfHeight = KfItem.KF_HEIGHT - 2 * KfItem.PADDING;
+    //     this.drawKfBg(0);
+    //     this.container.appendChild(this.kfBg);
+    //     if (staticMarks.length > 0) {
+    //         this.drawStaticChart(staticMarks);
+    //         this.container.appendChild(this.chartThumbnail);
+    //     }
+    //     KfItem.staticKf = this;
+    // }
 
     public createOptionKfItem(allCurrentMarks: string[], allGroupMarks: string[], marksThisKf: string[], kfWidth: number, kfHeight: number) {
         this.kfWidth = kfWidth;
@@ -182,13 +177,16 @@ export default class KfItem extends KfTimingIllus {
         if (typeof this.kfInfo.alignTo !== 'undefined') {//this kf is align to others
             const aniGroup: KfGroup = this.parentObj.fetchAniGroup();
             this.container.onmouseover = () => {
-                aniGroup.transShowTitle();
+                if (!state.mousemoving) {
+                    aniGroup.transShowTitle();
+                }
             }
             this.container.onmouseout = () => {
                 aniGroup.transHideTitle();
             }
         }
         this.container.onmousedown = (downEvt) => {
+            Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
             let oriMousePosi: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
             const targetMoveItem: KfGroup | KfItem = typeof this.kfInfo.alignTo !== 'undefined' ? this.parentObj.fetchAniGroup() : this;
             //move the entire group
@@ -227,9 +225,11 @@ export default class KfItem extends KfTimingIllus {
                         //change ref line to align frame
                         allKfItems.forEach((kf: KfItem) => {
                             kf.showAlignFrame();
-                            const corresRefLine: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kf.id).lineId);
-                            if (typeof corresRefLine !== 'undefined') {
-                                corresRefLine.hideLine();
+                            if (typeof IntelliRefLine.kfLineMapping.get(kf.id) !== 'undefined') {
+                                const corresRefLine: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kf.id).lineId);
+                                if (typeof corresRefLine !== 'undefined') {
+                                    corresRefLine.hideLine();
+                                }
                             }
                         })
                         //triger action
@@ -244,9 +244,11 @@ export default class KfItem extends KfTimingIllus {
                         //change align frame to ref line
                         allKfItems.forEach((kf: KfItem) => {
                             kf.hideAlignFrame();
-                            const corresRefLine: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kf.id).lineId);
-                            if (typeof corresRefLine !== 'undefined') {
-                                corresRefLine.showLine();
+                            if (typeof IntelliRefLine.kfLineMapping.get(kf.id) !== 'undefined') {
+                                const corresRefLine: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kf.id).lineId);
+                                if (typeof corresRefLine !== 'undefined') {
+                                    corresRefLine.showLine();
+                                }
                             }
                         })
                         //triger action
@@ -264,6 +266,7 @@ export default class KfItem extends KfTimingIllus {
                 document.onmouseup = () => {
                     document.onmousemove = null;
                     document.onmouseup = null;
+                    Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
                     if (!updateSpec) {
                         targetMoveItem.container.setAttributeNS(null, 'transform', targetMoveItem.container.getAttributeNS(null, '_transform'));
                         targetMoveItem.parentObj.container.appendChild(targetMoveItem.container);
@@ -419,6 +422,7 @@ export default class KfItem extends KfTimingIllus {
                 document.onmouseup = () => {
                     document.onmousemove = null;
                     document.onmouseup = null;
+                    Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
                     if (!updateSpec) {
                         this.container.setAttributeNS(null, 'transform', this.container.getAttributeNS(null, '_transform'));
                         if (this.treeLevel === 1) {
@@ -459,9 +463,10 @@ export default class KfItem extends KfTimingIllus {
         }
 
         //if this kfItem is aligned to previous kfItems, update positions
+        KfItem.allKfItems.set(this.id, this);
         if (typeof this.kfInfo.alignTo !== 'undefined') {
             this.updateAlignPosi(this.kfInfo.alignTo);
-            KfItem.allKfItems.set(this.id, this);
+            // KfItem.allKfItems.set(this.id, this);
             //check whether there is already a line
             if (typeof IntelliRefLine.kfLineMapping.get(this.kfInfo.alignTo) !== 'undefined') {//already a line
                 const refLineId: number = IntelliRefLine.kfLineMapping.get(this.kfInfo.alignTo).lineId;
@@ -481,7 +486,7 @@ export default class KfItem extends KfTimingIllus {
                 this.parentObj.alignLines.push(refLine.id);
             }
         } else {
-            KfItem.allKfItems.set(this.id, this);
+            // KfItem.allKfItems.set(this.id, this);
         }
     }
 
@@ -543,7 +548,20 @@ export default class KfItem extends KfTimingIllus {
             if (currentKfInfo.timingRef === TimingSpec.timingRef.previousStart) {
                 alignedKfBgX = alignedKfItem.kfBg.getBoundingClientRect().left;
             } else {
+                console.log('updateing align position: ', alignedKfItem, KfItem.allKfInfo.get(alignedKfItem.id));
                 alignedKfBgX = alignedKfItem.container.getBoundingClientRect().right;
+                KfItem.allKfInfo.get(alignedKfItem.id).alignWithKfs.forEach((kfId: number) => {
+                    console.log('fetching kf: ', kfId, this.id, KfItem.allKfItems);
+                    if (kfId !== this.id) {
+                        const tmpKf: KfItem = KfItem.allKfItems.get(kfId);
+                        if (typeof tmpKf !== 'undefined' && tmpKf.rendered) {
+                            const tmpKfBBox: DOMRect = tmpKf.container.getBoundingClientRect();
+                            if (tmpKfBBox.right > alignedKfBgX) {
+                                alignedKfBgX = tmpKfBBox.right;
+                            }
+                        }
+                    }
+                })
             }
             const bgDiffX: number = Math.abs(currentPosiX - alignedKfBgX);
             console.log('calculate bg diff: ', alignedKfBgX, currentPosiX, bgDiffX);

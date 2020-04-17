@@ -1,4 +1,6 @@
 import '../../assets/style/slider.scss'
+import Reducer from '../../app/reducer';
+import * as action from '../../app/action';
 
 export default class Slider {
     // static SLIDER_LONG = 'sliderLong';
@@ -56,7 +58,7 @@ export default class Slider {
             return Math.floor(100 * (((a - this.sliderMargin) / this.containerWidth) * (this.domain[1] - this.domain[0]) + this.domain[0])) / 100;
         }
         this.scale = (a: number) => {
-            if(this.domain[1] !== this.domain[0]){
+            if (this.domain[1] !== this.domain[0]) {
                 return Math.floor(100 * (this.containerWidth * (a - this.domain[0]) / (this.domain[1] - this.domain[0]) + this.sliderMargin)) / 100;
             }
             return this.sliderMargin;
@@ -97,6 +99,7 @@ export default class Slider {
 
         //bind dragging event to the slider
         this.slider.onmousedown = (downEvt) => {
+            Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
             let preX: number = downEvt.pageX;
             document.onmousemove = (moveEvt) => {
                 const currentX: number = moveEvt.pageX;
@@ -112,6 +115,7 @@ export default class Slider {
                 }
             }
             document.onmouseup = () => {
+                Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
                 const currentSliderX: number = parseFloat(this.slider.getAttributeNS(null, 'cx'));
                 this.currentValue = this.reverseScale(currentSliderX);
                 if (this.callbackFunc && typeof this.callbackFunc !== 'undefined') {

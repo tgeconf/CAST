@@ -49,6 +49,7 @@ export default class SelectableTable {
                 const td: HTMLTableCellElement = document.createElement('td');
                 td.innerText = value.toString();
                 td.onmousedown = (downEvt) => {
+                    Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
                     this.mouseDownCell(downEvt);
                 }
                 tr.appendChild(td);
@@ -84,6 +85,7 @@ export default class SelectableTable {
             this.mouseMoveCell(moveEvt);
         }
         document.onmouseup = (upEvt) => {
+            Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
             this.mouseUpCell(upEvt);
         }
     }

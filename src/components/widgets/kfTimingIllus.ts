@@ -6,6 +6,7 @@ import KfTrack from "./kfTrack";
 import Tool from "../../util/tool";
 
 import '../../assets/style/kfTimingIllus.scss'
+import { state } from "../../app/state";
 
 export default class KfTimingIllus {
     static BASIC_OFFSET_DURATION_W: number = 20;
@@ -67,7 +68,9 @@ export default class KfTimingIllus {
 
     public bindOffsetHover() {
         this.offsetIllus.onmouseover = (overEvt) => {
-            hintTag.createHint({ x: overEvt.pageX, y: overEvt.pageY }, `delay: ${this.offsetNum}ms`);
+            if (!state.mousemoving) {
+                hintTag.createHint({ x: overEvt.pageX, y: overEvt.pageY }, `delay: ${this.offsetNum}ms`);
+            }
         }
         this.offsetIllus.onmouseout = () => {
             hintTag.removeHint();
@@ -128,7 +131,9 @@ export default class KfTimingIllus {
 
     public bindDurationHover() {
         this.durationIllus.onmouseover = (overEvt) => {
-            hintTag.createHint({ x: overEvt.pageX, y: overEvt.pageY }, `duration: ${this.durationNum}ms`);
+            if (!state.mousemoving) {
+                hintTag.createHint({ x: overEvt.pageX, y: overEvt.pageY }, `duration: ${this.durationNum}ms`);
+            }
         }
         this.durationIllus.onmouseout = () => {
             hintTag.removeHint();
@@ -202,6 +207,7 @@ export default class KfTimingIllus {
         stretchBar.classList.add('ease-fade', 'stretchable-component', 'fadein-ele');
 
         stretchBar.onmousedown = (downEvt) => {
+            Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
             hintTag.removeHint();
             this.startAdjustingTime();
             this.removeEasingTransform();//eg: groupTitle
@@ -242,6 +248,7 @@ export default class KfTimingIllus {
                 }
             }
             document.onmouseup = () => {
+                Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
                 hintTag.removeTimingHint();
                 document.onmousemove = null;
                 document.onmouseup = null;

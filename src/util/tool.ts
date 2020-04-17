@@ -117,6 +117,7 @@ export default class Tool {
     //TODO: coord problem
     public static initLassoSelection(containerId: string): void {
         document.getElementById(containerId).onmousedown = (downEvt) => {
+            Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
             const lassoSelection = new Lasso();
             const evtTarget: HTMLElement = <HTMLElement>downEvt.target;
             if (evtTarget.id === 'highlightSelectionFrame' ||
@@ -141,6 +142,7 @@ export default class Tool {
                         }
                     }
                     document.onmouseup = (upEvt) => {
+                        Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
                         isDragging = false;
                         const selectedMarks: string[] = lassoSelection.lassoSelect(state.selection);
                         //save histroy before update state
@@ -163,6 +165,7 @@ export default class Tool {
     public static initRectangularSelection(containerId: string): void {
         const rectangularSelection = new Rectangular();
         document.getElementById(containerId).onmousedown = (downEvt) => {
+            Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
             downEvt.preventDefault();
             //get the scale of the chart since the size of the svg container is different from that of the chart
             let scaleW: number = 1, scaleH: number = 1;
@@ -210,6 +213,7 @@ export default class Tool {
                         }
                     }
                     document.onmouseup = (upEvt) => {
+                        Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
                         isDragging = false;
                         const mouseMoveThsh: number = 3;//mouse move less than 3px -> single selection; bigger than 3px -> rect selection
                         //save histroy before update state
