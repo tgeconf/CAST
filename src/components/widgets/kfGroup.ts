@@ -696,7 +696,7 @@ export default class KfGroup extends KfTimingIllus {
      * @param updateAlignedKfs 
      */
     public translateGroup(startTransItem: KfItem | KfOmit, transX: number, updateAlignedKfs: boolean, updateStartItem: boolean, updateStartItemAligned: boolean, extraInfo: { lastItem: boolean, extraWidth: number } = { lastItem: false, extraWidth: 0 }): void {
-        console.log('translating group: ', startTransItem, transX);
+        // console.log('translating group: ', startTransItem, transX);
         //translate kfitems after the input one within the same group
         let currentTransX: number = 0;
         if (!extraInfo.lastItem) {
@@ -823,7 +823,6 @@ export default class KfGroup extends KfTimingIllus {
             const currentTransX: number = Tool.extractTransNums(this.children[0].container.getAttributeNS(null, 'transform')).x;
             diffX = this.hasOffset ? currentTransX - KfGroup.PADDING - this.offsetWidth : currentTransX - KfGroup.PADDING;
         }
-        // [...this.kfOmits, ...this.children].forEach((c: KfGroup | KfItem | KfOmit) => {
         this.children.forEach((c: KfGroup | KfItem | KfOmit) => {
             if (typeof c.container !== 'undefined') {
                 if (c instanceof KfItem || c instanceof KfOmit) {
@@ -855,6 +854,21 @@ export default class KfGroup extends KfTimingIllus {
             this.updateOffset(childHeight);
             currentGroupWidth += this.offsetWidth;
         }
+
+        // //update available insert and groups in the tracks which current group prossesses
+        // if (this.parentObj instanceof KfTrack) {
+        //     [...KfTrack.aniTrackMapping.get(this.aniId)].forEach((kfTrack: KfTrack) => {
+        //         const tmpBBox: DOMRect = this.groupBg.getBoundingClientRect();
+        //         const rightBoundary: number = tmpBBox.left + tmpBBox.width;
+        //         if (rightBoundary > kfTrack.availableInsert) {
+        //             console.log('setting avali insert: ', rightBoundary);
+        //             kfTrack.availableInsert = rightBoundary;
+        //         }
+        //         console.log('track is: ', kfTrack, this.groupBg, rightBoundary);
+        //     })
+        // }
+
+
         return [diffX, currentGroupWidth, childHeight];
     }
 
@@ -891,7 +905,13 @@ export default class KfGroup extends KfTimingIllus {
             let [diffX, currentGroupWidth, gHeight] = this.updateSize();
             if (this.parentObj instanceof KfTrack) {
                 KfTrack.aniTrackMapping.get(this.aniId).forEach((kft: KfTrack) => {
-                    kft.availableInsert += (currentGroupWidth - oriW);
+                    // kft.availableInsert += (currentGroupWidth - oriW);
+                    const tmpBBox: DOMRect = this.groupBg.getBoundingClientRect();
+                    const rightBoundary: number = tmpBBox.left + tmpBBox.width;
+                    const kftStart: number = document.getElementById(KfContainer.KF_BG).getBoundingClientRect().left;
+                    if (rightBoundary - kftStart > kft.availableInsert) {
+                        kft.availableInsert = rightBoundary - kftStart;
+                    }
                 })
             }
 

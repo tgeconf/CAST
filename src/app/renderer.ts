@@ -46,10 +46,10 @@ export default class Renderer {
             State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
             Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(Util.filteredDataTable.keys()));
             Reducer.triger(action.UPDATE_DATA_TABLE, Util.filteredDataTable);
-            Reducer.triger(action.UPDATE_DATA_SORT, Object.keys(Util.attrType).map(attrName => {
+            Reducer.triger(action.UPDATE_DATA_SORT, ['markId', ...Object.keys(Util.attrType)].map(attrName => {
                 return {
                     attr: attrName,
-                    sort: 'dataIndex'
+                    sort: 'asscending'
                 }
             }));
 
@@ -338,12 +338,14 @@ export default class Renderer {
             document.getElementById('attrBtnContainer').innerHTML = '';
             document.getElementById('sortInputContainer').innerHTML = '';
             sdaArr.forEach(sda => {
-                const attrBtn: AttrBtn = new AttrBtn();
-                attrBtn.createAttrBtn(sda.attr);
-                document.getElementById('attrBtnContainer').appendChild(attrBtn.btn);
-                const attrSort: AttrSort = new AttrSort();
-                attrSort.createAttrSort(sda.attr);
-                document.getElementById('sortInputContainer').appendChild(attrSort.selectInput);
+                if (sda.attr !== 'markId') {
+                    const attrBtn: AttrBtn = new AttrBtn();
+                    attrBtn.createAttrBtn(sda.attr);
+                    document.getElementById('attrBtnContainer').appendChild(attrBtn.btn);
+                    const attrSort: AttrSort = new AttrSort();
+                    attrSort.createAttrSort(sda.attr);
+                    document.getElementById('sortInputContainer').appendChild(attrSort.selectInput);
+                }
             })
         }
     }
@@ -437,20 +439,21 @@ export default class Renderer {
                 if (!suggestOnFirstKf) {//the suggestion is based on all marks in this animation as the last kf
                     if (Tool.identicalArrays(clsOfMarksInPath, clsOfMarksThisAni)) {//marks in current path have the same classes as those in current animation 
                         if (clsOfMarksInPath.length > 1) {//create multiple animations
-                            console.log('same cls have different kinds of marks: ', targetPath.attrComb, attrValueSort);
+                            console.log('same cls have different kinds of marks: ', targetPath, targetPath.attrComb, attrValueSort);
                         } else {//create grouping
                             Reducer.triger(action.UPDATE_SPEC_GROUPING, { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort });
                         }
                     } else {//marks in current path don't have the same classes as those in current animation 
                         if (clsOfMarksInPath.length > 1) {//create multiple animations
-                            console.log('diff cls have different kinds of marks: ', targetPath.attrComb, attrValueSort);
+                            Reducer.triger(action.SPLIT_CREATE_MULTI_ANI, { aniId: startKf.aniId, path: targetPath, attrValueSort: attrValueSort })
+                            console.log('diff cls have different kinds of marks: ', clsOfMarksInPath, targetPath, targetPath.attrComb, attrValueSort);
                         } else {//create one animation
                             Reducer.triger(action.SPLIT_CREATE_ONE_ANI, { aniId: startKf.aniId, newAniSelector: `#${targetPath.lastKfMarks.join(', #')}`, attrComb: targetPath.attrComb, attrValueSort: attrValueSort });
                         }
                     }
                 } else {//the suggestion is based on all marks in current first  kf as the last kf
                     if (clsOfMarksInPath.length > 1) {//change timing of marks of different classes
-                        console.log('diff cls first kf as last: ', targetPath.attrComb, attrValueSort);
+                        console.log('diff cls first kf as last: ', targetPath, targetPath.attrComb, attrValueSort);
                     } else {//append grouping to current animation
                         Reducer.triger(action.APPEND_SPEC_GROUPING, { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort })
                     }

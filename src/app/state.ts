@@ -73,21 +73,19 @@ export class State implements IState {
             let newAttrs: string[] = sda.map(a => { return a.attr });
             sameAttrs = Tool.identicalArrays(oriAttrs, newAttrs);
         }
-
         if (!sameAttrs) {
             Renderer.renderDataAttrs(sda);
         } else {
             //find sort reference
             const [found, attrAndOrder] = Util.findUpdatedAttrOrder(sda);
+            console.log('found sort attr: ', sda, found, attrAndOrder);
             //reorder data items
             if (found) {
+                this._sortDataAttrs = sda;
                 Reducer.triger(action.UPDATE_DATA_ORDER, Util.sortDataTable(attrAndOrder));
                 Renderer.renderDataTable(this.dataTable);
             }
-
-
         }
-        //State.saveHistory(action.UPDATE_DATA_SORT, this._sortDataAttrs);
         this._sortDataAttrs = sda;
     }
     get sortDataAttrs(): ISortDataAttr[] {

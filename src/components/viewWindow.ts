@@ -353,7 +353,7 @@ export class ViewContent {
         dataTableTitleDropdown.onclick = () => {
             dataTableTitleDropdown.classList.toggle('left-up-icon');
             dataTableContainer.classList.toggle('hidden-data-table');
-            attrWrapper.classList.toggle('non-sortable-attr-wrapper');
+            // attrWrapper.classList.toggle('non-sortable-attr-wrapper');
         }
         dataTableTitle.appendChild(dataTableTitleDropdown);
         dataTableWrapper.appendChild(dataTableTitle);

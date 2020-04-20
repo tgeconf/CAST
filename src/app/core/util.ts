@@ -415,6 +415,7 @@ export default class Util {
             for (let j = 0; j < len; j++) {
                 if (sda[j].attr === state.sortDataAttrs[i].attr) {
                     found = sda[j].sort !== state.sortDataAttrs[i].sort;
+                    console.log('testing: ', sda[j], state.sortDataAttrs[i], found);
                     if (found) {
                         result.attr = sda[j].attr;
                         result.sort = sda[j].sort;
@@ -422,10 +423,10 @@ export default class Util {
                     }
                 }
             }
+            flag = flag || found;
             if (found) {
                 break;
             }
-            flag = flag || found;
         }
         return [flag, result];
     }
@@ -445,11 +446,21 @@ export default class Util {
                 case AttrSort.DESCENDING_ORDER:
                     let arrToOrder: string[][] = [];
                     state.dataTable.forEach((datum, markId) => {
-                        arrToOrder.push([markId, datum[attrOrder.attr].toString()]);
+                        if (attrOrder.attr !== 'markId') {
+                            arrToOrder.push([markId, datum[attrOrder.attr].toString()]);
+                        } else {
+                            arrToOrder.push([markId, markId]);
+                        }
                     })
                     arrToOrder.sort((a, b) => {
-                        const compareA: string | number = !isNaN(Number(a[1])) ? Number(a[1]) : a[1];
-                        const compareB: string | number = !isNaN(Number(b[1])) ? Number(b[1]) : b[1];
+                        let va: string = a[1];
+                        let vb: string = b[1];
+                        if (attrOrder.attr === 'markId') {
+                            va = va.substring(4);
+                            vb = vb.substring(4);
+                        }
+                        const compareA: string | number = !isNaN(Number(va)) ? Number(va) : va;
+                        const compareB: string | number = !isNaN(Number(vb)) ? Number(vb) : vb;
                         if (attrOrder.sort === AttrSort.ASSCENDING_ORDER)
                             return compareA < compareB ? -1 : 1;
                         else

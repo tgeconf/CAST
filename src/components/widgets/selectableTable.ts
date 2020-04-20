@@ -1,8 +1,9 @@
 import '../../assets/style/selectableTable.scss'
 import { state, State } from '../../app/state'
-import { IDataItem } from '../../app/core/ds';
+import { IDataItem, ISortDataAttr } from '../../app/core/ds';
 import Reducer from '../../app/reducer';
 import * as action from '../../app/action'
+import AttrSort from './attrSort';
 
 export default class SelectableTable {
     startRowIdx: string;
@@ -37,7 +38,52 @@ export default class SelectableTable {
                 const headerTr: HTMLTableRowElement = document.createElement('tr');
                 ['markId', ...Object.keys(dataItem)].forEach(key => {
                     const th: HTMLTableHeaderCellElement = document.createElement('th');
-                    th.innerText = key;
+                    const thContainer: HTMLDivElement = document.createElement('div');
+                    thContainer.className = 'th-container';
+                    const titleContent: HTMLParagraphElement = document.createElement('p');
+                    titleContent.innerHTML = key;
+                    thContainer.appendChild(titleContent);
+                    //create sort btn
+                    const sortBtn: HTMLSpanElement = document.createElement('span');
+                    let iconCls: string = '-icon';
+                    state.sortDataAttrs.forEach(sda => {
+                        console.log('testing sort', sda);
+                        if (sda.attr === key) {
+                            if (sda.sort === AttrSort.DESCENDING_ORDER) {
+                                iconCls = `${AttrSort.DESCENDING_ORDER}${iconCls}`;
+                            } else {
+                                iconCls = `${AttrSort.ASSCENDING_ORDER}${iconCls}`;
+                            }
+                        }
+                    })
+                    sortBtn.className = 'sort-btn ' + iconCls;
+                    sortBtn.onclick = () => {
+                        let sort: string = AttrSort.ASSCENDING_ORDER;
+                        if (sortBtn.classList.contains('asscending-icon')) {
+                            sort = AttrSort.DESCENDING_ORDER;
+                        }
+                        // sortBtn.classList.toggle('asscending-icon');
+                        // sortBtn.classList.toggle('descending-icon');
+                        //triger action
+                        let sortDataAttrArr: ISortDataAttr[] = [];
+                        state.sortDataAttrs.forEach(sda => {
+                            if (sda.attr === key) {
+                                sortDataAttrArr.push({
+                                    attr: key,
+                                    sort: sort
+                                })
+                            } else {
+                                sortDataAttrArr.push(sda);
+                            }
+                        })
+                        //save histroy before update state
+                        State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
+                        State.saveHistory();
+                        Reducer.triger(action.UPDATE_DATA_SORT, sortDataAttrArr);
+                    }
+                    thContainer.appendChild(sortBtn);
+                    th.appendChild(thContainer);
+
                     headerTr.appendChild(th);
                 })
                 dataTable.appendChild(headerTr);

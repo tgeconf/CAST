@@ -22,21 +22,7 @@ export default class AttrSort {
             select.appendChild(option);
         })
         select.onchange = () => {
-            let sortDataAttrArr: ISortDataAttr[] = [];
-            state.sortDataAttrs.forEach(sda => {
-                if (sda.attr === select.name) {
-                    sortDataAttrArr.push({
-                        attr: select.name,
-                        sort: select.value
-                    })
-                } else {
-                    sortDataAttrArr.push(sda);
-                }
-            })
-            //save histroy before update state
-            State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
-            State.saveHistory();
-            Reducer.triger(action.UPDATE_DATA_SORT, sortDataAttrArr);
+            
         }
         this.selectInput.appendChild(select);
     }

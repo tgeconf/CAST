@@ -351,6 +351,64 @@ Reducer.listen(action.UPDATE_SPEC_GROUPING, (actionInfo: { aniId: string, attrCo
     }
 })
 
+Reducer.listen(action.SPLIT_CREATE_MULTI_ANI, (actionInfo: { aniId: string, path: IPath, attrValueSort: string[][] }) => {
+    //extract marks with same shape
+    const shapeAttrIdx: number = actionInfo.path.attrComb.indexOf('mShape');
+    actionInfo.path.attrComb.splice(shapeAttrIdx, 1);
+    actionInfo.attrValueSort.splice(shapeAttrIdx, 1);
+    console.log('shape attr idx: ', shapeAttrIdx, actionInfo.path.attrComb);
+    const shapeMarkMap: Map<string, string[]> = new Map();
+    const kfMarks: string[][] = [actionInfo.path.firstKfMarks, ...actionInfo.path.kfMarks];
+    actionInfo.path.sortedAttrValueComb.forEach((attrValueComb: string, idx: number) => {
+        const shape: string = attrValueComb.split(',')[shapeAttrIdx];
+        if (typeof shapeMarkMap.get(shape) === 'undefined') {
+            shapeMarkMap.set(shape, []);
+        }
+        shapeMarkMap.get(shape).push(...kfMarks[idx]);
+    })
+
+    const animations: IAnimationSpec[] = state.spec.animations;
+    for (let i = 0, len = animations.length; i < len; i++) {
+        let a: IAnimationSpec = animations[i];
+        let insertIdx: number = i;
+        if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
+            //create multiple animations
+            let selectorRecorder: string[] = [];
+            [...shapeMarkMap].forEach((shapeMarks: [string, string[]], idx: number) => {
+                const newSelector: string = `#${shapeMarks[1].join(', #')}`;
+                selectorRecorder.push(...newSelector.split(', '));
+                const newAni: IAnimationSpec = {
+                    selector: newSelector,
+                    effects: a.effects,
+                    chartIdx: a.chartIdx
+                }
+                if (idx === 0) {
+                    if (typeof a.reference !== 'undefined') {
+                        newAni.reference = a.reference;
+                    }
+                    if (typeof a.offset !== 'undefined') {
+                        newAni.offset = a.offset;
+                    }
+                    newAni.id = actionInfo.aniId;
+                } else {
+                    newAni.reference = TimingSpec.timingRef.previousEnd;
+                    newAni.align = { target: actionInfo.aniId, type: 'element', merge: true };
+                }
+                if (actionInfo.path.attrComb.length > 0) {
+                    CanisGenerator.createGrouping(newAni, actionInfo.path.attrComb, actionInfo.attrValueSort);
+                }
+                animations.splice(insertIdx, 0, newAni);
+                insertIdx++;
+            })
+
+            a.reference = TimingSpec.timingRef.previousEnd;
+            CanisGenerator.removeMarksFromSelector(a, selectorRecorder);
+            break;
+        }
+    }
+    state.spec = { ...state.spec, animations: animations };
+})
+
 Reducer.listen(action.SPLIT_CREATE_ONE_ANI, (actionInfo: { aniId: string, newAniSelector: string, attrComb: string[], attrValueSort: string[][] }) => {
     const animations: IAnimationSpec[] = state.spec.animations;
     for (let i = 0, len = animations.length; i < len; i++) {

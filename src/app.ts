@@ -5,6 +5,7 @@ import ViewWindow from './components/viewWindow'
 import FloatingWindow from './components/floatingWindow'
 import { state } from './app/state'
 import Tool from './util/tool'
+import { Hint, hintTag } from './components/widgets/hint'
 
 function app(): HTMLDivElement {
     const outerWrapper: HTMLDivElement = document.createElement('div');
@@ -53,6 +54,15 @@ function app(): HTMLDivElement {
 document.oncontextmenu = () => {
     return false;
 }
+document.onkeyup = (e) => {
+    var event: any = e || window.event;
+    var key = event.which || event.keyCode || event.charCode;
+    if (key == 13) {
+        if (typeof document.getElementById(Hint.TIMING_HINT_ID) !== 'undefined') {
+            hintTag.contentInput.blur();
+        }
+    }
+};
 
 document.body.appendChild(app());
 //init styles
