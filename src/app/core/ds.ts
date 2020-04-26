@@ -17,6 +17,7 @@ export interface IKeyframe {
     timingRef: string;
     // parentObj: IKeyframeGroup //keyframe group id
     durationIcon: boolean
+    hiddenDurationIcon: boolean,
     duration: number
     delayIcon: boolean
     delay: number

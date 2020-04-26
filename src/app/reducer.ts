@@ -15,6 +15,7 @@ import KfOmit from '../components/widgets/kfOmit'
 import Renderer from './renderer'
 import { kfContainer, KfContainer } from '../components/kfContainer'
 import { suggestBox } from '../components/widgets/suggestBox'
+import { ViewContent } from '../components/viewWindow'
 
 export default class Reducer {
     static list: any = {};
@@ -95,6 +96,15 @@ Reducer.listen(action.RESET_STATE, () => {
     Reducer.triger(action.UPDATE_SELECTION, []);
     state.spec = { charts: state.spec.charts, animations: [] };
     suggestBox.removeSuggestBox();
+})
+
+Reducer.listen(action.UPDATE_LOADING_STATUS, (actionInfo: { il: boolean, srcDom: HTMLElement, content: string }) => {
+    state.isLoading = actionInfo.il;
+    if (actionInfo.il) {
+        Renderer.renderLoading(actionInfo.srcDom, actionInfo.content);
+    } else {
+        Renderer.removeLoading();
+    }
 })
 
 Reducer.listen(action.UPDATE_DATA_SORT, (sdaArr: ISortDataAttr[]) => {
@@ -299,7 +309,9 @@ Reducer.listen(action.UPDATE_DURATION, (actionInfo: { aniId: string, duration: n
     const animations: IAnimationSpec[] = state.spec.animations;
     animations.forEach((a: IAnimationSpec) => {
         if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
-            CanisGenerator.updateDuration(a.effects[0], actionInfo.duration);
+            let tmpEffect = Util.cloneObj(a.effects[0]);
+            CanisGenerator.updateDuration(tmpEffect, actionInfo.duration);
+            a.effects = [tmpEffect];
         }
     })
     state.spec = { ...state.spec, animations: animations };
@@ -351,12 +363,70 @@ Reducer.listen(action.UPDATE_SPEC_GROUPING, (actionInfo: { aniId: string, attrCo
     }
 })
 
+Reducer.listen(action.REMOVE_CREATE_MULTI_ANI, (actionInfo: { aniId: string, path: IPath, attrValueSort: string[][] }) => {
+    //extract marks with same shape
+    const shapeAttrIdx: number = actionInfo.path.attrComb.indexOf('mShape');
+    actionInfo.path.attrComb.splice(shapeAttrIdx, 1);
+    actionInfo.attrValueSort.splice(shapeAttrIdx, 1);
+    const shapeMarkMap: Map<string, string[]> = new Map();
+    const kfMarks: string[][] = [actionInfo.path.firstKfMarks, ...actionInfo.path.kfMarks];
+    actionInfo.path.sortedAttrValueComb.forEach((attrValueComb: string, idx: number) => {
+        const shape: string = attrValueComb.split(',')[shapeAttrIdx];
+        if (typeof shapeMarkMap.get(shape) === 'undefined') {
+            shapeMarkMap.set(shape, []);
+        }
+        shapeMarkMap.get(shape).push(...kfMarks[idx]);
+    })
+
+    const animations: IAnimationSpec[] = state.spec.animations;
+    for (let i = 0, len = animations.length; i < len; i++) {
+        let a: IAnimationSpec = animations[i];
+        let insertIdx: number = i;
+        if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
+            //create multiple animations
+            let selectorRecorder: string[] = [];
+            [...shapeMarkMap].forEach((shapeMarks: [string, string[]], idx: number) => {
+                const newSelector: string = `#${shapeMarks[1].join(', #')}`;
+                selectorRecorder.push(...newSelector.split(', '));
+                const newAni: IAnimationSpec = {
+                    selector: newSelector,
+                    effects: a.effects,
+                    chartIdx: a.chartIdx
+                }
+                if (idx === 0) {
+                    if (typeof a.reference !== 'undefined') {
+                        newAni.reference = a.reference;
+                    }
+                    if (typeof a.offset !== 'undefined') {
+                        newAni.offset = a.offset;
+                    }
+                    newAni.id = actionInfo.aniId;
+                } else {
+                    newAni.reference = TimingSpec.timingRef.previousEnd;
+                    newAni.align = { target: actionInfo.aniId, type: 'element', merge: true };
+                }
+                if (actionInfo.path.attrComb.length > 0) {
+                    CanisGenerator.createGrouping(newAni, actionInfo.path.attrComb, actionInfo.attrValueSort);
+                }
+                animations.splice(insertIdx, 0, newAni);
+                insertIdx++;
+            })
+
+            // a.reference = TimingSpec.timingRef.previousEnd;
+
+            // CanisGenerator.removeMarksFromSelector(a, selectorRecorder);
+            animations.splice(insertIdx, 1);
+            break;
+        }
+    }
+    state.spec = { ...state.spec, animations: animations };
+})
+
 Reducer.listen(action.SPLIT_CREATE_MULTI_ANI, (actionInfo: { aniId: string, path: IPath, attrValueSort: string[][] }) => {
     //extract marks with same shape
     const shapeAttrIdx: number = actionInfo.path.attrComb.indexOf('mShape');
     actionInfo.path.attrComb.splice(shapeAttrIdx, 1);
     actionInfo.attrValueSort.splice(shapeAttrIdx, 1);
-    console.log('shape attr idx: ', shapeAttrIdx, actionInfo.path.attrComb);
     const shapeMarkMap: Map<string, string[]> = new Map();
     const kfMarks: string[][] = [actionInfo.path.firstKfMarks, ...actionInfo.path.kfMarks];
     actionInfo.path.sortedAttrValueComb.forEach((attrValueComb: string, idx: number) => {
@@ -458,6 +528,30 @@ Reducer.listen(action.UPDATE_ALIGN_MERGE, (actionInfo: { aniId: string, merge: b
             break;
         }
     }
+    state.spec = { ...state.spec, animations: animations };
+})
+
+Reducer.listen(action.UPDATE_EFFECT_TYPE, (actionInfo: { aniId: string, effectPropValue: string }) => {
+    const animations: IAnimationSpec[] = state.spec.animations;
+    animations.forEach((a: IAnimationSpec) => {
+        if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
+            let tmpEffect = Util.cloneObj(a.effects[0]);
+            CanisGenerator.updateEffectType(tmpEffect, actionInfo.effectPropValue);
+            a.effects = [tmpEffect];
+        }
+    })
+    state.spec = { ...state.spec, animations: animations };
+})
+
+Reducer.listen(action.UPDATE_EFFECT_EASING, (actionInfo: { aniId: string, effectPropValue: string }) => {
+    const animations: IAnimationSpec[] = state.spec.animations;
+    animations.forEach((a: IAnimationSpec) => {
+        if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
+            let tmpEffect = Util.cloneObj(a.effects[0]);
+            CanisGenerator.updateEffectEasing(tmpEffect, actionInfo.effectPropValue);
+            a.effects = [tmpEffect];
+        }
+    })
     state.spec = { ...state.spec, animations: animations };
 })
 

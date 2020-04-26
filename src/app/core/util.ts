@@ -611,6 +611,7 @@ export default class Util {
         })
         allCurrentMarks = [...state.staticMarks, ...allCurrentMarks];
 
+        let drawDelay: boolean = (aniLeaf.delay > 0 && leafIdx > 0);
         let drawDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousEnd || parentObj.marks.length === aniLeaf.marks.length;
         if (typeof aniLeaf.alignTo !== 'undefined') {
             drawDuration = KfItem.allKfInfo.get(aniLeaf.alignTo).durationIcon;
@@ -618,14 +619,16 @@ export default class Util {
         if (Animation.animations.get(aniId).actions[0].oriActionType === 'appear') {
             drawDuration = false;
         }
+        let drawHiddenDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousStart && parentMarks.length > aniLeaf.marks;
 
         let tmpKf: IKeyframe = {
             id: aniLeaf.id,
             timingRef: aniLeaf.timingRef,
             delay: aniLeaf.delay,
-            delayIcon: aniLeaf.delay > 0 && leafIdx > 0,
+            delayIcon: drawDelay,
             duration: tmpDuration,
             durationIcon: drawDuration,
+            hiddenDurationIcon: drawHiddenDuration,
             allCurrentMarks: allCurrentMarks,
             allGroupMarks: parentMarks,
             marksThisKf: aniLeaf.marks
@@ -812,5 +815,10 @@ export default class Util {
             clsOfMarks.add(Animation.markClass.get(mId));
         })
         return [...clsOfMarks];
+    }
+
+    public static cloneObj(obj: any): any {
+        let objStr: string = JSON.stringify(obj);
+        return JSON.parse(objStr);
     }
 }

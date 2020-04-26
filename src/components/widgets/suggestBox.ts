@@ -8,6 +8,7 @@ import Tool from "../../util/tool";
 import { ICoord } from "../../util/ds";
 import Reducer from "../../app/reducer";
 import * as action from "../../app/action";
+import { Loading } from './loading';
 
 interface IOptionInfo {
     kfIdx: number;
@@ -250,45 +251,48 @@ export class OptionItem {
             bg.classList.add('hide-ele');
         }
         this.container.onclick = () => {
-            //filter paths
-            let tmpAllPaths: IPath[] = [];
-            state.allPaths.forEach((p: IPath) => {
-                if (Tool.identicalArrays(p.kfMarks[optionInfo.kfIdx], optionInfo.marks)) {
-                    tmpAllPaths.push(p);
-                }
-            })
+            Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: this.container, content: Loading.SUGGESTING });
+            setTimeout(() => {
+                //filter paths
+                let tmpAllPaths: IPath[] = [];
+                state.allPaths.forEach((p: IPath) => {
+                    if (Tool.identicalArrays(p.kfMarks[optionInfo.kfIdx], optionInfo.marks)) {
+                        tmpAllPaths.push(p);
+                    }
+                })
 
-            //remove suggest box and create a new kf
-            const startKfInfo: IKeyframe = KfItem.allKfInfo.get(suggestBox.kfBeforeSuggestBox.id);
-            const tmpKfInfo: IKeyframe = KfItem.createKfInfo(optionInfo.marks,
-                {
-                    duration: startKfInfo.duration,
-                    allCurrentMarks: [...startKfInfo.allCurrentMarks, ...startKfInfo.marksThisKf],
-                    allGroupMarks: startKfInfo.allGroupMarks
-                });
-            KfItem.allKfInfo.set(tmpKfInfo.id, tmpKfInfo);
-            let tmpKf: KfItem = new KfItem();
-            const startX: number = Tool.extractTransNums(suggestBox.kfBeforeSuggestBox.container.getAttributeNS(null, 'transform')).x + suggestBox.kfBeforeSuggestBox.totalWidth - KfItem.PADDING;
-            tmpKf.createItem(tmpKfInfo, suggestBox.kfBeforeSuggestBox.parentObj.treeLevel + 1, suggestBox.kfBeforeSuggestBox.parentObj, startX);
-            let insertIdx: number = 0;
-            for (let i = 0, len = suggestBox.kfBeforeSuggestBox.parentObj.children.length; i < len; i++) {
-                if (suggestBox.kfBeforeSuggestBox.parentObj.children[i] instanceof KfItem && suggestBox.kfBeforeSuggestBox.parentObj.children[i].id === suggestBox.kfBeforeSuggestBox.id) {
-                    insertIdx = i + 1;
-                    break;
+                //remove suggest box and create a new kf
+                const startKfInfo: IKeyframe = KfItem.allKfInfo.get(suggestBox.kfBeforeSuggestBox.id);
+                const tmpKfInfo: IKeyframe = KfItem.createKfInfo(optionInfo.marks,
+                    {
+                        duration: startKfInfo.duration,
+                        allCurrentMarks: [...startKfInfo.allCurrentMarks, ...startKfInfo.marksThisKf],
+                        allGroupMarks: startKfInfo.allGroupMarks
+                    });
+                KfItem.allKfInfo.set(tmpKfInfo.id, tmpKfInfo);
+                let tmpKf: KfItem = new KfItem();
+                const startX: number = Tool.extractTransNums(suggestBox.kfBeforeSuggestBox.container.getAttributeNS(null, 'transform')).x + suggestBox.kfBeforeSuggestBox.totalWidth - KfItem.PADDING;
+                tmpKf.createItem(tmpKfInfo, suggestBox.kfBeforeSuggestBox.parentObj.treeLevel + 1, suggestBox.kfBeforeSuggestBox.parentObj, startX);
+                let insertIdx: number = 0;
+                for (let i = 0, len = suggestBox.kfBeforeSuggestBox.parentObj.children.length; i < len; i++) {
+                    if (suggestBox.kfBeforeSuggestBox.parentObj.children[i] instanceof KfItem && suggestBox.kfBeforeSuggestBox.parentObj.children[i].id === suggestBox.kfBeforeSuggestBox.id) {
+                        insertIdx = i + 1;
+                        break;
+                    }
                 }
-            }
-            let nextKf: KfItem = suggestBox.kfBeforeSuggestBox.parentObj.children[insertIdx];
-            suggestBox.kfBeforeSuggestBox.parentObj.children.splice(insertIdx, 0, tmpKf);
-            let transX: number = tmpKf.totalWidth - (suggestBox.boxWidth + 3 * SuggestBox.PADDING + suggestBox.menuWidth + 2);
-            if (typeof nextKf === 'undefined') {
-                suggestBox.kfBeforeSuggestBox.parentObj.translateGroup(tmpKf, transX, false, false, false, { lastItem: true, extraWidth: suggestBox.boxWidth + SuggestBox.PADDING + suggestBox.menuWidth });
-            } else {
-                suggestBox.kfBeforeSuggestBox.parentObj.translateGroup(nextKf, transX, false, false, false);
-            }
-            suggestBox.removeSuggestBox();
+                let nextKf: KfItem = suggestBox.kfBeforeSuggestBox.parentObj.children[insertIdx];
+                suggestBox.kfBeforeSuggestBox.parentObj.children.splice(insertIdx, 0, tmpKf);
+                let transX: number = tmpKf.totalWidth - (suggestBox.boxWidth + 3 * SuggestBox.PADDING + suggestBox.menuWidth + 2);
+                if (typeof nextKf === 'undefined') {
+                    suggestBox.kfBeforeSuggestBox.parentObj.translateGroup(tmpKf, transX, false, false, false, { lastItem: true, extraWidth: suggestBox.boxWidth + SuggestBox.PADDING + suggestBox.menuWidth });
+                } else {
+                    suggestBox.kfBeforeSuggestBox.parentObj.translateGroup(nextKf, transX, false, false, false);
+                }
+                suggestBox.removeSuggestBox();
 
-            //triger actions to render again
-            Reducer.triger(action.UPDATE_SUGGESTION_PATH, { ap: tmpAllPaths, kfIdxInPath: suggestBox.uniqueKfIdx, startKf: tmpKf, suggestOnFirstKf: optionInfo.suggestOnFirstKf, selectedMarks: optionInfo.marks });
+                //triger actions to render again
+                Reducer.triger(action.UPDATE_SUGGESTION_PATH, { ap: tmpAllPaths, kfIdxInPath: suggestBox.uniqueKfIdx, startKf: tmpKf, suggestOnFirstKf: optionInfo.suggestOnFirstKf, selectedMarks: optionInfo.marks });
+            }, 1);
         }
     }
 

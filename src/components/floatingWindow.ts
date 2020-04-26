@@ -21,6 +21,8 @@ import osSpec from '../assets/tmp/osSpec.json'
 import purchasesSpec from '../assets/tmp/purchasesSpec.json'
 import nightingaleSpec from '../assets/tmp/nightingaleSpec.json'
 import mushroomTest1 from '../assets/tmp/mushroomTest1.json'
+import { ViewContent } from './viewWindow'
+import { Loading } from './widgets/loading'
 /**end for test!!!!!!!!!!!!!!!!!!!!!!!! */
 
 export default class FloatingWindow {
@@ -146,11 +148,15 @@ export default class FloatingWindow {
     }
 
     public loadExampleChart(chart: any) {
-        //save histroy before update state
-        State.tmpStateBusket = [];
-        State.tmpStateBusket.push([action.LOAD_CHARTS, state.charts]);
-        Reducer.triger(action.LOAD_CHARTS, [chart]);
-        this.floatingWindow.remove();
+        //triger loading
+        Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID), content: Loading.LOADING });
+        setTimeout(() => {
+            //save histroy before update state
+            State.tmpStateBusket = [];
+            State.tmpStateBusket.push([action.LOAD_CHARTS, state.charts]);
+            Reducer.triger(action.LOAD_CHARTS, [chart]);
+            this.floatingWindow.remove();
+        }, 1);
     }
 
     /**

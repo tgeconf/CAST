@@ -8,6 +8,8 @@ import { dragableCanvas } from '../components/widgets/dragableCanvas'
 import * as action from '../app/action'
 import PlusBtn from '../components/widgets/plusBtn'
 import KfItem from '../components/widgets/kfItem'
+import { GroupMenu } from '../components/widgets/kfGroup'
+import { group } from 'd3'
 
 export default class Tool {
     public static extractTransNums(translateStr: string): ICoord {
@@ -318,5 +320,24 @@ export default class Tool {
                 c.classList.add('ease-transform');
             }
         })
+    }
+
+    public static translateEasing(easing: string): string {
+        switch (easing) {
+            case GroupMenu.EASING_LINEAR:
+                return 'ease linear';
+            case GroupMenu.EASING_IN_CUBIC:
+                return 'ease in cubic';
+            case GroupMenu.EASING_OUT_CUBIC:
+                return 'ease out cubic';
+            case GroupMenu.EASING_INOUT_CUBIC:
+                return 'ease in & out cubic';
+            case GroupMenu.EASING_IN_QUAD:
+                return 'ease in quad';
+            case GroupMenu.EASING_OUT_QUAD:
+                return 'ease out quad';
+            case GroupMenu.EASING_INOUT_QUAD:
+                return 'ease in & out quad';
+        }
     }
 }

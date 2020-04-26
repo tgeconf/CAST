@@ -1,5 +1,5 @@
 import { ChartSpec } from 'canis_toolkit'
-import { ViewToolBtn } from '../components/viewWindow'
+import { ViewToolBtn, ViewContent } from '../components/viewWindow'
 import Renderer from './renderer'
 import Tool from '../util/tool'
 import { ISortDataAttr, IDataItem, IKeyframeGroup, IKfGroupSize, IPath } from './core/ds'
@@ -21,6 +21,7 @@ export interface IState {
     selection: string[]
     suggestion: boolean
 
+    isLoading: boolean
 
     spec: ICanisSpec
     allPaths: IPath[]//for kf suggestion
@@ -51,6 +52,7 @@ export class State implements IState {
     _tool: string
     _selection: string[]
     _suggestion: boolean
+    _isLoading: boolean
     _spec: ICanisSpec
     _allPaths: IPath[]
     _kfGroupSize: IKfGroupSize
@@ -173,7 +175,15 @@ export class State implements IState {
     get staticMarks(): string[] {
         return this._staticMarks;
     }
+    set isLoading(il: boolean) {
+        this._isLoading = il;
+    }
+    get isLoading(): boolean {
+        return this._isLoading;
+    }
     set spec(canisSpec: ICanisSpec) {
+        //add loading
+        // Renderer.renderLoading(document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID)).then(() => {
         console.log('going to validate spec: ', canisSpec);
         //validate spec before render
         const validSpec: boolean = CanisGenerator.validate(canisSpec);
@@ -181,6 +191,9 @@ export class State implements IState {
             this._spec = canisSpec;
             Renderer.renderSpec(this.spec);
         }
+        // }).then(() => {
+        // Renderer.removeLoading();
+        // })
     }
     get spec(): ICanisSpec {
         return this._spec;

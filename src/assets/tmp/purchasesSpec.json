@@ -9,22 +9,22 @@
         "effects": [
             {
                 "type": "fade",
-                "duration": 1000
+                "duration": 300
             }
         ]
     },
     {
-        "reference": "start after previous",
+        "reference": "start with previous",
         "selector": ".text",
         "align": {
             "target": "symbol",
             "type": "element",
-            "merge": true
+            "merge": false
         },
         "effects": [
             {
                 "type": "fade",
-                "duration": 1000
+                "duration": 300
             }
         ]
     },
@@ -39,7 +39,17 @@
         "effects": [
             {
                 "type": "grow",
-                "duration": 3000
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "reference": "start after previous",
+        "selector": ".axis-domain, .x-axis-tick, .x-axis-label, .y-axis-tick, .y-axis-label, .title",
+        "effects": [
+            {
+                "type": "fade",
+                "duration": 200
             }
         ]
     }

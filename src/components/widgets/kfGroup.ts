@@ -191,7 +191,7 @@ export default class KfGroup extends KfTimingIllus {
             this.parentObj.container.appendChild(this.container);
         }
 
-        this.container.onmouseout = (outEvt) => {
+        this.container.onmouseout = (outEvt: any) => {
             if (!this.isDragging) {
                 //this is the original element the event handler was assigned to
                 var e = outEvt.relatedTarget;
@@ -204,14 +204,19 @@ export default class KfGroup extends KfTimingIllus {
                 }
                 this.transHideTitle();
                 if (this.treeLevel === 0 && typeof this.groupMenu !== 'undefined') {
-                    this.groupMenu.hideMenu();
+                    if (typeof this.groupMenu.menuListContainer === 'undefined') {
+                        this.groupMenu.hideMenu();
+                    } else {
+                        if (!this.groupMenu.menuListContainer.contains(outEvt.toElement))
+                            this.groupMenu.hideMenu();
+                    }
                 }
             }
         }
     }
 
     public drawGroupMenu(): void {
-        this.groupMenu = new GroupMenu(KfGroup.allActions.get(this.aniId), this.id);
+        this.groupMenu = new GroupMenu(KfGroup.allActions.get(this.aniId), this.id, this.aniId);
         this.groupMenu.createAndRenderMenu();
     }
 
@@ -823,9 +828,13 @@ export default class KfGroup extends KfTimingIllus {
             const currentTransX: number = Tool.extractTransNums(this.children[0].container.getAttributeNS(null, 'transform')).x;
             diffX = this.hasOffset ? currentTransX - KfGroup.PADDING - this.offsetWidth : currentTransX - KfGroup.PADDING;
         }
+        let childHasHiddenDuration: boolean = false;
         this.children.forEach((c: KfGroup | KfItem | KfOmit) => {
             if (typeof c.container !== 'undefined') {
                 if (c instanceof KfItem || c instanceof KfOmit) {
+                    if (c instanceof KfItem && c.hasHiddenDuration) {
+                        childHasHiddenDuration = true;
+                    }
                     const currentTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
                     c.container.setAttributeNS(null, 'transform', `translate(${currentTrans.x - diffX}, ${currentTrans.y})`);
                 }
@@ -846,6 +855,9 @@ export default class KfGroup extends KfTimingIllus {
         })
         let currentGroupWidth: number = maxBoundry.right - maxBoundry.left + 2 * KfGroup.PADDING + extraWidth;
         let childHeight: number = maxBoundry.bottom - maxBoundry.top + 2 * KfGroup.PADDING;
+        if (childHasHiddenDuration) {
+            childHeight -= KfTimingIllus.EXTRA_HEIGHT;
+        }
 
         //update size
         this.groupBg.setAttributeNS(null, 'height', `${childHeight}`);
@@ -855,16 +867,28 @@ export default class KfGroup extends KfTimingIllus {
             currentGroupWidth += this.offsetWidth;
         }
 
-        // //update available insert and groups in the tracks which current group prossesses
+        //update available insert and groups in the tracks which current group prossesses
+        if (this.parentObj instanceof KfTrack) {
+            [...KfTrack.aniTrackMapping.get(this.aniId)].forEach((kfTrack: KfTrack) => {
+                const tmpBBox: DOMRect = this.groupBg.getBoundingClientRect();
+                const rightBoundary: number = tmpBBox.left + tmpBBox.width;
+                const kftStart: number = document.getElementById(KfContainer.KF_BG).getBoundingClientRect().left;
+                if (rightBoundary - kftStart > kfTrack.availableInsert) {
+                    console.log('setting avali insert: ', rightBoundary - kftStart);
+                    kfTrack.availableInsert = rightBoundary - kftStart;
+                }
+                console.log('track is: ', kfTrack, this.groupBg, rightBoundary - kftStart);
+            })
+        }
         // if (this.parentObj instanceof KfTrack) {
-        //     [...KfTrack.aniTrackMapping.get(this.aniId)].forEach((kfTrack: KfTrack) => {
+        //     KfTrack.aniTrackMapping.get(this.aniId).forEach((kft: KfTrack) => {
+        //         // kft.availableInsert += (currentGroupWidth - oriW);
         //         const tmpBBox: DOMRect = this.groupBg.getBoundingClientRect();
         //         const rightBoundary: number = tmpBBox.left + tmpBBox.width;
-        //         if (rightBoundary > kfTrack.availableInsert) {
-        //             console.log('setting avali insert: ', rightBoundary);
-        //             kfTrack.availableInsert = rightBoundary;
+        //         const kftStart: number = document.getElementById(KfContainer.KF_BG).getBoundingClientRect().left;
+        //         if (rightBoundary - kftStart > kft.availableInsert) {
+        //             kft.availableInsert = rightBoundary - kftStart;
         //         }
-        //         console.log('track is: ', kfTrack, this.groupBg, rightBoundary);
         //     })
         // }
 
@@ -903,17 +927,7 @@ export default class KfGroup extends KfTimingIllus {
             //update size
             const oriW: number = this.width;
             let [diffX, currentGroupWidth, gHeight] = this.updateSize();
-            if (this.parentObj instanceof KfTrack) {
-                KfTrack.aniTrackMapping.get(this.aniId).forEach((kft: KfTrack) => {
-                    // kft.availableInsert += (currentGroupWidth - oriW);
-                    const tmpBBox: DOMRect = this.groupBg.getBoundingClientRect();
-                    const rightBoundary: number = tmpBBox.left + tmpBBox.width;
-                    const kftStart: number = document.getElementById(KfContainer.KF_BG).getBoundingClientRect().left;
-                    if (rightBoundary - kftStart > kft.availableInsert) {
-                        kft.availableInsert = rightBoundary - kftStart;
-                    }
-                })
-            }
+
 
             //update position of menu if there is one
             if (typeof this.groupMenu !== 'undefined') {
@@ -964,8 +978,14 @@ export class GroupMenu {
     static MENU_BG_COLOR: string = '#676767';
     static MENU_ICON_COLOR: string = '#e5e5e5';
     static MENU_ICON_HIGHLIGHT_COLOR: string = '#494949';
+    static MENU_LIST_WIDTH: number = 120;
+    static EASING_MENU_LIST_WIDTH: number = 156;
+    static MENU_LIST_ITEM_HEIGHT: number = 20;
     static EFFECT_FADE: string = 'fade';
-    static EFFECT_WIPE: string = 'wipe';
+    static EFFECT_WIPE_LEFT: string = 'wipe left';
+    static EFFECT_WIPE_RIGHT: string = 'wipe right';
+    static EFFECT_WIPE_TOP: string = 'wipe top';
+    static EFFECT_WIPE_BOTTOM: string = 'wipe bottom';
     static EFFECT_WHEEL: string = 'wheel';
     static EFFECT_CIRCLE: string = 'circle';
     static EFFECT_GROW: string = 'grow';
@@ -977,15 +997,20 @@ export class GroupMenu {
     static EASING_OUT_CUBIC: string = 'easeOutCubic';
     static EASING_INOUT_CUBIC: string = 'easeInOutCubic';
     static DURATION: string = 'duration';
+    static EFFECTS: string[] = [GroupMenu.EFFECT_FADE, GroupMenu.EFFECT_CIRCLE, GroupMenu.EFFECT_GROW, GroupMenu.EFFECT_WHEEL, GroupMenu.EFFECT_WIPE_LEFT, GroupMenu.EFFECT_WIPE_RIGHT, GroupMenu.EFFECT_WIPE_TOP, GroupMenu.EFFECT_WIPE_BOTTOM];
+    static EASINGS: string[] = [GroupMenu.EASING_LINEAR, GroupMenu.EASING_IN_CUBIC, GroupMenu.EASING_OUT_CUBIC, GroupMenu.EASING_INOUT_CUBIC, GroupMenu.EASING_IN_QUAD, GroupMenu.EASING_OUT_QUAD, GroupMenu.EASING_INOUT_QUAD];
 
     public action: any;
     public groupId: number;
+    public aniId: string;
     public container: SVGGElement;
+    public menuListContainer: SVGGElement;
     // public mask: SVGRectElement;
 
-    constructor(action: any, groupId: number) {
+    constructor(action: any, groupId: number, aniId: string) {
         this.action = action;
         this.groupId = groupId;
+        this.aniId = aniId;
     }
 
     public createAndRenderMenu(): SVGGElement {
@@ -997,7 +1022,8 @@ export class GroupMenu {
         menuBg.setAttributeNS(null, 'd', `M0,0 H${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING},${GroupMenu.MENU_RX} V${3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX},${3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING} H0 Z`)
         this.container.appendChild(menuBg);
 
-        const effectTypeBtn: SVGGElement = this.createBtn(this.action.animationType);
+        console.log('testing action:: ', this.action);
+        const effectTypeBtn: SVGGElement = this.createBtn(this.action.oriActionType);
         effectTypeBtn.setAttributeNS(null, 'transform', `translate(${GroupMenu.PADDING_LEFT}, ${GroupMenu.PADDING})`);
         this.container.appendChild(effectTypeBtn);
         this.container.appendChild(this.createSplit(1));
@@ -1038,13 +1064,22 @@ export class GroupMenu {
         btnContainer.appendChild(btnBg);
         const icon: SVGPathElement = this.createBtnIcon(btnType);
         btnContainer.appendChild(icon);
-        btnContainer.onmouseover = () => {
+        btnContainer.onmouseenter = () => {
             if (!state.mousemoving) {
                 icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_HIGHLIGHT_COLOR);
             }
         }
-        btnContainer.onmouseout = () => {
+        btnContainer.onmouseleave = (leaveEvt: any) => {
             icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
+            if (typeof this.menuListContainer !== 'undefined') {
+                if (!this.menuListContainer.contains(leaveEvt.toElement)) {
+                    document.getElementById(KfContainer.KF_MENU).innerHTML = '';
+                }
+            }
+        }
+        btnContainer.onclick = () => {
+            const btnContainerBBox: DOMRect = btnContainer.getBoundingClientRect();
+            this.createMenuList({ x: btnContainerBBox.left + btnContainerBBox.width, y: btnContainerBBox.top + btnContainerBBox.height / 2 }, btnType);
         }
         return btnContainer;
     }
@@ -1056,11 +1091,23 @@ export class GroupMenu {
             case GroupMenu.EFFECT_FADE:
                 icon.setAttributeNS(null, 'd', 'M7.37,0.29C7.09,0.31,6.82,0.35,6.55,0.41v15.19c0.27,0.05,0.54,0.09,0.82,0.12V0.29z M3.45,14.18c0.26,0.2,0.53,0.38,0.82,0.54V1.27C3.98,1.44,3.71,1.62,3.45,1.82V14.18z M5.82,0.59C5.54,0.68,5.26,0.79,5,0.9v14.2c0.27,0.12,0.54,0.22,0.82,0.31V0.59z M1.17,4.56C0.65,5.6,0.35,6.76,0.35,8s0.3,2.4,0.82,3.44V4.56z M8.1,0.25C8.1,0.25,8.1,0.25,8.1,0.25l0,15.5c0,0,0,0,0,0c4.27,0,7.75-3.48,7.75-7.75S12.37,0.25,8.1,0.25z M2.72,2.44c-0.3,0.29-0.57,0.6-0.82,0.93v9.26c0.25,0.33,0.52,0.65,0.82,0.93V2.44z');
                 break;
-            case GroupMenu.EFFECT_WIPE://wipe life for now
+            case GroupMenu.EFFECT_WIPE_LEFT:
                 icon.setAttributeNS(null, 'd', 'M8,0.25C3.73,0.25,0.25,3.73,0.25,8c0,4.27,3.48,7.75,7.75,7.75c4.27,0,7.75-3.48,7.75-7.75C15.75,3.73,12.27,0.25,8,0.25z M8,15c-1.01,0-1.97-0.22-2.84-0.61V8.38c0,0,0,0,0,0h5.44l-2.58,2.39l0.56,0.6L12.21,8L8.58,4.63l-0.56,0.6l2.58,2.39H5.16c0,0,0,0,0,0V1.61C6.03,1.22,6.99,1,8,1c3.86,0,7,3.14,7,7S11.86,15,8,15z');
+                break;
+            case GroupMenu.EFFECT_WIPE_RIGHT:
+                icon.setAttributeNS(null, 'd', 'M0.25,8c0,4.27,3.48,7.75,7.75,7.75s7.75-3.48,7.75-7.75S12.27,0.25,8,0.25S0.25,3.73,0.25,8z M1,8 c0-3.86,3.14-7,7-7c1.01,0,1.97,0.22,2.84,0.61v6.01l0,0H5.4l2.58-2.39l-0.56-0.6L3.79,8l3.63,3.37l0.56-0.6L5.4,8.38h5.44l0,0v6.01 C9.97,14.78,9.01,15,8,15C4.14,15,1,11.86,1,8z');
+                break;
+            case GroupMenu.EFFECT_WIPE_TOP:
+                icon.setAttributeNS(null, 'd', 'M8,15.75c4.27,0,7.75-3.48,7.75-7.75S12.27,0.25,8,0.25S0.25,3.73,0.25,8S3.73,15.75,8,15.75z M8,15 c-3.86,0-7-3.14-7-7c0-1.01,0.22-1.97,0.61-2.84h6.01l0,0v5.44L5.23,8.02l-0.6,0.56L8,12.21l3.37-3.63l-0.6-0.56L8.38,10.6V5.16l0,0 h6.01C14.78,6.03,15,6.99,15,8C15,11.86,11.86,15,8,15z');
+                break;
+            case GroupMenu.EFFECT_WIPE_BOTTOM:
+                icon.setAttributeNS(null, 'd', 'M8,0.25C3.73,0.25,0.25,3.73,0.25,8S3.73,15.75,8,15.75s7.75-3.48,7.75-7.75S12.27,0.25,8,0.25z M8,1 c3.86,0,7,3.14,7,7c0,1.01-0.22,1.97-0.61,2.84H8.38l0,0V5.4l2.39,2.58l0.6-0.56L8,3.79L4.63,7.42l0.6,0.56L7.62,5.4v5.44l0,0H1.61 C1.22,9.97,1,9.01,1,8C1,4.14,4.14,1,8,1z');
                 break;
             case GroupMenu.EFFECT_GROW:
                 icon.setAttributeNS(null, 'd', 'M8,0.25C3.73,0.25,0.25,3.73,0.25,8c0,4.27,3.48,7.75,7.75,7.75c4.27,0,7.75-3.48,7.75-7.75C15.75,3.73,12.27,0.25,8,0.25z M8,15c-3.86,0-7-3.14-7-7s3.14-7,7-7s7,3.14,7,7S11.86,15,8,15z M13.99,7.91c0-0.13-0.12-0.24-0.25-0.24H8.17c-0.14,0-0.25,0.11-0.25,0.25V9.9c0,0.14,0.11,0.25,0.25,0.25h2.79c-0.25,0.43-0.56,0.75-0.93,0.97C9.58,11.41,9,11.55,8.32,11.55c-1.06,0-1.93-0.34-2.65-1.04C5.1,9.95,4.78,9.31,4.66,8.57l0.8,0.65l0.17-0.21L4.57,8.14C4.54,8.1,4.5,8.07,4.46,8.05l-0.1-0.08L4.3,8.04c-0.11,0.03-0.2,0.13-0.19,0.25c0,0.01,0,0.01,0,0.02L3.41,9.32l0.23,0.16l0.55-0.78c0.14,0.82,0.52,1.56,1.14,2.17c0.81,0.79,1.82,1.18,3,1.18c0.77,0,1.44-0.17,1.97-0.5c0.54-0.33,0.98-0.85,1.31-1.54c0.04-0.08,0.03-0.17-0.02-0.24s-0.13-0.12-0.21-0.12H8.42V8.17h5.08l0.01,0.22c0,0.92-0.24,1.8-0.72,2.63c-0.48,0.82-1.1,1.46-1.86,1.9c-0.76,0.43-1.66,0.65-2.68,0.65c-1.1,0-2.09-0.24-2.95-0.72c-0.86-0.47-1.54-1.16-2.04-2.04C2.75,9.93,2.5,8.96,2.5,7.94c0-1.4,0.47-2.63,1.39-3.66c1.09-1.23,2.54-1.85,4.3-1.85c0.92,0,1.8,0.17,2.6,0.51c0.61,0.26,1.23,0.7,1.83,1.32l-1.13,1.12C10.54,4.46,9.43,4,8.2,4C8.06,4,7.95,4.11,7.95,4.25S8.06,4.5,8.2,4.5c1.19,0,2.2,0.46,3.1,1.41c0.05,0.05,0.11,0.08,0.18,0.08c0.09,0,0.13-0.02,0.18-0.07l1.48-1.47c0.1-0.09,0.1-0.25,0.01-0.35c-0.7-0.76-1.43-1.3-2.16-1.61c-0.87-0.37-1.81-0.55-2.8-0.55c-1.91,0-3.48,0.68-4.67,2.02C2.51,5.08,2,6.42,2,7.94c0,1.11,0.28,2.16,0.82,3.11c0.54,0.96,1.3,1.71,2.23,2.23c0.93,0.52,2.01,0.78,3.2,0.78c1.11,0,2.1-0.24,2.93-0.72c0.83-0.48,1.52-1.18,2.04-2.08C13.74,10.36,14,9.4,14,8.38L13.99,7.91z');
+                break;
+            case GroupMenu.EFFECT_CIRCLE:
+                icon.setAttributeNS(null, 'd', 'M8.08,0.29c-4.27,0-7.73,3.46-7.73,7.73s3.47,7.73,7.73,7.73s7.73-3.46,7.73-7.73S12.35,0.29,8.08,0.29z M8.08,13.79c-3.18,0-5.77-2.58-5.77-5.77S4.9,2.25,8.08,2.25s5.77,2.58,5.77,5.77S11.27,13.79,8.08,13.79z M8.08,3.14 c-2.7,0-4.88,2.19-4.88,4.88s2.19,4.88,4.88,4.88c2.7,0,4.88-2.19,4.88-4.88S10.78,3.14,8.08,3.14z M8.08,11.66 c-2.01,0-3.64-1.63-3.64-3.64s1.63-3.64,3.64-3.64S11.73,6,11.73,8.02S10.1,11.66,8.08,11.66z M8.08,5.18 c-1.56,0-2.83,1.27-2.83,2.83s1.27,2.83,2.83,2.83s2.83-1.27,2.83-2.83S9.65,5.18,8.08,5.18z M8.08,10.13 c-1.17,0-2.11-0.94-2.11-2.11S6.91,5.9,8.08,5.9s2.11,0.94,2.11,2.11S9.25,10.13,8.08,10.13z')
                 break;
             case GroupMenu.EFFECT_WHEEL:
                 icon.setAttributeNS(null, 'd', 'M8,0.25C3.73,0.25,0.25,3.73,0.25,8c0,4.27,3.48,7.75,7.75,7.75c4.27,0,7.75-3.48,7.75-7.75C15.75,3.73,12.27,0.25,8,0.25z M8,1c0,2.33,0,4.67,0,7c-1.91,1.33-3.83,2.66-5.74,4C1.47,10.86,1,9.49,1,8C1,4.14,4.14,1,8,1z M4.04,10.45c0.04,0,0.08-0.01,0.12-0.03c0.12-0.07,0.16-0.22,0.1-0.34C3.9,9.44,3.71,8.72,3.71,8c0-1.87,1.25-3.52,3.01-4.08L5.98,5.21L6.29,5.4L7.4,3.5L7.16,3.39C7.14,3.37,7.12,3.36,7.09,3.35L5.43,2.54L5.27,2.87L6.5,3.47C4.58,4.11,3.21,5.94,3.21,8c0,0.81,0.21,1.61,0.6,2.32C3.87,10.4,3.95,10.45,4.04,10.45z');
@@ -1069,7 +1116,7 @@ export class GroupMenu {
                 icon.setAttributeNS(null, 'd', 'M4.02,12.92c-0.09,0-0.19-0.04-0.26-0.11c-0.15-0.14-0.15-0.38-0.01-0.53l8.18-8.38c0.15-0.15,0.38-0.15,0.53-0.01c0.15,0.14,0.15,0.38,0.01,0.53l-8.18,8.38C4.22,12.89,4.12,12.92,4.02,12.92z M11.93,14.87H4.29c-1.74,0-3.15-1.42-3.15-3.15V4.07c0-1.74,1.41-3.15,3.15-3.15h7.64c1.74,0,3.15,1.41,3.15,3.15v7.64C15.09,13.46,13.67,14.87,11.93,14.87z M4.29,1.67c-1.33,0-2.4,1.08-2.4,2.4v7.64c0,1.33,1.08,2.4,2.4,2.4h7.64c1.33,0,2.4-1.08,2.4-2.4V4.07c0-1.33-1.08-2.4-2.4-2.4H4.29z');
                 break;
             case GroupMenu.EASING_IN_QUAD:
-                icon.setAttributeNS(null, 'd', 'M4.02,12.92c-0.15,0-0.3-0.1-0.35-0.25C3.6,12.48,3.7,12.26,3.9,12.2c0.61-0.22,1.21-0.48,1.77-0.79c3.42-1.87,5.25-5.04,6.19-7.37c0.08-0.19,0.3-0.28,0.49-0.21c0.19,0.08,0.29,0.3,0.21,0.49c-0.98,2.44-2.91,5.77-6.52,7.75c-0.6,0.33-1.23,0.61-1.88,0.84C4.1,12.92,4.06,12.92,4.02,12.92z M11.93,14.5H4.29c-1.53,0-2.78-1.24-2.78-2.78V4.07c0-1.53,1.24-2.78,2.78-2.78h7.64c1.53,0,2.78,1.24,2.78,2.78v7.64C14.71,13.25,13.47,14.5,11.93,14.5z');
+                icon.setAttributeNS(null, 'd', 'M12.21,3.79c0.03,0,0.06,0,0.08,0.01c0.2,0.05,0.33,0.25,0.28,0.45c-0.32,1.4-1.68,6.13-5.89,7.98 c-0.82,0.36-1.7,0.59-2.62,0.69c-0.22,0.02-0.39-0.13-0.41-0.33s0.13-0.39,0.33-0.41c0.84-0.09,1.65-0.3,2.4-0.63 c3.89-1.71,5.16-6.14,5.46-7.46C11.88,3.9,12.04,3.79,12.21,3.79z M11.93,0.92H4.29c-1.74,0-3.15,1.41-3.15,3.15v7.65c0,1.73,1.41,3.15,3.15,3.15h7.64 c1.74,0,3.16-1.41,3.15-3.16V4.07C15.08,2.33,13.67,0.92,11.93,0.92z M14.33,11.71c0,1.32-1.07,2.4-2.4,2.4H4.29 c-1.32,0-2.4-1.07-2.4-2.4V4.07c0-1.32,1.07-2.4,2.4-2.4h7.64c1.32,0,2.4,1.07,2.4,2.4V11.71z');
                 break;
             case GroupMenu.EASING_OUT_QUAD:
                 icon.setAttributeNS(null, 'd', 'M4.02,12.92c-0.03,0-0.06,0-0.08-0.01c-0.2-0.05-0.33-0.25-0.28-0.45c0.32-1.4,1.68-6.13,5.89-7.98c0.82-0.36,1.7-0.59,2.62-0.69c0.22-0.02,0.39,0.13,0.41,0.33s-0.13,0.39-0.33,0.41c-0.84,0.09-1.65,0.3-2.4,0.63c-3.89,1.71-5.16,6.14-5.46,7.46C4.35,12.81,4.19,12.92,4.02,12.92z M11.93,14.87H4.29c-1.74,0-3.15-1.42-3.15-3.15V4.07c0-1.74,1.41-3.15,3.15-3.15h7.64c1.74,0,3.15,1.41,3.15,3.15v7.64C15.09,13.46,13.67,14.87,11.93,14.87z M4.29,1.67c-1.33,0-2.4,1.08-2.4,2.4v7.64c0,1.33,1.08,2.4,2.4,2.4h7.64c1.33,0,2.4-1.08,2.4-2.4V4.07c0-1.33-1.08-2.4-2.4-2.4H4.29z');
@@ -1078,7 +1125,7 @@ export class GroupMenu {
                 icon.setAttributeNS(null, 'd', 'M4.02,12.92c-0.18,0-0.35-0.14-0.37-0.32c-0.03-0.21,0.12-0.39,0.32-0.42c1.02-0.14,1.84-0.5,2.46-1.08c0.93-0.87,1.17-2.06,1.4-3.2c0.25-1.25,0.51-2.53,1.64-3.37C10.18,4,11.1,3.76,12.22,3.79c0.21,0.01,0.37,0.18,0.36,0.39c-0.01,0.21-0.2,0.36-0.39,0.36c-0.96-0.03-1.71,0.16-2.27,0.58C9.02,5.8,8.81,6.84,8.56,8.05c-0.24,1.21-0.52,2.57-1.63,3.6c-0.73,0.68-1.69,1.11-2.87,1.27C4.05,12.92,4.04,12.92,4.02,12.92z M11.93,14.87H4.29c-1.74,0-3.15-1.42-3.15-3.15V4.07c0-1.74,1.41-3.15,3.15-3.15h7.64c1.74,0,3.15,1.41,3.15,3.15v7.64C15.09,13.46,13.67,14.87,11.93,14.87z M4.29,1.67c-1.33,0-2.4,1.08-2.4,2.4v7.64c0,1.33,1.08,2.4,2.4,2.4h7.64c1.33,0,2.4-1.08,2.4-2.4V4.07c0-1.33-1.08-2.4-2.4-2.4H4.29z');
                 break;
             case GroupMenu.EASING_IN_CUBIC:
-                icon.setAttributeNS(null, 'd', 'M4.02,12.92c-0.15,0-0.3-0.1-0.35-0.25C3.6,12.48,3.7,12.26,3.9,12.2c0.61-0.22,1.21-0.48,1.77-0.79c3.42-1.87,5.25-5.04,6.19-7.37c0.08-0.19,0.3-0.28,0.49-0.21c0.19,0.08,0.29,0.3,0.21,0.49c-0.98,2.44-2.91,5.77-6.52,7.75c-0.6,0.33-1.23,0.61-1.88,0.84C4.1,12.92,4.06,12.92,4.02,12.92z M11.93,14.5H4.29c-1.53,0-2.78-1.24-2.78-2.78V4.07c0-1.53,1.24-2.78,2.78-2.78h7.64c1.53,0,2.78,1.24,2.78,2.78v7.64C14.71,13.25,13.47,14.5,11.93,14.5z');
+                icon.setAttributeNS(null, 'd', 'M12.21,3.79c0.03,0,0.06,0,0.08,0.01c0.2,0.05,0.33,0.25,0.28,0.45c-0.32,1.4-1.68,6.13-5.89,7.98 c-0.82,0.36-1.7,0.59-2.62,0.69c-0.22,0.02-0.39-0.13-0.41-0.33s0.13-0.39,0.33-0.41c0.84-0.09,1.65-0.3,2.4-0.63 c3.89-1.71,5.16-6.14,5.46-7.46C11.88,3.9,12.04,3.79,12.21,3.79z M11.93,0.92H4.29c-1.74,0-3.15,1.41-3.15,3.15v7.65c0,1.73,1.41,3.15,3.15,3.15h7.64 c1.74,0,3.16-1.41,3.15-3.16V4.07C15.08,2.33,13.67,0.92,11.93,0.92z M14.33,11.71c0,1.32-1.07,2.4-2.4,2.4H4.29 c-1.32,0-2.4-1.07-2.4-2.4V4.07c0-1.32,1.07-2.4,2.4-2.4h7.64c1.32,0,2.4,1.07,2.4,2.4V11.71z');
                 break;
             case GroupMenu.EASING_OUT_CUBIC:
                 icon.setAttributeNS(null, 'd', 'M4.02,12.92c-0.03,0-0.06,0-0.08-0.01c-0.2-0.05-0.33-0.25-0.28-0.45c0.32-1.4,1.68-6.13,5.89-7.98c0.82-0.36,1.7-0.59,2.62-0.69c0.22-0.02,0.39,0.13,0.41,0.33s-0.13,0.39-0.33,0.41c-0.84,0.09-1.65,0.3-2.4,0.63c-3.89,1.71-5.16,6.14-5.46,7.46C4.35,12.81,4.19,12.92,4.02,12.92z M11.93,14.87H4.29c-1.74,0-3.15-1.42-3.15-3.15V4.07c0-1.74,1.41-3.15,3.15-3.15h7.64c1.74,0,3.15,1.41,3.15,3.15v7.64C15.09,13.46,13.67,14.87,11.93,14.87z M4.29,1.67c-1.33,0-2.4,1.08-2.4,2.4v7.64c0,1.33,1.08,2.4,2.4,2.4h7.64c1.33,0,2.4-1.08,2.4-2.4V4.07c0-1.33-1.08-2.4-2.4-2.4H4.29z');
@@ -1103,5 +1150,217 @@ export class GroupMenu {
         splitLine.setAttributeNS(null, 'y1', `${idx * (2 * GroupMenu.PADDING + GroupMenu.BTN_SIZE)}`);
         splitLine.setAttributeNS(null, 'y2', `${idx * (2 * GroupMenu.PADDING + GroupMenu.BTN_SIZE)} `);
         return splitLine;
+    }
+
+    public createMenuList(posi: ICoord, btnType: string) {
+        const menuLayer: HTMLElement = document.getElementById(KfContainer.KF_MENU);
+        menuLayer.innerHTML = '';
+        const menuLayerBBox: DOMRect = menuLayer.getBoundingClientRect();
+        this.menuListContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.menuListContainer.onmouseleave = () => {
+            menuLayer.innerHTML = '';
+        }
+
+        const pointer: SVGPathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        pointer.setAttributeNS(null, 'd', `M0,3 L5,6 V0 Z`);
+        // pointer.setAttributeNS(null, 'transform', `translate(${hintWidth / 2 - 6}, ${Hint.HINT_HEIGHT + 2 * Hint.PADDING})`);
+        pointer.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
+        this.menuListContainer.appendChild(pointer);
+        menuLayer.appendChild(this.menuListContainer);
+
+        let menuListHeight: number = 0;
+        let menuContent: string[] = [];
+        let itemWidth: number = 0;
+        let actionType: string = '';
+        if (GroupMenu.EFFECTS.includes(btnType)) {
+            menuListHeight = GroupMenu.EFFECTS.length * GroupMenu.MENU_LIST_ITEM_HEIGHT;
+            menuContent = GroupMenu.EFFECTS;
+            itemWidth = GroupMenu.MENU_LIST_WIDTH;
+            actionType = action.UPDATE_EFFECT_TYPE;
+        } else if (GroupMenu.EASINGS.includes(btnType)) {
+            menuListHeight = GroupMenu.EASINGS.length * GroupMenu.MENU_LIST_ITEM_HEIGHT;
+            menuContent = GroupMenu.EASINGS;
+            itemWidth = GroupMenu.EASING_MENU_LIST_WIDTH;
+            actionType = action.UPDATE_EFFECT_EASING;
+        }
+        this.menuListContainer.setAttributeNS(null, 'transform', `translate(${posi.x - menuLayerBBox.left + 4}, ${posi.y - menuLayerBBox.top - menuListHeight / 2})`);
+        pointer.setAttributeNS(null, 'transform', `translate(0, ${menuListHeight / 2 - 3})`);
+
+        const fakeBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        fakeBg.setAttributeNS(null, 'fill', '#00000000');
+        fakeBg.setAttributeNS(null, 'width', '10');
+        fakeBg.setAttributeNS(null, 'height', `${menuListHeight}`);
+        fakeBg.setAttributeNS(null, 'transform', 'translate(-6, 0)');
+        this.menuListContainer.appendChild(fakeBg);
+
+        menuContent.forEach((content: string, idx: number) => {
+            const listItem: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            listItem.classList.add('clickable-component');
+            listItem.setAttributeNS(null, 'transform', `translate(3, ${idx * GroupMenu.MENU_LIST_ITEM_HEIGHT})`);
+
+            const itemBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            itemBg.setAttributeNS(null, 'width', `${itemWidth}`);
+            itemBg.setAttributeNS(null, 'height', `${GroupMenu.MENU_LIST_ITEM_HEIGHT}`);
+            itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
+            listItem.appendChild(itemBg);
+
+            listItem.onmouseenter = () => {
+                itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_HIGHLIGHT_COLOR);
+            }
+            listItem.onmouseleave = () => {
+                itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
+            }
+            listItem.onclick = () => {
+                menuLayer.innerHTML = '';
+                Reducer.triger(actionType, { aniId: this.aniId, effectPropValue: content });
+            }
+
+            if (idx > 0) {
+                const splitLine: SVGLineElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                splitLine.setAttributeNS(null, 'x1', '0');
+                splitLine.setAttributeNS(null, 'x2', `${itemWidth}`);
+                splitLine.setAttributeNS(null, 'y1', '0');
+                splitLine.setAttributeNS(null, 'y2', '0');
+                listItem.appendChild(splitLine);
+            }
+
+            const icon: SVGPathElement = this.createBtnIcon(content);
+            icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
+            icon.setAttributeNS(null, 'transform', `translate(2, 2)`);
+            listItem.appendChild(icon);
+
+            const text: SVGTextContentElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttributeNS(null, 'x', '26');
+            text.setAttributeNS(null, 'y', `${GroupMenu.MENU_LIST_ITEM_HEIGHT - 4}`);
+            text.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
+            text.classList.add('monospace-font');
+            text.setAttributeNS(null, 'font-size', '10pt');
+            text.innerHTML = GroupMenu.EASINGS.includes(btnType) ? Tool.translateEasing(content) : content;
+            listItem.appendChild(text);
+            this.menuListContainer.appendChild(listItem);
+        })
+
+
+
+
+        // if (GroupMenu.EFFECTS.includes(btnType)) {
+        //     const menuListHeight: number = GroupMenu.EFFECTS.length * GroupMenu.MENU_LIST_ITEM_HEIGHT;
+        //     this.menuListContainer.setAttributeNS(null, 'transform', `translate(${posi.x - menuLayerBBox.left + 4}, ${posi.y - menuLayerBBox.top - menuListHeight / 2})`);
+        //     pointer.setAttributeNS(null, 'transform', `translate(0, ${menuListHeight / 2 - 3})`);
+
+        //     const fakeBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        //     fakeBg.setAttributeNS(null, 'fill', '#00000000');
+        //     fakeBg.setAttributeNS(null, 'width', '10');
+        //     fakeBg.setAttributeNS(null, 'height', `${menuListHeight}`);
+        //     fakeBg.setAttributeNS(null, 'transform', 'translate(-6, 0)');
+        //     this.menuListContainer.appendChild(fakeBg);
+
+        //     GroupMenu.EFFECTS.forEach((effect: string, idx: number) => {
+        //         const listItem: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        //         listItem.classList.add('clickable-component');
+        //         listItem.setAttributeNS(null, 'transform', `translate(3, ${idx * GroupMenu.MENU_LIST_ITEM_HEIGHT})`);
+
+        //         const itemBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        //         itemBg.setAttributeNS(null, 'width', `${GroupMenu.MENU_LIST_WIDTH}`);
+        //         itemBg.setAttributeNS(null, 'height', `${GroupMenu.MENU_LIST_ITEM_HEIGHT}`);
+        //         itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
+        //         listItem.appendChild(itemBg);
+
+        //         listItem.onmouseenter = () => {
+        //             itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_HIGHLIGHT_COLOR);
+        //         }
+        //         listItem.onmouseleave = () => {
+        //             itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
+        //         }
+        //         listItem.onclick = () => {
+        //             menuLayer.innerHTML = '';
+        //             Reducer.triger(action.UPDATE_EFFECT_TYPE, { aniId: this.aniId, effectType: effect });
+        //         }
+
+        //         if (idx > 0) {
+        //             const splitLine: SVGLineElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        //             splitLine.setAttributeNS(null, 'x1', '0');
+        //             splitLine.setAttributeNS(null, 'x2', `${GroupMenu.MENU_LIST_WIDTH}`);
+        //             splitLine.setAttributeNS(null, 'y1', '0');
+        //             splitLine.setAttributeNS(null, 'y2', '0');
+        //             listItem.appendChild(splitLine);
+        //         }
+
+        //         const icon: SVGPathElement = this.createBtnIcon(effect);
+        //         icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
+        //         icon.setAttributeNS(null, 'transform', `translate(2, 2)`);
+        //         listItem.appendChild(icon);
+
+        //         const text: SVGTextContentElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        //         text.setAttributeNS(null, 'x', '26');
+        //         text.setAttributeNS(null, 'y', `${GroupMenu.MENU_LIST_ITEM_HEIGHT - 4}`);
+        //         text.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
+        //         text.classList.add('monospace-font');
+        //         text.setAttributeNS(null, 'font-size', '10pt');
+        //         text.innerHTML = effect;
+        //         listItem.appendChild(text);
+        //         this.menuListContainer.appendChild(listItem);
+
+        //     })
+        // } else if (GroupMenu.EASINGS.includes(btnType)) {
+        //     const menuListHeight: number = GroupMenu.EASINGS.length * GroupMenu.MENU_LIST_ITEM_HEIGHT;
+        //     this.menuListContainer.setAttributeNS(null, 'transform', `translate(${posi.x - menuLayerBBox.left + 4}, ${posi.y - menuLayerBBox.top - menuListHeight / 2})`);
+        //     pointer.setAttributeNS(null, 'transform', `translate(0, ${menuListHeight / 2 - 3})`);
+
+        //     const fakeBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        //     fakeBg.setAttributeNS(null, 'fill', '#00000000');
+        //     fakeBg.setAttributeNS(null, 'width', '10');
+        //     fakeBg.setAttributeNS(null, 'height', `${menuListHeight}`);
+        //     fakeBg.setAttributeNS(null, 'transform', 'translate(-6, 0)');
+        //     this.menuListContainer.appendChild(fakeBg);
+
+        //     GroupMenu.EASINGS.forEach((easing: string, idx: number) => {
+        //         const listItem: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        //         listItem.classList.add('clickable-component');
+        //         listItem.setAttributeNS(null, 'transform', `translate(3, ${idx * GroupMenu.MENU_LIST_ITEM_HEIGHT})`);
+
+        //         const itemBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        //         itemBg.setAttributeNS(null, 'width', `${GroupMenu.EASING_MENU_LIST_WIDTH}`);
+        //         itemBg.setAttributeNS(null, 'height', `${GroupMenu.MENU_LIST_ITEM_HEIGHT}`);
+        //         itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
+        //         listItem.appendChild(itemBg);
+
+        //         listItem.onmouseenter = () => {
+        //             itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_HIGHLIGHT_COLOR);
+        //         }
+        //         listItem.onmouseleave = () => {
+        //             itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
+        //         }
+        //         listItem.onclick = () => {
+        //             menuLayer.innerHTML = '';
+        //             // Reducer.triger(action.UPDATE_EFFECT_TYPE, { aniId: this.aniId, effectType: effect });
+        //         }
+
+        //         if (idx > 0) {
+        //             const splitLine: SVGLineElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        //             splitLine.setAttributeNS(null, 'x1', '0');
+        //             splitLine.setAttributeNS(null, 'x2', `${GroupMenu.EASING_MENU_LIST_WIDTH}`);
+        //             splitLine.setAttributeNS(null, 'y1', '0');
+        //             splitLine.setAttributeNS(null, 'y2', '0');
+        //             listItem.appendChild(splitLine);
+        //         }
+
+        //         const icon: SVGPathElement = this.createBtnIcon(easing);
+        //         icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
+        //         icon.setAttributeNS(null, 'transform', `translate(2, 2)`);
+        //         listItem.appendChild(icon);
+
+        //         const text: SVGTextContentElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        //         text.setAttributeNS(null, 'x', '26');
+        //         text.setAttributeNS(null, 'y', `${GroupMenu.MENU_LIST_ITEM_HEIGHT - 4}`);
+        //         text.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
+        //         text.classList.add('monospace-font');
+        //         text.setAttributeNS(null, 'font-size', '10pt');
+        //         text.innerHTML = Tool.translateEasing(easing);
+        //         listItem.appendChild(text);
+        //         this.menuListContainer.appendChild(listItem);
+
+        //     })
+        // }
     }
 }

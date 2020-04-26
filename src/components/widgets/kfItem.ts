@@ -99,6 +99,7 @@ export default class KfItem extends KfTimingIllus {
             allGroupMarks: basicInfo.allGroupMarks,
             marksThisKf: selectedMarks,
             durationIcon: true,
+            hiddenDurationIcon: false,
             delay: 0,
             delayIcon: false
         }
@@ -132,6 +133,7 @@ export default class KfItem extends KfTimingIllus {
     public createItem(kf: IKeyframe, treeLevel: number, parentObj: KfGroup, startX: number, size?: ISize): void {
         this.hasOffset = kf.delayIcon;
         this.hasDuration = kf.durationIcon;
+        this.hasHiddenDuration = kf.hiddenDurationIcon;
         this.parentObj = parentObj;
         this.aniId = this.parentObj.aniId;
         if (this.parentObj.kfHasOffset !== this.hasOffset || this.parentObj.kfHasDuration !== this.hasDuration) {
@@ -310,7 +312,7 @@ export default class KfItem extends KfTimingIllus {
                                 preSibling.showDuration();
                             } else {
                                 if (typeof preSibling.durationIllus === 'undefined') {
-                                    preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight);
+                                    preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight, false);
                                 }
                                 preSibling.container.appendChild(preSibling.durationIllus);
                             }
@@ -342,7 +344,7 @@ export default class KfItem extends KfTimingIllus {
                                 preSibling.showDuration();
                             } else {
                                 if (typeof preSibling.durationIllus === 'undefined') {
-                                    preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight);
+                                    preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight, false);
                                 }
                                 preSibling.container.appendChild(preSibling.durationIllus);
                             }
@@ -445,10 +447,15 @@ export default class KfItem extends KfTimingIllus {
         }
         this.drawKfBg(this.treeLevel, size);
         this.container.appendChild(this.kfBg);
+        console.log('rendering kf: ', this, this.hasDuration, this.hasHiddenDuration);
         if (this.hasDuration) {
-            this.drawDuration(this.kfInfo.duration, this.kfWidth, this.kfHeight);
+            this.drawDuration(this.kfInfo.duration, this.kfWidth, this.kfHeight, false);
             this.container.appendChild(this.durationIllus);
             this.totalWidth += this.durationWidth;
+        } else if (this.hasHiddenDuration) {
+            console.log('draiwng hidden duration', this);
+            this.drawDuration(this.kfInfo.duration, this.kfWidth, this.kfHeight, true);
+            this.container.appendChild(this.durationIllus);
         }
         this.drawChart(this.kfInfo.allCurrentMarks, this.kfInfo.allGroupMarks, this.kfInfo.marksThisKf);
         this.container.appendChild(this.chartThumbnail);

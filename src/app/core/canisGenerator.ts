@@ -221,8 +221,16 @@ export default class CanisGenerator {
     }
 
     public static updateDuration(actionSpec: IAction, duration: number): void {
-        //TODO: consider data binding
+        //TODO: consider data binding\
         actionSpec.duration = duration;
+    }
+
+    public static updateEffectType(actionSpec: IAction, type: string): void {
+        actionSpec.type = type;
+    }
+
+    public static updateEffectEasing(actionSpec: IAction, easing: string): void {
+        actionSpec.easing = easing;
     }
 
     public static updateAniOffset(ani: IAnimationSpec, offset: number): void {

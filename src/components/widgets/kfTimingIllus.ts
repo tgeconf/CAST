@@ -15,6 +15,7 @@ export default class KfTimingIllus {
     static OFFSET_STRETCH_COLOR: string = '#ea5514';
     static DURATION_COLOR: string = '#5e9bd4cc';
     static DURATION_STRETCH_COLOR: string = '#358bcb';
+    static EXTRA_HEIGHT: number = 7;//for hidden duration
     static minDuration: number = 300;
     static maxDuration: number = 0;
     static minOffset: number = 300;
@@ -37,6 +38,7 @@ export default class KfTimingIllus {
     public groupRx: number = 0;
     public offsetIcon: SVGGElement
 
+    public hasHiddenDuration: boolean = false;//previous start + delay
     public hasDuration: boolean = false;
     public durationNum: number = 0;
     public _durationDiff: number = 0;
@@ -158,7 +160,7 @@ export default class KfTimingIllus {
                 offsetType += '-kf';
             }
         }
-        this.stretchBar = this.createStretchBar(widgetHeight, offsetType, actionInfo);
+        this.stretchBar = this.createStretchBar(widgetHeight, offsetType, false, actionInfo);
         this.offsetIllus.appendChild(this.stretchBar);
         this.bindOffsetHover(offsetType, actionInfo.groupRef);
     }
@@ -191,7 +193,7 @@ export default class KfTimingIllus {
         this.durationIllus.onmouseleave = null;
     }
 
-    public drawDuration(duration: number, widgetX: number, widgetHeight: number): void {
+    public drawDuration(duration: number, widgetX: number, widgetHeight: number, hiddenDuration: boolean): void {
         this.durationNum = duration
         if (KfTimingIllus.minDuration === 0) {
             this.durationWidth = KfTimingIllus.BASIC_OFFSET_DURATION_W;
@@ -203,10 +205,10 @@ export default class KfTimingIllus {
         this.durationIllus.setAttributeNS(null, 'transform', `translate(${transX}, 0)`);
         this.durationBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         this.durationBg.setAttributeNS(null, 'x', '0');
-        this.durationBg.setAttributeNS(null, 'y', '0');
+        this.durationBg.setAttributeNS(null, 'y', hiddenDuration ? `${-KfTimingIllus.EXTRA_HEIGHT}` : '0');
         this.durationBg.setAttributeNS(null, 'fill', KfTimingIllus.DURATION_COLOR);
         this.durationBg.setAttributeNS(null, 'width', `${this.durationWidth}`);
-        this.durationBg.setAttributeNS(null, 'height', `${widgetHeight}`);
+        this.durationBg.setAttributeNS(null, 'height', `${hiddenDuration ? widgetHeight + KfTimingIllus.EXTRA_HEIGHT : widgetHeight}`);
         this.durationIllus.appendChild(this.durationBg);
         this.durationIcon = this.drawArrowIcon({ x: this.durationWidth / 2 - 6, y: widgetHeight / 2 - 6 });
         this.durationIllus.appendChild(this.durationIcon);
@@ -214,41 +216,21 @@ export default class KfTimingIllus {
         // this.createTimeText({ x: this.durationWidth / 2 - 6, y: widgetHeight / 2 - 26 });
         // this.durationIllus.appendChild(this.textWrapper);
 
-        this.stretchBar = this.createStretchBar(widgetHeight, 'duration');
+        this.stretchBar = this.createStretchBar(widgetHeight, 'duration', hiddenDuration);
         this.durationIllus.appendChild(this.stretchBar);
 
         this.bindDurationHover();
     }
 
-    // public createTimeText(trans: ICoord) {
-    //     this.textWrapper = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    //     this.textWrapper.setAttributeNS(null, 'transform', `translate(${trans.x}, ${trans.y})`);
-    //     const inputWrapper: SVGForeignObjectElement = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-    //     inputWrapper.setAttributeNS(null, 'width', '26');
-    //     inputWrapper.setAttributeNS(null, 'height', '20');
-    //     this.textInput = document.createElement('input');
-    //     this.textInput.classList.add('timing-text');
-    //     // this.textInput.innerHTML = `${this.durationNum}`;
-    //     this.textInput.setAttribute('value', `${this.durationNum}`);
-    //     inputWrapper.appendChild(this.textInput);
-    //     this.textWrapper.appendChild(inputWrapper);
-    //     const msText: SVGTextElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    //     msText.setAttributeNS(null, 'x', '26');
-    //     msText.setAttributeNS(null, 'y', '16');
-    //     msText.setAttributeNS(null, 'font-size', '9pt');
-    //     msText.innerHTML = 'ms';
-    //     this.textWrapper.appendChild(msText);
-    // }
-
     public startAdjustingTime() { }
 
-    public createStretchBar(barHeight: number, type: string, actionInfo: any = {}): SVGRectElement {
+    public createStretchBar(barHeight: number, type: string, hiddenDuration: boolean, actionInfo: any = {}): SVGRectElement {
         //create stretchable bar
         const stretchBar: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         stretchBar.setAttributeNS(null, 'x', type === 'duration' ? `${this.durationWidth - 4}` : `${this.offsetWidth - 4}`);
-        stretchBar.setAttributeNS(null, 'y', '0');
+        stretchBar.setAttributeNS(null, 'y', hiddenDuration ? `${-KfTimingIllus.EXTRA_HEIGHT}` : '0');
         stretchBar.setAttributeNS(null, 'width', '4');
-        stretchBar.setAttributeNS(null, 'height', `${barHeight}`);
+        stretchBar.setAttributeNS(null, 'height', hiddenDuration ? `${barHeight + KfTimingIllus.EXTRA_HEIGHT}` : `${barHeight}`);
         stretchBar.setAttributeNS(null, 'fill', type === 'duration' ? KfTimingIllus.DURATION_STRETCH_COLOR : KfTimingIllus.OFFSET_STRETCH_COLOR);
         stretchBar.classList.add('ease-fade', 'stretchable-component', 'fadein-ele');
 

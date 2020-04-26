@@ -51,35 +51,35 @@ export default class IntelliRefLine {
             const alignKf1: IKeyframe = KfItem.allKfInfo.get(kfId);
             const alignKf2: IKeyframe = KfItem.allKfInfo.get(IntelliRefLine.kfLineMapping.get(kfId).theOtherEnd);
             let alignWithKfBBox: DOMRect, alignWithKfInfo: IKeyframe, alignToKfBBox: DOMRect, alignToKfInfo: IKeyframe;
-            let testWith, testTo;
+            let alignWithKf: KfItem, alignToKf: KfItem;
             if (typeof alignKf1.alignTo === 'undefined') {
-                testWith = KfItem.allKfItems.get(alignKf1.id);
-                testTo = KfItem.allKfItems.get(alignKf2.id);
-                alignWithKfBBox = KfItem.allKfItems.get(alignKf1.id).container.getBoundingClientRect();
-                alignToKfBBox = KfItem.allKfItems.get(alignKf2.id).container.getBoundingClientRect();
+                alignWithKf = KfItem.allKfItems.get(alignKf1.id);
+                alignToKf = KfItem.allKfItems.get(alignKf2.id);
                 alignWithKfInfo = alignKf1;
                 alignToKfInfo = alignKf2;
             } else {
-                testWith = KfItem.allKfItems.get(alignKf2.id);
-                testTo = KfItem.allKfItems.get(alignKf1.id);
-                alignWithKfBBox = KfItem.allKfItems.get(alignKf2.id).container.getBoundingClientRect();
-                alignToKfBBox = KfItem.allKfItems.get(alignKf1.id).container.getBoundingClientRect();
+                alignWithKf = KfItem.allKfItems.get(alignKf2.id);
+                alignToKf = KfItem.allKfItems.get(alignKf1.id);
                 alignWithKfInfo = alignKf2;
                 alignToKfInfo = alignKf1;
             }
+            if (alignWithKf.rendered && alignToKf.rendered) {
+                alignWithKfBBox = alignWithKf.container.getBoundingClientRect();
+                alignToKfBBox = alignToKf.container.getBoundingClientRect();
 
-            if (alignToKfInfo.timingRef === TimingSpec.timingRef.previousEnd) {
-                lineItem.line.setAttributeNS(null, 'x1', `${alignWithKfBBox.right - containerBBox.left}`);
-                lineItem.line.setAttributeNS(null, 'x2', `${alignWithKfBBox.right - containerBBox.left}`);
-            } else {
-                lineItem.line.setAttributeNS(null, 'x1', `${alignWithKfBBox.left - containerBBox.left}`);
-                lineItem.line.setAttributeNS(null, 'x2', `${alignWithKfBBox.left - containerBBox.left}`);
+                if (alignToKfInfo.timingRef === TimingSpec.timingRef.previousEnd) {
+                    lineItem.line.setAttributeNS(null, 'x1', `${alignWithKfBBox.right - containerBBox.left}`);
+                    lineItem.line.setAttributeNS(null, 'x2', `${alignWithKfBBox.right - containerBBox.left}`);
+                } else {
+                    lineItem.line.setAttributeNS(null, 'x1', `${alignWithKfBBox.left - containerBBox.left}`);
+                    lineItem.line.setAttributeNS(null, 'x2', `${alignWithKfBBox.left - containerBBox.left}`);
+                }
+
+                // lineItem.line.setAttributeNS(null, 'y1', `${24}`);
+                lineItem.line.setAttributeNS(null, 'y1', `${alignWithKfBBox.top - containerBBox.top}`);
+                lineItem.line.setAttributeNS(null, 'y2', `${alignToKfBBox.bottom - containerBBox.top}`);
+                lineItem.line.setAttributeNS(null, 'transform', '');
             }
-
-            // lineItem.line.setAttributeNS(null, 'y1', `${24}`);
-            lineItem.line.setAttributeNS(null, 'y1', `${alignWithKfBBox.top - containerBBox.top}`);
-            lineItem.line.setAttributeNS(null, 'y2', `${alignToKfBBox.bottom - containerBBox.top}`);
-            lineItem.line.setAttributeNS(null, 'transform', '');
         }
     }
 

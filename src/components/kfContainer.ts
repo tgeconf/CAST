@@ -14,6 +14,7 @@ export class KfContainer {
     static KF_FG: string = 'kfFgG';
     static KF_POPUP: string = 'kfPopupG';
     static KF_HINT: string = 'kfHintG';
+    static KF_MENU: string = 'kfMenuG';
     static SLIDER_W: number = 10;
     static WHEEL_STEP: number = 20;
 
@@ -63,6 +64,10 @@ export class KfContainer {
         const hintG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         hintG.setAttributeNS(null, 'id', KfContainer.KF_HINT);
         this.keyframeTrackContainer.appendChild(hintG);
+
+        const menuG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        menuG.setAttributeNS(null, 'id', KfContainer.KF_MENU);
+        this.keyframeTrackContainer.appendChild(menuG);
 
         keyframeTrackSVG.appendChild(this.keyframeTrackContainer);
         this.kfWidgetContainer.appendChild(keyframeTrackSVG);

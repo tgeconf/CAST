@@ -24,6 +24,8 @@ import PlusBtn from '../components/widgets/plusBtn'
 import Suggest from './core/suggest'
 import Tool from '../util/tool'
 import { suggestBox, SuggestBox } from '../components/widgets/suggestBox'
+import { Loading } from '../components/widgets/loading'
+// import { loadingBlock } from '../components/widgets/loading'
 /** end for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 
 /**
@@ -70,12 +72,22 @@ export default class Renderer {
             svg.appendChild(highlightBox);
         }
         //render video view
+        // this.removeLoading();
         this.renderVideo(lottieSpec);
         player.resetPlayer({
             frameRate: canis.frameRate,
             currentTime: 0,
             totalTime: canis.duration()
         })
+    }
+
+    public static renderLoading(wrapper: HTMLElement, content: string) {
+        const loadingBlock: Loading = new Loading();
+        loadingBlock.createLoading(wrapper, content);
+    }
+
+    public static removeLoading() {
+        Loading.removeLoading();
     }
 
     public static renderVideo(lottieSpec: any): void {
@@ -147,6 +159,7 @@ export default class Renderer {
         })
         const rootGroupBBox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();
         Reducer.triger(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, { width: rootGroupBBox.width, height: rootGroupBBox.height });
+        Reducer.triger(action.UPDATE_LOADING_STATUS, { il: false });
     }
 
     public static renderKeyframeGroup(kfgIdx: number, totalKfgNum: number, kfg: IKeyframeGroup, treeLevel: number, parentObj?: KfGroup): KfGroup {
@@ -209,7 +222,7 @@ export default class Renderer {
             KfTrack.aniTrackMapping.get(kfg.aniId).add(targetTrack);
             let minTrackPosiYThisGroup: number = [...KfTrack.aniTrackMapping.get(kfg.aniId)][0].trackPosiY;
 
-            console.log('target track: ', targetTrack, minTrackPosiYThisGroup);
+            console.log('target track: ', targetTrack, minTrackPosiYThisGroup, kfGroup);
             //check whether this is the group of animation, and whether to add a plus button or not
             let plusBtn: PlusBtn, addedPlusBtn: boolean = false;
             if (treeLevel === 0) {//this is the root group
@@ -307,9 +320,12 @@ export default class Renderer {
                     const kfItem: KfItem = new KfItem();
                     let targetSize: { w: number, h: number } = { w: 0, h: 0 }
                     if (isAlignWith === 2) {
-                        const alignedKf: DOMRect = KfItem.allKfItems.get(k.alignTo).kfBg.getBoundingClientRect();
-                        targetSize.w = alignedKf.width;
-                        targetSize.h = alignedKf.height;
+                        const tmpAlignToKf: KfItem = KfItem.allKfItems.get(k.alignTo);
+                        if (tmpAlignToKf.rendered) {
+                            const alignedKf: DOMRect = tmpAlignToKf.kfBg.getBoundingClientRect();
+                            targetSize.w = alignedKf.width;
+                            targetSize.h = alignedKf.height;
+                        }
                         kfItem.createItem(k, treeLevel, kfGroup, kfPosiX, targetSize);
                     } else {
                         kfItem.createItem(k, treeLevel, kfGroup, kfPosiX);
@@ -440,13 +456,13 @@ export default class Renderer {
                     if (Tool.identicalArrays(clsOfMarksInPath, clsOfMarksThisAni)) {//marks in current path have the same classes as those in current animation 
                         if (clsOfMarksInPath.length > 1) {//create multiple animations
                             console.log('same cls have different kinds of marks: ', targetPath, targetPath.attrComb, attrValueSort);
+                            Reducer.triger(action.REMOVE_CREATE_MULTI_ANI, { aniId: startKf.aniId, path: targetPath, attrValueSort: attrValueSort })
                         } else {//create grouping
                             Reducer.triger(action.UPDATE_SPEC_GROUPING, { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort });
                         }
                     } else {//marks in current path don't have the same classes as those in current animation 
                         if (clsOfMarksInPath.length > 1) {//create multiple animations
                             Reducer.triger(action.SPLIT_CREATE_MULTI_ANI, { aniId: startKf.aniId, path: targetPath, attrValueSort: attrValueSort })
-                            console.log('diff cls have different kinds of marks: ', clsOfMarksInPath, targetPath, targetPath.attrComb, attrValueSort);
                         } else {//create one animation
                             Reducer.triger(action.SPLIT_CREATE_ONE_ANI, { aniId: startKf.aniId, newAniSelector: `#${targetPath.lastKfMarks.join(', #')}`, attrComb: targetPath.attrComb, attrValueSort: attrValueSort });
                         }
@@ -514,6 +530,7 @@ export default class Renderer {
             } else {
                 startKf.parentObj.translateGroup(nextKf, transX, false, false, false);
             }
+            Reducer.triger(action.UPDATE_LOADING_STATUS, { il: false });
         }
     }
 }
