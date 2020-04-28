@@ -151,9 +151,13 @@ export default class FloatingWindow {
         //triger loading
         Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID), content: Loading.LOADING });
         setTimeout(() => {
-            //save histroy before update state
+            //reset state history
+            State.stateHistoryIdx = -1;
+            State.stateHistory = [];
             State.tmpStateBusket = [];
-            State.tmpStateBusket.push([action.LOAD_CHARTS, state.charts]);
+            State.tmpStateBusket.push([action.LOAD_CHARTS, [chart]]);
+            State.saveHistory();
+            // State.tmpStateBusket.push([action.LOAD_CHARTS, state.charts]);
             Reducer.triger(action.LOAD_CHARTS, [chart]);
             this.floatingWindow.remove();
         }, 1);

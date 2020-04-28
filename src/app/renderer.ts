@@ -39,25 +39,33 @@ export default class Renderer {
     public static async renderSpec(spec: ICanisSpec) {
         console.log('going to render spec: ', spec);
         const lottieSpec = await canis.renderSpec(spec, () => {
+            if (spec.animations[0].selector === '.mark') {//special triger, can not triger action
+                state.spec.animations[0].selector = `#${Animation.allMarks.join(', #')}`;
+            }
             Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
             Util.extractNonDataAttrValue(ChartSpec.nonDataMarkDatum);
 
             //save histroy before update state
-            State.tmpStateBusket.push([action.UPDATE_DATA_ORDER, state.dataOrder]);
-            State.tmpStateBusket.push([action.UPDATE_DATA_TABLE, state.dataTable]);
-            State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
-            Reducer.triger(action.UPDATE_DATA_ORDER, Array.from(Util.filteredDataTable.keys()));
-            Reducer.triger(action.UPDATE_DATA_TABLE, Util.filteredDataTable);
-            Reducer.triger(action.UPDATE_DATA_SORT, ['markId', ...Object.keys(Util.attrType)].map(attrName => {
+            // State.tmpStateBusket.push([action.UPDATE_DATA_ORDER, state.dataOrder]);
+            // State.tmpStateBusket.push([action.UPDATE_DATA_TABLE, state.dataTable]);
+            // State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
+            const dataOrder: string[] = Array.from(Util.filteredDataTable.keys());
+            const dataTable: Map<string, IDataItem> = Util.filteredDataTable;
+            const sortDataAttrs: ISortDataAttr[] = ['markId', ...Object.keys(Util.attrType)].map(attrName => {
                 return {
                     attr: attrName,
                     sort: 'asscending'
                 }
-            }));
-
-            if (spec.animations[0].selector === '.mark') {
-                Reducer.triger(action.UPDATE_SPEC_SELECTOR, { aniId: `${spec.animations[0].chartIdx}_${spec.animations[0].selector}`, selector: `#${Animation.allMarks.join(', #')}` });
-            }
+            })
+            // State.tmpStateBusket.push([action.UPDATE_DATA_ORDER, dataOrder]);
+            // State.tmpStateBusket.push([action.UPDATE_DATA_TABLE, dataTable]);
+            // State.tmpStateBusket.push([action.UPDATE_DATA_SORT, sortDataAttrs]);
+            Reducer.triger(action.UPDATE_DATA_ORDER, dataOrder);
+            Reducer.triger(action.UPDATE_DATA_TABLE, dataTable);
+            Reducer.triger(action.UPDATE_DATA_SORT, sortDataAttrs);
+            // if (spec.animations[0].selector === '.mark') {
+            //     Reducer.triger(action.UPDATE_SPEC_SELECTOR, { aniId: `${spec.animations[0].chartIdx}_${spec.animations[0].selector}`, selector: `#${Animation.allMarks.join(', #')}` });
+            // }
         });
         //add highlight box on the chart
         const svg: HTMLElement = document.getElementById('visChart');
@@ -91,10 +99,25 @@ export default class Renderer {
     }
 
     public static renderVideo(lottieSpec: any): void {
+        console.log('rendering video!');
         document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID).innerHTML = '';
         //save histroy before update state
-        State.tmpStateBusket.push([action.UPDATE_LOTTIE, state.lottieAni]);
-        State.saveHistory();
+        // const lottieAnimation: AnimationItem = Lottie.loadAnimation({
+        //     container: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID),
+        //     renderer: 'svg',
+        //     loop: false,
+        //     autoplay: false,
+        //     animationData: lottieSpec // the animation data
+        // })
+        // State.tmpStateBusket.push([action.UPDATE_LOTTIE, Lottie.loadAnimation({
+        //     container: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID),
+        //     renderer: 'svg',
+        //     loop: false,
+        //     autoplay: false,
+        //     animationData: lottieSpec // the animation data
+        // })]);
+        // State.tmpStateBusket.push([action.UPDATE_LOTTIE, state.lottieAni]);
+        // State.saveHistory();
         Lottie.destroy();
         Reducer.triger(action.UPDATE_LOTTIE, Lottie.loadAnimation({
             container: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID),
@@ -106,15 +129,7 @@ export default class Renderer {
         //start to play animation
         document.getElementById(Player.PLAY_BTN_ID).click();
 
-        //filter out the static marks
-        const animatedMarks: string[] = Array.from(Animation.allMarkAni.keys());
         const staticMarks: string[] = [];
-        Animation.allMarks.forEach((mId: string) => {
-            if (!animatedMarks.includes(mId)) {
-                staticMarks.push(mId);
-            }
-        });
-
         Reducer.triger(action.UPDATE_STATIC_KEYFRAME, staticMarks);
         Reducer.triger(action.UPDATE_KEYFRAME_TRACKS, Animation.animations);
     }
@@ -322,9 +337,9 @@ export default class Renderer {
                     if (isAlignWith === 2) {
                         const tmpAlignToKf: KfItem = KfItem.allKfItems.get(k.alignTo);
                         if (tmpAlignToKf.rendered) {
-                            const alignedKf: DOMRect = tmpAlignToKf.kfBg.getBoundingClientRect();
-                            targetSize.w = alignedKf.width;
-                            targetSize.h = alignedKf.height;
+                            const alignedKf: DOMRect = tmpAlignToKf.kfBg.getBoundingClientRect();//fixed
+                            targetSize.w = alignedKf.width / state.zoomLevel;
+                            targetSize.h = alignedKf.height / state.zoomLevel;
                         }
                         kfItem.createItem(k, treeLevel, kfGroup, kfPosiX, targetSize);
                     } else {
@@ -391,6 +406,10 @@ export default class Renderer {
                 (<HTMLElement>document.getElementsByClassName('table-icon')[0]).click();
                 break;
         }
+    }
+
+    public static zoomKfContainer(zl: number): void {
+        kfContainer.kfTrackScaleContainer.setAttributeNS(null, 'transform', `scale(${zl}, ${zl})`);
     }
 
     /**

@@ -1,7 +1,7 @@
 import '../../assets/style/suggestBox.scss'
 import KfItem from "./kfItem";
 import { kfContainer, KfContainer } from "../kfContainer";
-import { state } from "../../app/state";
+import { state, State } from "../../app/state";
 import { IPath, IKeyframe } from "../../app/core/ds";
 import KfGroup from "./kfGroup";
 import Tool from "../../util/tool";
@@ -57,9 +57,9 @@ export class SuggestBox {
             this.container.appendChild(suggestMenu.container);
         }
 
-        const bgLayerBBox: DOMRect = document.getElementById(KfContainer.KF_POPUP).getBoundingClientRect();
-        const preKfBBox: DOMRect = this.kfBeforeSuggestBox.container.getBoundingClientRect();
-        this.container.setAttributeNS(null, 'transform', `translate(${preKfBBox.right - bgLayerBBox.left + SuggestBox.PADDING}, ${preKfBBox.top - bgLayerBBox.top})`);
+        const bgLayerBBox: DOMRect = document.getElementById(KfContainer.KF_POPUP).getBoundingClientRect();//fixed
+        const preKfBBox: DOMRect = this.kfBeforeSuggestBox.container.getBoundingClientRect();//fixed
+        this.container.setAttributeNS(null, 'transform', `translate(${SuggestBox.PADDING + (preKfBBox.right - bgLayerBBox.left) / state.zoomLevel}, ${(preKfBBox.top - bgLayerBBox.top) / state.zoomLevel})`);
         const bg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         bg.setAttributeNS(null, 'width', `${this.boxWidth}`);
         bg.setAttributeNS(null, 'height', `${(this.kfHeight + 2 * SuggestBox.PADDING) * this.numShown}`);
@@ -291,7 +291,10 @@ export class OptionItem {
                 suggestBox.removeSuggestBox();
 
                 //triger actions to render again
-                Reducer.triger(action.UPDATE_SUGGESTION_PATH, { ap: tmpAllPaths, kfIdxInPath: suggestBox.uniqueKfIdx, startKf: tmpKf, suggestOnFirstKf: optionInfo.suggestOnFirstKf, selectedMarks: optionInfo.marks });
+                const actionInfo: any = { ap: tmpAllPaths, kfIdxInPath: suggestBox.uniqueKfIdx, startKf: tmpKf, suggestOnFirstKf: optionInfo.suggestOnFirstKf, selectedMarks: optionInfo.marks };
+                State.tmpStateBusket.push([action.UPDATE_SUGGESTION_PATH, actionInfo]);
+                State.saveHistory();
+                Reducer.triger(action.UPDATE_SUGGESTION_PATH, actionInfo);
             }, 1);
         }
     }

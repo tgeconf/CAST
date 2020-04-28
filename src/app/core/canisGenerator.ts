@@ -109,11 +109,13 @@ export default class CanisGenerator {
         spec.animations = [];
     }
 
-    public static updateKfDelay(groupingSpec: IGrouping, delay: number): void {
+    public static updateKfDelay(groupingSpec: IGrouping, delay: number): number {
         if (typeof groupingSpec.grouping !== 'undefined') {
-            this.updateKfDelay(groupingSpec.grouping, delay);
+            return this.updateKfDelay(groupingSpec.grouping, delay);
         } else {
+            let oriDelay = groupingSpec.delay;
             groupingSpec.delay = delay;
+            return oriDelay;
         }
     }
 
@@ -121,7 +123,7 @@ export default class CanisGenerator {
         if (typeof groupingSpec.grouping !== 'undefined') {
             this.removeKfDelay(groupingSpec.grouping);
         } else {
-            delete groupingSpec.delay;
+            groupingSpec.delay = 0;
         }
     }
 
@@ -220,9 +222,13 @@ export default class CanisGenerator {
         }
     }
 
-    public static updateDuration(actionSpec: IAction, duration: number): void {
-        //TODO: consider data binding\
-        actionSpec.duration = duration;
+    public static updateDuration(actionSpec: IAction, duration: number): number {
+        //TODO: consider data binding
+        if (typeof actionSpec.duration === 'number') {
+            let oriDuration: number = actionSpec.duration;
+            actionSpec.duration = duration;
+            return oriDuration;
+        }
     }
 
     public static updateEffectType(actionSpec: IAction, type: string): void {

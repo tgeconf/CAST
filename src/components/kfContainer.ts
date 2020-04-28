@@ -8,6 +8,7 @@ import { state } from '../app/state';
 
 export class KfContainer {
     static KF_CONTAINER: string = 'kfTracksContainer';
+    static KF_SCALE_ID: string = 'kfScaleWrapper';
     static KF_LIST_ID: string = 'kfList';
     // static MASK: string = 'markContainer';
     static KF_BG: string = 'kfBgG';
@@ -19,7 +20,8 @@ export class KfContainer {
     static WHEEL_STEP: number = 20;
 
     public kfWidgetContainer: HTMLDivElement;
-    public keyframeTrackContainer: SVGGElement;
+    public kfTrackScaleContainer: SVGGElement;
+    public kfTrackContainer: SVGGElement;
     public xSliderContainer: SVGElement;
     public xSliderBg: SVGRectElement;
     public xSlider: SVGRectElement;
@@ -40,13 +42,18 @@ export class KfContainer {
         const keyframeTrackSVG: SVGElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         keyframeTrackSVG.setAttributeNS(null, 'id', KfContainer.KF_CONTAINER);
         keyframeTrackSVG.setAttributeNS(null, 'class', 'kf-tracks-container');
-        this.keyframeTrackContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        this.keyframeTrackContainer.id = KfContainer.KF_LIST_ID;
-        this.keyframeTrackContainer.setAttributeNS(null, 'class', 'kf-tracks-inner-container');
+
+        this.kfTrackScaleContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.kfTrackScaleContainer.id = KfContainer.KF_SCALE_ID;
+        this.kfTrackScaleContainer.setAttributeNS(null, 'transform', `scale(${state.zoomLevel}, ${state.zoomLevel})`);
+
+        this.kfTrackContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.kfTrackContainer.id = KfContainer.KF_LIST_ID;
+        this.kfTrackContainer.setAttributeNS(null, 'class', 'kf-tracks-inner-container');
 
         const kfBgG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         kfBgG.setAttributeNS(null, 'id', KfContainer.KF_BG);
-        this.keyframeTrackContainer.appendChild(kfBgG);
+        this.kfTrackContainer.appendChild(kfBgG);
 
         const kfFgG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         kfFgG.setAttributeNS(null, 'id', KfContainer.KF_FG);
@@ -55,21 +62,22 @@ export class KfContainer {
         placeHolder.setAttributeNS(null, 'height', '18');
         placeHolder.setAttributeNS(null, 'fill', '#00000000');
         kfFgG.appendChild(placeHolder);
-        this.keyframeTrackContainer.appendChild(kfFgG);
+        this.kfTrackContainer.appendChild(kfFgG);
 
         const kfPopupG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         kfPopupG.setAttributeNS(null, 'id', KfContainer.KF_POPUP);
-        this.keyframeTrackContainer.appendChild(kfPopupG);
+        this.kfTrackContainer.appendChild(kfPopupG);
 
         const hintG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         hintG.setAttributeNS(null, 'id', KfContainer.KF_HINT);
-        this.keyframeTrackContainer.appendChild(hintG);
+        this.kfTrackContainer.appendChild(hintG);
 
         const menuG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         menuG.setAttributeNS(null, 'id', KfContainer.KF_MENU);
-        this.keyframeTrackContainer.appendChild(menuG);
+        this.kfTrackContainer.appendChild(menuG);
 
-        keyframeTrackSVG.appendChild(this.keyframeTrackContainer);
+        this.kfTrackScaleContainer.appendChild(this.kfTrackContainer);
+        keyframeTrackSVG.appendChild(this.kfTrackScaleContainer);
         this.kfWidgetContainer.appendChild(keyframeTrackSVG);
         //create y slider
         this.createYSlider();
@@ -106,10 +114,10 @@ export class KfContainer {
                     this.ySlider.setAttributeNS(null, 'y', `${currentSliderY + diffY}`);
 
                     //update translate of keyframe
-                    if (this.keyframeTrackContainer.getAttributeNS(null, 'transform')) {
-                        let oriTrans: ICoord = Tool.extractTransNums(this.keyframeTrackContainer.getAttributeNS(null, 'transform'));
+                    if (this.kfTrackContainer.getAttributeNS(null, 'transform')) {
+                        let oriTrans: ICoord = Tool.extractTransNums(this.kfTrackContainer.getAttributeNS(null, 'transform'));
                         this.transDistance.h = oriTrans.y - diffY * this.ySliderPercent;
-                        this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${oriTrans.y - diffY * this.ySliderPercent})`);
+                        this.kfTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${oriTrans.y - diffY * this.ySliderPercent})`);
                     }
                 }
             }
@@ -147,10 +155,10 @@ export class KfContainer {
                     this.ySlider.setAttributeNS(null, 'y', `${currentSliderY + diffY}`);
 
                     //update translate of keyframe tracks
-                    if (this.keyframeTrackContainer.getAttributeNS(null, 'transform')) {
-                        let oriTrans: ICoord = Tool.extractTransNums(this.keyframeTrackContainer.getAttributeNS(null, 'transform'));
+                    if (this.kfTrackContainer.getAttributeNS(null, 'transform')) {
+                        let oriTrans: ICoord = Tool.extractTransNums(this.kfTrackContainer.getAttributeNS(null, 'transform'));
                         this.transDistance.h = oriTrans.y - diffY * this.ySliderPercent;
-                        this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${this.transDistance.h})`);
+                        this.kfTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${this.transDistance.h})`);
                     }
                     preY = currentY;
                 }
@@ -196,10 +204,10 @@ export class KfContainer {
                     this.xSlider.setAttributeNS(null, 'x', `${currentSliderX + diffX}`);
 
                     //update viewBox of keyframe
-                    if (this.keyframeTrackContainer.getAttributeNS(null, 'transform')) {
-                        let oriTrans: ICoord = Tool.extractTransNums(this.keyframeTrackContainer.getAttributeNS(null, 'transform'));
+                    if (this.kfTrackContainer.getAttributeNS(null, 'transform')) {
+                        let oriTrans: ICoord = Tool.extractTransNums(this.kfTrackContainer.getAttributeNS(null, 'transform'));
                         this.transDistance.w = oriTrans.x - diffX * this.xSliderPercent;
-                        this.keyframeTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x - diffX * this.xSliderPercent}, ${oriTrans.y})`);
+                        this.kfTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x - diffX * this.xSliderPercent}, ${oriTrans.y})`);
                     }
                     preX = currentX;
                 }
@@ -216,7 +224,7 @@ export class KfContainer {
     }
 
     public resetContainerTrans(): void {
-        this.keyframeTrackContainer.setAttributeNS(null, 'transform', 'translate(0, 0)');
+        this.kfTrackContainer.setAttributeNS(null, 'transform', 'translate(0, 0)');
         this.transDistance = { w: 0, h: 0 };
         this.ySlider.setAttributeNS(null, 'y', '0');
         this.xSlider.setAttributeNS(null, 'x', '0');

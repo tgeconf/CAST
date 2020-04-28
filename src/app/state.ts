@@ -38,6 +38,7 @@ export interface IState {
 
     //status
     mousemoving: boolean
+    zoomLevel: number
 }
 
 /**
@@ -64,6 +65,7 @@ export class State implements IState {
     // _groupingAndTiming: any
 
     _mousemoving: boolean = false
+    _zoomLevel: number = 1;
 
     set sortDataAttrs(sda: ISortDataAttr[]) {
         //compare incoming
@@ -210,6 +212,13 @@ export class State implements IState {
     get mousemoving(): boolean {
         return this._mousemoving;
     }
+    set zoomLevel(zl: number) {
+        this._zoomLevel = zl;
+        Renderer.zoomKfContainer(zl);
+    }
+    get zoomLevel(): number {
+        return this._zoomLevel;
+    }
 
     public reset(): void {
         this.sortDataAttrs = [];
@@ -226,12 +235,13 @@ export class State implements IState {
     }
 
     static stateHistory: Array<Array<[string, any]>> = [];//each step might triger multiple actions, thus each step correspond to one Array<[actionType, stateAttrValue]>
-    static stateHistoryIdx: number = 0;
+    static stateHistoryIdx: number = -1;
     static tmpStateBusket: Array<[string, any]> = [];
     public static saveHistory() {
+        this.stateHistoryIdx++;
         this.stateHistory = this.stateHistory.slice(0, this.stateHistoryIdx);
         this.stateHistory.push(this.tmpStateBusket);
-        this.stateHistoryIdx++;
+        console.log('saving history: ', this.stateHistory, this.tmpStateBusket, this.stateHistoryIdx);
         this.tmpStateBusket = [];
         // console.log('current history: ', this.stateHistory);
     }
@@ -239,8 +249,10 @@ export class State implements IState {
     public static revertHistory() {
         if (this.stateHistoryIdx > 0) {
             this.stateHistoryIdx--;
+            console.log(this.stateHistory, this.stateHistoryIdx);
             const actionAndValues: Array<[string, any]> = this.stateHistory[this.stateHistoryIdx];
             actionAndValues.forEach(actionValue => {
+                console.log('reverting history: ', actionValue[0], actionValue[1]);
                 Reducer.triger(actionValue[0], actionValue[1]);
             })
         }
@@ -251,6 +263,7 @@ export class State implements IState {
             this.stateHistoryIdx++;
             const actionAndValues: Array<[string, any]> = this.stateHistory[this.stateHistoryIdx];
             actionAndValues.forEach(actionValue => {
+                console.log('redo history: ', actionValue[0], actionValue[1]);
                 Reducer.triger(actionValue[0], actionValue[1]);
             })
         }

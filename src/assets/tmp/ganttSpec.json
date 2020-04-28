@@ -1,32 +1,13 @@
 [
     {
-        "selector": ".axis-domain",
-        "effects": [
-            {
-                "type": "grow",
-                "duration": 300
-            }
-        ]
-    },
-    {
-        "reference": "start after previous",
-        "selector": ".axis-tick, .axis-label",
-        "effects": [
-            {
-                "type": "fade",
-                "duration": 300
-            }
-        ]
-    },
-    {
-        "reference": "start after previous",
         "selector": ".text",
+        "id": "text",
+        "grouping": {
+            "groupBy": "id",
+            "reference": "start after previous"
+        },
         "effects": [
             {
-                "offset": {
-                    "field": "start",
-                    "minOffset": 600
-                },
                 "type": "wipe left",
                 "duration": 300
             }
@@ -34,12 +15,12 @@
     },
     {
         "selector": ".rectangle",
+        "align": {
+            "target": "text",
+            "type": "element"
+        },
         "effects": [
             {
-                "offset": {
-                    "field": "start",
-                    "minOffset": 600
-                },
                 "type": "wipe left",
                 "duration": {
                     "field": "duration",

@@ -6,7 +6,7 @@ import KfTrack from "./kfTrack";
 import Tool from "../../util/tool";
 
 import '../../assets/style/kfTimingIllus.scss'
-import { state } from "../../app/state";
+import { state, State } from "../../app/state";
 import KfGroup from "./kfGroup";
 
 export default class KfTimingIllus {
@@ -71,26 +71,11 @@ export default class KfTimingIllus {
     public addEasingTransform() { }
     public removeEasingTransform() { }
 
-    // this.durationIllus.onmouseenter = (enterEvt) => {
-    //     if (!state.mousemoving && !this.mouseIsOver) {
-    //         hintTag.removeTimingHint();
-    //         const timingBBox: DOMRect = this.durationBg.getBoundingClientRect();
-    //         hintTag.createTimingHint({ x: timingBBox.left + timingBBox.width / 2, y: timingBBox.top }, `duration:${this.durationNum}ms`, action.UPDATE_DURATION, { aniId: this.aniId });
-    //     }
-    //     this.mouseIsOver = true;
-    // }
-    // this.durationIllus.onmouseleave = (leaveEvt: any) => {
-    //     if (!hintTag.container.contains(leaveEvt.toElement)) {
-    //         hintTag.removeTimingHint();
-    //     }
-    //     this.mouseIsOver = false;
-    // }
-
     public bindOffsetHover(type: string, groupRef: string) {
         this.offsetIllus.onmouseenter = (enterEvt) => {
             if (!state.mousemoving && !this.mouseIsOver) {
                 hintTag.removeTimingHint();
-                const timingBBox: DOMRect = this.offsetBg.getBoundingClientRect();
+                const timingBBox: DOMRect = this.offsetBg.getBoundingClientRect();//fixed
                 let actionType: string = '';
                 let actionInfo: any = {};
                 switch (type) {
@@ -175,7 +160,7 @@ export default class KfTimingIllus {
         this.durationIllus.onmouseenter = (enterEvt) => {
             if (!state.mousemoving && !this.mouseIsOver) {
                 hintTag.removeTimingHint();
-                const timingBBox: DOMRect = this.durationBg.getBoundingClientRect();
+                const timingBBox: DOMRect = this.durationBg.getBoundingClientRect();//fixed
                 hintTag.createTimingHint({ x: timingBBox.left + timingBBox.width / 2, y: timingBBox.top }, `duration:${this.durationNum}ms`, action.UPDATE_DURATION, { aniId: this.aniId });
             }
             this.mouseIsOver = true;
@@ -239,8 +224,8 @@ export default class KfTimingIllus {
             hintTag.removeHint();
             this.startAdjustingTime();
             this.removeEasingTransform();//eg: groupTitle
-            const strectchBarBBox: DOMRect = stretchBar.getBoundingClientRect();
-            const timingBBox: DOMRect = type === 'duration' ? this.durationBg.getBoundingClientRect() : this.offsetBg.getBoundingClientRect();
+            const strectchBarBBox: DOMRect = stretchBar.getBoundingClientRect();//fixed
+            const timingBBox: DOMRect = type === 'duration' ? this.durationBg.getBoundingClientRect() : this.offsetBg.getBoundingClientRect();//fixed
             const timingWidth: number = timingBBox.width;
             let currentTiming: number = this.widthToTiming(timingWidth);
             if (type === 'duration') {
@@ -273,7 +258,7 @@ export default class KfTimingIllus {
             document.onmousemove = (moveEvt) => {
                 moveEvt.stopPropagation();
                 const currentPosiX: number = moveEvt.pageX;
-                const diffX: number = currentPosiX - oriPosiX;
+                const diffX: number = (currentPosiX - oriPosiX) / state.zoomLevel;
                 const barX: number = parseFloat(stretchBar.getAttributeNS(null, 'x'));
 
                 const timingWidth: number = type === 'duration' ? parseFloat(this.durationBg.getAttributeNS(null, 'width')) : parseFloat(this.offsetBg.getAttributeNS(null, 'width'));
@@ -304,18 +289,26 @@ export default class KfTimingIllus {
                 if (type === 'duration') {
                     this.bindDurationHover();
                     const timingWidth: number = parseFloat(this.durationBg.getAttributeNS(null, 'width'));
+                    State.tmpStateBusket.push([action.UPDATE_DURATION, { aniId: this.aniId, duration: this.widthToTiming(timingWidth) }]);
+                    State.saveHistory();
                     Reducer.triger(action.UPDATE_DURATION, { aniId: this.aniId, duration: this.widthToTiming(timingWidth) });
                 } else {
                     this.bindOffsetHover(type, actionInfo.groupRef);
                     const timingWidth: number = parseFloat(this.offsetBg.getAttributeNS(null, 'width'));
                     switch (type) {
                         case 'offset-animation':
+                            State.tmpStateBusket.push([action.UPDATE_ANI_OFFSET, { aniId: this.aniId, offset: this.widthToTiming(timingWidth) }]);
+                            State.saveHistory();
                             Reducer.triger(action.UPDATE_ANI_OFFSET, { aniId: this.aniId, offset: this.widthToTiming(timingWidth) });
                             break;
                         case 'offset-group':
+                            State.tmpStateBusket.push([action.UPDATE_DELAY_BETWEEN_GROUP, { aniId: this.aniId, groupRef: actionInfo.groupRef, delay: this.widthToTiming(timingWidth) }]);
+                            State.saveHistory();
                             Reducer.triger(action.UPDATE_DELAY_BETWEEN_GROUP, { aniId: this.aniId, groupRef: actionInfo.groupRef, delay: this.widthToTiming(timingWidth) });
                             break;
                         case 'offset-kf':
+                            State.tmpStateBusket.push([action.UPDATE_DELAY_BETWEEN_KF, { aniId: this.aniId, delay: this.widthToTiming(timingWidth) }]);
+                            State.saveHistory();
                             Reducer.triger(action.UPDATE_DELAY_BETWEEN_KF, { aniId: this.aniId, delay: this.widthToTiming(timingWidth) });
                             break;
                     }

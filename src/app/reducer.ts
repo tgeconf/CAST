@@ -1,4 +1,4 @@
-import { state } from './state'
+import { state, State } from './state'
 import { IDataItem, ISortDataAttr, IKeyframeGroup, IKfGroupSize, IPath, IKeyframe } from './core/ds'
 import * as action from './action'
 import Util from './core/util'
@@ -37,7 +37,7 @@ export default class Reducer {
         }
     }
 
-    public static updateAniAlign(actionType: string, actionInfo: { targetAni: string, currentAni: string }) {
+    public static updateAniAlign(actionType: string, actionInfo: { targetAniId: string, currentAniId: string }) {
         const animations: IAnimationSpec[] = state.spec.animations;
         let currentAni: IAnimationSpec;
         let currentAniIdx: number;
@@ -45,14 +45,15 @@ export default class Reducer {
         let targetAniIdx: number;
         for (let i = 0, len = animations.length; i < len; i++) {
             let a: IAnimationSpec = animations[i];
-            if (`${a.chartIdx}_${a.selector}` === actionInfo.currentAni) {
+            if (`${a.chartIdx}_${a.selector}` === actionInfo.currentAniId) {
                 currentAni = a;
                 currentAniIdx = i;
-            } else if (`${a.chartIdx}_${a.selector}` === actionInfo.targetAni) {
+            } else if (`${a.chartIdx}_${a.selector}` === actionInfo.targetAniId) {
                 targetAni = a;
                 targetAniIdx = i;
             }
         }
+        console.log('target ani: ', targetAni, currentAni);
         let targetAniId: string;
         switch (actionType) {
             case action.UPDATE_ANI_ALIGN_AFTER_ANI:
@@ -63,7 +64,7 @@ export default class Reducer {
                 break;
             case action.UPDATE_ANI_ALIGN_AFTER_KF:
                 if (typeof targetAni.id === 'undefined') {
-                    targetAni.id = actionInfo.targetAni
+                    targetAni.id = actionInfo.targetAniId
                 }
                 animations[targetAniIdx] = targetAni;
                 targetAniId = targetAni.id;
@@ -72,7 +73,7 @@ export default class Reducer {
                 break;
             case action.UPDATE_ANI_ALIGN_WITH_KF:
                 if (typeof targetAni.id === 'undefined') {
-                    targetAni.id = actionInfo.targetAni
+                    targetAni.id = actionInfo.targetAniId
                 }
                 animations[targetAniIdx] = targetAni;
                 targetAniId = targetAni.id;
@@ -83,7 +84,7 @@ export default class Reducer {
         animations.splice(currentAniIdx, 1);
         for (let i = 0, len = animations.length; i < len; i++) {
             let a: IAnimationSpec = animations[i];
-            if (`${a.chartIdx}_${a.selector}` === actionInfo.targetAni) {
+            if (`${a.chartIdx}_${a.selector}` === actionInfo.targetAniId) {
                 animations.splice(i + 1, 0, currentAni);
                 break;
             }
@@ -107,6 +108,10 @@ Reducer.listen(action.UPDATE_LOADING_STATUS, (actionInfo: { il: boolean, srcDom:
     }
 })
 
+Reducer.listen(action.KEYFRAME_ZOOM_LEVEL, (zl: number) => {
+    state.zoomLevel = zl;
+})
+
 Reducer.listen(action.UPDATE_DATA_SORT, (sdaArr: ISortDataAttr[]) => {
     state.sortDataAttrs = Util.filterDataSort(sdaArr);
 })
@@ -117,7 +122,8 @@ Reducer.listen(action.UPDATE_DATA_TABLE, (dt: Map<string, IDataItem>) => {
     state.dataTable = dt;
 })
 Reducer.listen(action.LOAD_CHARTS, (chartContent: string[]) => {
-    document.getElementById('chartContainer').innerHTML = '';
+    // document.getElementById('chartContainer').innerHTML = '';
+    console.log('loading chart: ', chartContent);
     state.charts = chartContent;
 })
 Reducer.listen(action.TOGGLE_SUGGESTION, (suggestion: boolean) => {
@@ -144,8 +150,9 @@ Reducer.listen(action.UPDATE_KEYFRAME_TRACKS, (animations: Map<string, any>) => 
     KfGroup.allAniGroups.clear();
     const rootGroup: IKeyframeGroup[] = [];
     [...animations].forEach((a: any) => {
-        rootGroup.push(Util.aniRootToKFGroup(a[1].root, a[0], {}, -1));
-        KfGroup.allActions.set(a[0], a[1].actions[0]);
+        let aniId: string = a[0];
+        KfGroup.allActions.set(aniId, a[1].actions[0]);
+        rootGroup.push(Util.aniRootToKFGroup(a[1].root, aniId, {}, -1));
     });
     if (rootGroup.length > 0) {
         rootGroup[0].newTrack = false;
@@ -175,6 +182,7 @@ Reducer.listen(action.UPDATE_MOUSE_MOVING, (mm: boolean) => {
 
 
 Reducer.listen(action.UPDATE_DELAY_BETWEEN_KF, (actionInfo: { aniId: string, delay: number }) => {
+    console.log('updating delay: ', actionInfo.delay);
     const animations: IAnimationSpec[] = state.spec.animations;
     animations.forEach((a: IAnimationSpec) => {
         if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
@@ -184,7 +192,9 @@ Reducer.listen(action.UPDATE_DELAY_BETWEEN_KF, (actionInfo: { aniId: string, del
                     delay: actionInfo.delay
                 }
             } else {
-                CanisGenerator.updateKfDelay(a.grouping, actionInfo.delay);
+                let oriDelay: number = CanisGenerator.updateKfDelay(a.grouping, actionInfo.delay);
+                //save history
+
             }
         }
     })
@@ -308,9 +318,10 @@ Reducer.listen(action.MERGE_GROUP, (actionInfo: { aniId: string, groupRef: strin
 Reducer.listen(action.UPDATE_DURATION, (actionInfo: { aniId: string, duration: number }) => {
     const animations: IAnimationSpec[] = state.spec.animations;
     animations.forEach((a: IAnimationSpec) => {
+        console.log('updating duration:', a.chartIdx, a.selector, actionInfo.aniId);
         if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
             let tmpEffect = Util.cloneObj(a.effects[0]);
-            CanisGenerator.updateDuration(tmpEffect, actionInfo.duration);
+            let oriDuration: number = CanisGenerator.updateDuration(tmpEffect, actionInfo.duration);
             a.effects = [tmpEffect];
         }
     })
@@ -327,29 +338,20 @@ Reducer.listen(action.UPDATE_ANI_OFFSET, (actionInfo: { aniId: string, offset: n
     state.spec = { ...state.spec, animations: animations };
 })
 
-Reducer.listen(action.UPDATE_STATIC_SELECTOR, (addStaticMarks: string[]) => {
-    const animations: IAnimationSpec[] = state.spec.animations;
-    let emptyAniRecorder: number[] = [];
-    animations.forEach((a: IAnimationSpec, idx: number) => {
-        CanisGenerator.updateStaticSelector(a, addStaticMarks);
-    })
-    state.spec = { ...state.spec, animations: animations };
-})
-
 Reducer.listen(action.UPDATE_SUGGESTION_PATH, (actionInfo: { ap: IPath[], kfIdxInPath: number, startKf: KfItem, suggestOnFirstKf: boolean, selectedMarks: string[] }) => {
     state.allPaths = actionInfo.ap;
     Renderer.renderSuggestKfs(actionInfo.kfIdxInPath, actionInfo.startKf, actionInfo.suggestOnFirstKf, actionInfo.selectedMarks);
 })
 
-Reducer.listen(action.UPDATE_SPEC_SELECTOR, (actionInfo: { aniId: string, selector: string }) => {
-    const animations: IAnimationSpec[] = state.spec.animations;
-    animations.forEach((a: IAnimationSpec) => {
-        if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
-            a.selector = actionInfo.selector;
-        }
-    })
-    state.spec = { ...state.spec, animations: animations };
-})
+// Reducer.listen(action.UPDATE_SPEC_SELECTOR, (actionInfo: { aniId: string, selector: string }) => {
+//     const animations: IAnimationSpec[] = state.spec.animations;
+//     animations.forEach((a: IAnimationSpec) => {
+//         if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
+//             a.selector = actionInfo.selector;
+//         }
+//     })
+//     state.spec = { ...state.spec, animations: animations };
+// })
 
 Reducer.listen(action.UPDATE_SPEC_GROUPING, (actionInfo: { aniId: string, attrComb: string[], attrValueSort: string[][] }) => {
     if (actionInfo.attrComb.length > 0) {
@@ -555,18 +557,18 @@ Reducer.listen(action.UPDATE_EFFECT_EASING, (actionInfo: { aniId: string, effect
     state.spec = { ...state.spec, animations: animations };
 })
 
-Reducer.listen(action.UPDATE_ANI_ALIGN_AFTER_ANI, (actionInfo: { targetAni: string, currentAni: string }) => {
+Reducer.listen(action.UPDATE_ANI_ALIGN_AFTER_ANI, (actionInfo: { targetAniId: string, currentAniId: string }) => {
     Reducer.updateAniAlign(action.UPDATE_ANI_ALIGN_AFTER_ANI, actionInfo);
 })
 
-Reducer.listen(action.UPDATE_ANI_ALIGN_WITH_ANI, (actionInfo: { targetAni: string, currentAni: string }) => {
+Reducer.listen(action.UPDATE_ANI_ALIGN_WITH_ANI, (actionInfo: { targetAniId: string, currentAniId: string }) => {
     Reducer.updateAniAlign(action.UPDATE_ANI_ALIGN_WITH_ANI, actionInfo);
 })
 
-Reducer.listen(action.UPDATE_ANI_ALIGN_AFTER_KF, (actionInfo: { targetAni: string, currentAni: string }) => {
+Reducer.listen(action.UPDATE_ANI_ALIGN_AFTER_KF, (actionInfo: { targetAniId: string, currentAniId: string }) => {
     Reducer.updateAniAlign(action.UPDATE_ANI_ALIGN_AFTER_KF, actionInfo);
 })
 
-Reducer.listen(action.UPDATE_ANI_ALIGN_WITH_KF, (actionInfo: { targetAni: string, currentAni: string }) => {
+Reducer.listen(action.UPDATE_ANI_ALIGN_WITH_KF, (actionInfo: { targetAniId: string, currentAniId: string }) => {
     Reducer.updateAniAlign(action.UPDATE_ANI_ALIGN_WITH_KF, actionInfo);
 })

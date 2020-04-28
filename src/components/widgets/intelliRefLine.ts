@@ -4,6 +4,7 @@ import { ICoord } from "../../util/ds";
 import { IKeyframe } from "../../app/core/ds";
 import { TimingSpec } from "canis_toolkit";
 import KfGroup from "./kfGroup";
+import { state } from "../../app/state";
 
 export default class IntelliRefLine {
     static HIGHLIGHT_STROKE_COLOR: string = '#0e89e5';
@@ -46,8 +47,7 @@ export default class IntelliRefLine {
     public static updateLine(kfId: number) {
         if (typeof IntelliRefLine.kfLineMapping.get(kfId) !== 'undefined') {
             const lineItem: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kfId).lineId);
-            // const containerBBox: DOMRect = document.getElementById(KfContainer.KF_BG).getBoundingClientRect();
-            const containerBBox: DOMRect = lineItem.container.getBoundingClientRect();
+            const containerBBox: DOMRect = lineItem.container.getBoundingClientRect();//fixed
             const alignKf1: IKeyframe = KfItem.allKfInfo.get(kfId);
             const alignKf2: IKeyframe = KfItem.allKfInfo.get(IntelliRefLine.kfLineMapping.get(kfId).theOtherEnd);
             let alignWithKfBBox: DOMRect, alignWithKfInfo: IKeyframe, alignToKfBBox: DOMRect, alignToKfInfo: IKeyframe;
@@ -64,20 +64,20 @@ export default class IntelliRefLine {
                 alignToKfInfo = alignKf1;
             }
             if (alignWithKf.rendered && alignToKf.rendered) {
-                alignWithKfBBox = alignWithKf.container.getBoundingClientRect();
-                alignToKfBBox = alignToKf.container.getBoundingClientRect();
+                alignWithKfBBox = alignWithKf.container.getBoundingClientRect();//fixed
+                alignToKfBBox = alignToKf.container.getBoundingClientRect();//fixed
 
                 if (alignToKfInfo.timingRef === TimingSpec.timingRef.previousEnd) {
-                    lineItem.line.setAttributeNS(null, 'x1', `${alignWithKfBBox.right - containerBBox.left}`);
-                    lineItem.line.setAttributeNS(null, 'x2', `${alignWithKfBBox.right - containerBBox.left}`);
+                    lineItem.line.setAttributeNS(null, 'x1', `${(alignWithKfBBox.right - containerBBox.left) / state.zoomLevel}`);
+                    lineItem.line.setAttributeNS(null, 'x2', `${(alignWithKfBBox.right - containerBBox.left) / state.zoomLevel}`);
                 } else {
-                    lineItem.line.setAttributeNS(null, 'x1', `${alignWithKfBBox.left - containerBBox.left}`);
-                    lineItem.line.setAttributeNS(null, 'x2', `${alignWithKfBBox.left - containerBBox.left}`);
+                    lineItem.line.setAttributeNS(null, 'x1', `${(alignWithKfBBox.left - containerBBox.left) / state.zoomLevel}`);
+                    lineItem.line.setAttributeNS(null, 'x2', `${(alignWithKfBBox.left - containerBBox.left) / state.zoomLevel}`);
                 }
 
                 // lineItem.line.setAttributeNS(null, 'y1', `${24}`);
-                lineItem.line.setAttributeNS(null, 'y1', `${alignWithKfBBox.top - containerBBox.top}`);
-                lineItem.line.setAttributeNS(null, 'y2', `${alignToKfBBox.bottom - containerBBox.top}`);
+                lineItem.line.setAttributeNS(null, 'y1', `${(alignWithKfBBox.top - containerBBox.top) / state.zoomLevel}`);
+                lineItem.line.setAttributeNS(null, 'y2', `${(alignToKfBBox.bottom - containerBBox.top) / state.zoomLevel}`);
                 lineItem.line.setAttributeNS(null, 'transform', '');
             }
         }
@@ -89,20 +89,20 @@ export default class IntelliRefLine {
             const aniGroup: KfGroup = [...KfGroup.allAniGroups][i][1];
             if (kfGroup.id !== aniGroup.id) {
                 const firstKf: KfItem = aniGroup.fetchFirstKf();
-                const aniGroupBBox: DOMRect = aniGroup.groupBg.getBoundingClientRect();
-                const firstKfBBox: DOMRect = firstKf.container.getBoundingClientRect();
+                const aniGroupBBox: DOMRect = aniGroup.groupBg.getBoundingClientRect();//fixed
+                const firstKfBBox: DOMRect = firstKf.container.getBoundingClientRect();//fixed
 
                 const tmpHintLine1: IntelliRefLine = new IntelliRefLine();
-                tmpHintLine1.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height, true, false);
+                tmpHintLine1.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, false);
                 hintLines.push(tmpHintLine1);
                 const tmpHintLine2: IntelliRefLine = new IntelliRefLine();
-                tmpHintLine2.hintAlign({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height, false);
+                tmpHintLine2.hintAlign({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, false);
                 hintLines.push(tmpHintLine2);
                 const tmpHintLine3: IntelliRefLine = new IntelliRefLine();
-                tmpHintLine3.hintAlign({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height, false);
+                tmpHintLine3.hintAlign({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, false);
                 hintLines.push(tmpHintLine3);
                 const tmpHintLine4: IntelliRefLine = new IntelliRefLine();
-                tmpHintLine4.hintAlign({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height, false);
+                tmpHintLine4.hintAlign({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, false);
                 hintLines.push(tmpHintLine4);
             }
         }
@@ -119,7 +119,7 @@ export default class IntelliRefLine {
 
     public hintAlign(targetPosi: ICoord, targetHeight: number, highlight: boolean) {
         this.container = document.getElementById(KfContainer.KF_FG);
-        const containerBBox: DOMRect = document.getElementById(KfContainer.KF_CONTAINER).getBoundingClientRect();
+        const containerBBox: DOMRect = document.getElementById(KfContainer.KF_CONTAINER).getBoundingClientRect();//fixed
         if (typeof this.line === 'undefined') {
             this.line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         }
@@ -129,15 +129,15 @@ export default class IntelliRefLine {
         this.line.setAttributeNS(null, 'stroke', highlight ? IntelliRefLine.TRIGER_STROKE_COLOR : IntelliRefLine.HIGHLIGHT_STROKE_COLOR);
         this.line.setAttributeNS(null, 'stroke-width', '2');
         this.line.setAttributeNS(null, 'stroke-dasharray', '4 2');
-        this.line.setAttributeNS(null, 'x1', `${targetPosi.x - containerBBox.left - kfContainer.transDistance.w}`);
-        this.line.setAttributeNS(null, 'y1', `${targetPosi.y - containerBBox.top - kfContainer.transDistance.h}`);
-        this.line.setAttributeNS(null, 'x2', `${targetPosi.x - containerBBox.left - kfContainer.transDistance.w}`);
-        this.line.setAttributeNS(null, 'y2', `${targetPosi.y - containerBBox.top + targetHeight - kfContainer.transDistance.h}`);
+        this.line.setAttributeNS(null, 'x1', `${(targetPosi.x - containerBBox.left) / state.zoomLevel - kfContainer.transDistance.w}`);
+        this.line.setAttributeNS(null, 'y1', `${(targetPosi.y - containerBBox.top) / state.zoomLevel - kfContainer.transDistance.h}`);
+        this.line.setAttributeNS(null, 'x2', `${(targetPosi.x - containerBBox.left) / state.zoomLevel - kfContainer.transDistance.w}`);
+        this.line.setAttributeNS(null, 'y2', `${(targetPosi.y - containerBBox.top) / state.zoomLevel + targetHeight - kfContainer.transDistance.h}`);
     }
 
     public hintInsert(targetPosi: ICoord, targetHeight: number, vertical: boolean, highlight: boolean) {
         this.container = document.getElementById(KfContainer.KF_FG);
-        const containerBBox: DOMRect = document.getElementById(KfContainer.KF_CONTAINER).getBoundingClientRect();
+        const containerBBox: DOMRect = document.getElementById(KfContainer.KF_CONTAINER).getBoundingClientRect();//fixed
         if (typeof this.line === 'undefined') {
             this.line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         }
@@ -147,10 +147,10 @@ export default class IntelliRefLine {
         this.line.setAttributeNS(null, 'stroke', highlight ? IntelliRefLine.TRIGER_STROKE_COLOR : IntelliRefLine.HIGHLIGHT_STROKE_COLOR);
         this.line.setAttributeNS(null, 'stroke-width', '4');
         if (vertical) {
-            this.line.setAttributeNS(null, 'x1', `${targetPosi.x - containerBBox.left - kfContainer.transDistance.w}`);
-            this.line.setAttributeNS(null, 'y1', `${targetPosi.y - containerBBox.top - kfContainer.transDistance.h}`);
-            this.line.setAttributeNS(null, 'x2', `${targetPosi.x - containerBBox.left - kfContainer.transDistance.w}`);
-            this.line.setAttributeNS(null, 'y2', `${targetPosi.y - containerBBox.top + targetHeight - kfContainer.transDistance.h}`);
+            this.line.setAttributeNS(null, 'x1', `${(targetPosi.x - containerBBox.left) / state.zoomLevel - kfContainer.transDistance.w}`);
+            this.line.setAttributeNS(null, 'y1', `${(targetPosi.y - containerBBox.top) / state.zoomLevel - kfContainer.transDistance.h}`);
+            this.line.setAttributeNS(null, 'x2', `${(targetPosi.x - containerBBox.left) / state.zoomLevel - kfContainer.transDistance.w}`);
+            this.line.setAttributeNS(null, 'y2', `${(targetPosi.y - containerBBox.top) / state.zoomLevel + targetHeight - kfContainer.transDistance.h}`);
         }
     }
 

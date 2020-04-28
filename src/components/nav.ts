@@ -4,6 +4,9 @@ import Tool from '../util/tool'
 import FloatingWindow from './floatingWindow'
 import Reducer from '../app/reducer';
 import * as action from '../app/action';
+import { State } from '../app/state';
+import { ViewContent } from './viewWindow';
+import { Loading } from './widgets/loading';
 
 export default class Nav {
     navContainer: HTMLDivElement;
@@ -199,10 +202,20 @@ class NavBtn {
 
     public revert(): void {
         console.log('step backward');
+        Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID), content: Loading.LOADING })
+        setTimeout(() => {
+            State.revertHistory();
+            Loading.removeLoading();
+        }, 1);
     }
 
     public redo(): void {
         console.log('step forward');
+        Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID), content: Loading.LOADING })
+        setTimeout(() => {
+            State.redoHistory();
+            Loading.removeLoading();
+        }, 1);
     }
 
     public reset(): void {

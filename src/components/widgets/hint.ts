@@ -4,6 +4,7 @@ import { KfContainer } from "../kfContainer";
 import Tool from "../../util/tool";
 import Reducer from '../../app/reducer';
 import * as action from '../../app/action';
+import { State, state } from '../../app/state';
 
 export class Hint {
     static CHAR_LEN: number = 9;
@@ -29,9 +30,9 @@ export class Hint {
         this.removeTimingHint();
         this.content = content;
         const svgHintLayer: HTMLElement = document.getElementById(KfContainer.KF_HINT);
-        const hintLayerBBox: DOMRect = svgHintLayer.getBoundingClientRect();
+        const hintLayerBBox: DOMRect = svgHintLayer.getBoundingClientRect();//fixed
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        this.container.setAttributeNS(null, 'transform', `translate(${mousePosi.x - hintLayerBBox.left + 4}, ${mousePosi.y - hintLayerBBox.top + 2})`);
+        this.container.setAttributeNS(null, 'transform', `translate(${(mousePosi.x - hintLayerBBox.left) / state.zoomLevel + 4}, ${(mousePosi.y - hintLayerBBox.top) / state.zoomLevel + 2})`);
         this.hintBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         this.hintBg.setAttributeNS(null, 'width', `${Hint.CHAR_LEN * this.content.length}`);
         this.hintBg.setAttributeNS(null, 'height', `${Hint.HINT_HEIGHT + 2 * Hint.PADDING}`);
@@ -48,7 +49,7 @@ export class Hint {
         svgHintLayer.appendChild(this.container);
 
         document.onmousemove = (moveEvt) => {
-            this.container.setAttributeNS(null, 'transform', `translate(${moveEvt.pageX - hintLayerBBox.left + 4}, ${moveEvt.pageY - hintLayerBBox.top + 2})`);
+            this.container.setAttributeNS(null, 'transform', `translate(${(moveEvt.pageX - hintLayerBBox.left) / state.zoomLevel + 4}, ${(moveEvt.pageY - hintLayerBBox.top) / state.zoomLevel + 2})`);
         }
     }
 
@@ -67,12 +68,12 @@ export class Hint {
         const textBlocks: string[] = this.content.split(':');
 
         const svgHintLayer: HTMLElement = document.getElementById(KfContainer.KF_HINT);
-        const hintLayerBBox: DOMRect = svgHintLayer.getBoundingClientRect();
+        const hintLayerBBox: DOMRect = svgHintLayer.getBoundingClientRect();//fixed
         // const hintWidth: number = Hint.CHAR_LEN * this.content.length + 2 * Hint.PADDING;
         const hintWidth: number = textBlocks[0] === 'duration' ? 138 : 116;
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.container.id = Hint.TIMING_HINT_ID;
-        this.container.setAttributeNS(null, 'transform', `translate(${pointingPosi.x - hintLayerBBox.left - hintWidth / 2}, ${pointingPosi.y - hintLayerBBox.top - Hint.TIMING_HINT_HEIGHT})`);
+        this.container.setAttributeNS(null, 'transform', `translate(${(pointingPosi.x - hintLayerBBox.left) / state.zoomLevel - hintWidth / 2}, ${(pointingPosi.y - hintLayerBBox.top)/state.zoomLevel - Hint.TIMING_HINT_HEIGHT})`);
         this.container.onmouseleave = () => {
             this.removeTimingHint();
         }
@@ -121,6 +122,8 @@ export class Hint {
                     break;
             }
             this.removeTimingHint();
+            State.tmpStateBusket.push([actionType, actionInfo]);
+            State.saveHistory();
             Reducer.triger(actionType, actionInfo);
         }
         this.textWrapper.appendChild(this.contentInput);

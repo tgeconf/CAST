@@ -47,7 +47,6 @@ export default class SelectableTable {
                     const sortBtn: HTMLSpanElement = document.createElement('span');
                     let iconCls: string = '-icon';
                     state.sortDataAttrs.forEach(sda => {
-                        console.log('testing sort', sda);
                         if (sda.attr === key) {
                             if (sda.sort === AttrSort.DESCENDING_ORDER) {
                                 iconCls = `${AttrSort.DESCENDING_ORDER}${iconCls}`;
@@ -77,7 +76,7 @@ export default class SelectableTable {
                             }
                         })
                         //save histroy before update state
-                        State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
+                        State.tmpStateBusket.push([action.UPDATE_DATA_SORT, sortDataAttrArr]);
                         State.saveHistory();
                         Reducer.triger(action.UPDATE_DATA_SORT, sortDataAttrArr);
                     }
@@ -123,7 +122,8 @@ export default class SelectableTable {
             this.selectedRows.push(this.startRowIdx);
             SelectableTable.renderSelection(this.selectedRows);
             //save histroy before update state
-            State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
+            State.tmpStateBusket.push([action.UPDATE_SELECTION, this.selectedRows]);
+            // State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
             State.saveHistory();
             Reducer.triger(action.UPDATE_SELECTION, this.selectedRows);
         }
@@ -164,7 +164,8 @@ export default class SelectableTable {
         this.selectedRows = state.dataOrder.slice(selectionStartIdx, selectionEndIdx + 1);
         SelectableTable.renderSelection(this.selectedRows);
         //save histroy before update state
-        State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
+        // State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
+        State.tmpStateBusket.push([action.UPDATE_SELECTION, this.selectedRows]);
         State.saveHistory();
         Reducer.triger(action.UPDATE_SELECTION, this.selectedRows);
     }

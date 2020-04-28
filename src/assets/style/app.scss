@@ -117,6 +117,10 @@ body {
     opacity: 0;
 }
 
+.wait {
+    cursor: wait;
+}
+
 .monospace-font {
     font-family: var(--mono-font);
 }

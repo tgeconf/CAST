@@ -148,11 +148,15 @@ export default class Tool {
                         isDragging = false;
                         const selectedMarks: string[] = lassoSelection.lassoSelect(state.selection);
                         //save histroy before update state
-                        State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
-                        State.saveHistory();
+                        // State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
+                        // State.saveHistory();
                         if (this.identicalArrays(selectedMarks, state.selection)) {
+                            State.tmpStateBusket.push([action.UPDATE_SELECTION, []]);
+                            State.saveHistory();
                             Reducer.triger(action.UPDATE_SELECTION, []);
                         } else {
+                            State.tmpStateBusket.push([action.UPDATE_SELECTION, selectedMarks]);
+                            State.saveHistory();
                             Reducer.triger(action.UPDATE_SELECTION, selectedMarks);
                         }
 
@@ -219,8 +223,8 @@ export default class Tool {
                         isDragging = false;
                         const mouseMoveThsh: number = 3;//mouse move less than 3px -> single selection; bigger than 3px -> rect selection
                         //save histroy before update state
-                        State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
-                        State.saveHistory();
+                        // State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
+                        // State.saveHistory();
                         if (Tool.pointDist(lastMouseX, upEvt.pageX, lastMouseY, upEvt.pageY) > mouseMoveThsh) {//doing rect selection
                             const rectPosi2: ICoord = this.screenToSvgCoords(svg, upEvt.pageX, upEvt.pageY);
                             const selectedMarks: string[] = rectangularSelection.rectangularSelect({
@@ -229,15 +233,20 @@ export default class Tool {
                                 x2: rectPosi2.x,
                                 y2: rectPosi2.y
                             }, state.selection);
+                            State.tmpStateBusket.push([action.UPDATE_SELECTION, selectedMarks]);
+                            State.saveHistory();
                             Reducer.triger(action.UPDATE_SELECTION, selectedMarks);
                         } else {//single selection
                             const clickedItem: HTMLElement = <HTMLElement>upEvt.target;
                             if (clickedItem.classList.contains('mark')) {//clicked on a mark
                                 const clickedMarkId: string = clickedItem.id;
-                                state.selection.includes(clickedMarkId) ?
-                                    Reducer.triger(action.UPDATE_SELECTION, [...state.selection].splice(state.selection.indexOf(clickedMarkId), 1)) :
-                                    Reducer.triger(action.UPDATE_SELECTION, [...state.selection, clickedMarkId]);
+                                const selectedMarks: string[] = state.selection.includes(clickedMarkId) ? [...state.selection].splice(state.selection.indexOf(clickedMarkId), 1) : [...state.selection, clickedMarkId];
+                                State.tmpStateBusket.push([action.UPDATE_SELECTION, selectedMarks]);
+                                State.saveHistory();
+                                Reducer.triger(action.UPDATE_SELECTION, selectedMarks);
                             } else {//didnt select any mark
+                                State.tmpStateBusket.push([action.UPDATE_SELECTION, []]);
+                                State.saveHistory();
                                 Reducer.triger(action.UPDATE_SELECTION, []);
                             }
                         }
@@ -281,12 +290,12 @@ export default class Tool {
                 }
             }
         })
-        if (typeof KfItem.staticKf !== 'undefined') {
-            const kfBBox: DOMRect = KfItem.staticKf.container.getBoundingClientRect();
-            if (mousePosi.x >= kfBBox.left && mousePosi.x <= kfBBox.right && mousePosi.y >= kfBBox.top && mousePosi.y <= kfBBox.bottom) {
-                dragOverItem = KfItem.staticKf;
-            }
-        }
+        // if (typeof KfItem.staticKf !== 'undefined') {
+        //     const kfBBox: DOMRect = KfItem.staticKf.container.getBoundingClientRect();
+        //     if (mousePosi.x >= kfBBox.left && mousePosi.x <= kfBBox.right && mousePosi.y >= kfBBox.top && mousePosi.y <= kfBBox.bottom) {
+        //         dragOverItem = KfItem.staticKf;
+        //     }
+        // }
         return dragOverItem;
     }
 

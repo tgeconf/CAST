@@ -106,8 +106,11 @@ export default class ViewWindow {
             iconClass: 'zoom-out-icon'
         }));
         //create zooming slider
-        const slider: Slider = new Slider([0, 100], 50);
+        const slider: Slider = new Slider([0.5, 1.5], 1);
         slider.createSlider()
+        slider.callbackFunc = (zl: number) => {
+            Reducer.triger(action.KEYFRAME_ZOOM_LEVEL, zl);
+        };
         toolContainer.appendChild(slider.sliderContainer);
         toolContainer.appendChild(this.createBtn({
             title: 'Zoom In',
@@ -140,11 +143,15 @@ export default class ViewWindow {
         suggestBox.type = 'checkbox';
         suggestBox.onchange = (evt) => {
             //save histroy before update state
-            State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, state.suggestion]);
-            State.saveHistory();
+            // State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, state.suggestion]);
+
             if ((<HTMLInputElement>evt.target).checked) {
+                State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, true]);
+                State.saveHistory();
                 Reducer.triger(action.TOGGLE_SUGGESTION, true);
             } else {
+                State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, false]);
+                State.saveHistory();
                 Reducer.triger(action.TOGGLE_SUGGESTION, false);
             }
         }
@@ -214,15 +221,19 @@ export class ViewToolBtn {
 
     // btn listeners
     public suggestSelection(btnIcon: HTMLSpanElement): void {
-        State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, state.suggestion]);
-        State.saveHistory();
+        // State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, state.suggestion]);
+        // State.saveHistory();
         if (state.suggestion) {
             btnIcon.classList.add('selection-non-suggestion-icon');
             btnIcon.classList.remove('selection-suggestion-icon');
+            State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, false]);
+            State.saveHistory();
             Reducer.triger(action.TOGGLE_SUGGESTION, false);
         } else {
             btnIcon.classList.remove('selection-non-suggestion-icon');
             btnIcon.classList.add('selection-suggestion-icon');
+            State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, true]);
+            State.saveHistory();
             Reducer.triger(action.TOGGLE_SUGGESTION, true);
         }
     }

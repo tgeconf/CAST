@@ -7,8 +7,10 @@ export class Loading {
 
     public container: HTMLDivElement;
     public createLoading(wrapper: HTMLElement, content: string) {
-        // Load.removeLoading();
-        const wrapperBBox: DOMRect = wrapper.getBoundingClientRect();
+        //change cursor
+        document.body.classList.add('wait');
+
+        const wrapperBBox: DOMRect = wrapper.getBoundingClientRect();//fixed
         if (typeof this.container === 'undefined') {
             this.container = document.createElement('div');
             this.container.className = 'loading-container';
@@ -38,6 +40,8 @@ export class Loading {
         Loading.allLoadings.push(this);
     }
     public static removeLoading() {
+        //change cursor
+        document.body.classList.remove('wait');
         this.allLoadings.forEach((l: Loading) => {
             if (document.body.contains(l.container)) {
                 document.body.removeChild(l.container);

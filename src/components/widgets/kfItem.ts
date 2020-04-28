@@ -10,7 +10,7 @@ import { KfContainer } from '../kfContainer';
 import * as action from '../../app/action';
 import Reducer from '../../app/reducer';
 import { TimingSpec } from 'canis_toolkit';
-import { state } from '../../app/state';
+import { state, State } from '../../app/state';
 import KfTrack from './kfTrack';
 
 export default class KfItem extends KfTimingIllus {
@@ -194,15 +194,15 @@ export default class KfItem extends KfTimingIllus {
             //move the entire group
             // const aniGroup: KfGroup = this.parentObj.fetchAniGroup();
             targetMoveItem.container.setAttributeNS(null, '_transform', targetMoveItem.container.getAttributeNS(null, 'transform'));
-            const containerBBox: DOMRect = targetMoveItem.container.getBoundingClientRect();
+            const containerBBox: DOMRect = targetMoveItem.container.getBoundingClientRect();//fixed
             if (targetMoveItem.parentObj.container.contains(targetMoveItem.container)) {
                 targetMoveItem.parentObj.container.removeChild(targetMoveItem.container);
             }
             const popKfContainer: HTMLElement = document.getElementById(KfContainer.KF_POPUP);
-            const popKfContainerBbox: DOMRect = popKfContainer.getBoundingClientRect();
+            const popKfContainerBbox: DOMRect = popKfContainer.getBoundingClientRect();//fixed
             popKfContainer.appendChild(targetMoveItem.container);
             //set new transform
-            targetMoveItem.container.setAttributeNS(null, 'transform', `translate(${containerBBox.left - popKfContainerBbox.left}, ${containerBBox.top - popKfContainerBbox.top})`);
+            targetMoveItem.container.setAttributeNS(null, 'transform', `translate(${(containerBBox.left - popKfContainerBbox.left) / state.zoomLevel}, ${(containerBBox.top - popKfContainerBbox.top) / state.zoomLevel})`);
 
             let updateSpec: boolean = false;
             let actionType: string = '';
@@ -216,14 +216,14 @@ export default class KfItem extends KfTimingIllus {
                 targetMoveItem.hideTitle();
                 targetMoveItem.hideMenu();
                 document.onmousemove = (moveEvt) => {
-                    const alignWithGroupBBox: DOMRect = targetMoveItem.fetchAlignWithGroup().container.getBoundingClientRect();
+                    const alignWithGroupBBox: DOMRect = targetMoveItem.fetchAlignWithGroup().container.getBoundingClientRect();//fixed
                     const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
-                    const posiDiff: ICoord = { x: currentMousePosi.x - oriMousePosi.x, y: currentMousePosi.y - oriMousePosi.y };
+                    const posiDiff: ICoord = { x: (currentMousePosi.x - oriMousePosi.x) / state.zoomLevel, y: (currentMousePosi.y - oriMousePosi.y) / state.zoomLevel };
                     const oriTrans: ICoord = Tool.extractTransNums(targetMoveItem.container.getAttributeNS(null, 'transform'));
                     targetMoveItem.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${oriTrans.y + posiDiff.y})`);
 
-                    const currentBBox: DOMRect = targetMoveItem.container.getBoundingClientRect();
-                    if (currentBBox.top - alignWithGroupBBox.top <= KfTrack.TRACK_HEIGHT * 0.6 && currentBBox.top - alignWithGroupBBox.top >= 0) {//set merge to true
+                    const currentBBox: DOMRect = targetMoveItem.container.getBoundingClientRect();//fixed
+                    if ((currentBBox.top - alignWithGroupBBox.top) / state.zoomLevel <= KfTrack.TRACK_HEIGHT * 0.6 && (currentBBox.top - alignWithGroupBBox.top) / state.zoomLevel >= 0) {//set merge to true
                         //change ref line to align frame
                         allKfItems.forEach((kf: KfItem) => {
                             kf.showAlignFrame();
@@ -242,7 +242,7 @@ export default class KfItem extends KfTimingIllus {
                             actionType = action.UPDATE_ALIGN_MERGE;
                             actionInfo = { aniId: this.aniId, merge: true }
                         }
-                    } else if (currentBBox.top - alignWithGroupBBox.top >= KfTrack.TRACK_HEIGHT * 0.6) {//set merge to false
+                    } else if ((currentBBox.top - alignWithGroupBBox.top) / state.zoomLevel >= KfTrack.TRACK_HEIGHT * 0.6) {//set merge to false
                         //change align frame to ref line
                         allKfItems.forEach((kf: KfItem) => {
                             kf.hideAlignFrame();
@@ -288,17 +288,17 @@ export default class KfItem extends KfTimingIllus {
             } else {//this kf is not aligned to others
                 document.onmousemove = (moveEvt) => {
                     const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
-                    const posiDiff: ICoord = { x: currentMousePosi.x - oriMousePosi.x, y: currentMousePosi.y - oriMousePosi.y };
+                    const posiDiff: ICoord = { x: (currentMousePosi.x - oriMousePosi.x) / state.zoomLevel, y: (currentMousePosi.y - oriMousePosi.y) / state.zoomLevel };
                     const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
                     this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + posiDiff.x}, ${oriTrans.y + posiDiff.y})`);
                     const preSibling: KfItem | KfOmit = this.parentObj.children[this.idxInGroup - 1];
                     if (this.idxInGroup > 0 && preSibling instanceof KfItem) {//this is not the first kf in group, need to check the position relation with previous kf
-                        const currentKfLeft: number = this.kfBg.getBoundingClientRect().left;
-                        const preKfRight: number = preSibling.kfBg.getBoundingClientRect().right;
-                        const posiDiff: number = currentKfLeft - preKfRight;
+                        const currentKfLeft: number = this.kfBg.getBoundingClientRect().left;//fixed
+                        const preKfRight: number = preSibling.kfBg.getBoundingClientRect().right;//fixed
+                        const posiXDiff: number = (currentKfLeft - preKfRight) / state.zoomLevel;
                         const currentKfOffsetW: number = KfItem.BASIC_OFFSET_DURATION_W > this.offsetWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.offsetWidth;
                         const preKfDurationW: number = KfItem.BASIC_OFFSET_DURATION_W > this.durationWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.durationWidth;
-                        if (posiDiff >= currentKfOffsetW + preKfDurationW) {//show both pre duration and current offset
+                        if (posiXDiff >= currentKfOffsetW + preKfDurationW) {//show both pre duration and current offset
                             preSibling.cancelKfDragoverKf();
                             if (this.hasOffset) {
                                 this.showOffset();
@@ -331,7 +331,7 @@ export default class KfItem extends KfTimingIllus {
                                 updateSpec = false;
                                 actionInfo = {};
                             }
-                        } else if (posiDiff >= preKfDurationW && posiDiff < currentKfOffsetW + preKfDurationW) {//show pre duration
+                        } else if (posiXDiff >= preKfDurationW && posiXDiff < currentKfOffsetW + preKfDurationW) {//show pre duration
                             preSibling.cancelKfDragoverKf();
                             if (this.hasOffset) {
                                 this.hideOffset();
@@ -351,8 +351,9 @@ export default class KfItem extends KfTimingIllus {
                             //target actions
                             if (this.hasOffset && preSibling.hasDuration) {
                                 updateSpec = true;//remove offset between kfs
-                                actionType = action.UPDATE_DELAY_BETWEEN_KF;
+                                actionType = action.REMOVE_DELAY_BETWEEN_KF;
                                 actionInfo.aniId = this.parentObj.aniId;
+                                console.log('remveo offset: ', actionInfo);
                             } else if (this.hasOffset && !preSibling.hasDuration) {
                                 updateSpec = true;//change timing ref from with to after and remove offset
                                 actionType = action.UPDATE_TIMING_REF_DELAY_KF;
@@ -363,7 +364,7 @@ export default class KfItem extends KfTimingIllus {
                                 updateSpec = false;
                                 actionInfo = {};
                             }
-                        } else if (posiDiff < preKfDurationW && posiDiff >= 0) {//show current offset
+                        } else if (posiXDiff < preKfDurationW && posiXDiff >= 0) {//show current offset
                             preSibling.cancelKfDragoverKf();
                             if (this.hasOffset) {
                                 this.showOffset();
@@ -433,6 +434,8 @@ export default class KfItem extends KfTimingIllus {
                             this.parentObj.container.appendChild(this.container);
                         }
                     } else {
+                        State.tmpStateBusket.push([actionType, actionInfo]);
+                        State.saveHistory();
                         Reducer.triger(actionType, actionInfo);
                         popKfContainer.removeChild(this.container);
                     }
@@ -478,8 +481,8 @@ export default class KfItem extends KfTimingIllus {
             if (typeof IntelliRefLine.kfLineMapping.get(this.kfInfo.alignTo) !== 'undefined') {//already a line
                 const refLineId: number = IntelliRefLine.kfLineMapping.get(this.kfInfo.alignTo).lineId;
                 const oriToKf: number = IntelliRefLine.kfLineMapping.get(this.kfInfo.alignTo).theOtherEnd;
-                const oriToKfBottom: number = KfItem.allKfItems.get(oriToKf).container.getBoundingClientRect().bottom;
-                const currentKfBottom: number = this.container.getBoundingClientRect().bottom;
+                const oriToKfBottom: number = KfItem.allKfItems.get(oriToKf).container.getBoundingClientRect().bottom;//fixed
+                const currentKfBottom: number = this.container.getBoundingClientRect().bottom;//fixed
                 if (currentKfBottom > oriToKfBottom) {//update the line info
                     IntelliRefLine.kfLineMapping.get(this.kfInfo.alignTo).theOtherEnd = this.id;
                     IntelliRefLine.kfLineMapping.delete(oriToKf);
@@ -499,10 +502,10 @@ export default class KfItem extends KfTimingIllus {
 
     public showAlignFrame() {
         if (typeof this.alignFrame === 'undefined') {
-            const itemBBox: DOMRect = this.container.getBoundingClientRect();
+            const itemBBox: DOMRect = this.container.getBoundingClientRect();//fixed
             this.alignFrame = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            this.alignFrame.setAttributeNS(null, 'width', `${itemBBox.width}`);
-            this.alignFrame.setAttributeNS(null, 'height', `${itemBBox.height}`);
+            this.alignFrame.setAttributeNS(null, 'width', `${itemBBox.width / state.zoomLevel}`);
+            this.alignFrame.setAttributeNS(null, 'height', `${itemBBox.height / state.zoomLevel}`);
             this.alignFrame.setAttributeNS(null, 'stroke', KfItem.FRAME_COLOR);
             this.alignFrame.setAttributeNS(null, 'stroke-width', '1');
             this.alignFrame.setAttributeNS(null, 'stroke-dasharray', '4 2');
@@ -545,7 +548,7 @@ export default class KfItem extends KfTimingIllus {
 
     public updateAlignPosi(alignTo: number) {
         //use bbox to compare position
-        const currentPosiX: number = this.container.getBoundingClientRect().left;
+        const currentPosiX: number = this.container.getBoundingClientRect().left;//fixed
         const currentKfInfo: IKeyframe = KfItem.allKfInfo.get(this.id);
         const alignedKfInfo: IKeyframe = KfItem.allKfInfo.get(alignTo);
         const alignedKfItem: KfItem = KfItem.allKfItems.get(alignTo);
@@ -553,16 +556,16 @@ export default class KfItem extends KfTimingIllus {
         if (alignedKfItem.rendered) {
             let alignedKfBgX: number = 0;
             if (currentKfInfo.timingRef === TimingSpec.timingRef.previousStart) {
-                alignedKfBgX = alignedKfItem.kfBg.getBoundingClientRect().left;
+                alignedKfBgX = alignedKfItem.kfBg.getBoundingClientRect().left;//fixed
             } else {
                 console.log('updateing align position: ', alignedKfItem, KfItem.allKfInfo.get(alignedKfItem.id));
-                alignedKfBgX = alignedKfItem.container.getBoundingClientRect().right;
+                alignedKfBgX = alignedKfItem.container.getBoundingClientRect().right;//fixed
                 KfItem.allKfInfo.get(alignedKfItem.id).alignWithKfs.forEach((kfId: number) => {
                     console.log('fetching kf: ', kfId, this.id, KfItem.allKfItems);
                     if (kfId !== this.id) {
                         const tmpKf: KfItem = KfItem.allKfItems.get(kfId);
                         if (typeof tmpKf !== 'undefined' && tmpKf.rendered) {
-                            const tmpKfBBox: DOMRect = tmpKf.container.getBoundingClientRect();
+                            const tmpKfBBox: DOMRect = tmpKf.container.getBoundingClientRect();//fixed
                             if (tmpKfBBox.right > alignedKfBgX) {
                                 alignedKfBgX = tmpKfBBox.right;
                             }
@@ -570,16 +573,15 @@ export default class KfItem extends KfTimingIllus {
                     }
                 })
             }
-            const bgDiffX: number = Math.abs(currentPosiX - alignedKfBgX);
-            console.log('calculate bg diff: ', alignedKfBgX, currentPosiX, bgDiffX);
+            const bgDiffX: number = Math.abs((currentPosiX - alignedKfBgX) / state.zoomLevel);
             if (currentPosiX > alignedKfBgX) { //translate aligned kf and its group
                 console.log('translating alignwith kf');
-                let posiXForNextKf: number = this.container.getBoundingClientRect().right;
+                let posiXForNextKf: number = this.container.getBoundingClientRect().right;//fixed
 
                 //update aligned kfs, together with those kfs after it, and those in its parent group
                 const currentAlignedKfTransX: number = Tool.extractTransNums(alignedKfItem.container.getAttributeNS(null, 'transform')).x;
                 alignedKfItem.container.setAttributeNS(null, 'transform', `translate(${currentAlignedKfTransX + bgDiffX}, ${KfItem.PADDING})`);
-                const alignedKfItemBBox: DOMRect = alignedKfItem.container.getBoundingClientRect();
+                const alignedKfItemBBox: DOMRect = alignedKfItem.container.getBoundingClientRect();//fixed
                 if (alignedKfItemBBox.right > posiXForNextKf) {
                     posiXForNextKf = alignedKfItemBBox.right;
                 }
@@ -589,7 +591,7 @@ export default class KfItem extends KfTimingIllus {
                         const tmpKfItem = KfItem.allKfItems.get(kfId);
                         if (typeof tmpKfItem !== 'undefined') {
                             tmpKfItem.parentObj.translateGroup(tmpKfItem, bgDiffX, false, true, true);
-                            const tmpKfItemBBox: DOMRect = tmpKfItem.container.getBoundingClientRect();
+                            const tmpKfItemBBox: DOMRect = tmpKfItem.container.getBoundingClientRect();//fixed
                             if (tmpKfItemBBox.right > posiXForNextKf) {
                                 posiXForNextKf = tmpKfItemBBox.right;
                             }
@@ -609,8 +611,9 @@ export default class KfItem extends KfTimingIllus {
                             c.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transXForNextKf}, ${tmpTrans.y})`);
                             console.log('going to update transx: ');
                         } else {
-                            if (c.container.getBoundingClientRect().left + transXForNextKf < posiXForNextKf) {
-                                transXForNextKf = posiXForNextKf - c.container.getBoundingClientRect().left;
+                            const tmpBBox: DOMRect = c.container.getBoundingClientRect();//fixed
+                            if (tmpBBox.left + transXForNextKf * state.zoomLevel < posiXForNextKf) {
+                                transXForNextKf = (posiXForNextKf - tmpBBox.left) / state.zoomLevel;
                             }
                             nextKf = c;
                             break;
@@ -623,14 +626,12 @@ export default class KfItem extends KfTimingIllus {
 
                 //update position of next kf in aligned group
                 if (transXForNextKf > 0) {
-                    console.log('translating nex kf: ', nextKf, transXForNextKf);
                     nextKf.parentObj.translateGroup(nextKf, transXForNextKf, true, true, true);
                 }
             } else {//translate current kf
                 console.log('translating current alignto kf');
                 const currentTransX: number = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform')).x;
                 this.container.setAttributeNS(null, 'transform', `translate(${currentTransX + bgDiffX}, ${KfItem.PADDING})`);
-                console.log('updating translate: ', currentTransX, bgDiffX, currentTransX + bgDiffX);
                 this.totalWidth += bgDiffX;
 
                 //find the next kf in aligned group
@@ -643,8 +644,10 @@ export default class KfItem extends KfTimingIllus {
                         if (c instanceof KfOmit) {
                             // transXForNextKf += KfOmit.OMIT_W + KfGroup.PADDING;
                         } else {
-                            if (c.container.getBoundingClientRect().left < this.container.getBoundingClientRect().right) {
-                                transXForNextKf = this.container.getBoundingClientRect().right - c.container.getBoundingClientRect().left;
+                            const currentBBox: DOMRect = this.container.getBoundingClientRect();//fixed
+                            const tmpBBox: DOMRect = c.container.getBoundingClientRect();//fixed
+                            if (tmpBBox.left < currentBBox.right) {
+                                transXForNextKf = (currentBBox.right - tmpBBox.left) / state.zoomLevel;
                             }
                             nextKf = c;
                             break;
@@ -770,8 +773,7 @@ export default class KfItem extends KfTimingIllus {
         let currentSelection: string[] = state.selection;
         Reducer.triger(action.UPDATE_SELECTION, []);
         if (this.id === KfItem.STATIC_KF_ID) {
-            //update static marks
-            Reducer.triger(action.UPDATE_STATIC_SELECTOR, currentSelection);
+
         } else {
 
         }

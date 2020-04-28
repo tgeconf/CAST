@@ -24,7 +24,7 @@ export default class DragableCanvas {
         const ctx = canvas.getContext('2d');
         document.body.appendChild(canvas);
 
-        const svgW: number = targetSVG.getBoundingClientRect().width, svgH: number = targetSVG.getBoundingClientRect().height;
+        const svgW: number = targetSVG.getBoundingClientRect().width, svgH: number = targetSVG.getBoundingClientRect().height;//fixed
         canvas.width = KfItem.KF_WIDTH;
         canvas.height = KfItem.KF_HEIGHT;
         canvas.style.left = `${downCoord.x - canvas.width / 2}px`;

@@ -415,7 +415,6 @@ export default class Util {
             for (let j = 0; j < len; j++) {
                 if (sda[j].attr === state.sortDataAttrs[i].attr) {
                     found = sda[j].sort !== state.sortDataAttrs[i].sort;
-                    console.log('testing: ', sda[j], state.sortDataAttrs[i], found);
                     if (found) {
                         result.attr = sda[j].attr;
                         result.sort = sda[j].sort;
@@ -581,7 +580,7 @@ export default class Util {
      * @param parentId 
      */
     public static aniLeafToKF(aniLeaf: any, leafIdx: number, aniId: string, parentObj: IKeyframeGroup, parentMarks: string[]): IKeyframe {
-        console.log('creating kf info: ', aniLeaf, Animation.animations);
+        console.log('creating kf info: ', aniLeaf, Animation.animations, KfGroup.allActions, aniId);
         //find the min and max duraion of kfs, in order to render kfs
         const tmpDuration: number = aniLeaf.end - aniLeaf.start;
         aniLeaf.marks = [...new Set(aniLeaf.marks)];
@@ -597,19 +596,28 @@ export default class Util {
             }
         })
         let allCurrentMarks: string[] = [];
-        Animation.animations.forEach((ani: any, tmpAniId: string) => {
-            if (tmpAniId === aniId) {
-                allCurrentMarks = [...allCurrentMarks, ...ani.marksInOrder.slice(0, targetIdx)];
-            } else {
-                for (let i = 0, len = ani.marksInOrder.length; i < len; i++) {
-                    if (Animation.allMarkAni.get(ani.marksInOrder[i]).startTime >= minStartTime) {
-                        break;
-                    }
-                    allCurrentMarks.push(ani.marksInOrder[i]);
+        // Animation.animations.forEach((ani: any, tmpAniId: string) => {
+        //     if (tmpAniId === aniId) {
+        //         allCurrentMarks = [...allCurrentMarks, ...ani.marksInOrder.slice(0, targetIdx)];
+        //     } else {
+        //         for (let i = 0, len = ani.marksInOrder.length; i < len; i++) {
+        //             if (Animation.allMarkAni.get(ani.marksInOrder[i]).startTime >= minStartTime) {
+        //                 break;
+        //             }
+        //             allCurrentMarks.push(ani.marksInOrder[i]);
+        //         }
+        //     }
+        // })
+        Animation.animations.forEach((ani: any) => {
+            const tmpMarksInOrder: string[] = ani.marksInOrder;
+            tmpMarksInOrder.forEach((m: string) => {
+                if (Animation.allMarkAni.get(m).startTime < minStartTime) {
+                    allCurrentMarks.push(m);
                 }
-            }
+            })
         })
-        allCurrentMarks = [...state.staticMarks, ...allCurrentMarks];
+        // allCurrentMarks = [...allCurrentMarks];
+        // allCurrentMarks = [...state.staticMarks, ...allCurrentMarks];
 
         let drawDelay: boolean = (aniLeaf.delay > 0 && leafIdx > 0);
         let drawDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousEnd || parentObj.marks.length === aniLeaf.marks.length;
@@ -620,7 +628,7 @@ export default class Util {
             drawDuration = false;
         }
         let drawHiddenDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousStart && parentMarks.length > aniLeaf.marks;
-
+        console.log('all current marks: ', allCurrentMarks, parentMarks, aniLeaf.marks);
         let tmpKf: IKeyframe = {
             id: aniLeaf.id,
             timingRef: aniLeaf.timingRef,

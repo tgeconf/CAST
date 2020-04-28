@@ -14,7 +14,7 @@ import Reducer from "../../app/reducer";
 import { TimingSpec, Animation } from 'canis_toolkit';
 import PlusBtn from "./plusBtn";
 import { hintTag } from "./hint";
-import { state } from "../../app/state";
+import { state, State } from "../../app/state";
 
 export default class KfGroup extends KfTimingIllus {
     static groupIdx: number = 0;
@@ -157,8 +157,8 @@ export default class KfGroup extends KfTimingIllus {
                 //find the aligned group
                 const alignWithGroup: KfGroup = this.fetchAlignWithGroup();
                 //align to the lowest group
-                const lwestGroupBBox: DOMRect = alignWithGroup.fetchFirstKf().parentObj.container.getBoundingClientRect();
-                const transY: number = this.parentObj.container.getBoundingClientRect().top - lwestGroupBBox.top + 2;
+                const lowestGroupBBox: DOMRect = alignWithGroup.fetchFirstKf().parentObj.container.getBoundingClientRect();//fixed
+                const transY: number = (this.parentObj.container.getBoundingClientRect().top - lowestGroupBBox.top) / state.zoomLevel + 2;
                 this.posiY -= transY;
                 //hide omits in alignwith group
                 alignWithGroup.kfOmits.forEach((kfo: KfOmit) => {
@@ -322,13 +322,13 @@ export default class KfGroup extends KfTimingIllus {
             this.unbindTitleHover();
             let oriMousePosi: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
             this.container.setAttributeNS(null, '_transform', this.container.getAttributeNS(null, 'transform'));
-            const containerBBox: DOMRect = this.container.getBoundingClientRect();
+            const containerBBox: DOMRect = this.container.getBoundingClientRect();//fixed
             this.parentObj.container.removeChild(this.container);
             const popKfContainer: HTMLElement = document.getElementById(KfContainer.KF_POPUP);
-            const popKfContainerBbox: DOMRect = popKfContainer.getBoundingClientRect();
+            const popKfContainerBbox: DOMRect = popKfContainer.getBoundingClientRect();//fixed
             popKfContainer.appendChild(this.container);
             //set new transform
-            this.container.setAttributeNS(null, 'transform', `translate(${containerBBox.left - popKfContainerBbox.left}, ${containerBBox.top - popKfContainerBbox.top + KfGroup.TITLE_HEIHGT})`);
+            this.container.setAttributeNS(null, 'transform', `translate(${(containerBBox.left - popKfContainerBbox.left) / state.zoomLevel}, ${KfGroup.TITLE_HEIHGT + (containerBBox.top - popKfContainerBbox.top) / state.zoomLevel})`);
 
             let updateSpec: boolean = false;
             let actionType: string = '';
@@ -343,7 +343,7 @@ export default class KfGroup extends KfTimingIllus {
 
             document.onmousemove = (moveEvt) => {
                 const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
-                const posiDiff: ICoord = { x: currentMousePosi.x - oriMousePosi.x, y: currentMousePosi.y - oriMousePosi.y };
+                const posiDiff: ICoord = { x: (currentMousePosi.x - oriMousePosi.x) / state.zoomLevel, y: (currentMousePosi.y - oriMousePosi.y) / state.zoomLevel };
                 const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
                 this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + posiDiff.x}, ${oriTrans.y + posiDiff.y})`);
                 if (this.idxInGroup > 0 && preSibling.rendered && this.groupRef !== 'root') {//group within animation
@@ -372,6 +372,8 @@ export default class KfGroup extends KfTimingIllus {
                     }
                 } else {
                     //triger action
+                    State.tmpStateBusket.push([actionType, actionInfo]);
+                    State.saveHistory();
                     Reducer.triger(actionType, actionInfo);
                     popKfContainer.removeChild(this.container);
                 }
@@ -407,7 +409,7 @@ export default class KfGroup extends KfTimingIllus {
      */
     public dragAniGroup(): [boolean, string, any] {
         const currentAniId: string = this.aniId;
-        const currentGBBox: DOMRect = this.groupBg.getBoundingClientRect();
+        const currentGBBox: DOMRect = this.groupBg.getBoundingClientRect();//fixed
         const currentGPosi: ICoord = { x: currentGBBox.left, y: currentGBBox.top };
         let targetAni: { targetAniId: string, currentAniId: string, actionType: string };
         for (let i = 0, len = [...KfGroup.allAniGroups].length; i < len; i++) {
@@ -416,35 +418,35 @@ export default class KfGroup extends KfTimingIllus {
                 const firstKf: KfItem = aniGroup.fetchFirstKf();
                 const alignTargetGroup: boolean = typeof KfItem.allKfInfo.get(firstKf.id).alignTo === 'undefined';
                 //judge the relative position between this one and aniGroup & the first Kf in aniGroup
-                const aniGroupBBox: DOMRect = aniGroup.groupBg.getBoundingClientRect();
-                const firstKfBBox: DOMRect = firstKf.container.getBoundingClientRect();
+                const aniGroupBBox: DOMRect = aniGroup.groupBg.getBoundingClientRect();//fixed
+                const firstKfBBox: DOMRect = firstKf.container.getBoundingClientRect();//fixed
                 const targetAniId: string = aniGroup.aniId;
 
                 //add orange lines according to drag position
-                if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + 20 && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
+                if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + (20 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
                     targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_ANI };//after group has higher priority
                     hintDrop.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height, true, true);
+                    console.log('hint insert');
                     break;
                 } else {
-                    if (currentGPosi.x >= aniGroupBBox.left && currentGPosi.x < aniGroupBBox.left + 6 && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
+                    if (currentGPosi.x >= aniGroupBBox.left && currentGPosi.x < aniGroupBBox.left + (6 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
                         targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_WITH_ANI };
-                        hintDrop.hintAlign({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height, true);
-                    } else if (currentGPosi.x >= firstKfBBox.left && currentGPosi.x < firstKfBBox.left + 6 && alignTargetGroup) {
+                        hintDrop.hintAlign({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true);
+                    } else if (currentGPosi.x >= firstKfBBox.left && currentGPosi.x < firstKfBBox.left + (6 * state.zoomLevel) && alignTargetGroup) {
                         targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_WITH_KF };
-                        hintDrop.hintAlign({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height, true);
-                    } else if (currentGPosi.x >= firstKfBBox.right && currentGPosi.x < firstKfBBox.right + 6 && alignTargetGroup) {
+                        hintDrop.hintAlign({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, true);
+                    } else if (currentGPosi.x >= firstKfBBox.right && currentGPosi.x < firstKfBBox.right + (6 * state.zoomLevel) && alignTargetGroup) {
                         targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_KF };
-                        hintDrop.hintAlign({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height, true);
+                        hintDrop.hintAlign({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, true);
                     }
                 }
             }
         }
         if (typeof targetAni === 'undefined') {
             hintDrop.removeHintLine();
-
             return [false, '', {}];
         } else {//triger action
-            return [true, targetAni.actionType, { targetAni: targetAni.targetAniId, currentAni: targetAni.currentAniId }];
+            return [true, targetAni.actionType, { targetAniId: targetAni.targetAniId, currentAniId: targetAni.currentAniId }];
         }
     }
 
@@ -452,16 +454,16 @@ export default class KfGroup extends KfTimingIllus {
         let updateSpec: boolean = false;
         let actionType: string = '';
         let actionInfo: any = {};
-        const currentGroupBBox: DOMRect = this.groupBg.getBoundingClientRect();
-        const preGroupBBox: DOMRect = preSibling.groupBg.getBoundingClientRect();
+        const currentGroupBBox: DOMRect = this.groupBg.getBoundingClientRect();//fixed
+        const preGroupBBox: DOMRect = preSibling.groupBg.getBoundingClientRect();//fixed
         const posiYDiff: number = currentGroupBBox.top - preGroupBBox.top;
-        const posiXRightDiff: number = currentGroupBBox.left - preGroupBBox.right;
-        const posiXLeftDiff: number = currentGroupBBox.left - preGroupBBox.left;
+        const posiXRightDiff: number = (currentGroupBBox.left - preGroupBBox.right) / state.zoomLevel;
+        const posiXLeftDiff: number = (currentGroupBBox.left - preGroupBBox.left) / state.zoomLevel;
         const currentKfOffsetW: number = KfGroup.BASIC_OFFSET_DURATION_W > this.offsetWidth ? KfGroup.BASIC_OFFSET_DURATION_W : this.offsetWidth;
         let correctTimingRef: boolean = true;
         let compareXDiff: number = posiXRightDiff;
         let updateTimingRef: string = '';
-        if (posiYDiff <= this.groupBg.getBoundingClientRect().height) {//timing ref should be start after
+        if (posiYDiff <= currentGroupBBox.height) {//timing ref should be start after
             if (this.timingRef !== TimingSpec.timingRef.previousEnd) {
                 correctTimingRef = false;
                 updateTimingRef = TimingSpec.timingRef.previousEnd;
@@ -477,7 +479,7 @@ export default class KfGroup extends KfTimingIllus {
             preSibling.cancelHighlightGroup();
             if (!this.hasOffset) {//add default delay
                 if (typeof this.offsetIllus === 'undefined') {
-                    this.drawOffset(KfGroup.minOffset, this.groupBg.getBoundingClientRect().height, KfGroup.GROUP_RX, true);
+                    this.drawOffset(KfGroup.minOffset, currentGroupBBox.height / state.zoomLevel, KfGroup.GROUP_RX, true);
                 }
                 this.container.prepend(this.offsetIllus);
 
@@ -534,7 +536,7 @@ export default class KfGroup extends KfTimingIllus {
                 }
             }
         } else {//
-            if (posiYDiff <= this.groupBg.getBoundingClientRect().height) {//timing ref should be start after
+            if (posiYDiff <= currentGroupBBox.height) {//timing ref should be start after
                 preSibling.highlightGroup();
                 updateSpec = true;
                 actionType = action.MERGE_GROUP;
@@ -707,7 +709,7 @@ export default class KfGroup extends KfTimingIllus {
         if (!extraInfo.lastItem) {
             currentTransX = Tool.extractTransNums(startTransItem.container.getAttributeNS(null, 'transform')).x;
         } else {
-            currentTransX = Tool.extractTransNums(startTransItem.container.getAttributeNS(null, 'transform')).x + startTransItem.container.getBoundingClientRect().width;
+            currentTransX = Tool.extractTransNums(startTransItem.container.getAttributeNS(null, 'transform')).x + (startTransItem.container.getBoundingClientRect().width / state.zoomLevel);//fixed
         }
         let count: number = 0;
         let comingThroughOmit: boolean = false;
@@ -766,10 +768,10 @@ export default class KfGroup extends KfTimingIllus {
     }
 
     public updateSiblingAndParentSizePosi(transX: number, updateAlignedKfs: boolean) {
-        const currentGroupBBox: DOMRect = this.container.getBoundingClientRect();
+        const currentGroupBBox: DOMRect = this.container.getBoundingClientRect();//fixed
         this.parentObj.children.forEach((c: KfGroup | KfOmit) => {
             if (c.rendered) {
-                const tmpGroupBBox: DOMRect = c.container.getBoundingClientRect();
+                const tmpGroupBBox: DOMRect = c.container.getBoundingClientRect();//fixed
                 if (tmpGroupBBox.left >= currentGroupBBox.left && c.id !== this.id) {
                     if (c instanceof KfOmit || (c instanceof KfGroup && c.rendered)) {
                         const tmpTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
@@ -779,20 +781,21 @@ export default class KfGroup extends KfTimingIllus {
                             if (c.children[0] instanceof KfItem && updateAlignedKfs) {//need to update the aligned kfs and their group
                                 c.children.forEach((cc: KfItem | KfOmit) => {
                                     if (cc instanceof KfItem) {
-                                        const tmpAlignTargetLeft: number = cc.kfBg.getBoundingClientRect().left;
-                                        const tmpAlignTargetRight: number = cc.container.getBoundingClientRect().right;
+                                        const tmpAlignTargetLeft: number = cc.kfBg.getBoundingClientRect().left;//fixed
+                                        const tmpAlignTargetRight: number = cc.container.getBoundingClientRect().right;//fixed
                                         if (typeof KfItem.allKfInfo.get(cc.id).alignWithKfs !== 'undefined') {
                                             KfItem.allKfInfo.get(cc.id).alignWithKfs.forEach((kfId: number) => {
                                                 const tmpKfItem: KfItem = KfItem.allKfItems.get(kfId);
                                                 const tmpKfItemInfo: IKeyframe = KfItem.allKfInfo.get(kfId);
                                                 if (typeof tmpKfItem !== 'undefined') {
+                                                    const tmpKfItemBBox: DOMRect = tmpKfItem.container.getBoundingClientRect();//fixed
                                                     if (tmpKfItemInfo.timingRef === TimingSpec.timingRef.previousEnd) {
-                                                        if (tmpKfItem.container.getBoundingClientRect().left !== tmpAlignTargetRight) {//this kf together with its group need to be updated
-                                                            tmpKfItem.parentObj.translateGroup(tmpKfItem, tmpAlignTargetRight - tmpKfItem.container.getBoundingClientRect().left, false, true, true);
+                                                        if (tmpKfItemBBox.left !== tmpAlignTargetRight) {//this kf together with its group need to be updated
+                                                            tmpKfItem.parentObj.translateGroup(tmpKfItem, (tmpAlignTargetRight - tmpKfItemBBox.left) / state.zoomLevel, false, true, true);
                                                         }
                                                     } else {
-                                                        if (tmpKfItem.container.getBoundingClientRect().left !== tmpAlignTargetLeft) {//this kf together with its group need to be updated
-                                                            tmpKfItem.parentObj.translateGroup(tmpKfItem, tmpAlignTargetLeft - tmpKfItem.container.getBoundingClientRect().left, false, true, true);
+                                                        if (tmpKfItemBBox.left !== tmpAlignTargetLeft) {//this kf together with its group need to be updated
+                                                            tmpKfItem.parentObj.translateGroup(tmpKfItem, (tmpAlignTargetLeft - tmpKfItemBBox.left) / state.zoomLevel, false, true, true);
                                                         }
                                                     }
                                                 }
@@ -838,7 +841,7 @@ export default class KfGroup extends KfTimingIllus {
                     const currentTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
                     c.container.setAttributeNS(null, 'transform', `translate(${currentTrans.x - diffX}, ${currentTrans.y})`);
                 }
-                const tmpBBox: DOMRect = c.container.getBoundingClientRect();
+                const tmpBBox: DOMRect = c.container.getBoundingClientRect();//fixed
                 if (tmpBBox.top < maxBoundry.top) {
                     maxBoundry.top = tmpBBox.top;
                 }
@@ -853,8 +856,8 @@ export default class KfGroup extends KfTimingIllus {
                 }
             }
         })
-        let currentGroupWidth: number = maxBoundry.right - maxBoundry.left + 2 * KfGroup.PADDING + extraWidth;
-        let childHeight: number = maxBoundry.bottom - maxBoundry.top + 2 * KfGroup.PADDING;
+        let currentGroupWidth: number = (maxBoundry.right - maxBoundry.left) / state.zoomLevel + 2 * KfGroup.PADDING + extraWidth;
+        let childHeight: number = (maxBoundry.bottom - maxBoundry.top) / state.zoomLevel + 2 * KfGroup.PADDING;
         if (childHasHiddenDuration) {
             childHeight -= KfTimingIllus.EXTRA_HEIGHT;
         }
@@ -870,28 +873,14 @@ export default class KfGroup extends KfTimingIllus {
         //update available insert and groups in the tracks which current group prossesses
         if (this.parentObj instanceof KfTrack) {
             [...KfTrack.aniTrackMapping.get(this.aniId)].forEach((kfTrack: KfTrack) => {
-                const tmpBBox: DOMRect = this.groupBg.getBoundingClientRect();
+                const tmpBBox: DOMRect = this.groupBg.getBoundingClientRect();//fixed
                 const rightBoundary: number = tmpBBox.left + tmpBBox.width;
-                const kftStart: number = document.getElementById(KfContainer.KF_BG).getBoundingClientRect().left;
-                if (rightBoundary - kftStart > kfTrack.availableInsert) {
-                    console.log('setting avali insert: ', rightBoundary - kftStart);
-                    kfTrack.availableInsert = rightBoundary - kftStart;
+                const kftStart: number = document.getElementById(KfContainer.KF_BG).getBoundingClientRect().left;//fixed
+                if ((rightBoundary - kftStart) / state.zoomLevel > kfTrack.availableInsert) {
+                    kfTrack.availableInsert = (rightBoundary - kftStart) / state.zoomLevel;
                 }
-                console.log('track is: ', kfTrack, this.groupBg, rightBoundary - kftStart);
             })
         }
-        // if (this.parentObj instanceof KfTrack) {
-        //     KfTrack.aniTrackMapping.get(this.aniId).forEach((kft: KfTrack) => {
-        //         // kft.availableInsert += (currentGroupWidth - oriW);
-        //         const tmpBBox: DOMRect = this.groupBg.getBoundingClientRect();
-        //         const rightBoundary: number = tmpBBox.left + tmpBBox.width;
-        //         const kftStart: number = document.getElementById(KfContainer.KF_BG).getBoundingClientRect().left;
-        //         if (rightBoundary - kftStart > kft.availableInsert) {
-        //             kft.availableInsert = rightBoundary - kftStart;
-        //         }
-        //     })
-        // }
-
 
         return [diffX, currentGroupWidth, childHeight];
     }
@@ -914,7 +903,7 @@ export default class KfGroup extends KfTimingIllus {
                         this.kfOmits.forEach((kfO: KfOmit) => {
                             kfO.updateThumbnail(this.kfHasOffset, this.kfHasDuration);
                             kfO.updateNum(this.kfNum - 3);
-                            kfO.updateTrans(this.children[1].posiX + this.children[1].width, KfGroup.PADDING + this.children[1].posiY + this.children[1].container.getBoundingClientRect().height / 2);
+                            kfO.updateTrans(this.children[1].posiX + this.children[1].width, KfGroup.PADDING + this.children[1].posiY + (this.children[1].container.getBoundingClientRect().height / state.zoomLevel / 2));//fixed
                         })
                     }
                     if (c instanceof KfGroup) {
@@ -1078,7 +1067,7 @@ export class GroupMenu {
             }
         }
         btnContainer.onclick = () => {
-            const btnContainerBBox: DOMRect = btnContainer.getBoundingClientRect();
+            const btnContainerBBox: DOMRect = btnContainer.getBoundingClientRect();//fixed
             this.createMenuList({ x: btnContainerBBox.left + btnContainerBBox.width, y: btnContainerBBox.top + btnContainerBBox.height / 2 }, btnType);
         }
         return btnContainer;
@@ -1155,7 +1144,7 @@ export class GroupMenu {
     public createMenuList(posi: ICoord, btnType: string) {
         const menuLayer: HTMLElement = document.getElementById(KfContainer.KF_MENU);
         menuLayer.innerHTML = '';
-        const menuLayerBBox: DOMRect = menuLayer.getBoundingClientRect();
+        const menuLayerBBox: DOMRect = menuLayer.getBoundingClientRect();//fixed
         this.menuListContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.menuListContainer.onmouseleave = () => {
             menuLayer.innerHTML = '';
@@ -1183,7 +1172,7 @@ export class GroupMenu {
             itemWidth = GroupMenu.EASING_MENU_LIST_WIDTH;
             actionType = action.UPDATE_EFFECT_EASING;
         }
-        this.menuListContainer.setAttributeNS(null, 'transform', `translate(${posi.x - menuLayerBBox.left + 4}, ${posi.y - menuLayerBBox.top - menuListHeight / 2})`);
+        this.menuListContainer.setAttributeNS(null, 'transform', `translate(${(posi.x - menuLayerBBox.left) / state.zoomLevel + 4}, ${(posi.y - menuLayerBBox.top) / state.zoomLevel - menuListHeight / 2})`);
         pointer.setAttributeNS(null, 'transform', `translate(0, ${menuListHeight / 2 - 3})`);
 
         const fakeBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -1212,7 +1201,10 @@ export class GroupMenu {
             }
             listItem.onclick = () => {
                 menuLayer.innerHTML = '';
-                Reducer.triger(actionType, { aniId: this.aniId, effectPropValue: content });
+                const actionInfo: any = { aniId: this.aniId, effectPropValue: content };
+                State.tmpStateBusket.push([actionType, actionInfo]);
+                State.saveHistory();
+                Reducer.triger(actionType, actionInfo);
             }
 
             if (idx > 0) {
@@ -1239,128 +1231,5 @@ export class GroupMenu {
             listItem.appendChild(text);
             this.menuListContainer.appendChild(listItem);
         })
-
-
-
-
-        // if (GroupMenu.EFFECTS.includes(btnType)) {
-        //     const menuListHeight: number = GroupMenu.EFFECTS.length * GroupMenu.MENU_LIST_ITEM_HEIGHT;
-        //     this.menuListContainer.setAttributeNS(null, 'transform', `translate(${posi.x - menuLayerBBox.left + 4}, ${posi.y - menuLayerBBox.top - menuListHeight / 2})`);
-        //     pointer.setAttributeNS(null, 'transform', `translate(0, ${menuListHeight / 2 - 3})`);
-
-        //     const fakeBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        //     fakeBg.setAttributeNS(null, 'fill', '#00000000');
-        //     fakeBg.setAttributeNS(null, 'width', '10');
-        //     fakeBg.setAttributeNS(null, 'height', `${menuListHeight}`);
-        //     fakeBg.setAttributeNS(null, 'transform', 'translate(-6, 0)');
-        //     this.menuListContainer.appendChild(fakeBg);
-
-        //     GroupMenu.EFFECTS.forEach((effect: string, idx: number) => {
-        //         const listItem: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        //         listItem.classList.add('clickable-component');
-        //         listItem.setAttributeNS(null, 'transform', `translate(3, ${idx * GroupMenu.MENU_LIST_ITEM_HEIGHT})`);
-
-        //         const itemBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        //         itemBg.setAttributeNS(null, 'width', `${GroupMenu.MENU_LIST_WIDTH}`);
-        //         itemBg.setAttributeNS(null, 'height', `${GroupMenu.MENU_LIST_ITEM_HEIGHT}`);
-        //         itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
-        //         listItem.appendChild(itemBg);
-
-        //         listItem.onmouseenter = () => {
-        //             itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_HIGHLIGHT_COLOR);
-        //         }
-        //         listItem.onmouseleave = () => {
-        //             itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
-        //         }
-        //         listItem.onclick = () => {
-        //             menuLayer.innerHTML = '';
-        //             Reducer.triger(action.UPDATE_EFFECT_TYPE, { aniId: this.aniId, effectType: effect });
-        //         }
-
-        //         if (idx > 0) {
-        //             const splitLine: SVGLineElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        //             splitLine.setAttributeNS(null, 'x1', '0');
-        //             splitLine.setAttributeNS(null, 'x2', `${GroupMenu.MENU_LIST_WIDTH}`);
-        //             splitLine.setAttributeNS(null, 'y1', '0');
-        //             splitLine.setAttributeNS(null, 'y2', '0');
-        //             listItem.appendChild(splitLine);
-        //         }
-
-        //         const icon: SVGPathElement = this.createBtnIcon(effect);
-        //         icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
-        //         icon.setAttributeNS(null, 'transform', `translate(2, 2)`);
-        //         listItem.appendChild(icon);
-
-        //         const text: SVGTextContentElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        //         text.setAttributeNS(null, 'x', '26');
-        //         text.setAttributeNS(null, 'y', `${GroupMenu.MENU_LIST_ITEM_HEIGHT - 4}`);
-        //         text.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
-        //         text.classList.add('monospace-font');
-        //         text.setAttributeNS(null, 'font-size', '10pt');
-        //         text.innerHTML = effect;
-        //         listItem.appendChild(text);
-        //         this.menuListContainer.appendChild(listItem);
-
-        //     })
-        // } else if (GroupMenu.EASINGS.includes(btnType)) {
-        //     const menuListHeight: number = GroupMenu.EASINGS.length * GroupMenu.MENU_LIST_ITEM_HEIGHT;
-        //     this.menuListContainer.setAttributeNS(null, 'transform', `translate(${posi.x - menuLayerBBox.left + 4}, ${posi.y - menuLayerBBox.top - menuListHeight / 2})`);
-        //     pointer.setAttributeNS(null, 'transform', `translate(0, ${menuListHeight / 2 - 3})`);
-
-        //     const fakeBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        //     fakeBg.setAttributeNS(null, 'fill', '#00000000');
-        //     fakeBg.setAttributeNS(null, 'width', '10');
-        //     fakeBg.setAttributeNS(null, 'height', `${menuListHeight}`);
-        //     fakeBg.setAttributeNS(null, 'transform', 'translate(-6, 0)');
-        //     this.menuListContainer.appendChild(fakeBg);
-
-        //     GroupMenu.EASINGS.forEach((easing: string, idx: number) => {
-        //         const listItem: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        //         listItem.classList.add('clickable-component');
-        //         listItem.setAttributeNS(null, 'transform', `translate(3, ${idx * GroupMenu.MENU_LIST_ITEM_HEIGHT})`);
-
-        //         const itemBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        //         itemBg.setAttributeNS(null, 'width', `${GroupMenu.EASING_MENU_LIST_WIDTH}`);
-        //         itemBg.setAttributeNS(null, 'height', `${GroupMenu.MENU_LIST_ITEM_HEIGHT}`);
-        //         itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
-        //         listItem.appendChild(itemBg);
-
-        //         listItem.onmouseenter = () => {
-        //             itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_HIGHLIGHT_COLOR);
-        //         }
-        //         listItem.onmouseleave = () => {
-        //             itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
-        //         }
-        //         listItem.onclick = () => {
-        //             menuLayer.innerHTML = '';
-        //             // Reducer.triger(action.UPDATE_EFFECT_TYPE, { aniId: this.aniId, effectType: effect });
-        //         }
-
-        //         if (idx > 0) {
-        //             const splitLine: SVGLineElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        //             splitLine.setAttributeNS(null, 'x1', '0');
-        //             splitLine.setAttributeNS(null, 'x2', `${GroupMenu.EASING_MENU_LIST_WIDTH}`);
-        //             splitLine.setAttributeNS(null, 'y1', '0');
-        //             splitLine.setAttributeNS(null, 'y2', '0');
-        //             listItem.appendChild(splitLine);
-        //         }
-
-        //         const icon: SVGPathElement = this.createBtnIcon(easing);
-        //         icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
-        //         icon.setAttributeNS(null, 'transform', `translate(2, 2)`);
-        //         listItem.appendChild(icon);
-
-        //         const text: SVGTextContentElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        //         text.setAttributeNS(null, 'x', '26');
-        //         text.setAttributeNS(null, 'y', `${GroupMenu.MENU_LIST_ITEM_HEIGHT - 4}`);
-        //         text.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
-        //         text.classList.add('monospace-font');
-        //         text.setAttributeNS(null, 'font-size', '10pt');
-        //         text.innerHTML = Tool.translateEasing(easing);
-        //         listItem.appendChild(text);
-        //         this.menuListContainer.appendChild(listItem);
-
-        //     })
-        // }
     }
 }

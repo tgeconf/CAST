@@ -2,7 +2,7 @@ import KfGroup from "./kfGroup";
 import { Animation, ChartSpec } from 'canis_toolkit';
 import Tool from "../../util/tool";
 import KfItem from "./kfItem";
-import { state } from "../../app/state";
+import { state, State } from "../../app/state";
 import { IKeyframe } from "../../app/core/ds";
 import Reducer from "../../app/reducer";
 import * as action from "../../app/action";
@@ -220,6 +220,9 @@ export default class PlusBtn {
             const marksThisAni: string[] = this.targetKfg.marksThisAni();
             Suggest.suggestPaths(selectedMarks, marksThisAni);
         }
-        Reducer.triger(action.UPDATE_SUGGESTION_PATH, { ap: Suggest.allPaths, kfIdxInPath: -1, startKf: tmpKf, suggestOnFirstKf: suggestOnFirstKf, selectedMarks: selectedMarks });
+        const actionInfo: any = { ap: Suggest.allPaths, kfIdxInPath: -1, startKf: tmpKf, suggestOnFirstKf: suggestOnFirstKf, selectedMarks: selectedMarks };
+        State.tmpStateBusket.push([action.UPDATE_SUGGESTION_PATH, actionInfo]);
+        State.saveHistory();
+        Reducer.triger(action.UPDATE_SUGGESTION_PATH, actionInfo);
     }
 }

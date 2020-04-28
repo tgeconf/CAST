@@ -2,6 +2,7 @@ import KfGroup from "./kfGroup";
 import KfItem from "./kfItem";
 import { ICoord } from "../../util/ds";
 import Tool from "../../util/tool";
+import { state } from "../../app/state";
 
 export default class KfOmit {
     static OMIT_W: number = 36;
@@ -116,7 +117,7 @@ export default class KfOmit {
     public correctTrans(currentTransY: number): void {
         const preKfTrans: ICoord = Tool.extractTransNums(this.preItem.container.getAttributeNS(null, 'transform'));
         const preKfBBox: DOMRect = this.preItem.container.getBoundingClientRect();
-        this.container.setAttributeNS(null, 'transform', `translate(${preKfTrans.x + preKfBBox.width}, ${currentTransY})`);
+        this.container.setAttributeNS(null, 'transform', `translate(${preKfTrans.x + preKfBBox.width / state.zoomLevel}, ${currentTransY})`);
     }
 
     public updateTrans(startX: number, startY: number): void {
