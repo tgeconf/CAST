@@ -1,5 +1,10 @@
-[
+
+
+  
+
+  [
     {
+        "id": "symbol",
         "selector": ".symbol",
         "grouping": {
             "groupBy": "year",
@@ -8,35 +13,47 @@
         "effects": [
             {
                 "type": "fade",
-                "duration": 200
+                "duration": 300
             }
         ]
     },
     {
-        "reference": "start after previous",
+        "reference": "start with previous",
         "selector": ".text",
-        "grouping": {
-            "groupBy": "year",
-            "reference": "start after previous"
+        "align": {
+            "target": "symbol",
+            "type": "element",
+            "merge": false
         },
         "effects": [
             {
                 "type": "fade",
-                "duration": 200
+                "duration": 300
             }
         ]
     },
     {
         "reference": "start after previous",
         "selector": ".link",
-        "grouping": {
-            "groupBy": "year",
-            "reference": "start after previous"
+        "align": {
+            "target": "symbol",
+            "type": "element",
+            "merge": true
         },
         "effects": [
             {
                 "type": "grow",
-                "duration": 600
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "reference": "start after previous",
+        "selector": ".axis-domain, .x-axis-tick, .x-axis-label, .y-axis-tick, .y-axis-label, .title",
+        "effects": [
+            {
+                "type": "fade",
+                "duration": 200
             }
         ]
     }

@@ -169,6 +169,7 @@ export default class Renderer {
             //top-down to init group and kf
             const rootGroup: KfGroup = this.renderKeyframeGroup(0, 1, kfg, treeLevel);
             //bottom-up to update size and position
+            console.log('for root group: ', [...KfTrack.aniTrackMapping.get(rootGroup.aniId)][0].availableInsert);
             rootGroup.updateGroupPosiAndSize([...KfTrack.aniTrackMapping.get(rootGroup.aniId)][0].availableInsert, 0, false, true);
             KfGroup.allAniGroups.set(rootGroup.aniId, rootGroup);
         })

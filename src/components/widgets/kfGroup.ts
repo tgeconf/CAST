@@ -166,6 +166,7 @@ export default class KfGroup extends KfTimingIllus {
                 })
             }
             const transX: number = this.parentObj.availableInsert;
+            console.log('insert group in track: ', this, transX);
             this.container.setAttributeNS(null, 'transform', `translate(${transX}, ${this.posiY})`);
             this.parentObj.children.push(this);
             this.idxInGroup = this.parentObj.children.length - 1;
@@ -703,7 +704,7 @@ export default class KfGroup extends KfTimingIllus {
      * @param updateAlignedKfs 
      */
     public translateGroup(startTransItem: KfItem | KfOmit, transX: number, updateAlignedKfs: boolean, updateStartItem: boolean, updateStartItemAligned: boolean, extraInfo: { lastItem: boolean, extraWidth: number } = { lastItem: false, extraWidth: 0 }): void {
-        // console.log('translating group: ', startTransItem, transX);
+        console.log('translating group: ', startTransItem, transX);
         //translate kfitems after the input one within the same group
         let currentTransX: number = 0;
         if (!extraInfo.lastItem) {
@@ -759,6 +760,7 @@ export default class KfGroup extends KfTimingIllus {
         })
         //update the group size and position
         let extraWidth: number = extraInfo.lastItem ? extraInfo.extraWidth : 0;
+        console.log('going to update size: ', 5, extraWidth);
         let [diffX, currentGroupWidth, childHeight] = this.updateSize(extraWidth);
         const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
         this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + diffX}, ${oriTrans.y})`);
@@ -878,6 +880,7 @@ export default class KfGroup extends KfTimingIllus {
                 const kftStart: number = document.getElementById(KfContainer.KF_BG).getBoundingClientRect().left;//fixed
                 if ((rightBoundary - kftStart) / state.zoomLevel > kfTrack.availableInsert) {
                     kfTrack.availableInsert = (rightBoundary - kftStart) / state.zoomLevel;
+                    console.log('updating track available insert: ', kfTrack, kfTrack.availableInsert);
                 }
             })
         }
@@ -938,6 +941,7 @@ export default class KfGroup extends KfTimingIllus {
             //update position
             const transPosiY = rootGroup ? this.posiY + 1 : this.posiY + KfGroup.PADDING;
             if (this.newTrack) {
+                console.log('translating test', 4, this, lastGroupStart, diffX);
                 this.container.setAttributeNS(null, 'transform', `translate(${lastGroupStart + diffX}, ${transPosiY})`);
                 this.posiX = lastGroupStart + this.offsetWidth;
                 this.width = currentGroupWidth > lastGroupWidth ? currentGroupWidth : lastGroupWidth;

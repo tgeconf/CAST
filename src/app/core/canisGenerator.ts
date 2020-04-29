@@ -94,6 +94,25 @@ export default class CanisGenerator {
                     spec.animations.splice(i, 1);
                 }
             }
+            //check animation order, alignTo animation must follow the target
+            for (let j = 0, len = spec.animations.length; j < len; j++) {
+                const tmpAni: IAnimationSpec = spec.animations[j];
+                if (typeof tmpAni.id !== 'undefined') {
+                    let removedAni: IAnimationSpec[] = [];
+                    for (let z = 0, len2 = len; z < len2; z++) {
+                        const tmpAni2: IAnimationSpec = spec.animations[z];
+                        if (typeof tmpAni2.align !== 'undefined') {
+                            if (tmpAni2.align.target === tmpAni.id) {
+                                removedAni.push(spec.animations.splice(z, 1)[0]);
+                                z--;
+                                len2--;
+                            }
+                        }
+                    }
+                    const insertIdx: number = spec.animations.indexOf(tmpAni);
+                    spec.animations.splice(insertIdx + 1, 0, ...removedAni);
+                }
+            }
         }
         if (spec.animations.length === 0) {
             const animationSpec: IAnimationSpec = {

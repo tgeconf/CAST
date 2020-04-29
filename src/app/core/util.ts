@@ -321,6 +321,7 @@ export default class Util {
         this.dataAttrs = [...new Set(this.dataAttrs)];
         //sort data values
         this.sortAttrValues(this.dataValues);
+        console.log('sorted data values: ', this.dataValues);
     }
 
     public static extractNonDataAttrValue(markData: Map<string, IDataItem>) {
@@ -397,6 +398,7 @@ export default class Util {
                     return 1;
                 }
             })
+            values.set(aName, v);
         })
     }
 

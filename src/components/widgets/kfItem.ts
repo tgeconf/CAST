@@ -552,16 +552,14 @@ export default class KfItem extends KfTimingIllus {
         const currentKfInfo: IKeyframe = KfItem.allKfInfo.get(this.id);
         const alignedKfInfo: IKeyframe = KfItem.allKfInfo.get(alignTo);
         const alignedKfItem: KfItem = KfItem.allKfItems.get(alignTo);
-        console.log('in kf update align posi: ', this, alignedKfItem);
+        console.log('in kf update align posi: ', this, alignedKfItem, this);
         if (alignedKfItem.rendered) {
             let alignedKfBgX: number = 0;
             if (currentKfInfo.timingRef === TimingSpec.timingRef.previousStart) {
                 alignedKfBgX = alignedKfItem.kfBg.getBoundingClientRect().left;//fixed
             } else {
-                console.log('updateing align position: ', alignedKfItem, KfItem.allKfInfo.get(alignedKfItem.id));
                 alignedKfBgX = alignedKfItem.container.getBoundingClientRect().right;//fixed
                 KfItem.allKfInfo.get(alignedKfItem.id).alignWithKfs.forEach((kfId: number) => {
-                    console.log('fetching kf: ', kfId, this.id, KfItem.allKfItems);
                     if (kfId !== this.id) {
                         const tmpKf: KfItem = KfItem.allKfItems.get(kfId);
                         if (typeof tmpKf !== 'undefined' && tmpKf.rendered) {
@@ -574,7 +572,9 @@ export default class KfItem extends KfTimingIllus {
                 })
             }
             const bgDiffX: number = Math.abs((currentPosiX - alignedKfBgX) / state.zoomLevel);
+            console.log('test: ', currentPosiX, alignedKfBgX);
             if (currentPosiX > alignedKfBgX) { //translate aligned kf and its group
+                // if (currentPosiX > alignedKfBgX && (currentPosiX - alignedKfBgX >= 1)) { //translate aligned kf and its group
                 console.log('translating alignwith kf');
                 let posiXForNextKf: number = this.container.getBoundingClientRect().right;//fixed
 
@@ -585,19 +585,20 @@ export default class KfItem extends KfTimingIllus {
                 if (alignedKfItemBBox.right > posiXForNextKf) {
                     posiXForNextKf = alignedKfItemBBox.right;
                 }
-                //update kfs and their groups aligned to alignedKfItem
-                if (typeof alignedKfInfo.alignWithKfs !== 'undefined') {
-                    alignedKfInfo.alignWithKfs.forEach((kfId: number) => {
-                        const tmpKfItem = KfItem.allKfItems.get(kfId);
-                        if (typeof tmpKfItem !== 'undefined') {
-                            tmpKfItem.parentObj.translateGroup(tmpKfItem, bgDiffX, false, true, true);
-                            const tmpKfItemBBox: DOMRect = tmpKfItem.container.getBoundingClientRect();//fixed
-                            if (tmpKfItemBBox.right > posiXForNextKf) {
-                                posiXForNextKf = tmpKfItemBBox.right;
-                            }
-                        }
-                    })
-                }
+                //update kfs and their groups aligned to alignedKfItem !!!!! this part might cause loop updating
+                // if (typeof alignedKfInfo.alignWithKfs !== 'undefined') {
+                //     alignedKfInfo.alignWithKfs.forEach((kfId: number) => {
+                //         const tmpKfItem = KfItem.allKfItems.get(kfId);
+                //         if (typeof tmpKfItem !== 'undefined') {
+                //             console.log('in', 1);
+                //             tmpKfItem.parentObj.translateGroup(tmpKfItem, bgDiffX, false, true, true);
+                //             const tmpKfItemBBox: DOMRect = tmpKfItem.container.getBoundingClientRect();//fixed
+                //             if (tmpKfItemBBox.right > posiXForNextKf) {
+                //                 posiXForNextKf = tmpKfItemBBox.right;
+                //             }
+                //         }
+                //     })
+                // }
                 //find the next kf in aligned group
                 let flag: boolean = false;
                 let transXForNextKf: number = 0;
@@ -628,7 +629,7 @@ export default class KfItem extends KfTimingIllus {
                 if (transXForNextKf > 0) {
                     nextKf.parentObj.translateGroup(nextKf, transXForNextKf, true, true, true);
                 }
-            } else {//translate current kf
+            } else if (currentPosiX <= alignedKfBgX) {//translate current kf
                 console.log('translating current alignto kf');
                 const currentTransX: number = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform')).x;
                 this.container.setAttributeNS(null, 'transform', `translate(${currentTransX + bgDiffX}, ${KfItem.PADDING})`);

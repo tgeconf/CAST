@@ -52,6 +52,31 @@ export default class Suggest {
         return attrDiffValues;
     }
 
+    public static removeEmptyCell(firstKfMarks: string[], attrToSec: string[], sameAttrs: string[], diffAttrs: string[], dataEncode: boolean): string[] {
+        const tmpMarkRecord: string[] = [];
+        const dataTable: Map<string, IDataItem> = dataEncode ? Util.filteredDataTable : Util.nonDataTable;
+        dataTable.forEach((d: IDataItem, mId: string) => {
+            let flag: boolean = true;
+            sameAttrs.forEach((aName: string) => {
+                if (d[aName] !== dataTable.get(firstKfMarks[0])[aName]) {
+                    flag = false;
+                }
+            })
+            if (flag) {
+                tmpMarkRecord.push(mId);
+            }
+        })
+        if (Tool.identicalArrays(firstKfMarks, tmpMarkRecord)) {//remove same attrs from attrToSecs
+            console.log('remvoe same attrs from attrToSecs')
+            diffAttrs.forEach((aName: string) => {
+                if (attrToSec.includes(aName)) {
+                    attrToSec.splice(attrToSec.indexOf(aName), 1);
+                }
+            })
+        }
+        return attrToSec;
+    }
+
     /**
      * find the same and different attributes of the given marks
      * @param markIdArr 
@@ -345,38 +370,38 @@ export default class Suggest {
         return -1;
     }
 
-    /**
-     * return index of the unique kfs in each path
-     * @param {*} repeatKfRecord 
-     */
-    public static findUniqueKfs(repeatKfRecord: string[][][]): number[][] {
-        let pathWithUniqueAndMissingKfs: number[][] = [];
-        for (let i = 0, len = repeatKfRecord.length; i < len; i++) {
-            let uniqueKf: number[] = []; //record unique kf idx of this path
-            let removeIdx = [i];//index of the paths that don't need to compare
-            //kf index currently being compared
-            for (let compareKfIdx = 0, len2 = repeatKfRecord[i].length; compareKfIdx < len2; compareKfIdx++) {
-                let flag = true;//if the kf is the same in all paths
-                for (let j = 0; j < len; j++) {
-                    if (!removeIdx.includes(j)) {
-                        //compare the current kf
-                        let tmpFlag = Tool.identicalArrays(repeatKfRecord[i][compareKfIdx], repeatKfRecord[j][compareKfIdx]);
-                        if (!tmpFlag) {//this path in this kf is different from others
-                            flag = false;
-                            removeIdx.push(j);
-                        } else {
-                            continue;
-                        }
-                    }
-                }
-                if (!flag) {
-                    uniqueKf.push(compareKfIdx);
-                }
-            }
-            pathWithUniqueAndMissingKfs.push(uniqueKf);
-        }
-        return pathWithUniqueAndMissingKfs;
-    }
+    // /**
+    //  * return index of the unique kfs in each path
+    //  * @param {*} repeatKfRecord 
+    //  */
+    // public static findUniqueKfs(repeatKfRecord: string[][][]): number[][] {
+    //     let pathWithUniqueAndMissingKfs: number[][] = [];
+    //     for (let i = 0, len = repeatKfRecord.length; i < len; i++) {
+    //         let uniqueKf: number[] = []; //record unique kf idx of this path
+    //         let removeIdx = [i];//index of the paths that don't need to compare
+    //         //kf index currently being compared
+    //         for (let compareKfIdx = 0, len2 = repeatKfRecord[i].length; compareKfIdx < len2; compareKfIdx++) {
+    //             let flag = true;//if the kf is the same in all paths
+    //             for (let j = 0; j < len; j++) {
+    //                 if (!removeIdx.includes(j)) {
+    //                     //compare the current kf
+    //                     let tmpFlag = Tool.identicalArrays(repeatKfRecord[i][compareKfIdx], repeatKfRecord[j][compareKfIdx]);
+    //                     if (!tmpFlag) {//this path in this kf is different from others
+    //                         flag = false;
+    //                         removeIdx.push(j);
+    //                     } else {
+    //                         continue;
+    //                     }
+    //                 }
+    //             }
+    //             if (!flag) {
+    //                 uniqueKf.push(compareKfIdx);
+    //             }
+    //         }
+    //         pathWithUniqueAndMissingKfs.push(uniqueKf);
+    //     }
+    //     return pathWithUniqueAndMissingKfs;
+    // }
 
     public static suggestPaths(firstKfMarks: string[], lastKfMarks: string[]) {
         this.allPaths = [];
@@ -385,24 +410,28 @@ export default class Suggest {
         const sepLastKfMarks: { dataMarks: string[], nonDataMarks: string[] } = this.separateDataAndNonDataMarks(lastKfMarks);
         if (sepFirstKfMarks.dataMarks.length > 0 && sepFirstKfMarks.nonDataMarks.length > 0) {//there are both data encoded and non data encoded marks in the first kf
             //no suggestion
-            
+
         } else if (sepFirstKfMarks.dataMarks.length > 0 && sepFirstKfMarks.nonDataMarks.length === 0) {
             //suggest based on data attrs
             const firstKfDataMarks: string[] = sepFirstKfMarks.dataMarks;
             const lastKfDataMarks: string[] = sepLastKfMarks.dataMarks;
             if (Tool.identicalArrays(firstKfDataMarks, lastKfDataMarks)) {
                 //refresh current spec
-                
+
             } else {
                 let attrWithDiffValues: string[] = this.findAttrWithDiffValue(firstKfDataMarks, lastKfDataMarks, true);
                 console.log('found attrs with diff values: ', attrWithDiffValues);
+                const [sameAttrs, diffAttrs] = this.findSameDiffAttrs(firstKfDataMarks, true);
+                console.log('found same and diff attrs', sameAttrs, diffAttrs);
                 let flag: boolean = false;
                 if (attrWithDiffValues.length === 0) {
                     flag = true;
-                    const [sameAttrs, diffAttrs] = this.findSameDiffAttrs(firstKfDataMarks, true);
                     const filteredDiffAttrs: string[] = this.filterAttrs(diffAttrs);
                     attrWithDiffValues = [...sameAttrs, ...filteredDiffAttrs];
                 }
+                //remove empty cell problem
+                attrWithDiffValues = this.removeEmptyCell(firstKfMarks, attrWithDiffValues, sameAttrs, diffAttrs, true);
+
                 console.log('attrs to make secs: ', attrWithDiffValues);
                 let valueIdx: Map<string, number> = new Map();//key: attr name, value: index of the value in all values
                 attrWithDiffValues.forEach((aName: string) => {
@@ -415,7 +444,9 @@ export default class Suggest {
                     } else {
                         valueIdx.set(aName, 2);//this value is in the middle of all values
                     }
+                    console.log('value index: ', aName, valueIdx.get(aName));
                 })
+
                 //sortedAttrs: key: channel, value: attr array
                 const sortedAttrs: Map<string, string[]> = flag ? this.assignChannelName(attrWithDiffValues) : this.sortAttrs(attrWithDiffValues);
                 console.log('ordered attrs: ', sortedAttrs);
