@@ -100,16 +100,15 @@ export default class Lasso {
         //filter marks
         Array.from(document.getElementsByClassName('mark')).forEach((m: HTMLElement) => {
             const markBBox = m.getBoundingClientRect();
-            const coord1X = markBBox.left - this.svg.getBoundingClientRect().x,
-                coord1Y = markBBox.top - this.svg.getBoundingClientRect().y,
-                coord2X = coord1X + markBBox.width,
-                coord2Y = coord1Y + markBBox.height;
+            
+            const coord1: ICoord = Tool.screenToSvgCoords(this.svg, markBBox.left, markBBox.top);
+            const coord2: ICoord = Tool.screenToSvgCoords(this.svg, markBBox.left + markBBox.width, markBBox.top + markBBox.height);
+            const pnt1 = <Point>[coord1.x, coord1.y],
+                pnt2 = <Point>[coord1.x, coord2.y],
+                pnt3 = <Point>[coord2.x, coord1.y],
+                pnt4 = <Point>[coord2.x, coord2.y],
+                pnt5 = <Point>[coord1.x + (coord2.x - coord1.x) / 2, coord1.y + (coord2.y - coord1.y) / 2];
 
-            const pnt1 = <Point>[coord1X, coord1Y],
-                pnt2 = <Point>[coord1X, coord2Y],
-                pnt3 = <Point>[coord2X, coord1Y],
-                pnt4 = <Point>[coord2X, coord2Y],
-                pnt5 = <Point>[coord1X + (coord2X - coord1X) / 2, coord1Y + (coord2Y - coord1Y) / 2];
             let framed: boolean = false;
             if (classifyPoint(this.polygon, pnt5) <= 0) {
                 let framedPnt: number = 0;

@@ -31,6 +31,7 @@ export interface IState {
 
     //video
     lottieAni: AnimationItem
+    lottieSpec: any
     // hiddenLottie: AnimationItem
     keyframeGroups: IKeyframeGroup[]//each keyframe group correspond to one root from one aniunit
     staticMarks: string[]
@@ -59,7 +60,7 @@ export class State implements IState {
     _kfGroupSize: IKfGroupSize
 
     _lottieAni: AnimationItem
-    _hiddenLottie: AnimationItem
+    _lottieSpec: any
     _keyframeGroups: IKeyframeGroup[]
     _staticMarks: string[]
     // _groupingAndTiming: any
@@ -153,6 +154,13 @@ export class State implements IState {
     }
     get lottieAni(): AnimationItem {
         return this._lottieAni;
+    }
+    set lottieSpec(ls: any) {
+        this._lottieSpec = ls;
+        Renderer.renderVideo(ls);
+    }
+    get lottieSpec(): any {
+        return this._lottieSpec;
     }
     // set hiddenLottie(hl: AnimationItem) {
     //     this._hiddenLottie = hl;
@@ -272,3 +280,25 @@ export class State implements IState {
 }
 
 export let state = new State();
+
+// _sortDataAttrs: ISortDataAttr[] = [];
+//     _dataTable: Map<string, IDataItem> = new Map();
+//     _dataOrder: string[]
+
+//     _charts: string[]
+//     _tool: string
+//     _selection: string[]
+//     _suggestion: boolean
+//     _isLoading: boolean
+//     _spec: ICanisSpec
+//     _allPaths: IPath[]
+//     _kfGroupSize: IKfGroupSize
+
+//     _lottieAni: AnimationItem
+//     _lottieSpec: any
+//     _keyframeGroups: IKeyframeGroup[]
+//     _staticMarks: string[]
+//     // _groupingAndTiming: any
+
+//     _mousemoving: boolean = false
+//     _zoomLevel: number = 1;

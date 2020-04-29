@@ -4,7 +4,7 @@ import Tool from '../util/tool'
 import FloatingWindow from './floatingWindow'
 import Reducer from '../app/reducer';
 import * as action from '../app/action';
-import { State } from '../app/state';
+import { State, state } from '../app/state';
 import { ViewContent } from './viewWindow';
 import { Loading } from './widgets/loading';
 
@@ -53,8 +53,8 @@ export default class Nav {
         }));
         this.navContainer.appendChild(new NavBtn().createNavBtn({
             classNameStr: 'export',
-            title: 'export video',
-            evtType: NavBtn.EXPORT_PROJECT
+            title: 'export Lottie',
+            evtType: NavBtn.EXPORT_LOTTIE
         }));
         this.navContainer.appendChild(this.createSeparator());
         this.navContainer.appendChild(new NavBtn().createNavBtn({
@@ -103,7 +103,7 @@ class NavBtn {
     static OPEN_PROJECT: string = 'openProject';
     static SAVE_PROJECT: string = 'saveProject';
     static LOAD_EXAMPLES: string = 'loadExamples';
-    static EXPORT_PROJECT: string = 'exportProject';
+    static EXPORT_LOTTIE: string = 'exportLottie';
     static REVERT: string = 'revert';
     static REDO: string = 'redo';
     static RESET: string = 'reset';
@@ -120,8 +120,11 @@ class NavBtn {
             case NavBtn.OPEN_PROJECT:
                 btn.onclick = () => this.openProject();
                 break;
-            case NavBtn.EXPORT_PROJECT:
-                btn.onclick = () => this.exportProject();
+            case NavBtn.SAVE_PROJECT:
+                btn.onclick = () => this.saveProject();
+                break;
+            case NavBtn.EXPORT_LOTTIE:
+                btn.onclick = () => this.exportLottie();
                 break;
             case NavBtn.REVERT:
                 btn.onclick = () => this.revert();
@@ -186,18 +189,49 @@ class NavBtn {
         document.getElementById('appWrapper').appendChild(floatingWindow.floatingWindow);
     }
 
-    // public loadExamples() {
-    //     const floatingWindow: FloatingWindow = new FloatingWindow();
-    //     floatingWindow.createFloatingWindow(FloatingWindow.TYPE_EXAMPLE);
-    //     document.getElementById('appWrapper').appendChild(floatingWindow.floatingWindow);
-    // }
-
     public saveProject() {
         console.log('save project');
+
+        const outputObj = {
+            spec: state.spec
+        }
+
+        const file = new Blob([JSON.stringify(outputObj, null, 2)], { type: 'application/json' });
+        const fileName = 'canis_project.cpro';
+        if (window.navigator.msSaveOrOpenBlob) // IE10+
+            window.navigator.msSaveOrOpenBlob(file, fileName);
+        else { // Others
+            var a = document.createElement("a"),
+                url = URL.createObjectURL(file);
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function () {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 0);
+        }
     }
 
-    public exportProject() {
-        console.log('export project');
+    public exportLottie() {
+        console.log('export lottie');
+        const file = new Blob([JSON.stringify(state.lottieSpec, null, 2)], { type: 'application/json' });
+        const fileName = 'animatedChart.json';
+        if (window.navigator.msSaveOrOpenBlob) // IE10+
+            window.navigator.msSaveOrOpenBlob(file, fileName);
+        else { // Others
+            var a = document.createElement("a"),
+                url = URL.createObjectURL(file);
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function () {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 0);
+        }
     }
 
     public revert(): void {

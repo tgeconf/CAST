@@ -148,6 +148,9 @@ Reducer.listen(action.UPDATE_SELECTION, (selection: string[]) => {
 Reducer.listen(action.UPDATE_LOTTIE, (lai: AnimationItem) => {
     state.lottieAni = lai;
 })
+Reducer.listen(action.UPDATE_LOTTIE_SPEC, (ls: any) => {
+    state.lottieSpec = ls;
+})
 Reducer.listen(action.UPDATE_STATIC_KEYFRAME, (staticMarks: string[]) => {
     state.staticMarks = staticMarks;
 })
@@ -182,6 +185,10 @@ Reducer.listen(action.UPDATE_SPEC_CHARTS, (charts: string[]) => {
     const chartSpecs: IChartSpec[] = CanisGenerator.generateChartSpec(charts);
     let tmpSpec: ICanisSpec = { charts: chartSpecs, animations: [] };
     state.spec = tmpSpec;
+})
+
+Reducer.listen(action.LOAD_CANIS_SPEC, (spec: ICanisSpec) => {
+    state.spec = spec;
 })
 
 Reducer.listen(action.UPDATE_MOUSE_MOVING, (mm: boolean) => {

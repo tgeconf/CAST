@@ -81,7 +81,7 @@ export default class Renderer {
         }
         //render video view
         // this.removeLoading();
-        this.renderVideo(lottieSpec);
+        Reducer.triger(action.UPDATE_LOTTIE_SPEC, lottieSpec);
         player.resetPlayer({
             frameRate: canis.frameRate,
             currentTime: 0,
@@ -118,7 +118,16 @@ export default class Renderer {
         // })]);
         // State.tmpStateBusket.push([action.UPDATE_LOTTIE, state.lottieAni]);
         // State.saveHistory();
-        Lottie.destroy();
+        // Lottie.destroy();
+        // Lottie.loadAnimation({
+        //     container: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID),
+        //     renderer: 'svg',
+        //     loop: false,
+        //     autoplay: false,
+        //     animationData: lottieSpec // the animation data
+        // })
+        // document.getElementById(Player.PLAY_BTN_ID).click();
+
         Reducer.triger(action.UPDATE_LOTTIE, Lottie.loadAnimation({
             container: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID),
             renderer: 'svg',

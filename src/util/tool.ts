@@ -129,16 +129,19 @@ export default class Tool {
                 const svg: HTMLElement = document.getElementById('visChart');
                 if (svg) {
                     const svgBBox = svg.getBoundingClientRect();
+                    const startPoint: ICoord = this.screenToSvgCoords(svg, downEvt.pageX, downEvt.pageY);
                     const originX = downEvt.pageX - svgBBox.x, originY = downEvt.pageY - svgBBox.y;
                     let isDragging: boolean = true;
                     //create selection frame
-                    lassoSelection.createSelectionFrame(svg, { x: originX, y: originY });
+                    lassoSelection.createSelectionFrame(svg, { x: startPoint.x, y: startPoint.y });
+                    // lassoSelection.createSelectionFrame(svg, { x: originX, y: originY });
                     document.onmousemove = (moveEvt) => {
                         if (isDragging) {
-                            const pathCoord: ICoord = { x: moveEvt.pageX - svgBBox.x, y: moveEvt.pageY - svgBBox.y };
+                            const pathCoord: ICoord = this.screenToSvgCoords(svg, moveEvt.pageX, moveEvt.pageY);
+                            const boundaryCheck: ICoord = { x: moveEvt.pageX - svgBBox.x, y: moveEvt.pageY - svgBBox.y };
                             const possibleMarks: string[] = lassoSelection.lassoSelect(state.selection);
                             //can't move outside the view
-                            if (pathCoord.x >= 0 && pathCoord.x <= document.getElementById('chartContainer').offsetWidth && pathCoord.y >= 0 && pathCoord.y <= document.getElementById('chartContainer').offsetHeight) {
+                            if (boundaryCheck.x >= 0 && boundaryCheck.x <= document.getElementById('chartContainer').offsetWidth && boundaryCheck.y >= 0 && boundaryCheck.y <= document.getElementById('chartContainer').offsetHeight) {
                                 lassoSelection.updatePath(pathCoord);
                             }
                         }

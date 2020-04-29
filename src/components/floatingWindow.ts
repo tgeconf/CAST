@@ -89,11 +89,33 @@ export default class FloatingWindow {
         exampleList.appendChild(projectTitle);
         const clickableArea: HTMLDivElement = document.createElement('div');
         clickableArea.className = 'click-to-open-area';
-        clickableArea.innerHTML = 'Drop Your File Here (or Click)';
+        clickableArea.innerHTML = 'Drop Your Project File Here (or Click)';
         const uploadIcon: HTMLDivElement = document.createElement('div');
         uploadIcon.className = 'upload-icon';
         clickableArea.appendChild(uploadIcon);
         exampleList.appendChild(clickableArea);
+        clickableArea.ondragover = (overEvt) => {
+            overEvt.preventDefault();
+        }
+        clickableArea.ondragenter = () => {
+            clickableArea.classList.add('drag-over-area');
+        }
+        clickableArea.ondragleave = () => {
+            clickableArea.classList.remove('drag-over-area');
+        }
+        clickableArea.ondrop = (dropEvt) => {
+            const that = this;
+            dropEvt.preventDefault();
+            let projectFile = dropEvt.dataTransfer.files[0];
+            var fr = new FileReader();
+            fr.readAsText(projectFile);
+            fr.onload = function () {
+                const spec: string = <string>fr.result;
+                Reducer.triger(action.LOAD_CANIS_SPEC, JSON.parse(spec).spec);
+                that.floatingWindow.remove();
+            }
+        }
+
         const chartTitle: HTMLHeadingElement = document.createElement('h3');
         chartTitle.innerText = 'Load Example Projects';
         exampleList.appendChild(chartTitle);
