@@ -9,9 +9,11 @@ import * as action from '../app/action'
 import PlusBtn from '../components/widgets/plusBtn'
 import KfItem from '../components/widgets/kfItem'
 import { GroupMenu } from '../components/widgets/kfGroup'
-import { group } from 'd3'
+import { group, thresholdFreedmanDiaconis } from 'd3'
 
 export default class Tool {
+    static ENLARGE_THRESHOLD: number = 200;
+
     public static extractTransNums(translateStr: string): ICoord {
         const transNums = translateStr.match(/[+-]?\d+(?:\.\d+)?/g).map(x => parseFloat(x));
         return { x: transNums[0], y: transNums[1] };
@@ -351,5 +353,79 @@ export default class Tool {
             case GroupMenu.EASING_INOUT_QUAD:
                 return 'ease in & out quad';
         }
+    }
+
+    /**
+     * enlarge those marks with the given classname
+     * @param svg 
+     * @param clsName 
+     */
+    public static enlargeMarks(svg: HTMLElement, clsName: string, includeCls: boolean) {
+        const targetMarks: Element[] = includeCls ? Array.from(svg.getElementsByClassName(clsName)) : Array.from(svg.querySelectorAll(`.mark:not(.${clsName})`));
+        console.log('enlarging', targetMarks);
+        targetMarks.forEach((m: HTMLElement) => {
+            //judge whether this is a line
+            let isLine: boolean = false;
+            let strokeWidth: number = 0;
+            if (m.tagName === 'path'
+                && (typeof m.getAttributeNS(null, 'stroke-width') !== 'undefined' || typeof m.style.strokeWidth !== 'undefined')
+                && (typeof m.getAttributeNS(null, 'fill') === 'undefined' || m.getAttributeNS(null, 'fill') === 'none' || m.getAttributeNS(null, 'fill') === '')
+                && (typeof m.style.fill === 'undefined' || m.style.fill === 'none' || m.style.fill === '')) {
+                const strokeWidth1: number = isNaN(parseFloat(m.getAttributeNS(null, 'stroke-width'))) ? 0 : parseFloat(m.getAttributeNS(null, 'stroke-width'));
+                const strokeWidth2: number = isNaN(parseFloat(m.style.strokeWidth)) ? 0 : parseFloat(m.style.strokeWidth);
+                const oriStrokeWidth: number = strokeWidth1 > strokeWidth2 ? strokeWidth1 : strokeWidth2;
+                if (oriStrokeWidth > 0) {
+                    isLine = true;
+                    m.style.strokeWidth = null;
+                    strokeWidth = oriStrokeWidth;
+                }
+            }
+
+            if (isLine) {
+                m.setAttributeNS(null, 'tmp_stroke-width', `${strokeWidth}`);
+                m.setAttributeNS(null, 'stroke-width', `${strokeWidth * 4}`);
+            } else {
+                if (m.tagName !== 'text') {
+                    const tmpBBox: DOMRect = m.getBoundingClientRect();
+                    const tmpSize: number = tmpBBox.width * tmpBBox.height;
+                    if (tmpSize < this.ENLARGE_THRESHOLD) {
+                        const oriTransform: string = m.getAttributeNS(null, 'transform');
+                        m.setAttributeNS(null, 'tmp_transform', oriTransform);
+                        const transCoords: ICoord = Tool.screenToSvgCoords(svg, tmpBBox.left + tmpBBox.width / 2, tmpBBox.top + tmpBBox.height / 2);
+                        const scaleLevel: number = 2.5;
+                        const transStr: string = `${(1 - scaleLevel) * transCoords.x}, ${(1 - scaleLevel) * transCoords.y}`;
+                        m.setAttributeNS(null, 'transform', `translate(${transStr}) scale(${scaleLevel})`);
+                    }
+                }
+            }
+        })
+    }
+
+    public static resetMarkSize(svg: HTMLElement, clsName: string, includeCls: boolean) {
+        const targetMarks: Element[] = includeCls ? Array.from(svg.getElementsByClassName(clsName)) : Array.from(svg.querySelectorAll(`.mark:not(.${clsName})`));
+        console.log('enlarging', targetMarks);
+        targetMarks.forEach((m: HTMLElement) => {
+            //judge whether this is a line
+            let isLine: boolean = false;
+            if (m.tagName === 'path'
+                && (typeof m.getAttributeNS(null, 'stroke-width') !== 'undefined')
+                && (typeof m.getAttributeNS(null, 'fill') === 'undefined' || m.getAttributeNS(null, 'fill') === 'none' || m.getAttributeNS(null, 'fill') === '')
+                && (typeof m.style.fill === 'undefined' || m.style.fill === 'none' || m.style.fill === '')) {
+                const oriStrokeWidth: number = isNaN(parseFloat(m.getAttributeNS(null, 'stroke-width'))) ? 0 : parseFloat(m.getAttributeNS(null, 'stroke-width'));
+                if (oriStrokeWidth > 0) {
+                    isLine = true;
+                }
+            }
+
+            if (isLine) {
+                m.setAttributeNS(null, 'stroke-width', m.getAttributeNS(null, 'tmp_stroke-width'));
+            } else {
+                if (m.tagName !== 'text') {
+                    if (typeof m.getAttributeNS(null, 'tmp_transform') !== 'undefined') {
+                        m.setAttributeNS(null, 'transform', m.getAttributeNS(null, 'tmp_transform'));
+                    }
+                }
+            }
+        })
     }
 }

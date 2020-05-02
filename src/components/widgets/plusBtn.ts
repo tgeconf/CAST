@@ -213,6 +213,7 @@ export default class PlusBtn {
         const clsSelMarks: string[] = Util.extractClsFromMarks(selectedMarks);
         const clsFirstKf: string[] = Util.extractClsFromMarks(firstKfInfoInParent.marksThisKf);
         let suggestOnFirstKf: boolean = false;
+        console.log('selected marks are: ', selectedMarks);
         if (Tool.arrayContained(firstKfInfoInParent.marksThisKf, selectedMarks) && Tool.identicalArrays(clsSelMarks, clsFirstKf)) {//suggest based on first kf in animation
             suggestOnFirstKf = true;
             Suggest.suggestPaths(selectedMarks, firstKfInfoInParent.marksThisKf);

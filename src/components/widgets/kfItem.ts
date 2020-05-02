@@ -50,6 +50,7 @@ export default class KfItem extends KfTimingIllus {
     public alignFrame: SVGRectElement
     public totalWidth: number = 0
     public chartThumbnail: SVGImageElement
+    public chartSmallThumbnail: SVGImageElement
 
     set offsetDiff(od: number) {
         this._offsetDiff = od;
@@ -462,6 +463,7 @@ export default class KfItem extends KfTimingIllus {
         }
         this.drawChart(this.kfInfo.allCurrentMarks, this.kfInfo.allGroupMarks, this.kfInfo.marksThisKf);
         this.container.appendChild(this.chartThumbnail);
+        this.container.appendChild(this.chartSmallThumbnail);
         if (this.treeLevel === 1) {
             if (typeof this.parentObj.groupMenu === 'undefined') {//fake groups
                 this.parentObj.container.appendChild(this.container);
@@ -685,21 +687,21 @@ export default class KfItem extends KfTimingIllus {
         this.totalWidth += this.kfWidth;
     }
 
-    public drawStaticChart(staticMarks: string[]) {
-        const svg: HTMLElement = document.getElementById('visChart');
-        Array.from(svg.getElementsByClassName('mark')).forEach((m: HTMLElement) => {
-            if (!staticMarks.includes(m.id)) {
-                m.setAttributeNS(null, '_opacity', m.getAttributeNS(null, 'opacity') ? m.getAttributeNS(null, 'opacity') : '1');
-                m.setAttributeNS(null, 'opacity', '0');
-                m.classList.add('translucent-mark');
-            }
-        })
-        this.renderChartToCanvas(svg);
-        Array.from(svg.getElementsByClassName('translucent-mark')).forEach((m: HTMLElement) => {
-            m.classList.remove('translucent-mark');
-            m.setAttributeNS(null, 'opacity', m.getAttributeNS(null, '_opacity'));
-        })
-    }
+    // public drawStaticChart(staticMarks: string[]) {
+    //     const svg: HTMLElement = document.getElementById('visChart');
+    //     Array.from(svg.getElementsByClassName('mark')).forEach((m: HTMLElement) => {
+    //         if (!staticMarks.includes(m.id)) {
+    //             m.setAttributeNS(null, '_opacity', m.getAttributeNS(null, 'opacity') ? m.getAttributeNS(null, 'opacity') : '1');
+    //             m.setAttributeNS(null, 'opacity', '0');
+    //             m.classList.add('translucent-mark');
+    //         }
+    //     })
+    //     this.renderChartToCanvas(svg);
+    //     Array.from(svg.getElementsByClassName('translucent-mark')).forEach((m: HTMLElement) => {
+    //         m.classList.remove('translucent-mark');
+    //         m.setAttributeNS(null, 'opacity', m.getAttributeNS(null, '_opacity'));
+    //     })
+    // }
 
     public drawChart(allMarks: string[], allGroupMarks: string[], marksThisKf: string[]): void {
         const svg: HTMLElement = document.getElementById('visChart');
@@ -729,6 +731,18 @@ export default class KfItem extends KfTimingIllus {
         this.chartThumbnail.setAttributeNS(null, 'width', `${this.kfWidth}`);
         this.chartThumbnail.setAttributeNS(null, 'height', `${this.kfHeight}`);
         this.chartThumbnail.setAttributeNS(null, 'href', imgSrc);
+
+        //get enlarge version
+        Tool.enlargeMarks(svg, 'translucent-mark', false);
+        const imgSmallSrc: string = Tool.svg2url(svg);
+        this.chartSmallThumbnail = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        this.chartSmallThumbnail.setAttributeNS(null, 'x', `${typeof this.offsetIllus === 'undefined' ? 0 : this.offsetWidth}`);
+        this.chartSmallThumbnail.setAttributeNS(null, 'y', '0');
+        this.chartSmallThumbnail.setAttributeNS(null, 'width', `${this.kfWidth}`);
+        this.chartSmallThumbnail.setAttributeNS(null, 'height', `${this.kfHeight}`);
+        this.chartSmallThumbnail.setAttributeNS(null, 'href', imgSmallSrc);
+        Tool.resetMarkSize(svg, 'translucent-mark', false);
+
     }
 
     public highlightKf() {

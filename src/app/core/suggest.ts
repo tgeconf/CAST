@@ -12,6 +12,7 @@ export default class Suggest {
      * @param markIdArr 
      */
     public static separateDataAndNonDataMarks(markIdArr: string[]): { dataMarks: string[], nonDataMarks: string[] } {
+        console.log('markId arr: ', markIdArr);
         let dataMarks: string[] = [];
         let nonDataMarks: string[] = [];
         markIdArr.forEach((mId: string) => {
@@ -544,6 +545,70 @@ export default class Suggest {
             //suggest based on non data attrs
             const firstKfNonDataMarks: string[] = sepFirstKfMarks.nonDataMarks;
             const lastKfNonDataMarks: string[] = sepLastKfMarks.nonDataMarks;
+            console.log('1st non data kf marks: ', firstKfNonDataMarks, lastKfNonDataMarks);
+
+            if (!Tool.identicalArrays(firstKfNonDataMarks, lastKfNonDataMarks)) {
+                console.log('non data table', Util.nonDataTable);
+                //count the number of types in first kf
+                const typeCount: Map<string, number> = new Map();
+                firstKfNonDataMarks.forEach((mId: string) => {
+                    let attrValStr: string = '';
+                    const tmpDatum: IDataItem = Util.nonDataTable.get(mId);
+                    Object.keys(tmpDatum).forEach((attr: string) => {
+                        if (Util.isNonDataAttr(attr)) {
+                            attrValStr += `*${tmpDatum[attr]}`;
+                        }
+                    })
+                    console.log('attr values: ', attrValStr);
+                    if (typeof typeCount.get(attrValStr) === 'undefined') {
+                        typeCount.set(attrValStr, 0);
+                    }
+                    typeCount.set(attrValStr, typeCount.get(attrValStr) + 1);
+                    console.log(typeCount);
+                })
+                console.log('record type: ', typeCount, [...typeCount][0]);
+                const attrValStr = [...typeCount][0][0];
+                if (typeCount.size === 1 && [...typeCount][0][1] === 1) {
+                    //fetch all marks with the same attr values
+                    let suggestionLastKfMarks: string[] = [...firstKfNonDataMarks];
+                    Util.nonDataTable.forEach((datum: IDataItem, mId: string) => {
+                        let tmpAttrValStr: string = '';
+                        Object.keys(datum).forEach((attr: string) => {
+                            if (Util.isNonDataAttr(attr)) {
+                                tmpAttrValStr += `*${datum[attr]}`;
+                            }
+                        })
+                        if (tmpAttrValStr === attrValStr) {
+                            suggestionLastKfMarks.push(mId);
+                        }
+                    })
+                    let asscendingOrder: string[] = suggestionLastKfMarks.sort((a: string, b: string) => {
+                        return b > a ? -1 : 1;
+                    })
+                    let descendingOrder: string[] = suggestionLastKfMarks.sort((a: string, b: string) => {
+                        return b > a ? 1 : -1;
+                    })
+                    if (asscendingOrder.indexOf(firstKfNonDataMarks[0]) === 0) {
+                        suggestionLastKfMarks = asscendingOrder;
+                    } else if (descendingOrder.indexOf(firstKfNonDataMarks[0]) === 0) {
+                        suggestionLastKfMarks = descendingOrder;
+                    }
+                    suggestionLastKfMarks = [...new Set(suggestionLastKfMarks)];
+
+                    const tmpKfMarks: string[][] = [];
+                    suggestionLastKfMarks.forEach((mId: string) => {
+                        tmpKfMarks.push([mId]);
+                    })
+                    console.log('last kf: ', suggestionLastKfMarks);
+                    this.allPaths = [{ attrComb: ['id'], sortedAttrValueComb: suggestionLastKfMarks, kfMarks: tmpKfMarks, firstKfMarks: firstKfNonDataMarks, lastKfMarks: suggestionLastKfMarks }];
+                    console.log('suggestion based on non data mark: ', this.allPaths);
+                }
+            }
+            //         attrComb: string[]
+            // sortedAttrValueComb: string[]
+            // kfMarks: string[][]
+            // firstKfMarks: string[]
+            // lastKfMarks: string[]
         }
     }
 }

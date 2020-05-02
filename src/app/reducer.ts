@@ -143,6 +143,7 @@ Reducer.listen(action.UPDATE_SELECTION, (selection: string[]) => {
     if (state.suggestion && selection.length > 0) {
         selection = Util.suggestSelection(selection);
     }
+    selection = [...new Set(selection)];
     state.selection = selection;
 })
 Reducer.listen(action.UPDATE_LOTTIE, (lai: AnimationItem) => {

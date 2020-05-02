@@ -402,6 +402,10 @@ export default class Util {
         })
     }
 
+    public static isNonDataAttr(attr: string): boolean {
+        return (attr.includes('_TYPE') || attr === 'mShape');
+    }
+
     public static filterDataSort(dataSort: ISortDataAttr[]): ISortDataAttr[] {
         return dataSort.filter(ds => !Util.EXCLUDED_DATA_ATTR.includes(ds.attr));
     }
