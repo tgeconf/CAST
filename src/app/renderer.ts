@@ -420,6 +420,17 @@ export default class Renderer {
 
     public static zoomKfContainer(zl: number): void {
         kfContainer.kfTrackScaleContainer.setAttributeNS(null, 'transform', `scale(${zl}, ${zl})`);
+        //set visbility of chart thumbnails
+        const shownThumbnail: number = Math.floor((zl - 0.5) / 0.2);
+        KfItem.allKfItems.forEach((kfItem: KfItem) => {
+            kfItem.chartThumbnails.forEach((ct: SVGImageElement, i: number) => {
+                if (i === shownThumbnail) {
+                    ct.classList.remove('no-display-ele');
+                } else {
+                    ct.classList.add('no-display-ele');
+                }
+            })
+        })
     }
 
     /**

@@ -360,9 +360,9 @@ export default class Tool {
      * @param svg 
      * @param clsName 
      */
-    public static enlargeMarks(svg: HTMLElement, clsName: string, includeCls: boolean) {
+    public static enlargeMarks(svg: HTMLElement, clsName: string, strokeScale: number, markScale: number, includeCls: boolean) {
         const targetMarks: Element[] = includeCls ? Array.from(svg.getElementsByClassName(clsName)) : Array.from(svg.querySelectorAll(`.mark:not(.${clsName})`));
-        console.log('enlarging', targetMarks);
+        console.log('enlarging', targetMarks, strokeScale, markScale);
         targetMarks.forEach((m: HTMLElement) => {
             //judge whether this is a line
             let isLine: boolean = false;
@@ -383,7 +383,7 @@ export default class Tool {
 
             if (isLine) {
                 m.setAttributeNS(null, 'tmp_stroke-width', `${strokeWidth}`);
-                m.setAttributeNS(null, 'stroke-width', `${strokeWidth * 4}`);
+                m.setAttributeNS(null, 'stroke-width', `${strokeWidth * strokeScale}`);
             } else {
                 if (m.tagName !== 'text') {
                     const tmpBBox: DOMRect = m.getBoundingClientRect();
@@ -392,9 +392,8 @@ export default class Tool {
                         const oriTransform: string = m.getAttributeNS(null, 'transform');
                         m.setAttributeNS(null, 'tmp_transform', oriTransform);
                         const transCoords: ICoord = Tool.screenToSvgCoords(svg, tmpBBox.left + tmpBBox.width / 2, tmpBBox.top + tmpBBox.height / 2);
-                        const scaleLevel: number = 2.5;
-                        const transStr: string = `${(1 - scaleLevel) * transCoords.x}, ${(1 - scaleLevel) * transCoords.y}`;
-                        m.setAttributeNS(null, 'transform', `translate(${transStr}) scale(${scaleLevel})`);
+                        const transStr: string = `${(1 - markScale) * transCoords.x}, ${(1 - markScale) * transCoords.y}`;
+                        m.setAttributeNS(null, 'transform', `translate(${transStr}) scale(${markScale})`);
                     }
                 }
             }
@@ -403,7 +402,7 @@ export default class Tool {
 
     public static resetMarkSize(svg: HTMLElement, clsName: string, includeCls: boolean) {
         const targetMarks: Element[] = includeCls ? Array.from(svg.getElementsByClassName(clsName)) : Array.from(svg.querySelectorAll(`.mark:not(.${clsName})`));
-        console.log('enlarging', targetMarks);
+        console.log('reseting', targetMarks);
         targetMarks.forEach((m: HTMLElement) => {
             //judge whether this is a line
             let isLine: boolean = false;
@@ -421,8 +420,10 @@ export default class Tool {
                 m.setAttributeNS(null, 'stroke-width', m.getAttributeNS(null, 'tmp_stroke-width'));
             } else {
                 if (m.tagName !== 'text') {
-                    if (typeof m.getAttributeNS(null, 'tmp_transform') !== 'undefined') {
+                    if (typeof m.getAttributeNS(null, 'tmp_transform') !== 'undefined' && m.getAttributeNS(null, 'tmp_transform') !== 'null') {
                         m.setAttributeNS(null, 'transform', m.getAttributeNS(null, 'tmp_transform'));
+                    } else {
+                        m.setAttributeNS(null, 'transform', '');
                     }
                 }
             }
