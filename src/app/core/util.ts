@@ -634,7 +634,6 @@ export default class Util {
             drawDuration = false;
         }
         let drawHiddenDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousStart && parentMarks.length > aniLeaf.marks;
-        console.log('all current marks: ', allCurrentMarks, parentMarks, aniLeaf.marks);
         let tmpKf: IKeyframe = {
             id: aniLeaf.id,
             timingRef: aniLeaf.timingRef,

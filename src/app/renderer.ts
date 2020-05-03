@@ -421,7 +421,10 @@ export default class Renderer {
     public static zoomKfContainer(zl: number): void {
         kfContainer.kfTrackScaleContainer.setAttributeNS(null, 'transform', `scale(${zl}, ${zl})`);
         //set visbility of chart thumbnails
-        const shownThumbnail: number = Math.floor((zl - 0.5) / 0.2);
+        if (zl === 1.5) {
+            zl -= 0.01;
+        }
+        const shownThumbnail: number = Math.floor((zl - 0.5) / (1.0 / state.chartThumbNailZoomLevels));
         KfItem.allKfItems.forEach((kfItem: KfItem) => {
             kfItem.chartThumbnails.forEach((ct: SVGImageElement, i: number) => {
                 if (i === shownThumbnail) {

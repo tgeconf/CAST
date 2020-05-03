@@ -362,15 +362,14 @@ export default class Tool {
      */
     public static enlargeMarks(svg: HTMLElement, clsName: string, strokeScale: number, markScale: number, includeCls: boolean) {
         const targetMarks: Element[] = includeCls ? Array.from(svg.getElementsByClassName(clsName)) : Array.from(svg.querySelectorAll(`.mark:not(.${clsName})`));
-        console.log('enlarging', targetMarks, strokeScale, markScale);
         targetMarks.forEach((m: HTMLElement) => {
             //judge whether this is a line
             let isLine: boolean = false;
             let strokeWidth: number = 0;
-            if (m.tagName === 'path'
+            if ((m.tagName === 'path' || m.tagName === 'line')
                 && (typeof m.getAttributeNS(null, 'stroke-width') !== 'undefined' || typeof m.style.strokeWidth !== 'undefined')
-                && (typeof m.getAttributeNS(null, 'fill') === 'undefined' || m.getAttributeNS(null, 'fill') === 'none' || m.getAttributeNS(null, 'fill') === '')
-                && (typeof m.style.fill === 'undefined' || m.style.fill === 'none' || m.style.fill === '')) {
+                && (typeof m.getAttributeNS(null, 'fill') === 'undefined' || m.getAttributeNS(null, 'fill') === 'none' || m.getAttributeNS(null, 'fill') === '' || !m.getAttributeNS(null, 'fill'))
+                && (typeof m.style.fill === 'undefined' || m.style.fill === 'none' || m.style.fill === '' || !m.style.fill)) {
                 const strokeWidth1: number = isNaN(parseFloat(m.getAttributeNS(null, 'stroke-width'))) ? 0 : parseFloat(m.getAttributeNS(null, 'stroke-width'));
                 const strokeWidth2: number = isNaN(parseFloat(m.style.strokeWidth)) ? 0 : parseFloat(m.style.strokeWidth);
                 const oriStrokeWidth: number = strokeWidth1 > strokeWidth2 ? strokeWidth1 : strokeWidth2;
@@ -381,17 +380,33 @@ export default class Tool {
                 }
             }
 
+            if (m.getAttributeNS(null, 'tmp_strokeWidth') && m.getAttributeNS(null, 'tmp_strokeWidth').length > 0) {
+                isLine = true;
+            }
+
             if (isLine) {
-                m.setAttributeNS(null, 'tmp_stroke-width', `${strokeWidth}`);
-                m.setAttributeNS(null, 'stroke-width', `${strokeWidth * strokeScale}`);
+                if (typeof m.getAttributeNS(null, 'tmp_strokeWidth') !== 'undefined' && m.getAttributeNS(null, 'tmp_strokeWidth')) {
+                    m.setAttributeNS(null, 'stroke-width', `${parseFloat(m.getAttributeNS(null, 'tmp_strokeWidth')) * strokeScale}`);
+                } else {
+                    m.setAttributeNS(null, 'tmp_strokeWidth', `${strokeWidth}`);
+                    m.setAttributeNS(null, 'stroke-width', `${strokeWidth * strokeScale}`);
+                }
             } else {
                 if (m.tagName !== 'text') {
                     const tmpBBox: DOMRect = m.getBoundingClientRect();
-                    const tmpSize: number = tmpBBox.width * tmpBBox.height;
+                    let bBoxCoords: any = { left: tmpBBox.left, width: tmpBBox.width, top: tmpBBox.top, height: tmpBBox.height };
+                    let tmpSize: number = tmpBBox.width * tmpBBox.height;
+                    if (m.getAttributeNS(null, 'tmp_bbox') && m.getAttributeNS(null, 'tmp_bbox').length > 0) {
+                        bBoxCoords = JSON.parse(m.getAttributeNS(null, 'tmp_bbox'));
+                        tmpSize = bBoxCoords.width * bBoxCoords.height;
+                    }
                     if (tmpSize < this.ENLARGE_THRESHOLD) {
-                        const oriTransform: string = m.getAttributeNS(null, 'transform');
-                        m.setAttributeNS(null, 'tmp_transform', oriTransform);
-                        const transCoords: ICoord = Tool.screenToSvgCoords(svg, tmpBBox.left + tmpBBox.width / 2, tmpBBox.top + tmpBBox.height / 2);
+                        if (!m.getAttributeNS(null, 'tmp_bbox')) {
+                            const oriTransform: string = m.getAttributeNS(null, 'transform');
+                            m.setAttributeNS(null, 'tmp_transform', oriTransform);
+                            m.setAttributeNS(null, 'tmp_bbox', `{"left": ${tmpBBox.left}, "width": ${tmpBBox.width}, "top": ${tmpBBox.top}, "height": ${tmpBBox.height}}`);
+                        }
+                        const transCoords: ICoord = Tool.screenToSvgCoords(svg, bBoxCoords.left + bBoxCoords.width / 2, bBoxCoords.top + bBoxCoords.height / 2);
                         const transStr: string = `${(1 - markScale) * transCoords.x}, ${(1 - markScale) * transCoords.y}`;
                         m.setAttributeNS(null, 'transform', `translate(${transStr}) scale(${markScale})`);
                     }
@@ -402,7 +417,6 @@ export default class Tool {
 
     public static resetMarkSize(svg: HTMLElement, clsName: string, includeCls: boolean) {
         const targetMarks: Element[] = includeCls ? Array.from(svg.getElementsByClassName(clsName)) : Array.from(svg.querySelectorAll(`.mark:not(.${clsName})`));
-        console.log('reseting', targetMarks);
         targetMarks.forEach((m: HTMLElement) => {
             //judge whether this is a line
             let isLine: boolean = false;
@@ -417,10 +431,10 @@ export default class Tool {
             }
 
             if (isLine) {
-                m.setAttributeNS(null, 'stroke-width', m.getAttributeNS(null, 'tmp_stroke-width'));
+                m.setAttributeNS(null, 'stroke-width', m.getAttributeNS(null, 'tmp_strokeWidth'));
             } else {
                 if (m.tagName !== 'text') {
-                    if (typeof m.getAttributeNS(null, 'tmp_transform') !== 'undefined' && m.getAttributeNS(null, 'tmp_transform') !== 'null') {
+                    if (m.getAttributeNS(null, 'tmp_transform') && m.getAttributeNS(null, 'tmp_transform') !== 'null') {
                         m.setAttributeNS(null, 'transform', m.getAttributeNS(null, 'tmp_transform'));
                     } else {
                         m.setAttributeNS(null, 'transform', '');

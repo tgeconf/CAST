@@ -49,8 +49,8 @@ export default class KfItem extends KfTimingIllus {
     public kfWidth: number
     public alignFrame: SVGRectElement
     public totalWidth: number = 0
-    public chartThumbnail: SVGImageElement
-    public chartSmallThumbnail: SVGImageElement
+    // public chartThumbnail: SVGImageElement
+    // public chartSmallThumbnail: SVGImageElement
     public chartThumbnails: SVGImageElement[] = []
 
     set offsetDiff(od: number) {
@@ -129,7 +129,7 @@ export default class KfItem extends KfTimingIllus {
         this.drawKfBg(-1, { w: kfWidth, h: kfHeight });
         this.container.appendChild(this.kfBg);
         this.drawChart(allCurrentMarks, allGroupMarks, marksThisKf);
-        this.container.appendChild(this.chartThumbnail);
+        // this.container.appendChild(this.chartThumbnail);
     }
 
     public createItem(kf: IKeyframe, treeLevel: number, parentObj: KfGroup, startX: number, size?: ISize): void {
@@ -710,12 +710,12 @@ export default class KfItem extends KfTimingIllus {
 
     public renderChartToCanvas(svg: HTMLElement): void {
         //stroke enlarge range: 1 to 4, mark enlarge range: 1 to 3
-        const shownThumbnail: number = Math.floor((state.zoomLevel - 0.5) / 0.2);
-        for (let i = 0; i < 6; i++) {
-            Tool.enlargeMarks(svg, 'translucent-mark', 4 - i * 0.6, 3 - i * 0.4, false);
+        const shownThumbnail: number = Math.floor((state.zoomLevel - 0.5) / (1 / (state.chartThumbNailZoomLevels - 1)));
+        for (let i = 0; i < state.chartThumbNailZoomLevels; i++) {
+            Tool.enlargeMarks(svg, 'translucent-mark', 4 - i * (3 / (state.chartThumbNailZoomLevels - 1)), 3 - i * (2 / (state.chartThumbNailZoomLevels - 1)), false);
             this.chartThumbnails.push(this.createImage(svg, shownThumbnail === i));
-            Tool.resetMarkSize(svg, 'translucent-mark', false);
         }
+        Tool.resetMarkSize(svg, 'translucent-mark', false);
     }
 
     public createImage(svg: HTMLElement, shown: boolean): SVGImageElement {

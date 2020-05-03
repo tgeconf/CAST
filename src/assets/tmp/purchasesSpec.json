@@ -1,5 +1,16 @@
 [
   {
+    "selector": "#mark3002, #mark3004, #mark4011, #mark4012, #mark4013, #mark4014, #mark4015, #mark4016, #mark4017, #mark4018, #mark4019, #mark4020, #mark4021, #mark3005, #mark3006, #mark5011, #mark5012, #mark5013, #mark5014, #mark5015, #mark5016, #mark5017, #mark5018, #mark5019, #mark5020, #mark5021, #mark3001, #mark4001, #mark4002, #mark4003, #mark4004, #mark4005, #mark4006, #mark4007, #mark4008, #mark4009, #mark4010, #mark3003, #mark5001, #mark5002, #mark5003, #mark5004, #mark5005, #mark5006, #mark5007, #mark5008, #mark5009, #mark5010",
+    "effects": [
+      {
+        "type": "fade",
+        "duration": 300,
+        "chartIdx": 0
+      }
+    ],
+    "chartIdx": 0
+  },
+  {
     "selector": "#mark2001, #mark2002, #mark2003, #mark2004, #mark2005, #mark2006, #mark2007, #mark2008, #mark2009, #mark2010",
     "effects": [
       {
@@ -9,7 +20,8 @@
       }
     ],
     "chartIdx": 0,
-    "id": "0_#mark1, #mark2, #mark3, #mark4, #mark5, #mark6, #mark7, #mark8, #mark9, #mark1001, #mark1002, #mark1003, #mark1004, #mark1005, #mark1006, #mark1007, #mark1008, #mark1009, #mark1010, #mark2001, #mark2002, #mark2003, #mark2004, #mark2005, #mark2006, #mark2007, #mark2008, #mark2009, #mark2010, #mark3001, #mark4001, #mark4002, #mark4003, #mark4004, #mark4005, #mark4006, #mark4007, #mark4008, #mark4009, #mark4010, #mark3002, #mark3003, #mark5001, #mark5002, #mark5003, #mark5004, #mark5005, #mark5006, #mark5007, #mark5008, #mark5009, #mark5010, #mark3004, #mark4011, #mark4012, #mark4013, #mark4014, #mark4015, #mark4016, #mark4017, #mark4018, #mark4019, #mark4020, #mark4021, #mark3005, #mark3006, #mark5011, #mark5012, #mark5013, #mark5014, #mark5015, #mark5016, #mark5017, #mark5018, #mark5019, #mark5020, #mark5021, #mark6001",
+    "reference": "start after previous",
+    "id": "0_#mark1, #mark2, #mark3, #mark4, #mark5, #mark6, #mark7, #mark8, #mark9, #mark1001, #mark1002, #mark1003, #mark1004, #mark1005, #mark1006, #mark1007, #mark1008, #mark1009, #mark1010, #mark2001, #mark2002, #mark2003, #mark2004, #mark2005, #mark2006, #mark2007, #mark2008, #mark2009, #mark2010, #mark6001",
     "grouping": {
       "groupBy": "year",
       "reference": "start after previous",
@@ -30,6 +42,23 @@
     }
   },
   {
+    "selector": "#mark1001, #mark1002, #mark1003, #mark1004, #mark1005, #mark1006, #mark1007, #mark1008, #mark1009, #mark1010",
+    "effects": [
+      {
+        "type": "fade",
+        "duration": 300,
+        "chartIdx": 0
+      }
+    ],
+    "chartIdx": 0,
+    "reference": "start with previous",
+    "align": {
+      "type": "element",
+      "target": "0_#mark1, #mark2, #mark3, #mark4, #mark5, #mark6, #mark7, #mark8, #mark9, #mark1001, #mark1002, #mark1003, #mark1004, #mark1005, #mark1006, #mark1007, #mark1008, #mark1009, #mark1010, #mark2001, #mark2002, #mark2003, #mark2004, #mark2005, #mark2006, #mark2007, #mark2008, #mark2009, #mark2010, #mark6001",
+      "merge": false
+    }
+  },
+  {
     "selector": "#mark1, #mark2, #mark3, #mark4, #mark5, #mark6, #mark7, #mark8, #mark9",
     "effects": [
       {
@@ -42,29 +71,12 @@
     "reference": "start with previous",
     "align": {
       "type": "element",
-      "target": "0_#mark1, #mark2, #mark3, #mark4, #mark5, #mark6, #mark7, #mark8, #mark9, #mark1001, #mark1002, #mark1003, #mark1004, #mark1005, #mark1006, #mark1007, #mark1008, #mark1009, #mark1010, #mark2001, #mark2002, #mark2003, #mark2004, #mark2005, #mark2006, #mark2007, #mark2008, #mark2009, #mark2010, #mark3001, #mark4001, #mark4002, #mark4003, #mark4004, #mark4005, #mark4006, #mark4007, #mark4008, #mark4009, #mark4010, #mark3002, #mark3003, #mark5001, #mark5002, #mark5003, #mark5004, #mark5005, #mark5006, #mark5007, #mark5008, #mark5009, #mark5010, #mark3004, #mark4011, #mark4012, #mark4013, #mark4014, #mark4015, #mark4016, #mark4017, #mark4018, #mark4019, #mark4020, #mark4021, #mark3005, #mark3006, #mark5011, #mark5012, #mark5013, #mark5014, #mark5015, #mark5016, #mark5017, #mark5018, #mark5019, #mark5020, #mark5021, #mark6001",
+      "target": "0_#mark1, #mark2, #mark3, #mark4, #mark5, #mark6, #mark7, #mark8, #mark9, #mark1001, #mark1002, #mark1003, #mark1004, #mark1005, #mark1006, #mark1007, #mark1008, #mark1009, #mark1010, #mark2001, #mark2002, #mark2003, #mark2004, #mark2005, #mark2006, #mark2007, #mark2008, #mark2009, #mark2010, #mark6001",
       "merge": false
     }
   },
   {
-    "selector": "#mark1001, #mark1002, #mark1003, #mark1004, #mark1005, #mark1006, #mark1007, #mark1008, #mark1009, #mark1010",
-    "effects": [
-      {
-        "type": "fade",
-        "duration": 1740,
-        "chartIdx": 0
-      }
-    ],
-    "chartIdx": 0,
-    "reference": "start with previous",
-    "align": {
-      "type": "element",
-      "target": "0_#mark1, #mark2, #mark3, #mark4, #mark5, #mark6, #mark7, #mark8, #mark9, #mark1001, #mark1002, #mark1003, #mark1004, #mark1005, #mark1006, #mark1007, #mark1008, #mark1009, #mark1010, #mark2001, #mark2002, #mark2003, #mark2004, #mark2005, #mark2006, #mark2007, #mark2008, #mark2009, #mark2010, #mark3001, #mark4001, #mark4002, #mark4003, #mark4004, #mark4005, #mark4006, #mark4007, #mark4008, #mark4009, #mark4010, #mark3002, #mark3003, #mark5001, #mark5002, #mark5003, #mark5004, #mark5005, #mark5006, #mark5007, #mark5008, #mark5009, #mark5010, #mark3004, #mark4011, #mark4012, #mark4013, #mark4014, #mark4015, #mark4016, #mark4017, #mark4018, #mark4019, #mark4020, #mark4021, #mark3005, #mark3006, #mark5011, #mark5012, #mark5013, #mark5014, #mark5015, #mark5016, #mark5017, #mark5018, #mark5019, #mark5020, #mark5021, #mark6001",
-      "merge": false
-    }
-  },
-  {
-    "selector": "#mark3001, #mark4001, #mark4002, #mark4003, #mark4004, #mark4005, #mark4006, #mark4007, #mark4008, #mark4009, #mark4010, #mark3002, #mark3003, #mark5001, #mark5002, #mark5003, #mark5004, #mark5005, #mark5006, #mark5007, #mark5008, #mark5009, #mark5010, #mark3004, #mark4011, #mark4012, #mark4013, #mark4014, #mark4015, #mark4016, #mark4017, #mark4018, #mark4019, #mark4020, #mark4021, #mark3005, #mark3006, #mark5011, #mark5012, #mark5013, #mark5014, #mark5015, #mark5016, #mark5017, #mark5018, #mark5019, #mark5020, #mark5021, #mark6001",
+    "selector": "#mark6001",
     "effects": [
       {
         "type": "fade",

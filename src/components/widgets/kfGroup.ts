@@ -819,6 +819,18 @@ export default class KfGroup extends KfTimingIllus {
         }
     }
 
+    /**
+     * for merged aligned groups
+     * @param extraWidth : width in visual pixel level
+     */
+    public extendSize(extraWidth: number): void {
+        this.groupBg.setAttributeNS(null, 'width', `${parseFloat(this.groupBg.getAttributeNS(null, 'width')) + (extraWidth / state.zoomLevel)}`);
+        //update available insert and groups in the tracks which current group prossesses
+        if (this.parentObj instanceof KfTrack) {
+            this.updateParentTrackInsert();
+        }
+    }
+
     public updateSize(extraWidth: number = 0): [number, number, number] {
         //get size of all children (kfgroup or kfitem)
         let maxBoundry: {
@@ -874,18 +886,23 @@ export default class KfGroup extends KfTimingIllus {
 
         //update available insert and groups in the tracks which current group prossesses
         if (this.parentObj instanceof KfTrack) {
-            [...KfTrack.aniTrackMapping.get(this.aniId)].forEach((kfTrack: KfTrack) => {
-                const tmpBBox: DOMRect = this.groupBg.getBoundingClientRect();//fixed
-                const rightBoundary: number = tmpBBox.left + tmpBBox.width;
-                const kftStart: number = document.getElementById(KfContainer.KF_BG).getBoundingClientRect().left;//fixed
-                if ((rightBoundary - kftStart) / state.zoomLevel > kfTrack.availableInsert) {
-                    kfTrack.availableInsert = (rightBoundary - kftStart) / state.zoomLevel;
-                    console.log('updating track available insert: ', kfTrack, kfTrack.availableInsert);
-                }
-            })
+            this.updateParentTrackInsert();
         }
 
         return [diffX, currentGroupWidth, childHeight];
+    }
+
+    public updateParentTrackInsert() {
+        [...KfTrack.aniTrackMapping.get(this.aniId)].forEach((kfTrack: KfTrack) => {
+            const tmpBBox: DOMRect = this.container.getBoundingClientRect();//fixed
+            console.log('update track from : ', this, tmpBBox);
+            const rightBoundary: number = tmpBBox.right;
+            const kftStart: number = document.getElementById(KfContainer.KF_BG).getBoundingClientRect().left;//fixed
+            if ((rightBoundary - kftStart) / state.zoomLevel > kfTrack.availableInsert) {
+                kfTrack.availableInsert = (rightBoundary - kftStart) / state.zoomLevel;
+                console.log('updating track available insert: ', kfTrack, kfTrack.availableInsert);
+            }
+        })
     }
 
     public updateGroupPosiAndSize(lastGroupStart: number, lastGroupWidth: number, lastGroup: boolean, rootGroup: boolean = false): void {
@@ -913,7 +930,6 @@ export default class KfGroup extends KfTimingIllus {
                         this.alignLines = [...this.alignLines, ...c.alignLines];
                     }
                 })
-
             }
 
             //update size
@@ -924,18 +940,6 @@ export default class KfGroup extends KfTimingIllus {
             //update position of menu if there is one
             if (typeof this.groupMenu !== 'undefined') {
                 this.groupMenu.updatePosition(this.offsetWidth, gHeight);
-            }
-
-            //update background color
-            const grayColor: number = KfGroup.BASIC_GRAY - KfGroup.GRAY_STEP * (KfGroup.leafLevel - this.treeLevel);
-            if (typeof this.groupTitleCover !== 'undefined') {
-                this.groupTitleCover.setAttributeNS(null, 'fill', `rgb(${grayColor}, ${grayColor}, ${grayColor})`);
-            }
-            if (this.alignMerge) {
-                this.groupBg.setAttributeNS(null, 'fill', 'none');
-                this.groupBg.setAttributeNS(null, '_fill', `rgb(${grayColor}, ${grayColor}, ${grayColor})`);
-            } else {
-                this.groupBg.setAttributeNS(null, 'fill', `rgb(${grayColor}, ${grayColor}, ${grayColor})`);
             }
 
             //update position
@@ -950,6 +954,34 @@ export default class KfGroup extends KfTimingIllus {
                 this.posiX = lastGroupStart + lastGroupWidth;
                 this.width = currentGroupWidth;
             }
+
+            //check whther need to update the available insert of kftrack
+            if (this.parentObj instanceof KfTrack) {
+                this.updateParentTrackInsert();
+            }
+
+            //update background color
+            const grayColor: number = KfGroup.BASIC_GRAY - KfGroup.GRAY_STEP * (KfGroup.leafLevel - this.treeLevel);
+            if (typeof this.groupTitleCover !== 'undefined') {
+                this.groupTitleCover.setAttributeNS(null, 'fill', `rgb(${grayColor}, ${grayColor}, ${grayColor})`);
+            }
+            if (this.alignMerge) {
+                this.groupBg.setAttributeNS(null, 'fill', 'none');
+                this.groupBg.setAttributeNS(null, '_fill', `rgb(${grayColor}, ${grayColor}, ${grayColor})`);
+                //extend the gorup with of the alignWith group
+                const alignWithGroup: KfGroup = this.fetchAlignWithGroup();
+                const alignWithGroupBBox: DOMRect = alignWithGroup.container.getBoundingClientRect();
+                const currentBBox: DOMRect = this.container.getBoundingClientRect();
+                const diffW: number = currentBBox.right - alignWithGroupBBox.right;
+                console.log('extending group size: ', alignWithGroup, this, currentBBox, alignWithGroupBBox, diffW);
+                if (diffW > 0) {
+                    alignWithGroup.extendSize(diffW);
+                }
+
+            } else {
+                this.groupBg.setAttributeNS(null, 'fill', `rgb(${grayColor}, ${grayColor}, ${grayColor})`);
+            }
+
         }
     }
 
