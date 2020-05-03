@@ -134,6 +134,9 @@ export default class Slider {
         this.currentValue = value;
         this.slider.setAttributeNS(null, 'cx', this.scale(value).toString());
         this.trackPassed.setAttributeNS(null, 'x2', this.scale(value).toString());
+        if (this.callbackFunc && typeof this.callbackFunc !== 'undefined') {
+            this.callbackFunc(value);
+        }
     }
 
     /**

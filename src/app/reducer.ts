@@ -156,7 +156,7 @@ Reducer.listen(action.UPDATE_STATIC_KEYFRAME, (staticMarks: string[]) => {
     state.staticMarks = staticMarks;
 })
 Reducer.listen(action.UPDATE_KEYFRAME_TRACKS, (animations: Map<string, any>) => {
-    //reset the min and max duraiton of KfItem
+    //reset the min and max duration of KfItem
     PlusBtn.allPlusBtn = [];
     KfItem.allKfItems.clear();
     KfItem.allKfInfo.clear();
@@ -335,11 +335,26 @@ Reducer.listen(action.MERGE_GROUP, (actionInfo: { aniId: string, groupRef: strin
 
 Reducer.listen(action.UPDATE_DURATION, (actionInfo: { aniId: string, duration: number }) => {
     const animations: IAnimationSpec[] = state.spec.animations;
+    const animationsNeedToUpdate: string[] = [];
     animations.forEach((a: IAnimationSpec) => {
-        console.log('updating duration:', a.chartIdx, a.selector, actionInfo.aniId);
         if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
+            animationsNeedToUpdate.push(a.selector);
+            //find merged aligned animations
+            if (typeof a.id !== 'undefined') {
+                const [alignWithAni, alignToAnis] = CanisGenerator.findMergedAlignAnis(a.id);
+                animationsNeedToUpdate.push(...alignToAnis);
+            } else if (typeof a.align !== 'undefined') {
+                if (a.align.type === Animation.alignTarget.withEle && a.align.merge) {
+                    const [alignWithAni, alignToAnis] = CanisGenerator.findMergedAlignAnis(a.align.target);
+                    animationsNeedToUpdate.push(...[alignWithAni, ...alignToAnis]);
+                }
+            }
+        }
+    })
+    animations.forEach((a: IAnimationSpec) => {
+        if (animationsNeedToUpdate.includes(a.selector)) {
             let tmpEffect = Util.cloneObj(a.effects[0]);
-            let oriDuration: number = CanisGenerator.updateDuration(tmpEffect, actionInfo.duration);
+            CanisGenerator.updateDuration(tmpEffect, actionInfo.duration);
             a.effects = [tmpEffect];
         }
     })
@@ -545,6 +560,18 @@ Reducer.listen(action.UPDATE_ALIGN_MERGE, (actionInfo: { aniId: string, merge: b
         let a: IAnimationSpec = animations[i];
         if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
             CanisGenerator.updateMerge(a, actionInfo.merge);
+
+            let targetDuration: number = 0;
+            for (let j = 0; j < len; j++) {
+                if (state.spec.animations[j].id === a.align.target) {
+                    targetDuration = <number>state.spec.animations[j].effects[0].duration;
+                    break;
+                }
+            }
+
+            let tmpEffect = Util.cloneObj(a.effects[0]);
+            CanisGenerator.updateDuration(tmpEffect, targetDuration);
+            a.effects = [tmpEffect];
             break;
         }
     }

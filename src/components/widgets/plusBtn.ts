@@ -46,12 +46,10 @@ export default class PlusBtn {
     }
 
     public static cancelHighlightPlusBtns() {
-        console.log('cancel highlight plu btn: ', this.allPlusBtn);
         this.allPlusBtn.forEach((pb: PlusBtn) => {
             if (pb.isHighlighted) {
                 pb.cancelHighlightBtn();
                 let transX: number = pb.kfSize.w - this.BTN_SIZE;
-                console.log('transalteing target kfg: ', pb.targetKfg, -transX);
                 pb.targetKfg.translateWholeGroup(-transX, true);
             }
         })
@@ -213,7 +211,6 @@ export default class PlusBtn {
         const clsSelMarks: string[] = Util.extractClsFromMarks(selectedMarks);
         const clsFirstKf: string[] = Util.extractClsFromMarks(firstKfInfoInParent.marksThisKf);
         let suggestOnFirstKf: boolean = false;
-        console.log('selected marks are: ', selectedMarks);
         if (Tool.arrayContained(firstKfInfoInParent.marksThisKf, selectedMarks) && Tool.identicalArrays(clsSelMarks, clsFirstKf)) {//suggest based on first kf in animation
             suggestOnFirstKf = true;
             Suggest.suggestPaths(selectedMarks, firstKfInfoInParent.marksThisKf);

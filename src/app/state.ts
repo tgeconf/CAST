@@ -85,7 +85,6 @@ export class State implements IState {
         } else {
             //find sort reference
             const [found, attrAndOrder] = Util.findUpdatedAttrOrder(sda);
-            console.log('found sort attr: ', sda, found, attrAndOrder);
             //reorder data items
             if (found) {
                 this._sortDataAttrs = sda;
@@ -253,13 +252,11 @@ export class State implements IState {
         this.stateHistory.push(this.tmpStateBusket);
         console.log('saving history: ', this.stateHistory, this.tmpStateBusket, this.stateHistoryIdx);
         this.tmpStateBusket = [];
-        // console.log('current history: ', this.stateHistory);
     }
 
     public static revertHistory() {
         if (this.stateHistoryIdx > 0) {
             this.stateHistoryIdx--;
-            console.log(this.stateHistory, this.stateHistoryIdx);
             const actionAndValues: Array<[string, any]> = this.stateHistory[this.stateHistoryIdx];
             actionAndValues.forEach(actionValue => {
                 console.log('reverting history: ', actionValue[0], actionValue[1]);

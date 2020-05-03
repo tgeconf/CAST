@@ -9,9 +9,10 @@ import IntelliRefLine from './intelliRefLine';
 import { KfContainer } from '../kfContainer';
 import * as action from '../../app/action';
 import Reducer from '../../app/reducer';
-import { TimingSpec } from 'canis_toolkit';
+import { Animation, TimingSpec } from 'canis_toolkit';
 import { state, State } from '../../app/state';
 import KfTrack from './kfTrack';
+import { IAnimationSpec } from '../../app/core/canisGenerator';
 
 export default class KfItem extends KfTimingIllus {
     static KF_HEIGHT: number = 178;
@@ -145,7 +146,6 @@ export default class KfItem extends KfTimingIllus {
         this.treeLevel = treeLevel;
 
         if (typeof size !== 'undefined') {
-            console.log('alignto level: ', treeLevel);
             this.kfHeight = size.h;
         } else {
             this.kfHeight = KfItem.KF_HEIGHT - 2 * treeLevel * KfItem.KF_H_STEP;
@@ -355,7 +355,6 @@ export default class KfItem extends KfTimingIllus {
                                 updateSpec = true;//remove offset between kfs
                                 actionType = action.REMOVE_DELAY_BETWEEN_KF;
                                 actionInfo.aniId = this.parentObj.aniId;
-                                console.log('remveo offset: ', actionInfo);
                             } else if (this.hasOffset && !preSibling.hasDuration) {
                                 updateSpec = true;//change timing ref from with to after and remove offset
                                 actionType = action.UPDATE_TIMING_REF_DELAY_KF;
@@ -452,13 +451,11 @@ export default class KfItem extends KfTimingIllus {
         }
         this.drawKfBg(this.treeLevel, size);
         this.container.appendChild(this.kfBg);
-        console.log('rendering kf: ', this, this.hasDuration, this.hasHiddenDuration);
         if (this.hasDuration) {
             this.drawDuration(this.kfInfo.duration, this.kfWidth, this.kfHeight, false);
             this.container.appendChild(this.durationIllus);
             this.totalWidth += this.durationWidth;
         } else if (this.hasHiddenDuration) {
-            console.log('draiwng hidden duration', this);
             this.drawDuration(this.kfInfo.duration, this.kfWidth, this.kfHeight, true);
             this.container.appendChild(this.durationIllus);
         }
@@ -555,7 +552,6 @@ export default class KfItem extends KfTimingIllus {
         const currentKfInfo: IKeyframe = KfItem.allKfInfo.get(this.id);
         const alignedKfInfo: IKeyframe = KfItem.allKfInfo.get(alignTo);
         const alignedKfItem: KfItem = KfItem.allKfItems.get(alignTo);
-        console.log('in kf update align posi: ', this, alignedKfItem, this);
         if (alignedKfItem.rendered) {
             let alignedKfBgX: number = 0;
             if (currentKfInfo.timingRef === TimingSpec.timingRef.previousStart) {
@@ -575,10 +571,8 @@ export default class KfItem extends KfTimingIllus {
                 })
             }
             const bgDiffX: number = Math.abs((currentPosiX - alignedKfBgX) / state.zoomLevel);
-            console.log('test: ', currentPosiX, alignedKfBgX);
             if (currentPosiX > alignedKfBgX) { //translate aligned kf and its group
                 // if (currentPosiX > alignedKfBgX && (currentPosiX - alignedKfBgX >= 1)) { //translate aligned kf and its group
-                console.log('translating alignwith kf');
                 let posiXForNextKf: number = this.container.getBoundingClientRect().right;//fixed
 
                 //update aligned kfs, together with those kfs after it, and those in its parent group
@@ -593,7 +587,6 @@ export default class KfItem extends KfTimingIllus {
                 //     alignedKfInfo.alignWithKfs.forEach((kfId: number) => {
                 //         const tmpKfItem = KfItem.allKfItems.get(kfId);
                 //         if (typeof tmpKfItem !== 'undefined') {
-                //             console.log('in', 1);
                 //             tmpKfItem.parentObj.translateGroup(tmpKfItem, bgDiffX, false, true, true);
                 //             const tmpKfItemBBox: DOMRect = tmpKfItem.container.getBoundingClientRect();//fixed
                 //             if (tmpKfItemBBox.right > posiXForNextKf) {
@@ -613,7 +606,6 @@ export default class KfItem extends KfTimingIllus {
                             transXForNextKf = bgDiffX;
                             const tmpTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
                             c.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transXForNextKf}, ${tmpTrans.y})`);
-                            console.log('going to update transx: ');
                         } else {
                             const tmpBBox: DOMRect = c.container.getBoundingClientRect();//fixed
                             if (tmpBBox.left + transXForNextKf * state.zoomLevel < posiXForNextKf) {
@@ -633,7 +625,6 @@ export default class KfItem extends KfTimingIllus {
                     nextKf.parentObj.translateGroup(nextKf, transXForNextKf, true, true, true);
                 }
             } else if (currentPosiX <= alignedKfBgX) {//translate current kf
-                console.log('translating current alignto kf');
                 const currentTransX: number = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform')).x;
                 this.container.setAttributeNS(null, 'transform', `translate(${currentTransX + bgDiffX}, ${KfItem.PADDING})`);
                 this.totalWidth += bgDiffX;
@@ -673,7 +664,6 @@ export default class KfItem extends KfTimingIllus {
     }
 
     public drawKfBg(treeLevel: number, size?: ISize): void {
-        console.log("size is: ", size);
         if (typeof size !== 'undefined') {
             this.kfWidth = size.w;
         } else {

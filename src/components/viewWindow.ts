@@ -10,6 +10,7 @@ import { kfContainer } from './kfContainer'
 interface IViewBtnProp {
     title?: string,
     clickEvtType: string,
+    clickEvt?: () => void,
     iconClass: string
 }
 
@@ -100,21 +101,35 @@ export default class ViewWindow {
             clickEvtType: ViewToolBtn.ZOOM,
             iconClass: 'zoom-icon'
         }));
-        toolContainer.appendChild(this.createBtn({
-            title: 'Zoom Out',
-            clickEvtType: ViewToolBtn.ZOOM_OUT,
-            iconClass: 'zoom-out-icon'
-        }));
         //create zooming slider
         const slider: Slider = new Slider([0.5, 1.5], 1);
         slider.createSlider()
         slider.callbackFunc = (zl: number) => {
             Reducer.triger(action.KEYFRAME_ZOOM_LEVEL, zl);
         };
+        toolContainer.appendChild(this.createBtn({
+            title: 'Zoom Out',
+            clickEvtType: ViewToolBtn.CUSTOM,
+            clickEvt: () => {
+                if (state.zoomLevel - 0.1 >= 0.5) {
+                    slider.moveSlider(state.zoomLevel - 0.1);
+                }else{
+                    slider.moveSlider(0.5);
+                }
+            },
+            iconClass: 'zoom-out-icon'
+        }));
         toolContainer.appendChild(slider.sliderContainer);
         toolContainer.appendChild(this.createBtn({
             title: 'Zoom In',
-            clickEvtType: ViewToolBtn.ZOOM_IN,
+            clickEvtType: ViewToolBtn.CUSTOM,
+            clickEvt: () => {
+                if (state.zoomLevel + 0.1 <= 1.5) {
+                    slider.moveSlider(state.zoomLevel + 0.1);
+                }else{
+                    slider.moveSlider(1.5);
+                }
+            },
             iconClass: 'zoom-in-icon'
         }));
         return toolContainer;
@@ -181,6 +196,7 @@ export class ViewToolBtn {
     static SUGGEST: string = 'suggest';
     static ZOOM_OUT: string = 'zoomOut';
     static ZOOM_IN: string = 'zoomIn';
+    static CUSTOM: string = 'custom';
 
     public btn(props: IViewBtnProp): HTMLSpanElement {
         const btn: HTMLSpanElement = document.createElement('span');
@@ -213,6 +229,10 @@ export class ViewToolBtn {
             case ViewToolBtn.ZOOM_OUT:
                 btn.classList.add('narrow-tool-btn');
                 btn.onclick = () => this.zoomOut();
+                break;
+            case ViewToolBtn.CUSTOM:
+                btn.classList.add('narrow-tool-btn');
+                btn.onclick = props.clickEvt;
                 break;
         }
 

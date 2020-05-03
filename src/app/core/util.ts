@@ -113,7 +113,6 @@ export default class Util {
             }
             selAndSug.get(sectionId).add(markId);
         })
-        console.log('selection and suggestion before: ', selAndSug);
 
         //find suggestion
         let valueOfSameAttrs: string[] = [];
@@ -165,14 +164,12 @@ export default class Util {
                 }
             })
         })
-        console.log('selection and suggestion after: ', selAndSug);
 
         //add suggestion result to the selected marks
         let selectedMarks: string[] = [];
         selAndSug.forEach((selAndSugMarks, secId) => {
             selectedMarks.push(...selAndSugMarks);
         })
-        console.log('final sugestion: ', selectedMarks);
         return selectedMarks;
     }
 
@@ -181,7 +178,6 @@ export default class Util {
      */
     public static suggestSelBasedOnChart(markIds: string[]): string[] {
         const [sameAttrs, diffAttrs] = this.compareAttrs(markIds, this.nonDataTable, this.nonDataAttrs, false);
-        console.log('same and diff attrs: ', sameAttrs, diffAttrs);
         // const allNonDataMarks: string[] = Array.from(this.nonDataTable.keys());
         let suggestMarks: string[] = [];
         this.nonDataTable.forEach((d: IDataItem, mId: string) => {
@@ -196,7 +192,6 @@ export default class Util {
             }
         })
 
-        console.log('non data suggest marks: ', suggestMarks);
         return [...markIds, ...suggestMarks];
     }
 

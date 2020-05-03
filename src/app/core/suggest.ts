@@ -12,7 +12,6 @@ export default class Suggest {
      * @param markIdArr 
      */
     public static separateDataAndNonDataMarks(markIdArr: string[]): { dataMarks: string[], nonDataMarks: string[] } {
-        console.log('markId arr: ', markIdArr);
         let dataMarks: string[] = [];
         let nonDataMarks: string[] = [];
         markIdArr.forEach((mId: string) => {
@@ -68,7 +67,6 @@ export default class Suggest {
             }
         })
         if (Tool.identicalArrays(firstKfMarks, tmpMarkRecord)) {//remove same attrs from attrToSecs
-            console.log('remvoe same attrs from attrToSecs')
             diffAttrs.forEach((aName: string) => {
                 if (attrToSec.includes(aName)) {
                     attrToSec.splice(attrToSec.indexOf(aName), 1);
@@ -559,14 +557,11 @@ export default class Suggest {
                             attrValStr += `*${tmpDatum[attr]}`;
                         }
                     })
-                    console.log('attr values: ', attrValStr);
                     if (typeof typeCount.get(attrValStr) === 'undefined') {
                         typeCount.set(attrValStr, 0);
                     }
                     typeCount.set(attrValStr, typeCount.get(attrValStr) + 1);
-                    console.log(typeCount);
                 })
-                console.log('record type: ', typeCount, [...typeCount][0]);
                 const attrValStr = [...typeCount][0][0];
                 if (typeCount.size === 1 && [...typeCount][0][1] === 1) {
                     //fetch all marks with the same attr values

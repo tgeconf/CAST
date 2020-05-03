@@ -57,6 +57,8 @@ export default class KfGroup extends KfTimingIllus {
     public groupMenu: GroupMenu;
     // public groupMenuMask: SVGMaskElement;
     public groupTitle: SVGGElement;
+    public groupTitleBg: SVGRectElement;
+    public groupTitleContent: SVGTextContentElement;
     public groupTitleCover: SVGRectElement;//same color as the group bg
     public children: any[] = [];
     public kfNum: number = 0;
@@ -166,7 +168,6 @@ export default class KfGroup extends KfTimingIllus {
                 })
             }
             const transX: number = this.parentObj.availableInsert;
-            console.log('insert group in track: ', this, transX);
             this.container.setAttributeNS(null, 'transform', `translate(${transX}, ${this.posiY})`);
             this.parentObj.children.push(this);
             this.idxInGroup = this.parentObj.children.length - 1;
@@ -191,6 +192,9 @@ export default class KfGroup extends KfTimingIllus {
             }
             this.parentObj.container.appendChild(this.container);
         }
+
+        //update group title width
+        this.updateTitleWidth();
 
         this.container.onmouseout = (outEvt: any) => {
             if (!this.isDragging) {
@@ -228,6 +232,13 @@ export default class KfGroup extends KfTimingIllus {
             if (this.parentObj.kfHasOffset !== hasOffset || this.parentObj.kfHasDuration !== hasDuration) {
                 this.parentObj.updateParentKfHasTiming(hasOffset, hasDuration);
             }
+        }
+    }
+
+    public updateTitleWidth() {
+        if (typeof this.groupTitleContent !== 'undefined') {
+            const textBBox: DOMRect = this.groupTitleContent.getBoundingClientRect();
+            this.groupTitleBg.setAttributeNS(null, 'width', `${textBBox.width + 2 * KfGroup.GROUP_RX}`);
         }
     }
 
@@ -299,20 +310,20 @@ export default class KfGroup extends KfTimingIllus {
         this.groupTitle.classList.add('ease-transform');
         this.groupTitle.classList.add('draggable-component');
         this.groupTitle.setAttributeNS(null, 'transform', 'translate(0, 2)');
-        const groupTitleBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        groupTitleBg.setAttributeNS(null, 'width', `${KfGroup.TITLE_CHAR_WIDTH * this.title.length + 2 * KfGroup.TITLE_PADDING}`);
-        groupTitleBg.setAttributeNS(null, 'height', '30');
-        groupTitleBg.setAttributeNS(null, 'fill', '#676767');
-        groupTitleBg.setAttributeNS(null, 'rx', `${KfGroup.GROUP_RX}`);
-        this.groupTitle.appendChild(groupTitleBg);
-        const groupTitleContent: SVGTextElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        groupTitleContent.innerHTML = this.title;
-        groupTitleContent.setAttributeNS(null, 'x', '6');
-        groupTitleContent.setAttributeNS(null, 'y', `${KfGroup.TITLE_HEIHGT - 4}`);
-        groupTitleContent.setAttributeNS(null, 'fill', '#fff');
-        groupTitleContent.classList.add('monospace-font');
-        groupTitleContent.setAttributeNS(null, 'font-size', '10pt');
-        this.groupTitle.appendChild(groupTitleContent);
+        this.groupTitleBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        this.groupTitleBg.setAttributeNS(null, 'width', `${KfGroup.TITLE_CHAR_WIDTH * this.title.length + 2 * KfGroup.TITLE_PADDING}`);
+        this.groupTitleBg.setAttributeNS(null, 'height', '30');
+        this.groupTitleBg.setAttributeNS(null, 'fill', '#676767');
+        this.groupTitleBg.setAttributeNS(null, 'rx', `${KfGroup.GROUP_RX}`);
+        this.groupTitle.appendChild(this.groupTitleBg);
+        this.groupTitleContent = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        this.groupTitleContent.innerHTML = this.title;
+        this.groupTitleContent.setAttributeNS(null, 'x', '6');
+        this.groupTitleContent.setAttributeNS(null, 'y', `${KfGroup.TITLE_HEIHGT - 4}`);
+        this.groupTitleContent.setAttributeNS(null, 'fill', '#fff');
+        this.groupTitleContent.classList.add('monospace-font');
+        this.groupTitleContent.setAttributeNS(null, 'font-size', '10pt');
+        this.groupTitle.appendChild(this.groupTitleContent);
 
         this.bindTitleHover();
 
@@ -427,7 +438,6 @@ export default class KfGroup extends KfTimingIllus {
                 if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + (20 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
                     targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_ANI };//after group has higher priority
                     hintDrop.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height, true, true);
-                    console.log('hint insert');
                     break;
                 } else {
                     if (currentGPosi.x >= aniGroupBBox.left && currentGPosi.x < aniGroupBBox.left + (6 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
@@ -704,7 +714,6 @@ export default class KfGroup extends KfTimingIllus {
      * @param updateAlignedKfs 
      */
     public translateGroup(startTransItem: KfItem | KfOmit, transX: number, updateAlignedKfs: boolean, updateStartItem: boolean, updateStartItemAligned: boolean, extraInfo: { lastItem: boolean, extraWidth: number } = { lastItem: false, extraWidth: 0 }): void {
-        console.log('translating group: ', startTransItem, transX);
         //translate kfitems after the input one within the same group
         let currentTransX: number = 0;
         if (!extraInfo.lastItem) {
@@ -760,7 +769,6 @@ export default class KfGroup extends KfTimingIllus {
         })
         //update the group size and position
         let extraWidth: number = extraInfo.lastItem ? extraInfo.extraWidth : 0;
-        console.log('going to update size: ', 5, extraWidth);
         let [diffX, currentGroupWidth, childHeight] = this.updateSize(extraWidth);
         const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
         this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + diffX}, ${oriTrans.y})`);
@@ -895,12 +903,10 @@ export default class KfGroup extends KfTimingIllus {
     public updateParentTrackInsert() {
         [...KfTrack.aniTrackMapping.get(this.aniId)].forEach((kfTrack: KfTrack) => {
             const tmpBBox: DOMRect = this.container.getBoundingClientRect();//fixed
-            console.log('update track from : ', this, tmpBBox);
             const rightBoundary: number = tmpBBox.right;
             const kftStart: number = document.getElementById(KfContainer.KF_BG).getBoundingClientRect().left;//fixed
             if ((rightBoundary - kftStart) / state.zoomLevel > kfTrack.availableInsert) {
                 kfTrack.availableInsert = (rightBoundary - kftStart) / state.zoomLevel;
-                console.log('updating track available insert: ', kfTrack, kfTrack.availableInsert);
             }
         })
     }
@@ -945,7 +951,6 @@ export default class KfGroup extends KfTimingIllus {
             //update position
             const transPosiY = rootGroup ? this.posiY + 1 : this.posiY + KfGroup.PADDING;
             if (this.newTrack) {
-                console.log('translating test', 4, this, lastGroupStart, diffX);
                 this.container.setAttributeNS(null, 'transform', `translate(${lastGroupStart + diffX}, ${transPosiY})`);
                 this.posiX = lastGroupStart + this.offsetWidth;
                 this.width = currentGroupWidth > lastGroupWidth ? currentGroupWidth : lastGroupWidth;
@@ -956,7 +961,7 @@ export default class KfGroup extends KfTimingIllus {
             }
 
             //check whther need to update the available insert of kftrack
-            if (this.parentObj instanceof KfTrack) {
+            if (this.parentObj instanceof KfTrack && typeof this.alignTarget !== 'undefined' && !this.alignMerge) {
                 this.updateParentTrackInsert();
             }
 
@@ -1047,7 +1052,6 @@ export class GroupMenu {
         menuBg.setAttributeNS(null, 'd', `M0,0 H${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING},${GroupMenu.MENU_RX} V${3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX},${3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING} H0 Z`)
         this.container.appendChild(menuBg);
 
-        console.log('testing action:: ', this.action);
         const effectTypeBtn: SVGGElement = this.createBtn(this.action.oriActionType);
         effectTypeBtn.setAttributeNS(null, 'transform', `translate(${GroupMenu.PADDING_LEFT}, ${GroupMenu.PADDING})`);
         this.container.appendChild(effectTypeBtn);

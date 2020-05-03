@@ -1,13 +1,11 @@
+import '../../assets/style/kfTimingIllus.scss'
 import { hintTag } from "./hint";
 import { ICoord } from "../../util/ds";
 import Reducer from "../../app/reducer";
 import * as action from "../../app/action";
 import KfTrack from "./kfTrack";
 import Tool from "../../util/tool";
-
-import '../../assets/style/kfTimingIllus.scss'
 import { state, State } from "../../app/state";
-import KfGroup from "./kfGroup";
 
 export default class KfTimingIllus {
     static BASIC_OFFSET_DURATION_W: number = 20;

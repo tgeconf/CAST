@@ -21,7 +21,6 @@ export default class IntelliRefLine {
     public createLine(alignWithKfId: number, alignToKfId: number) {
         //judge whether the alignto kfgroup is merged to alignwith group
         const alignToKfGroup: KfGroup = KfItem.allKfItems.get(alignToKfId).parentObj.fetchAniGroup();
-        console.log('alito group: ', alignToKfGroup);
         this.container = document.getElementById(KfContainer.KF_FG);
         this.id = IntelliRefLine.idx;
         IntelliRefLine.idx++;

@@ -1,4 +1,4 @@
-import { IState } from '../state'
+import { IState, state } from '../state'
 import Canis, { TimingSpec } from 'canis_toolkit';
 import { ActionSpec, Animation } from 'canis_toolkit';
 
@@ -241,12 +241,10 @@ export default class CanisGenerator {
         }
     }
 
-    public static updateDuration(actionSpec: IAction, duration: number): number {
+    public static updateDuration(actionSpec: IAction, duration: number): void {
         //TODO: consider data binding
         if (typeof actionSpec.duration === 'number') {
-            let oriDuration: number = actionSpec.duration;
             actionSpec.duration = duration;
-            return oriDuration;
         }
     }
 
@@ -334,5 +332,24 @@ export default class CanisGenerator {
 
     public static updateMerge(ani: IAnimationSpec, merge: boolean) {
         ani.align.merge = merge;
+    }
+
+    /**
+     * 
+     * @param id : aniId used in align
+     */
+    public static findMergedAlignAnis(id: string): [string, string[]] {
+        let alignWithAni: string, alignToAnis: string[] = [];
+        state.spec.animations.forEach((a: IAnimationSpec) => {
+            if (a.id === id) {
+                alignWithAni = a.selector;
+            }
+            if (typeof a.align !== 'undefined') {
+                if (a.align.type === Animation.alignTarget.withEle && a.align.merge) {
+                    alignToAnis.push(a.selector);
+                }
+            }
+        })
+        return [alignWithAni, alignToAnis];
     }
 }

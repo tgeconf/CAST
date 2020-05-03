@@ -120,9 +120,6 @@ export default class Lasso {
                 framed = framedPnt >= 2;
             }
 
-            if (framed) {
-                console.log(m.getAttribute('id'), 'is framed');
-            }
             //update the appearance of marks
             if ((framedMarks.includes(m.id) && framed) || (!framedMarks.includes(m.id) && !framed)) {
                 m.classList.add('non-framed-mark');
@@ -131,7 +128,6 @@ export default class Lasso {
                 result.push(m.id);
             }
         })
-        console.log('selected marks:', result, framedMarks);
         return result;
     }
 }

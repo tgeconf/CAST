@@ -318,7 +318,6 @@ export default class Tool {
     public static transNodeElements(rootNode: any, transX: number, transOffset: boolean = false) {
         const allNodeElements: any[] = transOffset ? Array.from(rootNode.childNodes).slice(1) : Array.from(rootNode.childNodes);
         allNodeElements.forEach((c: any) => {
-            console.log('test translating: ', c);
             let isEasingNode: boolean = false;
             if (c.classList.contains('ease-transform')) {
                 isEasingNode = true;
