@@ -10,6 +10,7 @@ import Suggest from "../../app/core/suggest";
 import Util from "../../app/core/util";
 import KfTrack from "./kfTrack";
 import { ICoord, ISize } from "../../util/ds";
+import { suggestBox, SuggestMenu } from "./suggestBox";
 
 export default class PlusBtn {
     static BTN_SIZE: number = 16;
@@ -18,16 +19,19 @@ export default class PlusBtn {
     static BTN_HIGHLIGHT_COLOR: string = '#358bcb';
     static BTN_DRAGOVER_COLOR: string = '#ea5514';
     static allPlusBtn: PlusBtn[] = [];
+    static plusBtnMapping: Map<string, PlusBtn> = new Map();//key: aniId, value: index in allPlusBtn
     static dragoverBtn: PlusBtn;
     static BTN_IDX: number = 0;
 
     // public parentObj: KfGroup;
+    public onShow: boolean = true;
     public parentTrack: KfTrack;
     public targetKfg: KfGroup;
     public firstKfArrInTargetKfg: IKeyframe[];
     public fakeKfg: KfGroup;
     public id: number;
-    public kfSize: ISize
+    public aniId: string;
+    public kfSize: ISize;
     public acceptableCls: string[];
     public isHighlighted: boolean = false;
     public container: SVGGElement;
@@ -37,7 +41,7 @@ export default class PlusBtn {
     public static highlightPlusBtns(selectedCls: string[]) {
         //filter which button to highlight (has the same accepatable classes)
         this.allPlusBtn.forEach((pb: PlusBtn) => {
-            if (Tool.arrayContained(pb.acceptableCls, selectedCls)) {
+            if (Tool.arrayContained(pb.acceptableCls, selectedCls) && pb.onShow) {
                 pb.highlightBtn();
                 let transX: number = pb.kfSize.w - this.BTN_SIZE;
                 pb.targetKfg.translateWholeGroup(transX, true);
@@ -47,7 +51,7 @@ export default class PlusBtn {
 
     public static cancelHighlightPlusBtns() {
         this.allPlusBtn.forEach((pb: PlusBtn) => {
-            if (pb.isHighlighted) {
+            if (pb.isHighlighted && pb.onShow) {
                 pb.cancelHighlightBtn();
                 let transX: number = pb.kfSize.w - this.BTN_SIZE;
                 pb.targetKfg.translateWholeGroup(-transX, true);
@@ -103,8 +107,8 @@ export default class PlusBtn {
     public createBtn(targetKfg: KfGroup, firstKfArrInTargetKfg: IKeyframe[], parentTrack: KfTrack, startX: number, kfSize: ISize, acceptableCls: string[]) {
         //create a blank kfg
         this.fakeKfg = new KfGroup();
-        this.fakeKfg.createBlankKfg(parentTrack, startX + KfGroup.PADDING);
-
+        this.fakeKfg.createBlankKfg(parentTrack, targetKfg.aniId, startX + KfGroup.PADDING);
+        this.aniId = targetKfg.aniId;
         this.targetKfg = targetKfg;
         this.firstKfArrInTargetKfg = firstKfArrInTargetKfg;
         this.parentTrack = parentTrack;
@@ -134,20 +138,28 @@ export default class PlusBtn {
         this.container.appendChild(this.btnIcon);
         // this.parentTrack.container.appendChild(this.container);
         this.fakeKfg.container.appendChild(this.container);
+        this.fakeKfg.plusBtn = this;
 
         PlusBtn.allPlusBtn.push(this);
+        // PlusBtn.plusBtnMapping.set(this.aniId, PlusBtn.allPlusBtn.length - 1);
+
     }
 
     public removeBtn() {
         for (let i = 0, len = PlusBtn.allPlusBtn.length; i < len; i++) {
             if (PlusBtn.allPlusBtn[i].id === this.id) {
-                PlusBtn.allPlusBtn.splice(i, 1);
+                PlusBtn.allPlusBtn[i].onShow = false;
                 break;
             }
         }
         if (this.fakeKfg.container.contains(this.container)) {
             this.fakeKfg.container.removeChild(this.container);
         }
+    }
+
+    public restoreBtn() {
+        this.onShow = true;
+        this.fakeKfg.container.appendChild(this.container);
     }
 
     public highlightBtn() {
@@ -188,7 +200,7 @@ export default class PlusBtn {
     }
 
     public dropSelOn() {
-        let selectedMarks: string[] = state.selection;
+        const selectedMarks: string[] = state.activatePlusBtn.selection;
         let firstKfInfoInParent: IKeyframe = this.firstKfArrInTargetKfg[0];
         const tmpKfInfo: IKeyframe = KfItem.createKfInfo(selectedMarks,
             {
@@ -197,7 +209,6 @@ export default class PlusBtn {
                 allGroupMarks: firstKfInfoInParent.allGroupMarks
             });
         KfItem.allKfInfo.set(tmpKfInfo.id, tmpKfInfo);
-        Reducer.triger(action.UPDATE_SELECTION, []);//reset state selection
 
         //create a kf and replace the plus btn
         const btnX: number = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform')).x;
@@ -207,20 +218,16 @@ export default class PlusBtn {
         this.fakeKfg.children.unshift(tmpKf);
         this.fakeKfg.updateSize();
 
-        //create suggestion list if there is one, judge whether to use current last kf as last kf or the current first as last kf
-        const clsSelMarks: string[] = Util.extractClsFromMarks(selectedMarks);
-        const clsFirstKf: string[] = Util.extractClsFromMarks(firstKfInfoInParent.marksThisKf);
-        let suggestOnFirstKf: boolean = false;
-        if (Tool.arrayContained(firstKfInfoInParent.marksThisKf, selectedMarks) && Tool.identicalArrays(clsSelMarks, clsFirstKf)) {//suggest based on first kf in animation
-            suggestOnFirstKf = true;
-            Suggest.suggestPaths(selectedMarks, firstKfInfoInParent.marksThisKf);
-        } else {//suggest based on all marks in animation
-            const marksThisAni: string[] = this.targetKfg.marksThisAni();
-            Suggest.suggestPaths(selectedMarks, marksThisAni);
-        }
-        const actionInfo: any = { ap: Suggest.allPaths, kfIdxInPath: -1, startKf: tmpKf, suggestOnFirstKf: suggestOnFirstKf, selectedMarks: selectedMarks };
-        State.tmpStateBusket.push([action.UPDATE_SUGGESTION_PATH, actionInfo]);
-        State.saveHistory();
-        Reducer.triger(action.UPDATE_SUGGESTION_PATH, actionInfo);
+        const suggestOnFirstKf: boolean = Suggest.generateSuggestionPath(selectedMarks, firstKfInfoInParent, this.targetKfg);
+        // const actionInfo: any = { ap: Suggest.allPaths, kfIdxInPath: state.activatePlusBtn.renderedUniqueIdx, startKf: tmpKf, kfGroup: this.fakeKfg, suggestOnFirstKf: suggestOnFirstKf, selectedMarks: selectedMarks };
+        // State.tmpStateBusket.push({
+        //     historyAction: { actionType: action.UPDATE_SUGGESTION_PATH, actionVal: { ap: undefined, kfIdxInPath: -1, startKf: tmpKf, suggestOnFirstKf: false, selectedMarks: [] } },
+        //     currentAction: { actionType: action.UPDATE_SUGGESTION_PATH, actionVal: actionInfo }
+        // })
+        // State.saveHistory();
+        // Reducer.triger(action.UPDATE_SUGGESTION_PATH, actionInfo);
+        // Reducer.triger(action.UPDATE_SUGGESTION_PATH, Suggest.allPaths);
+        suggestBox.renderKfOnPathAndSuggestionBox(Suggest.allPaths, tmpKf, this.fakeKfg, suggestOnFirstKf);
+        // suggestBox.lastUpdateSuggestionPathActionInfo = actionInfo;
     }
 }

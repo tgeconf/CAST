@@ -10,6 +10,7 @@ import PlusBtn from '../components/widgets/plusBtn'
 import KfItem from '../components/widgets/kfItem'
 import { GroupMenu } from '../components/widgets/kfGroup'
 import { group, thresholdFreedmanDiaconis } from 'd3'
+import Util from '../app/core/util'
 
 export default class Tool {
     static ENLARGE_THRESHOLD: number = 200;
@@ -153,16 +154,20 @@ export default class Tool {
                         isDragging = false;
                         const selectedMarks: string[] = lassoSelection.lassoSelect(state.selection);
                         //save histroy before update state
-                        // State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
-                        // State.saveHistory();
                         if (this.identicalArrays(selectedMarks, state.selection)) {
-                            State.tmpStateBusket.push([action.UPDATE_SELECTION, []]);
+                            State.tmpStateBusket.push({
+                                historyAction: { actionType: action.UPDATE_SELECTION, actionVal: state.selection },
+                                currentAction: { actionType: action.UPDATE_SELECTION, actionVal: [] }
+                            })
                             State.saveHistory();
                             Reducer.triger(action.UPDATE_SELECTION, []);
                         } else {
-                            State.tmpStateBusket.push([action.UPDATE_SELECTION, selectedMarks]);
+                            State.tmpStateBusket.push({
+                                historyAction: { actionType: action.UPDATE_SELECTION, actionVal: state.selection },
+                                currentAction: { actionType: action.UPDATE_SELECTION, actionVal: selectedMarks }
+                            })
                             State.saveHistory();
-                            Reducer.triger(action.UPDATE_SELECTION, selectedMarks);
+                            Reducer.triger(action.UPDATE_SELECTION, state.suggestion ? Util.suggestSelection(selectedMarks) : selectedMarks);
                         }
 
                         lassoSelection.removeSelectionFrame();
@@ -228,8 +233,6 @@ export default class Tool {
                         isDragging = false;
                         const mouseMoveThsh: number = 3;//mouse move less than 3px -> single selection; bigger than 3px -> rect selection
                         //save histroy before update state
-                        // State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
-                        // State.saveHistory();
                         if (Tool.pointDist(lastMouseX, upEvt.pageX, lastMouseY, upEvt.pageY) > mouseMoveThsh) {//doing rect selection
                             const rectPosi2: ICoord = this.screenToSvgCoords(svg, upEvt.pageX, upEvt.pageY);
                             const selectedMarks: string[] = rectangularSelection.rectangularSelect({
@@ -238,19 +241,28 @@ export default class Tool {
                                 x2: rectPosi2.x,
                                 y2: rectPosi2.y
                             }, state.selection);
-                            State.tmpStateBusket.push([action.UPDATE_SELECTION, selectedMarks]);
+                            State.tmpStateBusket.push({
+                                historyAction: { actionType: action.UPDATE_SELECTION, actionVal: state.selection },
+                                currentAction: { actionType: action.UPDATE_SELECTION, actionVal: selectedMarks }
+                            })
                             State.saveHistory();
-                            Reducer.triger(action.UPDATE_SELECTION, selectedMarks);
+                            Reducer.triger(action.UPDATE_SELECTION, state.suggestion ? Util.suggestSelection(selectedMarks) : selectedMarks);
                         } else {//single selection
                             const clickedItem: HTMLElement = <HTMLElement>upEvt.target;
                             if (clickedItem.classList.contains('mark')) {//clicked on a mark
                                 const clickedMarkId: string = clickedItem.id;
                                 const selectedMarks: string[] = state.selection.includes(clickedMarkId) ? [...state.selection].splice(state.selection.indexOf(clickedMarkId), 1) : [...state.selection, clickedMarkId];
-                                State.tmpStateBusket.push([action.UPDATE_SELECTION, selectedMarks]);
+                                State.tmpStateBusket.push({
+                                    historyAction: { actionType: action.UPDATE_SELECTION, actionVal: state.selection },
+                                    currentAction: { actionType: action.UPDATE_SELECTION, actionVal: selectedMarks }
+                                })
                                 State.saveHistory();
-                                Reducer.triger(action.UPDATE_SELECTION, selectedMarks);
+                                Reducer.triger(action.UPDATE_SELECTION, state.suggestion ? Util.suggestSelection(selectedMarks) : selectedMarks);
                             } else {//didnt select any mark
-                                State.tmpStateBusket.push([action.UPDATE_SELECTION, []]);
+                                State.tmpStateBusket.push({
+                                    historyAction: { actionType: action.UPDATE_SELECTION, actionVal: state.selection },
+                                    currentAction: { actionType: action.UPDATE_SELECTION, actionVal: [] }
+                                })
                                 State.saveHistory();
                                 Reducer.triger(action.UPDATE_SELECTION, []);
                             }
@@ -280,27 +292,22 @@ export default class Tool {
     public static judgeDragOver(mousePosi: ICoord): PlusBtn | KfItem {
         let dragOverItem: PlusBtn | KfItem;
         PlusBtn.allPlusBtn.forEach((pb: PlusBtn) => {
-            if (pb.isHighlighted) {
+            if (pb.isHighlighted && pb.onShow) {
                 const pbBBox: DOMRect = pb.container.getBoundingClientRect();
                 if (mousePosi.x >= pbBBox.left && mousePosi.x <= pbBBox.right && mousePosi.y >= pbBBox.top && mousePosi.y <= pbBBox.bottom) {
                     dragOverItem = pb;
                 }
             }
         })
-        KfItem.allKfItems.forEach((kf: KfItem) => {
-            if (kf.isHighlighted) {
-                const kfBBox: DOMRect = kf.container.getBoundingClientRect();
-                if (mousePosi.x >= kfBBox.left && mousePosi.x <= kfBBox.right && mousePosi.y >= kfBBox.top && mousePosi.y <= kfBBox.bottom) {
-                    dragOverItem = kf;
-                }
-            }
-        })
-        // if (typeof KfItem.staticKf !== 'undefined') {
-        //     const kfBBox: DOMRect = KfItem.staticKf.container.getBoundingClientRect();
-        //     if (mousePosi.x >= kfBBox.left && mousePosi.x <= kfBBox.right && mousePosi.y >= kfBBox.top && mousePosi.y <= kfBBox.bottom) {
-        //         dragOverItem = KfItem.staticKf;
+        // KfItem.allKfItems.forEach((kf: KfItem) => {
+        //     if (kf.isHighlighted) {
+        //         const kfBBox: DOMRect = kf.container.getBoundingClientRect();
+        //         if (mousePosi.x >= kfBBox.left && mousePosi.x <= kfBBox.right && mousePosi.y >= kfBBox.top && mousePosi.y <= kfBBox.bottom) {
+        //             dragOverItem = kf;
+        //         }
         //     }
-        // }
+        // })
+       
         return dragOverItem;
     }
 

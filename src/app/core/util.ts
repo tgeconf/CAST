@@ -63,14 +63,18 @@ export default class Util {
      * @param markIds : selected marks
      */
     public static suggestSelection(markIds: string[]): string[] {
-        const suggestionType: string = this.judgeSuggestionType(markIds);
-        switch (suggestionType) {
-            case this.DATA_SUGGESTION:
-                return this.suggestSelBasedOnData(markIds);
-            case this.NON_DATA_SUGGESTION:
-                return this.suggestSelBasedOnChart(markIds);
-            default:
-                return markIds;
+        if (markIds.length > 0) {
+            const suggestionType: string = this.judgeSuggestionType(markIds);
+            switch (suggestionType) {
+                case this.DATA_SUGGESTION:
+                    return this.suggestSelBasedOnData(markIds);
+                case this.NON_DATA_SUGGESTION:
+                    return this.suggestSelBasedOnChart(markIds);
+                default:
+                    return markIds;
+            }
+        } else {
+            return [];
         }
     }
 
@@ -411,23 +415,34 @@ export default class Util {
     public static findUpdatedAttrOrder(sda: ISortDataAttr[]): [boolean, ISortDataAttr] {
         let result: ISortDataAttr = { attr: '', sort: '' };
         let flag = false;
-        for (let i = 0, len = state.sortDataAttrs.length; i < len; i++) {
-            let found: boolean = false;
-            for (let j = 0; j < len; j++) {
-                if (sda[j].attr === state.sortDataAttrs[i].attr) {
-                    found = sda[j].sort !== state.sortDataAttrs[i].sort;
-                    if (found) {
-                        result.attr = sda[j].attr;
-                        result.sort = sda[j].sort;
-                        break;
+        if (state.sortDataAttrs.length > 0) {
+            for (let i = 0, len = state.sortDataAttrs.length; i < len; i++) {
+                let found: boolean = false;
+                for (let j = 0; j < len; j++) {
+                    if (sda[j].attr === state.sortDataAttrs[i].attr) {
+                        found = sda[j].sort !== state.sortDataAttrs[i].sort;
+                        if (found) {
+                            result.attr = sda[j].attr;
+                            result.sort = sda[j].sort;
+                            break;
+                        }
                     }
                 }
+                flag = flag || found;
+                if (found) {
+                    break;
+                }
             }
-            flag = flag || found;
-            if (found) {
-                break;
-            }
+        } else {
+            sda.forEach((ds: ISortDataAttr) => {
+                if (ds.sort !== AttrSort.INDEX_ORDER) {
+                    result.attr = ds.attr;
+                    result.sort = ds.sort;
+                    flag = true;
+                }
+            })
         }
+
         return [flag, result];
     }
     public static sortDataTable(attrOrder: ISortDataAttr): string[] {
@@ -628,7 +643,7 @@ export default class Util {
         if (Animation.animations.get(aniId).actions[0].oriActionType === 'appear') {
             drawDuration = false;
         }
-        let drawHiddenDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousStart && parentMarks.length > aniLeaf.marks;
+        let drawHiddenDuration: boolean = (aniLeaf.timingRef === TimingSpec.timingRef.previousStart && parentMarks.length > aniLeaf.marks.length);
         let tmpKf: IKeyframe = {
             id: aniLeaf.id,
             timingRef: aniLeaf.timingRef,

@@ -63,3 +63,21 @@ export interface IPath {
     firstKfMarks: string[]
     lastKfMarks: string[]
 }
+
+export interface IInteractionRecord {
+    historyAction: {
+        actionType: string,
+        actionVal: any
+    },
+    currentAction: {
+        actionType: string,
+        actionVal: any
+    }
+}
+
+export interface IActivatePlusBtn {
+    aniId: string,
+    selection: string[],
+    selectedMarksEachStep: Map<number, string[]>,
+    renderedUniqueIdx: number
+}

@@ -4,6 +4,7 @@ import { IDataItem, ISortDataAttr } from '../../app/core/ds';
 import Reducer from '../../app/reducer';
 import * as action from '../../app/action'
 import AttrSort from './attrSort';
+import Util from '../../app/core/util';
 
 export default class SelectableTable {
     startRowIdx: string;
@@ -28,6 +29,7 @@ export default class SelectableTable {
     }
 
     public createTable(dt: Map<string, IDataItem>): HTMLTableElement {
+        console.log('creating data table');
         const dataTable: HTMLTableElement = document.createElement('table');
         dataTable.className = 'selectable-table';
         let count = 0;
@@ -38,31 +40,41 @@ export default class SelectableTable {
                 const headerTr: HTMLTableRowElement = document.createElement('tr');
                 ['markId', ...Object.keys(dataItem)].forEach(key => {
                     const th: HTMLTableHeaderCellElement = document.createElement('th');
+                    th.className = 'non-activate-th';
                     const thContainer: HTMLDivElement = document.createElement('div');
                     thContainer.className = 'th-container';
                     const titleContent: HTMLParagraphElement = document.createElement('p');
                     titleContent.innerHTML = key;
+                    titleContent.className = 'non-activate-p';
                     thContainer.appendChild(titleContent);
                     //create sort btn
                     const sortBtn: HTMLSpanElement = document.createElement('span');
-                    let iconCls: string = '-icon';
+                    let iconCls: string = '';
+                    console.log('sort attrs: ', state.sortDataAttrs);
                     state.sortDataAttrs.forEach(sda => {
                         if (sda.attr === key) {
+                            console.log('testing1');
                             if (sda.sort === AttrSort.DESCENDING_ORDER) {
-                                iconCls = `${AttrSort.DESCENDING_ORDER}${iconCls}`;
-                            } else {
-                                iconCls = `${AttrSort.ASSCENDING_ORDER}${iconCls}`;
+                                iconCls = `${AttrSort.DESCENDING_ORDER}-icon activate-sort-btn`;
+                                titleContent.classList.remove('non-activate-p');
+                                th.classList.remove('non-activate-th');
+                            } else if (sda.sort === AttrSort.ASSCENDING_ORDER) {
+                                iconCls = `${AttrSort.ASSCENDING_ORDER}-icon activate-sort-btn`;
+                                titleContent.classList.remove('non-activate-p');
+                                th.classList.remove('non-activate-th');
                             }
                         }
                     })
                     sortBtn.className = 'sort-btn ' + iconCls;
-                    sortBtn.onclick = () => {
+                    th.onclick = () => {
                         let sort: string = AttrSort.ASSCENDING_ORDER;
-                        if (sortBtn.classList.contains('asscending-icon')) {
+                        if (!sortBtn.classList.contains('asscending-icon') && !sortBtn.classList.contains('descending-icon')) {
+                            sort = AttrSort.ASSCENDING_ORDER;
+                        } else if (sortBtn.classList.contains('asscending-icon')) {
                             sort = AttrSort.DESCENDING_ORDER;
+                        } else if (sortBtn.classList.contains('descending-icon')) {
+                            sort = AttrSort.ASSCENDING_ORDER;
                         }
-                        // sortBtn.classList.toggle('asscending-icon');
-                        // sortBtn.classList.toggle('descending-icon');
                         //triger action
                         let sortDataAttrArr: ISortDataAttr[] = [];
                         state.sortDataAttrs.forEach(sda => {
@@ -72,11 +84,17 @@ export default class SelectableTable {
                                     sort: sort
                                 })
                             } else {
-                                sortDataAttrArr.push(sda);
+                                sortDataAttrArr.push({
+                                    attr: sda.attr,
+                                    sort: AttrSort.INDEX_ORDER
+                                });
                             }
                         })
                         //save histroy before update state
-                        State.tmpStateBusket.push([action.UPDATE_DATA_SORT, sortDataAttrArr]);
+                        State.tmpStateBusket.push({
+                            historyAction: { actionType: action.UPDATE_DATA_SORT, actionVal: state.sortDataAttrs },
+                            currentAction: { actionType: action.UPDATE_DATA_SORT, actionVal: sortDataAttrArr }
+                        })
                         State.saveHistory();
                         Reducer.triger(action.UPDATE_DATA_SORT, sortDataAttrArr);
                     }
@@ -122,10 +140,12 @@ export default class SelectableTable {
             this.selectedRows.push(this.startRowIdx);
             SelectableTable.renderSelection(this.selectedRows);
             //save histroy before update state
-            State.tmpStateBusket.push([action.UPDATE_SELECTION, this.selectedRows]);
-            // State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
+            State.tmpStateBusket.push({
+                historyAction: { actionType: action.UPDATE_SELECTION, actionVal: state.selection },
+                currentAction: { actionType: action.UPDATE_SELECTION, actionVal: this.selectedRows }
+            })
             State.saveHistory();
-            Reducer.triger(action.UPDATE_SELECTION, this.selectedRows);
+            Reducer.triger(action.UPDATE_SELECTION, state.suggestion ? Util.suggestSelection(this.selectedRows) : this.selectedRows);
         }
         document.onmousemove = (moveEvt) => {
             this.mouseMoveCell(moveEvt);
@@ -164,9 +184,11 @@ export default class SelectableTable {
         this.selectedRows = state.dataOrder.slice(selectionStartIdx, selectionEndIdx + 1);
         SelectableTable.renderSelection(this.selectedRows);
         //save histroy before update state
-        // State.tmpStateBusket.push([action.UPDATE_SELECTION, state.selection]);
-        State.tmpStateBusket.push([action.UPDATE_SELECTION, this.selectedRows]);
+        State.tmpStateBusket.push({
+            historyAction: { actionType: action.UPDATE_SELECTION, actionVal: state.selection },
+            currentAction: { actionType: action.UPDATE_SELECTION, actionVal: this.selectedRows }
+        })
         State.saveHistory();
-        Reducer.triger(action.UPDATE_SELECTION, this.selectedRows);
+        Reducer.triger(action.UPDATE_SELECTION, state.suggestion ? Util.suggestSelection(this.selectedRows) : this.selectedRows);
     }
 }

@@ -1,7 +1,11 @@
 import { Animation, ChartSpec } from 'canis_toolkit';
 import Tool from '../../util/tool';
 import Util from './util';
-import { IDataItem, IPath } from './ds';
+import { IDataItem, IPath, IKeyframe } from './ds';
+import { State } from '../state';
+import Reducer from '../reducer';
+import { suggestBox } from '../../components/widgets/suggestBox';
+import KfGroup from '../../components/widgets/kfGroup';
 
 export default class Suggest {
     static NUMERIC_CAT_ATTRS: string[] = ['Year', 'year', 'Month', 'month', 'Day', 'day'];
@@ -354,11 +358,13 @@ export default class Suggest {
      */
     public static findNextUniqueKf(allPaths: IPath[], kfStartIdx: number): number {
         let len: number = 0;
-        allPaths.forEach((p: IPath) => {
-            if (p.kfMarks.length > len) {
-                len = p.kfMarks.length;
-            }
-        })
+        if (typeof allPaths !== 'undefined') {
+            allPaths.forEach((p: IPath) => {
+                if (p.kfMarks.length > len) {
+                    len = p.kfMarks.length;
+                }
+            })
+        }
         for (let i = kfStartIdx + 1; i < len; i++) {
             for (let j = 1, len2 = allPaths.length; j < len2; j++) {
                 if (!Tool.identicalArrays(allPaths[j].kfMarks[i], allPaths[0].kfMarks[i])) {
@@ -367,6 +373,34 @@ export default class Suggest {
             }
         }
         return -1;
+    }
+
+    public static findUniqueKfs(allPaths: IPath[], kfStartIdx: number): { uniqueKfIdxs: number[], hasNextUniqueKf: boolean } {
+        console.log('all paths fidning unique: ', allPaths);
+        let len: number = 0;
+        if (typeof allPaths !== 'undefined') {
+            allPaths.forEach((p: IPath) => {
+                if (p.kfMarks.length > len) {
+                    len = p.kfMarks.length;
+                }
+            })
+        }
+        //pre kfs
+        const uniqueKfs: number[] = [];
+        for (let i = 0; i <= kfStartIdx; i++) {
+            for (let j = 1, len2 = allPaths.length; j < len2; j++) {
+                if (!Tool.identicalArrays(allPaths[j].kfMarks[i], allPaths[0].kfMarks[i])) {
+                    uniqueKfs.push(i);
+                    break;
+                }
+            }
+        }
+        //next kf
+        const nextKf: number = this.findNextUniqueKf(allPaths, kfStartIdx);
+        if (nextKf !== -1) {
+            uniqueKfs.push(nextKf);
+        }
+        return { uniqueKfIdxs: uniqueKfs, hasNextUniqueKf: nextKf !== -1 };
     }
 
     // /**
@@ -401,6 +435,21 @@ export default class Suggest {
     //     }
     //     return pathWithUniqueAndMissingKfs;
     // }
+
+    public static generateSuggestionPath(selectedMarks: string[], firstKfInfoInParent: IKeyframe, targetKfg: KfGroup): boolean {
+        //create suggestion list if there is one, judge whether to use current last kf as last kf or the current first as last kf
+        const clsSelMarks: string[] = Util.extractClsFromMarks(selectedMarks);
+        const clsFirstKf: string[] = Util.extractClsFromMarks(firstKfInfoInParent.marksThisKf);
+        let suggestOnFirstKf: boolean = false;
+        if (Tool.arrayContained(firstKfInfoInParent.marksThisKf, selectedMarks) && Tool.identicalArrays(clsSelMarks, clsFirstKf)) {//suggest based on first kf in animation
+            suggestOnFirstKf = true;
+            Suggest.suggestPaths(selectedMarks, firstKfInfoInParent.marksThisKf);
+        } else {//suggest based on all marks in animation
+            const marksThisAni: string[] = targetKfg.marksThisAni();
+            Suggest.suggestPaths(selectedMarks, marksThisAni);
+        }
+        return suggestOnFirstKf;
+    }
 
     public static suggestPaths(firstKfMarks: string[], lastKfMarks: string[]) {
         this.allPaths = [];
@@ -553,7 +602,7 @@ export default class Suggest {
                     let attrValStr: string = '';
                     const tmpDatum: IDataItem = Util.nonDataTable.get(mId);
                     Object.keys(tmpDatum).forEach((attr: string) => {
-                        if (Util.isNonDataAttr(attr)) {
+                        if (Util.isNonDataAttr(attr) && attr !== 'text') {
                             attrValStr += `*${tmpDatum[attr]}`;
                         }
                     })
@@ -569,7 +618,7 @@ export default class Suggest {
                     Util.nonDataTable.forEach((datum: IDataItem, mId: string) => {
                         let tmpAttrValStr: string = '';
                         Object.keys(datum).forEach((attr: string) => {
-                            if (Util.isNonDataAttr(attr)) {
+                            if (Util.isNonDataAttr(attr) && attr !== 'text') {
                                 tmpAttrValStr += `*${datum[attr]}`;
                             }
                         })
@@ -577,16 +626,12 @@ export default class Suggest {
                             suggestionLastKfMarks.push(mId);
                         }
                     })
-                    let asscendingOrder: string[] = suggestionLastKfMarks.sort((a: string, b: string) => {
-                        return b > a ? -1 : 1;
-                    })
-                    let descendingOrder: string[] = suggestionLastKfMarks.sort((a: string, b: string) => {
-                        return b > a ? 1 : -1;
-                    })
+                    let asscendingOrder: string[] = suggestionLastKfMarks.sort();
+
                     if (asscendingOrder.indexOf(firstKfNonDataMarks[0]) === 0) {
                         suggestionLastKfMarks = asscendingOrder;
-                    } else if (descendingOrder.indexOf(firstKfNonDataMarks[0]) === 0) {
-                        suggestionLastKfMarks = descendingOrder;
+                    } else if (asscendingOrder.indexOf(firstKfNonDataMarks[0]) === asscendingOrder.length - 1) {
+                        suggestionLastKfMarks = asscendingOrder.reverse();
                     }
                     suggestionLastKfMarks = [...new Set(suggestionLastKfMarks)];
 
@@ -594,16 +639,10 @@ export default class Suggest {
                     suggestionLastKfMarks.forEach((mId: string) => {
                         tmpKfMarks.push([mId]);
                     })
-                    console.log('last kf: ', suggestionLastKfMarks);
                     this.allPaths = [{ attrComb: ['id'], sortedAttrValueComb: suggestionLastKfMarks, kfMarks: tmpKfMarks, firstKfMarks: firstKfNonDataMarks, lastKfMarks: suggestionLastKfMarks }];
                     console.log('suggestion based on non data mark: ', this.allPaths);
                 }
             }
-            //         attrComb: string[]
-            // sortedAttrValueComb: string[]
-            // kfMarks: string[][]
-            // firstKfMarks: string[]
-            // lastKfMarks: string[]
         }
     }
 }

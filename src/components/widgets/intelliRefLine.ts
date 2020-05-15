@@ -17,6 +17,7 @@ export default class IntelliRefLine {
     public id: number;
     public container: HTMLElement;
     public line: SVGLineElement;
+    public fakeDuration: SVGRectElement;
 
     public createLine(alignWithKfId: number, alignToKfId: number) {
         //judge whether the alignto kfgroup is merged to alignwith group
@@ -134,6 +135,19 @@ export default class IntelliRefLine {
         this.line.setAttributeNS(null, 'y2', `${(targetPosi.y - containerBBox.top) / state.zoomLevel + targetHeight - kfContainer.transDistance.h}`);
     }
 
+    public showFakeDuration(targetPosi: ICoord, targetHeight: number) {
+        const containerBBox: DOMRect = document.getElementById(KfContainer.KF_CONTAINER).getBoundingClientRect();//fixed
+        if (typeof this.fakeDuration === 'undefined') {
+            this.fakeDuration = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        }
+        this.fakeDuration.setAttributeNS(null, 'x', `${(targetPosi.x - containerBBox.left) / state.zoomLevel - kfContainer.transDistance.w - 30}`);
+        this.fakeDuration.setAttributeNS(null, 'y', `${(targetPosi.y - containerBBox.top) / state.zoomLevel - kfContainer.transDistance.h}`);
+        this.fakeDuration.setAttributeNS(null, 'width', '30');
+        this.fakeDuration.setAttributeNS(null, 'height', `${targetHeight - kfContainer.transDistance.h}`);
+        this.fakeDuration.setAttributeNS(null, 'fill', `url(#${KfContainer.DURATION_GRADIENT})`);
+        this.container.appendChild(this.fakeDuration);
+    }
+
     public hintInsert(targetPosi: ICoord, targetHeight: number, vertical: boolean, highlight: boolean) {
         this.container = document.getElementById(KfContainer.KF_FG);
         const containerBBox: DOMRect = document.getElementById(KfContainer.KF_CONTAINER).getBoundingClientRect();//fixed
@@ -157,6 +171,14 @@ export default class IntelliRefLine {
         if (typeof this.container !== 'undefined') {
             if (this.container.contains(this.line)) {
                 this.container.removeChild(this.line);
+            }
+        }
+    }
+
+    public removeFakeDuration() {
+        if (typeof this.container !== 'undefined') {
+            if (this.container.contains(this.fakeDuration)) {
+                this.container.removeChild(this.fakeDuration);
             }
         }
     }

@@ -2,13 +2,17 @@ import '../../assets/style/suggestBox.scss'
 import KfItem from "./kfItem";
 import { kfContainer, KfContainer } from "../kfContainer";
 import { state, State } from "../../app/state";
-import { IPath, IKeyframe } from "../../app/core/ds";
+import { IPath, IKeyframe, IActivatePlusBtn } from "../../app/core/ds";
 import KfGroup from "./kfGroup";
 import Tool from "../../util/tool";
 import { ICoord } from "../../util/ds";
 import Reducer from "../../app/reducer";
 import * as action from "../../app/action";
 import { Loading } from './loading';
+import Util from '../../app/core/util';
+import Suggest from '../../app/core/suggest';
+import PlusBtn from './plusBtn';
+import KfOmit from './kfOmit';
 
 interface IOptionInfo {
     kfIdx: number;
@@ -27,37 +31,55 @@ export class SuggestBox {
     static SHOWN_NUM: number = 2;
     static MENU_WIDTH: number = 20;
 
+    public lastUpdateSuggestionPathActionInfo: {
+        ap: IPath[],
+        kfIdxInPath: number,
+        startKf: KfItem,
+        suggestOnFirstKf: boolean,
+        selectedMarks: string[]
+    }
     public kfBeforeSuggestBox: KfItem;
     public uniqueKfIdx: number;
     public kfWidth: number = 240;
     public kfHeight: number = 178;
     public boxWidth: number = 240;
+    public suggestMenu: SuggestMenu;
     public menuWidth: number = 0;
+    public preMenuWidth: number = 0;//TODO: remove this 
     public numShown: number = SuggestBox.SHOWN_NUM;
     public container: SVGGElement;
     public itemContainer: SVGGElement;
     public options: OptionItem[] = [];
-    public createSuggestBox(kfBeforeSuggestBox: KfItem, uniqueKfIdx: number, suggestOnFirstKf: boolean) {
+
+    public createSuggestBox(kfBeforeSuggestBox: KfItem, allCurrentPaths: IPath[], uniqueKfIdx: number, suggestOnFirstKf: boolean) {
         this.kfBeforeSuggestBox = kfBeforeSuggestBox;
         this.uniqueKfIdx = uniqueKfIdx;
         this.kfWidth = this.kfBeforeSuggestBox.kfWidth - 2 * SuggestBox.PADDING * this.kfBeforeSuggestBox.kfWidth / this.kfBeforeSuggestBox.kfHeight;
         this.kfHeight = this.kfBeforeSuggestBox.kfHeight - 2 * SuggestBox.PADDING;
         this.boxWidth = this.kfWidth + 3 * SuggestBox.PADDING + OptionItem.TEXT_PANEL_WIDTH;
         const tmpKfInfo: IKeyframe = KfItem.allKfInfo.get(this.kfBeforeSuggestBox.id);
-        this.createOptionKfs([...tmpKfInfo.allCurrentMarks, ...tmpKfInfo.marksThisKf], tmpKfInfo.allGroupMarks, suggestOnFirstKf);
-        this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.createOptionKfs(allCurrentPaths, [...tmpKfInfo.allCurrentMarks, ...tmpKfInfo.marksThisKf], tmpKfInfo.allGroupMarks, suggestOnFirstKf);
+        if (typeof this.container === 'undefined') {
+            this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        }
         if (this.options.length <= this.numShown) {
             this.numShown = this.options.length;
+            this.preMenuWidth = this.menuWidth;
             this.menuWidth = 0;
+            if (typeof this.suggestMenu !== 'undefined') {
+                this.container.removeChild(this.suggestMenu.container);
+                this.suggestMenu = undefined;
+            }
         } else {
             this.numShown = SuggestBox.SHOWN_NUM;
+            this.preMenuWidth = this.menuWidth;
             this.menuWidth = SuggestBox.MENU_WIDTH;
-            let suggestMenu: SuggestMenu = new SuggestMenu();
-            suggestMenu.createMenu({ x: this.boxWidth, y: this.kfHeight / 2 + SuggestBox.PADDING }, this);
-            this.container.appendChild(suggestMenu.container);
+            this.suggestMenu = new SuggestMenu();
+            this.suggestMenu.createMenu({ x: this.boxWidth, y: this.kfHeight / 2 + SuggestBox.PADDING }, this);
+            this.container.appendChild(this.suggestMenu.container);
         }
 
-        const bgLayerBBox: DOMRect = document.getElementById(KfContainer.KF_POPUP).getBoundingClientRect();//fixed
+        const bgLayerBBox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();//fixed
         const preKfBBox: DOMRect = this.kfBeforeSuggestBox.container.getBoundingClientRect();//fixed
         this.container.setAttributeNS(null, 'transform', `translate(${SuggestBox.PADDING + (preKfBBox.right - bgLayerBBox.left) / state.zoomLevel}, ${(preKfBBox.top - bgLayerBBox.top) / state.zoomLevel})`);
         const bg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -80,16 +102,212 @@ export class SuggestBox {
     }
 
     public removeSuggestBox() {
+        if (typeof this.container !== 'undefined') {
+            this.container.innerHTML = '';
+        }
         const popupLayer: HTMLElement = document.getElementById(KfContainer.KF_POPUP);
         if (popupLayer.contains(this.container)) {
             popupLayer.removeChild(this.container);
         }
         this.options = [];
+        this.menuWidth = 0;
+        this.suggestMenu = undefined;
     }
 
-    public createOptionKfs(allCurrentMarks: string[], allGroupMarks: string[], suggestOnFirstKf: boolean): void {
+    public pathToSpec(allSuggestedPaths: IPath[], startKf: KfItem, selectedMarks: string[], suggestOnFirstKf: boolean) {
+        suggestBox.resetProps();
+        const targetPath: IPath = allSuggestedPaths[0];
+
+        let actionType: string = '';
+        let actionInfo: any = {};
+        if (typeof targetPath === 'undefined') {
+            //create one animation
+            actionType = action.SPLIT_CREATE_ONE_ANI;
+            actionInfo = { aniId: startKf.aniId, newAniSelector: `#${selectedMarks.join(', #')}`, attrComb: [], attrValueSort: [] };
+            // Reducer.triger(action.SPLIT_CREATE_ONE_ANI, { aniId: startKf.aniId, newAniSelector: `#${selectedMarks.join(', #')}`, attrComb: [], attrValueSort: [] });
+        } else {
+            //extract attr value order
+            const attrValueSort: string[][] = Util.extractAttrValueOrder(targetPath.sortedAttrValueComb);
+            const clsOfMarksInPath: string[] = Util.extractClsFromMarks(targetPath.lastKfMarks);
+            const clsOfMarksThisAni: string[] = Util.extractClsFromMarks(startKf.parentObj.marksThisAni());
+
+            if (!suggestOnFirstKf) {//the suggestion is based on all marks in this animation as the last kf
+                if (Tool.identicalArrays(clsOfMarksInPath, clsOfMarksThisAni)) {//marks in current path have the same classes as those in current animation 
+                    if (clsOfMarksInPath.length > 1) {//create multiple animations
+                        actionType = action.REMOVE_CREATE_MULTI_ANI;
+                        actionInfo = { aniId: startKf.aniId, path: targetPath, attrValueSort: attrValueSort }
+                    } else {//create grouping
+                        actionType = action.UPDATE_SPEC_GROUPING;
+                        actionInfo = { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort }
+                    }
+                } else {//marks in current path don't have the same classes as those in current animation 
+                    if (clsOfMarksInPath.length > 1) {//create multiple animations
+                        actionType = action.SPLIT_CREATE_MULTI_ANI;
+                        actionInfo = { aniId: startKf.aniId, path: targetPath, attrValueSort: attrValueSort };
+                    } else {//create one animation
+                        actionType = action.SPLIT_CREATE_ONE_ANI;
+                        actionInfo = { aniId: startKf.aniId, newAniSelector: `#${targetPath.lastKfMarks.join(', #')}`, attrComb: targetPath.attrComb, attrValueSort: attrValueSort };
+                    }
+                }
+            } else {//the suggestion is based on all marks in current first  kf as the last kf
+                if (clsOfMarksInPath.length > 1) {//change timing of marks of different classes
+                    console.log('diff cls first kf as last: ', targetPath, targetPath.attrComb, attrValueSort);
+                } else {//append grouping to current animation
+                    actionType = action.APPEND_SPEC_GROUPING;
+                    actionInfo = { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort };
+                }
+            }
+        }
+
+        console.log('trigering suggestion box render spec: ', state.spec, JSON.stringify(state.spec));
+
+        State.tmpStateBusket.push({
+            historyAction: { actionType: action.LOAD_CANIS_SPEC, actionVal: JSON.stringify(state.spec) },
+            currentAction: { actionType: actionType, actionVal: actionInfo }
+        })
+        let insertHistory: boolean = false;
+        if (State.stateHistory[State.stateHistory.length - 1][0].currentAction.actionType === action.ACTIVATE_PLUS_BTN) {
+            insertHistory = true;
+        }
+        State.saveHistory(insertHistory);
+        Reducer.triger(actionType, actionInfo);
+    }
+
+    public createKfOnPath(marksThisStep: string[], preKfInfo: IKeyframe, startKf: KfItem, transX: number): [IKeyframe, KfItem] {
+        const tmpKfInfo: IKeyframe = KfItem.createKfInfo(marksThisStep,
+            {
+                duration: preKfInfo.duration,
+                allCurrentMarks: preKfInfo.allCurrentMarks,
+                allGroupMarks: preKfInfo.allGroupMarks
+            });
+        KfItem.allKfInfo.set(tmpKfInfo.id, tmpKfInfo);
+        let tmpKf: KfItem = new KfItem();
+        const startX: number = Tool.extractTransNums(startKf.container.getAttributeNS(null, 'transform')).x + transX - KfGroup.PADDING;
+        tmpKf.createItem(tmpKfInfo, startKf.parentObj.treeLevel + 1, startKf.parentObj, startX);
+        startKf.parentObj.children.push(tmpKf);
+        return [tmpKfInfo, tmpKf];
+    }
+
+    public renderKfOnPathAndSuggestionBox(allSuggestedPaths: IPath[], startKf: KfItem, startKfGroup: KfGroup, suggestOnFirstKf: boolean) {
+        const selectedMarks: string[] = state.activatePlusBtn.selection;//marks dropped on the plus button
+        const kfIdxInPath: number = state.activatePlusBtn.renderedUniqueIdx;
+        const marksEachStep: Map<number, string[]> = state.activatePlusBtn.selectedMarksEachStep;
+
+        let insertIdx: number = 0;
+        let kfBeforeSuggestBox: KfItem = startKf;
+        let transX: number = startKf.totalWidth;
+        let lastKf: KfItem;
+        const startKfInfo: IKeyframe = KfItem.allKfInfo.get(startKf.id);
+        let preKfInfo: IKeyframe = startKfInfo;
+        let preKf: KfItem = startKf;
+        let preStepIdx: number = -1;
+        if (typeof marksEachStep !== 'undefined') {
+            const marksEachStepArr: ([number, string[]])[] = [...marksEachStep];
+            for (let i = 0, len = marksEachStepArr.length; i < len; i++) {
+                let stepIdx: number = marksEachStepArr[i][0];
+                let marksThisStep: string[] = marksEachStepArr[i][1];
+
+                //render kfs in between
+                console.log("render kf inbetween: ", stepIdx, preStepIdx);
+                if (stepIdx - preStepIdx - 1 > 0) {
+                    for (let j = preStepIdx + 1; j < stepIdx; j++) {
+                        let omittedMarksRecord: string[] = [];
+                        if (stepIdx - preStepIdx - 1 > 2) {
+                            if (j === stepIdx - 1) {//put omit
+                                const kfOmit: KfOmit = new KfOmit();
+                                const omitStartX: number = Tool.extractTransNums(preKf.container.getAttributeNS(null, 'transform')).x + preKf.kfWidth + transX;
+                                kfOmit.createOmit(omitStartX, stepIdx - preStepIdx - 3, startKf.parentObj, false, true, startKf.kfHeight / 2);
+                                startKf.parentObj.children.push(kfOmit);
+                                startKf.parentObj.kfOmits.push(kfOmit);
+                                insertIdx++;
+                                transX += KfOmit.OMIT_W + 2 * KfItem.PADDING;
+                            } else if (j > preStepIdx + 1 && j < stepIdx - 1) {
+                                omittedMarksRecord = [...omittedMarksRecord, ...allSuggestedPaths[0].kfMarks[j]];
+                            }
+                        }
+
+                        //render kf
+                        const [tmpKfInfo, tmpKf] = this.createKfOnPath([...allSuggestedPaths[0].kfMarks[j], ...omittedMarksRecord], preKfInfo, startKf, transX)
+                        lastKf = tmpKf;
+                        insertIdx++;
+                        transX += tmpKf.totalWidth;
+                        kfBeforeSuggestBox = tmpKf;
+                        preKfInfo = tmpKfInfo;
+                        preKf = tmpKf;
+                    }
+                }
+
+                //render this kf
+                const [tmpKfInfo, tmpKf] = this.createKfOnPath(marksThisStep, preKfInfo, startKf, transX)
+                lastKf = tmpKf;
+                insertIdx++;
+                transX += tmpKf.totalWidth;
+                kfBeforeSuggestBox = tmpKf;
+                preKfInfo = tmpKfInfo;
+                preKf = tmpKf;
+
+                //filter all paths
+                let tmpAllPaths: IPath[] = [];
+                allSuggestedPaths.forEach((p: IPath) => {
+                    if (Tool.identicalArrays(p.kfMarks[stepIdx], marksThisStep)) {
+                        tmpAllPaths.push(p);
+                    }
+                })
+                allSuggestedPaths = tmpAllPaths;
+                preStepIdx = stepIdx;
+            }
+        }
+
+        const nextUniqueKfIdx: number = Suggest.findNextUniqueKf(allSuggestedPaths, preStepIdx);
+        if (nextUniqueKfIdx === -1) {
+            this.pathToSpec(allSuggestedPaths, startKf, selectedMarks, suggestOnFirstKf);
+        } else {
+            // State.saveHistory();
+            //render kfs before
+            for (let j = preStepIdx + 1; j < nextUniqueKfIdx; j++) {
+                let omittedMarksRecord: string[] = [];
+                if (nextUniqueKfIdx - preStepIdx - 1 > 2) {
+                    if (j === nextUniqueKfIdx - 1) {//put omit
+                        const kfOmit: KfOmit = new KfOmit();
+                        const omitStartX: number = Tool.extractTransNums(preKf.container.getAttributeNS(null, 'transform')).x + preKf.kfWidth + transX;
+                        kfOmit.createOmit(omitStartX, nextUniqueKfIdx - preStepIdx - 3, startKf.parentObj, false, true, startKf.kfHeight / 2);
+                        startKf.parentObj.children.push(kfOmit);
+                        startKf.parentObj.kfOmits.push(kfOmit);
+                        insertIdx++;
+                        transX += KfOmit.OMIT_W + 2 * KfItem.PADDING;
+                    } else if (j > preStepIdx + 1 && j < nextUniqueKfIdx - 1) {
+                        omittedMarksRecord = [...omittedMarksRecord, ...allSuggestedPaths[0].kfMarks[j]];
+                    }
+                }
+
+                //render kf
+                const [tmpKfInfo, tmpKf] = this.createKfOnPath([...allSuggestedPaths[0].kfMarks[j], ...omittedMarksRecord], preKfInfo, startKf, transX)
+                lastKf = tmpKf;
+                insertIdx++;
+                transX += tmpKf.totalWidth;
+                kfBeforeSuggestBox = tmpKf;
+                preKfInfo = tmpKfInfo;
+                preKf = tmpKf;
+            }
+
+            suggestBox.createSuggestBox(kfBeforeSuggestBox, allSuggestedPaths, nextUniqueKfIdx, suggestOnFirstKf);
+            transX += (suggestBox.boxWidth + suggestBox.menuWidth - PlusBtn.BTN_SIZE);
+            let transStartKf: KfItem = typeof lastKf === 'undefined' ? startKf : lastKf;
+            startKf.parentObj.translateGroup(transStartKf, transX, false, false, false, { lastItem: true, extraWidth: suggestBox.boxWidth + SuggestBox.PADDING + suggestBox.menuWidth });
+        }
+    }
+
+    public resetProps() {
+        this.lastUpdateSuggestionPathActionInfo = undefined;
+        this.menuWidth = 0;
+        this.preMenuWidth = 0;
+    }
+
+    public createOptionKfs(allCurrentPaths: IPath[], allCurrentMarks: string[], allGroupMarks: string[], suggestOnFirstKf: boolean): void {
+        console.log('all paths right now: ', allCurrentPaths);
+        this.options = [];
         let uniqueKfRecorder: string[][] = [];//record unique kfs
-        state.allPaths.forEach((path: IPath) => {
+        allCurrentPaths.forEach((path: IPath) => {
             const marksThisKf: string[] = path.kfMarks[this.uniqueKfIdx];
             if (!Tool.Array2DItem(uniqueKfRecorder, marksThisKf)) {
                 uniqueKfRecorder.push(marksThisKf);
@@ -253,48 +471,68 @@ export class OptionItem {
         this.container.onclick = () => {
             Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: this.container, content: Loading.SUGGESTING });
             setTimeout(() => {
-                //filter paths
-                let tmpAllPaths: IPath[] = [];
-                state.allPaths.forEach((p: IPath) => {
-                    if (Tool.identicalArrays(p.kfMarks[optionInfo.kfIdx], optionInfo.marks)) {
-                        tmpAllPaths.push(p);
-                    }
+                let currentSelectedMarksEachStep: Map<number, string[]> = typeof state.activatePlusBtn.selectedMarksEachStep === 'undefined' ? new Map() : new Map(state.activatePlusBtn.selectedMarksEachStep);
+                const currentActionInfo: IActivatePlusBtn = {
+                    aniId: state.activatePlusBtn.aniId,
+                    selection: state.activatePlusBtn.selection,
+                    selectedMarksEachStep: currentSelectedMarksEachStep.set(optionInfo.kfIdx, optionInfo.marks),
+                    renderedUniqueIdx: suggestBox.uniqueKfIdx
+                }
+                State.tmpStateBusket.push({
+                    historyAction: { actionType: action.ACTIVATE_PLUS_BTN, actionVal: state.activatePlusBtn },
+                    currentAction: { actionType: action.ACTIVATE_PLUS_BTN, actionVal: currentActionInfo }
                 })
-
-                //remove suggest box and create a new kf
-                const startKfInfo: IKeyframe = KfItem.allKfInfo.get(suggestBox.kfBeforeSuggestBox.id);
-                const tmpKfInfo: IKeyframe = KfItem.createKfInfo(optionInfo.marks,
-                    {
-                        duration: startKfInfo.duration,
-                        allCurrentMarks: [...startKfInfo.allCurrentMarks, ...startKfInfo.marksThisKf],
-                        allGroupMarks: startKfInfo.allGroupMarks
-                    });
-                KfItem.allKfInfo.set(tmpKfInfo.id, tmpKfInfo);
-                let tmpKf: KfItem = new KfItem();
-                const startX: number = Tool.extractTransNums(suggestBox.kfBeforeSuggestBox.container.getAttributeNS(null, 'transform')).x + suggestBox.kfBeforeSuggestBox.totalWidth - KfItem.PADDING;
-                tmpKf.createItem(tmpKfInfo, suggestBox.kfBeforeSuggestBox.parentObj.treeLevel + 1, suggestBox.kfBeforeSuggestBox.parentObj, startX);
-                let insertIdx: number = 0;
-                for (let i = 0, len = suggestBox.kfBeforeSuggestBox.parentObj.children.length; i < len; i++) {
-                    if (suggestBox.kfBeforeSuggestBox.parentObj.children[i] instanceof KfItem && suggestBox.kfBeforeSuggestBox.parentObj.children[i].id === suggestBox.kfBeforeSuggestBox.id) {
-                        insertIdx = i + 1;
-                        break;
-                    }
-                }
-                let nextKf: KfItem = suggestBox.kfBeforeSuggestBox.parentObj.children[insertIdx];
-                suggestBox.kfBeforeSuggestBox.parentObj.children.splice(insertIdx, 0, tmpKf);
-                let transX: number = tmpKf.totalWidth - (suggestBox.boxWidth + 3 * SuggestBox.PADDING + suggestBox.menuWidth + 2);
-                if (typeof nextKf === 'undefined') {
-                    suggestBox.kfBeforeSuggestBox.parentObj.translateGroup(tmpKf, transX, false, false, false, { lastItem: true, extraWidth: suggestBox.boxWidth + SuggestBox.PADDING + suggestBox.menuWidth });
-                } else {
-                    suggestBox.kfBeforeSuggestBox.parentObj.translateGroup(nextKf, transX, false, false, false);
-                }
-                suggestBox.removeSuggestBox();
-
-                //triger actions to render again
-                const actionInfo: any = { ap: tmpAllPaths, kfIdxInPath: suggestBox.uniqueKfIdx, startKf: tmpKf, suggestOnFirstKf: optionInfo.suggestOnFirstKf, selectedMarks: optionInfo.marks };
-                State.tmpStateBusket.push([action.UPDATE_SUGGESTION_PATH, actionInfo]);
                 State.saveHistory();
-                Reducer.triger(action.UPDATE_SUGGESTION_PATH, actionInfo);
+                Reducer.triger(action.ACTIVATE_PLUS_BTN, currentActionInfo);
+
+                // //filter paths
+                // let tmpAllPaths: IPath[] = [];
+                // state.allPaths.forEach((p: IPath) => {
+                //     if (Tool.identicalArrays(p.kfMarks[optionInfo.kfIdx], optionInfo.marks)) {
+                //         tmpAllPaths.push(p);
+                //     }
+                // })
+
+                // //remove suggest box and create a new kf
+                // const startKfInfo: IKeyframe = KfItem.allKfInfo.get(suggestBox.kfBeforeSuggestBox.id);
+                // const tmpKfInfo: IKeyframe = KfItem.createKfInfo(optionInfo.marks,
+                //     {
+                //         duration: startKfInfo.duration,
+                //         allCurrentMarks: [...startKfInfo.allCurrentMarks, ...startKfInfo.marksThisKf],
+                //         allGroupMarks: startKfInfo.allGroupMarks
+                //     });
+                // KfItem.allKfInfo.set(tmpKfInfo.id, tmpKfInfo);
+                // let tmpKf: KfItem = new KfItem();
+                // const startX: number = Tool.extractTransNums(suggestBox.kfBeforeSuggestBox.container.getAttributeNS(null, 'transform')).x + suggestBox.kfBeforeSuggestBox.totalWidth - KfItem.PADDING;
+                // tmpKf.createItem(tmpKfInfo, suggestBox.kfBeforeSuggestBox.parentObj.treeLevel + 1, suggestBox.kfBeforeSuggestBox.parentObj, startX);
+                // let insertIdx: number = 0;
+                // for (let i = 0, len = suggestBox.kfBeforeSuggestBox.parentObj.children.length; i < len; i++) {
+                //     if (suggestBox.kfBeforeSuggestBox.parentObj.children[i] instanceof KfItem && suggestBox.kfBeforeSuggestBox.parentObj.children[i].id === suggestBox.kfBeforeSuggestBox.id) {
+                //         insertIdx = i + 1;
+                //         break;
+                //     }
+                // }
+                // // let nextKf: KfItem = suggestBox.kfBeforeSuggestBox.parentObj.children[insertIdx];
+                // suggestBox.kfBeforeSuggestBox.parentObj.children.splice(insertIdx, 0, tmpKf);
+                // // let transX: number = tmpKf.totalWidth - (suggestBox.boxWidth + 3 * SuggestBox.PADDING + suggestBox.menuWidth + 2);
+                // // let transX: number = tmpKf.totalWidth;
+                // // console.log('in suggest box translate: ', transX);
+                // // if (typeof nextKf === 'undefined') {
+                // // suggestBox.kfBeforeSuggestBox.parentObj.translateGroup(tmpKf, transX, false, false, false, { lastItem: true, extraWidth: suggestBox.boxWidth + SuggestBox.PADDING + suggestBox.menuWidth });
+                // // } else {
+                // // suggestBox.kfBeforeSuggestBox.parentObj.translateGroup(nextKf, transX, false, false, false);
+                // // }
+                // suggestBox.removeSuggestBox();
+
+                // //triger actions to render again
+                // const actionInfo: any = { ap: tmpAllPaths, kfIdxInPath: suggestBox.uniqueKfIdx, startKf: tmpKf, kfGroup: suggestBox.kfBeforeSuggestBox.parentObj, suggestOnFirstKf: optionInfo.suggestOnFirstKf, selectedMarks: optionInfo.marks };
+                // State.tmpStateBusket.push({
+                //     historyAction: { actionType: action.UPDATE_SUGGESTION_PATH, actionVal: suggestBox.lastUpdateSuggestionPathActionInfo },
+                //     currentAction: { actionType: action.UPDATE_SUGGESTION_PATH, actionVal: actionInfo }
+                // })
+                // State.saveHistory();
+                // Reducer.triger(action.UPDATE_SUGGESTION_PATH, actionInfo);
+                // suggestBox.lastUpdateSuggestionPathActionInfo = actionInfo;
             }, 1);
         }
     }

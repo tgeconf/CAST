@@ -1,5 +1,5 @@
 import { state, State } from './state'
-import { IDataItem, ISortDataAttr, IKeyframeGroup, IKfGroupSize, IPath, IKeyframe } from './core/ds'
+import { IDataItem, ISortDataAttr, IKeyframeGroup, IKfGroupSize, IPath, IKeyframe, IActivatePlusBtn } from './core/ds'
 import * as action from './action'
 import Util from './core/util'
 import { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie'
@@ -132,6 +132,11 @@ Reducer.listen(action.UPDATE_DATA_TABLE, (dt: Map<string, IDataItem>) => {
     state.dataTable = dt;
 })
 Reducer.listen(action.LOAD_CHARTS, (chartContent: string[]) => {
+    State.tmpStateBusket.push({
+        historyAction: { actionType: action.UPDATE_SELECTION, actionVal: state.selection },
+        currentAction: { actionType: action.UPDATE_SELECTION, actionVal: [] }
+    });
+    Reducer.triger(action.UPDATE_SELECTION, []);
     // document.getElementById('chartContainer').innerHTML = '';
     console.log('loading chart: ', chartContent);
     state.charts = chartContent;
@@ -140,9 +145,6 @@ Reducer.listen(action.TOGGLE_SUGGESTION, (suggestion: boolean) => {
     state.suggestion = suggestion;
 })
 Reducer.listen(action.UPDATE_SELECTION, (selection: string[]) => {
-    if (state.suggestion && selection.length > 0) {
-        selection = Util.suggestSelection(selection);
-    }
     selection = [...new Set(selection)];
     state.selection = selection;
 })
@@ -158,6 +160,7 @@ Reducer.listen(action.UPDATE_STATIC_KEYFRAME, (staticMarks: string[]) => {
 Reducer.listen(action.UPDATE_KEYFRAME_TRACKS, (animations: Map<string, any>) => {
     //reset the min and max duration of KfItem
     PlusBtn.allPlusBtn = [];
+    // PlusBtn.plusBtnMapping.clear();
     KfItem.allKfItems.clear();
     KfItem.allKfInfo.clear();
     KfGroup.allActions.clear();
@@ -173,29 +176,35 @@ Reducer.listen(action.UPDATE_KEYFRAME_TRACKS, (animations: Map<string, any>) => 
     }
     state.keyframeGroups = rootGroup;
 })
+Reducer.listen(action.ACTIVATE_PLUS_BTN, (plusBtnInfo: IActivatePlusBtn) => {
+    state.activatePlusBtn = plusBtnInfo;
+    Renderer.renderActivatedPlusBtn();
+})
 Reducer.listen(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, (kfGroupSize: IKfGroupSize) => {
     state.kfGroupSize = kfGroupSize;
 })
 
-Reducer.listen(action.LOAD_ANIMATION_SPEC, (animationSpec: any) => {
+Reducer.listen(action.UPDATE_SPEC_ANIMATIONS, (animationSpec: IAnimationSpec[]) => {
     state.spec = { ...state.spec, animations: animationSpec };
 })
 
 Reducer.listen(action.UPDATE_SPEC_CHARTS, (charts: string[]) => {
     document.getElementById(KfContainer.KF_POPUP).innerHTML = '';
+    suggestBox.removeSuggestBox();
     const chartSpecs: IChartSpec[] = CanisGenerator.generateChartSpec(charts);
     let tmpSpec: ICanisSpec = { charts: chartSpecs, animations: [] };
     state.spec = tmpSpec;
 })
 
-Reducer.listen(action.LOAD_CANIS_SPEC, (spec: ICanisSpec) => {
-    state.spec = spec;
+
+
+Reducer.listen(action.LOAD_CANIS_SPEC, (spec: ICanisSpec | string) => {
+    state.spec = typeof spec === 'string' ? JSON.parse(spec) : spec;
 })
 
 Reducer.listen(action.UPDATE_MOUSE_MOVING, (mm: boolean) => {
     state.mousemoving = mm;
 })
-
 
 
 
@@ -371,9 +380,11 @@ Reducer.listen(action.UPDATE_ANI_OFFSET, (actionInfo: { aniId: string, offset: n
     state.spec = { ...state.spec, animations: animations };
 })
 
-Reducer.listen(action.UPDATE_SUGGESTION_PATH, (actionInfo: { ap: IPath[], kfIdxInPath: number, startKf: KfItem, suggestOnFirstKf: boolean, selectedMarks: string[] }) => {
-    state.allPaths = actionInfo.ap;
-    Renderer.renderSuggestKfs(actionInfo.kfIdxInPath, actionInfo.startKf, actionInfo.suggestOnFirstKf, actionInfo.selectedMarks);
+Reducer.listen(action.UPDATE_SUGGESTION_PATH, (ap: IPath[]) => {
+    // Reducer.listen(action.UPDATE_SUGGESTION_PATH, (actionInfo: { ap: IPath[], kfIdxInPath: number, startKf: KfItem, kfGroup: KfGroup, suggestOnFirstKf: boolean, selectedMarks: string[] }) => {
+    state.allPaths = ap;
+    // Renderer.renderSuggestionBox(actionInfo.kfIdxInPath, actionInfo.startKf, actionInfo.kfGroup, actionInfo.suggestOnFirstKf, actionInfo.selectedMarks);
+    // Renderer.renderSuggestKfs(actionInfo.kfIdxInPath, actionInfo.startKf, actionInfo.kfGroup, actionInfo.suggestOnFirstKf, actionInfo.selectedMarks);
 })
 
 // Reducer.listen(action.UPDATE_SPEC_SELECTOR, (actionInfo: { aniId: string, selector: string }) => {

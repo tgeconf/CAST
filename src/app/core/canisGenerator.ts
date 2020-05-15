@@ -109,6 +109,15 @@ export default class CanisGenerator {
                             }
                         }
                     }
+                    //put the start with ahead of start after
+                    removedAni.sort((a: IAnimationSpec, b: IAnimationSpec) => {
+                        if (a.reference === TimingSpec.timingRef.previousEnd && b.reference === TimingSpec.timingRef.previousStart) {
+                            return 1;
+                        } else if (a.reference === TimingSpec.timingRef.previousStart && b.reference === TimingSpec.timingRef.previousEnd) {
+                            return -1;
+                        }
+                        return 0;
+                    })
                     const insertIdx: number = spec.animations.indexOf(tmpAni);
                     spec.animations.splice(insertIdx + 1, 0, ...removedAni);
                 }

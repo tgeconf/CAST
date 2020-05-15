@@ -177,9 +177,11 @@ export default class FloatingWindow {
             State.stateHistoryIdx = -1;
             State.stateHistory = [];
             State.tmpStateBusket = [];
-            State.tmpStateBusket.push([action.LOAD_CHARTS, [chart]]);
+            State.tmpStateBusket.push({
+                historyAction: {actionType: action.LOAD_CHARTS, actionVal: state.charts},
+                currentAction: {actionType: action.LOAD_CHARTS, actionVal: [chart]}
+            })
             State.saveHistory();
-            // State.tmpStateBusket.push([action.LOAD_CHARTS, state.charts]);
             Reducer.triger(action.LOAD_CHARTS, [chart]);
             this.floatingWindow.remove();
         }, 1);
@@ -212,7 +214,7 @@ export default class FloatingWindow {
         renderBtn.innerHTML = 'render spec';
         renderBtn.onclick = () => {
             let tmpSpec = JSON.parse(specPanel.value);
-            Reducer.triger(action.LOAD_ANIMATION_SPEC, tmpSpec);
+            Reducer.triger(action.UPDATE_SPEC_ANIMATIONS, tmpSpec);
             this.floatingWindow.remove();
         }
         wrapper.appendChild(renderBtn);

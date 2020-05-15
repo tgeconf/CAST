@@ -19,7 +19,7 @@
             },
             "grouping": {
                 "groupBy": "Surface",
-                "reference": "start after previous",
+                "reference": "start with previous",
                 "delay": 500,
                 "sort": {
                     "order": [
@@ -27,10 +27,6 @@
                         "Scaly",
                         "Fibrous"
                     ]
-                },
-                "grouping": {
-                    "groupBy": "IsEdible",
-                    "reference": "start after previous"
                 }
             }
         },

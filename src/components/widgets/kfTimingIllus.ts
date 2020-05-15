@@ -9,9 +9,9 @@ import { state, State } from "../../app/state";
 
 export default class KfTimingIllus {
     static BASIC_OFFSET_DURATION_W: number = 20;
-    static OFFSET_COLOR: string = '#ef7b2acc';
+    static OFFSET_COLOR: string = '#ff9246';
     static OFFSET_STRETCH_COLOR: string = '#ea5514';
-    static DURATION_COLOR: string = '#5e9bd4cc';
+    static DURATION_COLOR: string = '#71b1ed';
     static DURATION_STRETCH_COLOR: string = '#358bcb';
     static EXTRA_HEIGHT: number = 7;//for hidden duration
     static minDuration: number = 300;
@@ -286,28 +286,40 @@ export default class KfTimingIllus {
                 //triger action to update spec
                 if (type === 'duration') {
                     this.bindDurationHover();
-                    const timingWidth: number = parseFloat(this.durationBg.getAttributeNS(null, 'width'));
-                    State.tmpStateBusket.push([action.UPDATE_DURATION, { aniId: this.aniId, duration: this.widthToTiming(timingWidth) }]);
+                    const durationTime: number = this.widthToTiming(parseFloat(this.durationBg.getAttributeNS(null, 'width')));
+                    State.tmpStateBusket.push({
+                        historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations },
+                        currentAction: { actionType: action.UPDATE_DURATION, actionVal: { aniId: this.aniId, duration: durationTime } }
+                    })
                     State.saveHistory();
-                    Reducer.triger(action.UPDATE_DURATION, { aniId: this.aniId, duration: this.widthToTiming(timingWidth) });
+                    Reducer.triger(action.UPDATE_DURATION, { aniId: this.aniId, duration: durationTime });
                 } else {
                     this.bindOffsetHover(type, actionInfo.groupRef);
-                    const timingWidth: number = parseFloat(this.offsetBg.getAttributeNS(null, 'width'));
+                    const delayTime: number = this.widthToTiming(parseFloat(this.offsetBg.getAttributeNS(null, 'width')));
                     switch (type) {
                         case 'offset-animation':
-                            State.tmpStateBusket.push([action.UPDATE_ANI_OFFSET, { aniId: this.aniId, offset: this.widthToTiming(timingWidth) }]);
+                            State.tmpStateBusket.push({
+                                historyAction: {actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations},
+                                currentAction: {actionType: action.UPDATE_ANI_OFFSET, actionVal: { aniId: this.aniId, offset: delayTime }}
+                            })
                             State.saveHistory();
-                            Reducer.triger(action.UPDATE_ANI_OFFSET, { aniId: this.aniId, offset: this.widthToTiming(timingWidth) });
+                            Reducer.triger(action.UPDATE_ANI_OFFSET, { aniId: this.aniId, offset: delayTime });
                             break;
                         case 'offset-group':
-                            State.tmpStateBusket.push([action.UPDATE_DELAY_BETWEEN_GROUP, { aniId: this.aniId, groupRef: actionInfo.groupRef, delay: this.widthToTiming(timingWidth) }]);
+                            State.tmpStateBusket.push({
+                                historyAction: {actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations},
+                                currentAction: {actionType: action.UPDATE_DELAY_BETWEEN_GROUP, actionVal: { aniId: this.aniId, groupRef: actionInfo.groupRef, delay: delayTime }}
+                            })
                             State.saveHistory();
-                            Reducer.triger(action.UPDATE_DELAY_BETWEEN_GROUP, { aniId: this.aniId, groupRef: actionInfo.groupRef, delay: this.widthToTiming(timingWidth) });
+                            Reducer.triger(action.UPDATE_DELAY_BETWEEN_GROUP, { aniId: this.aniId, groupRef: actionInfo.groupRef, delay: delayTime });
                             break;
                         case 'offset-kf':
-                            State.tmpStateBusket.push([action.UPDATE_DELAY_BETWEEN_KF, { aniId: this.aniId, delay: this.widthToTiming(timingWidth) }]);
+                            State.tmpStateBusket.push({
+                                historyAction: {actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations},
+                                currentAction: {actionType: action.UPDATE_DELAY_BETWEEN_KF, actionVal: { aniId: this.aniId, delay: delayTime }}
+                            })
                             State.saveHistory();
-                            Reducer.triger(action.UPDATE_DELAY_BETWEEN_KF, { aniId: this.aniId, delay: this.widthToTiming(timingWidth) });
+                            Reducer.triger(action.UPDATE_DELAY_BETWEEN_KF, { aniId: this.aniId, delay: delayTime });
                             break;
                     }
                 }

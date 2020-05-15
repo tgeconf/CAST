@@ -30,7 +30,8 @@ export default class KfGroup extends KfTimingIllus {
     static allAniGroups: Map<string, KfGroup> = new Map();//key: aniId, value: kfgroup corresponds to animation
 
     // public id: number;
-    // public aniId: string;
+    public aniId: string;
+    public preAniId: string;
     public newTrack: boolean;
     public posiX: number;
     public posiY: number;
@@ -56,6 +57,7 @@ export default class KfGroup extends KfTimingIllus {
     public groupBg: SVGRectElement;
     public groupMenu: GroupMenu;
     // public groupMenuMask: SVGMaskElement;
+    public plusBtn: PlusBtn;
     public groupTitle: SVGGElement;
     public groupTitleBg: SVGRectElement;
     public groupTitleContent: SVGTextContentElement;
@@ -92,9 +94,10 @@ export default class KfGroup extends KfTimingIllus {
      * @param g : container of this group, could be track or another group
      * @param p : init position of the root group
      */
-    public createGroup(kfg: IKeyframeGroup, parentObj: KfGroup | KfTrack, posiY: number, treeLevel: number, targetTrackId: string): void {
+    public createGroup(kfg: IKeyframeGroup, previousAniId: string, parentObj: KfGroup | KfTrack, posiY: number, treeLevel: number, targetTrackId: string): void {
         this.id = kfg.id;
         this.aniId = kfg.aniId;
+        this.preAniId = previousAniId;
         this.marks = kfg.marks;
         this.groupRef = kfg.groupRef;
         this.timingRef = kfg.timingRef;
@@ -133,8 +136,9 @@ export default class KfGroup extends KfTimingIllus {
         }
     }
 
-    public createBlankKfg(parentObj: KfTrack, startX: number): void {
+    public createBlankKfg(parentObj: KfTrack, targetGroupAniId: string, startX: number): void {
         this.parentObj = parentObj;
+        this.aniId = targetGroupAniId;
         this.treeLevel = 0;
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.posiY = 2;
@@ -148,6 +152,12 @@ export default class KfGroup extends KfTimingIllus {
         this.groupBg.setAttributeNS(null, 'x', '0');
         this.container.appendChild(this.groupBg);
         this.parentObj.container.appendChild(this.container);
+    }
+
+    public restorePlusBtn() {
+        if (typeof this.plusBtn !== 'undefined') {
+            this.plusBtn.restoreBtn();
+        }
     }
 
     public renderGroup() {
@@ -167,7 +177,11 @@ export default class KfGroup extends KfTimingIllus {
                     kfo.hideOmit();
                 })
             }
-            const transX: number = this.parentObj.availableInsert;
+            let transX: number = this.parentObj.availableInsert;
+            if (this.preAniId !== '' && this.timingRef === TimingSpec.timingRef.previousStart) {
+                transX = Tool.extractTransNums(KfGroup.allAniGroups.get(this.preAniId).container.getAttributeNS(null, 'transform')).x;
+            }
+            this.parentObj.availableInsert = transX;//need to  test!!!!!!!!
             this.container.setAttributeNS(null, 'transform', `translate(${transX}, ${this.posiY})`);
             this.parentObj.children.push(this);
             this.idxInGroup = this.parentObj.children.length - 1;
@@ -384,7 +398,10 @@ export default class KfGroup extends KfTimingIllus {
                     }
                 } else {
                     //triger action
-                    State.tmpStateBusket.push([actionType, actionInfo]);
+                    State.tmpStateBusket.push({
+                        historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations },
+                        currentAction: { actionType: actionType, actionVal: actionInfo }
+                    })
                     State.saveHistory();
                     Reducer.triger(actionType, actionInfo);
                     popKfContainer.removeChild(this.container);
@@ -714,6 +731,7 @@ export default class KfGroup extends KfTimingIllus {
      * @param updateAlignedKfs 
      */
     public translateGroup(startTransItem: KfItem | KfOmit, transX: number, updateAlignedKfs: boolean, updateStartItem: boolean, updateStartItemAligned: boolean, extraInfo: { lastItem: boolean, extraWidth: number } = { lastItem: false, extraWidth: 0 }): void {
+        console.log('translating group: ', transX, extraInfo);
         //translate kfitems after the input one within the same group
         let currentTransX: number = 0;
         if (!extraInfo.lastItem) {
@@ -721,6 +739,7 @@ export default class KfGroup extends KfTimingIllus {
         } else {
             currentTransX = Tool.extractTransNums(startTransItem.container.getAttributeNS(null, 'transform')).x + (startTransItem.container.getBoundingClientRect().width / state.zoomLevel);//fixed
         }
+        console.log('curent trans X: ', currentTransX);
         let count: number = 0;
         let comingThroughOmit: boolean = false;
         this.children.forEach((k: KfItem | KfOmit) => {
@@ -778,6 +797,7 @@ export default class KfGroup extends KfTimingIllus {
     }
 
     public updateSiblingAndParentSizePosi(transX: number, updateAlignedKfs: boolean) {
+        console.log('update sibling size and posi: ', transX);
         const currentGroupBBox: DOMRect = this.container.getBoundingClientRect();//fixed
         this.parentObj.children.forEach((c: KfGroup | KfOmit) => {
             if (c.rendered) {
@@ -786,6 +806,7 @@ export default class KfGroup extends KfTimingIllus {
                     if (c instanceof KfOmit || (c instanceof KfGroup && c.rendered)) {
                         const tmpTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
                         c.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transX}, ${tmpTrans.y})`);
+                        console.log('sibling trans ', c.container, tmpTrans.x, transX, tmpTrans.x + transX);
 
                         if (c instanceof KfGroup) {
                             if (c.children[0] instanceof KfItem && updateAlignedKfs) {//need to update the aligned kfs and their group
@@ -883,6 +904,12 @@ export default class KfGroup extends KfTimingIllus {
         if (childHasHiddenDuration) {
             childHeight -= KfTimingIllus.EXTRA_HEIGHT;
         }
+        if (childHeight < 0) {
+            childHeight = 0;
+        }
+        if (currentGroupWidth < 0) {
+            currentGroupWidth = 0;
+        }
 
         //update size
         this.groupBg.setAttributeNS(null, 'height', `${childHeight}`);
@@ -901,14 +928,18 @@ export default class KfGroup extends KfTimingIllus {
     }
 
     public updateParentTrackInsert() {
-        [...KfTrack.aniTrackMapping.get(this.aniId)].forEach((kfTrack: KfTrack) => {
-            const tmpBBox: DOMRect = this.container.getBoundingClientRect();//fixed
-            const rightBoundary: number = tmpBBox.right;
-            const kftStart: number = document.getElementById(KfContainer.KF_BG).getBoundingClientRect().left;//fixed
-            if ((rightBoundary - kftStart) / state.zoomLevel > kfTrack.availableInsert) {
-                kfTrack.availableInsert = (rightBoundary - kftStart) / state.zoomLevel;
-            }
-        })
+        console.log('update parent track insert: ', KfTrack.aniTrackMapping, this.aniId, KfTrack.aniTrackMapping.get(this.aniId));
+        if (typeof KfTrack.aniTrackMapping.get(this.aniId) !== 'undefined') {
+            [...KfTrack.aniTrackMapping.get(this.aniId)].forEach((kfTrack: KfTrack) => {
+                const tmpBBox: DOMRect = this.container.getBoundingClientRect();//fixed
+                const rightBoundary: number = tmpBBox.right;
+                const kftStart: number = document.getElementById(KfContainer.KF_BG).getBoundingClientRect().left;//fixed
+                if ((rightBoundary - kftStart) / state.zoomLevel > kfTrack.availableInsert) {
+                    kfTrack.availableInsert = (rightBoundary - kftStart) / state.zoomLevel;
+                }
+            })
+        }
+
     }
 
     public updateGroupPosiAndSize(lastGroupStart: number, lastGroupWidth: number, lastGroup: boolean, rootGroup: boolean = false): void {
@@ -1242,7 +1273,10 @@ export class GroupMenu {
             listItem.onclick = () => {
                 menuLayer.innerHTML = '';
                 const actionInfo: any = { aniId: this.aniId, effectPropValue: content };
-                State.tmpStateBusket.push([actionType, actionInfo]);
+                State.tmpStateBusket.push({
+                    historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations },
+                    currentAction: { actionType: actionType, actionVal: actionInfo }
+                })
                 State.saveHistory();
                 Reducer.triger(actionType, actionInfo);
             }

@@ -36,7 +36,7 @@ export default class Renderer {
      * test rendering spec
      * @param spec 
      */
-    public static async renderSpec(spec: ICanisSpec) {
+    public static async renderSpec(spec: ICanisSpec, callback: any = () => { }) {
         console.log('going to render spec: ', spec);
         const lottieSpec = await canis.renderSpec(spec, () => {
             if (spec.animations[0].selector === '.mark') {//special triger, can not triger action
@@ -45,27 +45,19 @@ export default class Renderer {
             Util.extractAttrValueAndDeterminType(ChartSpec.dataMarkDatum);
             Util.extractNonDataAttrValue(ChartSpec.nonDataMarkDatum);
 
-            //save histroy before update state
-            // State.tmpStateBusket.push([action.UPDATE_DATA_ORDER, state.dataOrder]);
-            // State.tmpStateBusket.push([action.UPDATE_DATA_TABLE, state.dataTable]);
-            // State.tmpStateBusket.push([action.UPDATE_DATA_SORT, state.sortDataAttrs]);
             const dataOrder: string[] = Array.from(Util.filteredDataTable.keys());
             const dataTable: Map<string, IDataItem> = Util.filteredDataTable;
             const sortDataAttrs: ISortDataAttr[] = ['markId', ...Object.keys(Util.attrType)].map(attrName => {
+                const sortType: string = attrName === 'markId' ? AttrSort.ASSCENDING_ORDER : AttrSort.INDEX_ORDER;
                 return {
                     attr: attrName,
-                    sort: 'asscending'
+                    sort: sortType
                 }
             })
-            // State.tmpStateBusket.push([action.UPDATE_DATA_ORDER, dataOrder]);
-            // State.tmpStateBusket.push([action.UPDATE_DATA_TABLE, dataTable]);
-            // State.tmpStateBusket.push([action.UPDATE_DATA_SORT, sortDataAttrs]);
+            //these actions are coupling with others, so they are not recorded in history
             Reducer.triger(action.UPDATE_DATA_ORDER, dataOrder);
             Reducer.triger(action.UPDATE_DATA_TABLE, dataTable);
             Reducer.triger(action.UPDATE_DATA_SORT, sortDataAttrs);
-            // if (spec.animations[0].selector === '.mark') {
-            //     Reducer.triger(action.UPDATE_SPEC_SELECTOR, { aniId: `${spec.animations[0].chartIdx}_${spec.animations[0].selector}`, selector: `#${Animation.allMarks.join(', #')}` });
-            // }
         });
         //add highlight box on the chart
         const svg: HTMLElement = document.getElementById('visChart');
@@ -87,6 +79,8 @@ export default class Renderer {
             currentTime: 0,
             totalTime: canis.duration()
         })
+
+        callback();
     }
 
     public static renderLoading(wrapper: HTMLElement, content: string) {
@@ -101,32 +95,6 @@ export default class Renderer {
     public static renderVideo(lottieSpec: any): void {
         console.log('rendering video!');
         document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID).innerHTML = '';
-        //save histroy before update state
-        // const lottieAnimation: AnimationItem = Lottie.loadAnimation({
-        //     container: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID),
-        //     renderer: 'svg',
-        //     loop: false,
-        //     autoplay: false,
-        //     animationData: lottieSpec // the animation data
-        // })
-        // State.tmpStateBusket.push([action.UPDATE_LOTTIE, Lottie.loadAnimation({
-        //     container: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID),
-        //     renderer: 'svg',
-        //     loop: false,
-        //     autoplay: false,
-        //     animationData: lottieSpec // the animation data
-        // })]);
-        // State.tmpStateBusket.push([action.UPDATE_LOTTIE, state.lottieAni]);
-        // State.saveHistory();
-        // Lottie.destroy();
-        // Lottie.loadAnimation({
-        //     container: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID),
-        //     renderer: 'svg',
-        //     loop: false,
-        //     autoplay: false,
-        //     animationData: lottieSpec // the animation data
-        // })
-        // document.getElementById(Player.PLAY_BTN_ID).click();
 
         Reducer.triger(action.UPDATE_LOTTIE, Lottie.loadAnimation({
             container: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID),
@@ -151,7 +119,6 @@ export default class Renderer {
 
     public static renderStaticKf(staticMarks: string[]) {
         //reset
-        //TODO: need to check performance
         document.getElementById(KfContainer.KF_BG).innerHTML = '';
         document.getElementById(KfContainer.KF_FG).innerHTML = '';
         const placeHolder: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -165,18 +132,14 @@ export default class Renderer {
 
         const firstTrack: KfTrack = new KfTrack();
         firstTrack.createTrack();
-        // const staticKf: KfItem = new KfItem();
-        // staticKf.createStaticItem(staticMarks);
-        // firstTrack.container.appendChild(staticKf.container);
     }
 
     public static renderKeyframeTracks(kfgs: IKeyframeGroup[]): void {
-        // let groupTrackMapping: Map<string, KfTrack[]> = new Map();//key: aniId, value: track id array
-        kfgs.forEach((kfg: IKeyframeGroup) => {
+        kfgs.forEach((kfg: IKeyframeGroup, i: number) => {
             KfGroup.leafLevel = 0;
             let treeLevel = 0;//use this to decide the background color of each group
             //top-down to init group and kf
-            const rootGroup: KfGroup = this.renderKeyframeGroup(0, 1, kfg, treeLevel);
+            const rootGroup: KfGroup = this.renderKeyframeGroup(0, kfgs[i - 1], 1, kfg, treeLevel);
             //bottom-up to update size and position
             console.log('for root group: ', rootGroup, [...KfTrack.aniTrackMapping.get(rootGroup.aniId)][0].availableInsert);
             rootGroup.updateGroupPosiAndSize([...KfTrack.aniTrackMapping.get(rootGroup.aniId)][0].availableInsert, 0, false, true);
@@ -187,8 +150,8 @@ export default class Renderer {
         Reducer.triger(action.UPDATE_LOADING_STATUS, { il: false });
     }
 
-    public static renderKeyframeGroup(kfgIdx: number, totalKfgNum: number, kfg: IKeyframeGroup, treeLevel: number, parentObj?: KfGroup): KfGroup {
-        console.log('rendering group: ', kfg);
+    public static renderKeyframeGroup(kfgIdx: number, previousKfg: IKeyframeGroup, totalKfgNum: number, kfg: IKeyframeGroup, treeLevel: number, parentObj?: KfGroup): KfGroup {
+        // console.log('rendering group: ', kfg);
         //draw group container
         let kfGroup: KfGroup = new KfGroup();
         if (kfgIdx === 0 || kfgIdx === 1 || kfgIdx === totalKfgNum - 1) {
@@ -248,7 +211,7 @@ export default class Renderer {
             KfTrack.aniTrackMapping.get(kfg.aniId).add(targetTrack);
             let minTrackPosiYThisGroup: number = [...KfTrack.aniTrackMapping.get(kfg.aniId)][0].trackPosiY;
 
-            console.log('target track: ', targetTrack, minTrackPosiYThisGroup, kfGroup);
+            // console.log('target track: ', targetTrack, minTrackPosiYThisGroup, kfGroup);
             //check whether this is the group of animation, and whether to add a plus button or not
             let plusBtn: PlusBtn, addedPlusBtn: boolean = false;
             if (treeLevel === 0) {//this is the root group
@@ -262,11 +225,15 @@ export default class Renderer {
                     targetTrack.availableInsert += PlusBtn.PADDING * 4 + PlusBtn.BTN_SIZE;
                 }
             }
-            console.log('all ani groups: ', KfGroup.allAniGroups);
-            kfGroup.createGroup(kfg, parentObj ? parentObj : targetTrack, targetTrack.trackPosiY - minTrackPosiYThisGroup, treeLevel, targetTrack.trackId);
-            if (treeLevel === 0 && addedPlusBtn) {
-                plusBtn.fakeKfg.marks = kfGroup.marks;
-                plusBtn.fakeKfg.aniId = kfGroup.aniId;
+            const previousAniId: string = typeof previousKfg === 'undefined' ? '' : previousKfg.aniId
+            kfGroup.createGroup(kfg, previousAniId, parentObj ? parentObj : targetTrack, targetTrack.trackPosiY - minTrackPosiYThisGroup, treeLevel, targetTrack.trackId);
+            if (addedPlusBtn) {
+                plusBtn.aniId = kfGroup.aniId;
+                PlusBtn.plusBtnMapping.set(plusBtn.aniId, plusBtn);
+                if (treeLevel === 0) {
+                    plusBtn.fakeKfg.marks = kfGroup.marks;
+                    plusBtn.fakeKfg.aniId = kfGroup.aniId;
+                }
             }
         } else if (totalKfgNum > 3 && kfgIdx === totalKfgNum - 2) {
             let kfOmit: KfOmit = new KfOmit();
@@ -366,7 +333,7 @@ export default class Renderer {
         } else if (kfg.children.length > 0) {
             //rendering kf group
             kfg.children.forEach((c: any, i: number) => {
-                const tmpKfGroup: KfGroup = this.renderKeyframeGroup(i, kfg.children.length, c, treeLevel, kfGroup);
+                const tmpKfGroup: KfGroup = this.renderKeyframeGroup(i, kfg.children[i - 1], kfg.children.length, c, treeLevel, kfGroup);
                 kfGroup.children.push(tmpKfGroup);
                 tmpKfGroup.idxInGroup = kfGroup.children.length - 1;
                 kfGroup.kfNum += tmpKfGroup.kfNum;
@@ -375,22 +342,22 @@ export default class Renderer {
         return kfGroup;
     }
 
-    public static renderDataAttrs(sdaArr: ISortDataAttr[]): void {
-        if (sdaArr.length > 0) {
-            document.getElementById('attrBtnContainer').innerHTML = '';
-            document.getElementById('sortInputContainer').innerHTML = '';
-            sdaArr.forEach(sda => {
-                if (sda.attr !== 'markId') {
-                    const attrBtn: AttrBtn = new AttrBtn();
-                    attrBtn.createAttrBtn(sda.attr);
-                    document.getElementById('attrBtnContainer').appendChild(attrBtn.btn);
-                    const attrSort: AttrSort = new AttrSort();
-                    attrSort.createAttrSort(sda.attr);
-                    document.getElementById('sortInputContainer').appendChild(attrSort.selectInput);
-                }
-            })
-        }
-    }
+    // public static renderDataAttrs(sdaArr: ISortDataAttr[]): void {
+    //     if (sdaArr.length > 0) {
+    //         // document.getElementById('attrBtnContainer').innerHTML = '';
+    //         // document.getElementById('sortInputContainer').innerHTML = '';
+    //         // sdaArr.forEach(sda => {
+    //         //     if (sda.attr !== 'markId') {
+    //         //         const attrBtn: AttrBtn = new AttrBtn();
+    //         //         attrBtn.createAttrBtn(sda.attr);
+    //         //         document.getElementById('attrBtnContainer').appendChild(attrBtn.btn);
+    //         //         const attrSort: AttrSort = new AttrSort();
+    //         //         attrSort.createAttrSort(sda.attr);
+    //         //         document.getElementById('sortInputContainer').appendChild(attrSort.selectInput);
+    //         //     }
+    //         // })
+    //     }
+    // }
 
     public static renderDataTable(dt: Map<string, IDataItem>): void {
         if (dt.size > 0) {
@@ -482,99 +449,14 @@ export default class Renderer {
 
     }
 
-    public static renderSuggestKfs(kfIdxInPath: number, startKf: KfItem, suggestOnFirstKf: boolean, selectedMarks: string[]) {
-        const nextUniqueKfIdx: number = Suggest.findNextUniqueKf(state.allPaths, kfIdxInPath);
-        if (nextUniqueKfIdx === -1) {//render groups
-            const targetPath: IPath = state.allPaths[0];
-
-            if (typeof targetPath === 'undefined') {
-                //create one animation
-                Reducer.triger(action.SPLIT_CREATE_ONE_ANI, { aniId: startKf.aniId, newAniSelector: `#${selectedMarks.join(', #')}`, attrComb: [], attrValueSort: [] });
-            } else {
-                //extract attr value order
-                const attrValueSort: string[][] = Util.extractAttrValueOrder(targetPath.sortedAttrValueComb);
-                const clsOfMarksInPath: string[] = Util.extractClsFromMarks(targetPath.lastKfMarks);
-                const clsOfMarksThisAni: string[] = Util.extractClsFromMarks(startKf.parentObj.marksThisAni());
-
-                if (!suggestOnFirstKf) {//the suggestion is based on all marks in this animation as the last kf
-                    if (Tool.identicalArrays(clsOfMarksInPath, clsOfMarksThisAni)) {//marks in current path have the same classes as those in current animation 
-                        if (clsOfMarksInPath.length > 1) {//create multiple animations
-                            console.log('same cls have different kinds of marks: ', targetPath, targetPath.attrComb, attrValueSort);
-                            Reducer.triger(action.REMOVE_CREATE_MULTI_ANI, { aniId: startKf.aniId, path: targetPath, attrValueSort: attrValueSort })
-                        } else {//create grouping
-                            Reducer.triger(action.UPDATE_SPEC_GROUPING, { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort });
-                        }
-                    } else {//marks in current path don't have the same classes as those in current animation 
-                        if (clsOfMarksInPath.length > 1) {//create multiple animations
-                            Reducer.triger(action.SPLIT_CREATE_MULTI_ANI, { aniId: startKf.aniId, path: targetPath, attrValueSort: attrValueSort })
-                        } else {//create one animation
-                            Reducer.triger(action.SPLIT_CREATE_ONE_ANI, { aniId: startKf.aniId, newAniSelector: `#${targetPath.lastKfMarks.join(', #')}`, attrComb: targetPath.attrComb, attrValueSort: attrValueSort });
-                        }
-                    }
-                } else {//the suggestion is based on all marks in current first  kf as the last kf
-                    if (clsOfMarksInPath.length > 1) {//change timing of marks of different classes
-                        console.log('diff cls first kf as last: ', targetPath, targetPath.attrComb, attrValueSort);
-                    } else {//append grouping to current animation
-                        Reducer.triger(action.APPEND_SPEC_GROUPING, { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort })
-                    }
-                }
-            }
-        } else {//there are still multiple paths
-            let insertIdx: number = 0;
-            for (let j = 0, len = startKf.parentObj.children.length; j < len; j++) {
-                if (startKf.parentObj.children[j] instanceof KfItem && startKf.parentObj.children[j].id === startKf.id) {
-                    insertIdx = j + 1;
-                    break;
-                }
-            }
-            const nextKf: KfItem = startKf.parentObj.children[insertIdx];
-
-            let kfBeforeSuggestBox: KfItem = startKf;
-            const numKfToRender: number = nextUniqueKfIdx - kfIdxInPath - 1;
-            let transX: number = 0;
-            let lastKf: KfItem;
-            for (let i = 0; i < numKfToRender; i++) {
-                if (i === 0 || i === numKfToRender - 1) {
-                    if (i === numKfToRender - 1 && numKfToRender > 2) {//render omit first
-                        const kfOmit: KfOmit = new KfOmit();
-                        const omitStartX: number = Tool.extractTransNums(startKf.container.getAttributeNS(null, 'transform')).x + startKf.kfWidth + transX;
-                        kfOmit.createOmit(omitStartX, numKfToRender - 2, startKf.parentObj, false, true, startKf.kfHeight / 2);
-                        startKf.parentObj.children.push(kfOmit);
-                        startKf.parentObj.kfOmits.push(kfOmit);
-                        insertIdx++;
-                        transX += KfOmit.OMIT_W + 2 * KfItem.PADDING;
-                    }
-                    //render kf
-                    const startKfInfo: IKeyframe = KfItem.allKfInfo.get(startKf.id);
-                    const tmpKfInfo: IKeyframe = KfItem.createKfInfo(state.allPaths[0].kfMarks[kfIdxInPath + 1 + i],
-                        {
-                            duration: startKfInfo.duration,
-                            allCurrentMarks: startKfInfo.allCurrentMarks,
-                            allGroupMarks: startKfInfo.allGroupMarks
-                        });
-                    KfItem.allKfInfo.set(tmpKfInfo.id, tmpKfInfo);
-                    let tmpKf: KfItem = new KfItem();
-                    const startX: number = Tool.extractTransNums(startKf.container.getAttributeNS(null, 'transform')).x + startKf.totalWidth + transX - KfGroup.PADDING;
-                    tmpKf.createItem(tmpKfInfo, startKf.parentObj.treeLevel + 1, startKf.parentObj, startX);
-                    lastKf = tmpKf;
-                    startKf.parentObj.children.splice(insertIdx, 0, tmpKf);
-                    insertIdx++;
-                    transX += tmpKf.totalWidth;
-                    kfBeforeSuggestBox = tmpKf;
-                }
-            }
-            //render suggestion box
-            suggestBox.createSuggestBox(kfBeforeSuggestBox, nextUniqueKfIdx, suggestOnFirstKf);
-            transX += (suggestBox.boxWidth + 3 * SuggestBox.PADDING + suggestBox.menuWidth + 2);
-
-            //translate the ori group
-            if (typeof nextKf === 'undefined') {
-                let transStartKf: KfItem = typeof lastKf === 'undefined' ? startKf : lastKf;
-                startKf.parentObj.translateGroup(transStartKf, transX, false, false, false, { lastItem: true, extraWidth: suggestBox.boxWidth + SuggestBox.PADDING + suggestBox.menuWidth });
-            } else {
-                startKf.parentObj.translateGroup(nextKf, transX, false, false, false);
-            }
-            Reducer.triger(action.UPDATE_LOADING_STATUS, { il: false });
+    public static renderActivatedPlusBtn() {
+        this.renderStaticKf([]);
+        this.renderKeyframeTracks(state.keyframeGroups);
+        suggestBox.removeSuggestBox();
+        const activatedPlusBtn: PlusBtn = PlusBtn.plusBtnMapping.get(state.activatePlusBtn.aniId);
+        console.log('in rendering active btn', state.activatePlusBtn.aniId, PlusBtn.plusBtnMapping, PlusBtn.allPlusBtn, PlusBtn.plusBtnMapping.get(state.activatePlusBtn.aniId), activatedPlusBtn);
+        if (typeof activatedPlusBtn !== 'undefined') {
+            activatedPlusBtn.dropSelOn();
         }
     }
 }

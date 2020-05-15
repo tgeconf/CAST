@@ -2,7 +2,7 @@ import '../../assets/style/dragableCanvas.scss'
 import { ICoord } from '../../util/ds';
 import KfItem from './kfItem';
 import PlusBtn from './plusBtn';
-import { state } from '../../app/state';
+import { state, State } from '../../app/state';
 import { Animation } from 'canis_toolkit';
 import Tool from '../../util/tool';
 import Reducer from '../../app/reducer';
@@ -70,13 +70,25 @@ export default class DragableCanvas {
             canvas.remove();
             //update kf if drop on plus button or kf
             if (typeof PlusBtn.dragoverBtn !== 'undefined') {
-                PlusBtn.dragoverBtn.dropSelOn();
+                // PlusBtn.dragoverBtn.dropSelOn(state.selection);
+                //TODO: save history
+                console.log('trigering active: ', PlusBtn.dragoverBtn, PlusBtn.dragoverBtn.aniId);
+                const selectedMarks: string[] = state.selection;
+                Reducer.triger(action.UPDATE_SELECTION, []);//reset state selection
+
+                State.tmpStateBusket.push({
+                    historyAction: { actionType: action.ACTIVATE_PLUS_BTN, actionVal: { aniId: '', selection: [], renderedUniqueIdx: -10 } },
+                    currentAction: { actionType: action.ACTIVATE_PLUS_BTN, actionVal: { aniId: PlusBtn.dragoverBtn.aniId, selection: selectedMarks, renderedUniqueIdx: -1 } }
+                })
+                State.saveHistory();
+                Reducer.triger(action.ACTIVATE_PLUS_BTN, { aniId: PlusBtn.dragoverBtn.aniId, selection: selectedMarks, renderedUniqueIdx: -1 });
+
             } else if (typeof KfItem.dragoverKf !== 'undefined') {
-                KfItem.dragoverKf.dropSelOn();
+                // KfItem.dragoverKf.dropSelOn();
             }
 
             PlusBtn.cancelHighlightPlusBtns();
-            KfItem.cancelHighlightKfs();
+            // KfItem.cancelHighlightKfs();
             PlusBtn.dragoverBtn = undefined;
             KfItem.dragoverKf = undefined;
             targetSVG.classList.toggle('chart-when-dragging');

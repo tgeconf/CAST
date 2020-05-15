@@ -73,7 +73,7 @@ export class Hint {
         const hintWidth: number = textBlocks[0] === 'duration' ? 138 : 116;
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.container.id = Hint.TIMING_HINT_ID;
-        this.container.setAttributeNS(null, 'transform', `translate(${(pointingPosi.x - hintLayerBBox.left) / state.zoomLevel - hintWidth / 2}, ${(pointingPosi.y - hintLayerBBox.top)/state.zoomLevel - Hint.TIMING_HINT_HEIGHT})`);
+        this.container.setAttributeNS(null, 'transform', `translate(${(pointingPosi.x - hintLayerBBox.left) / state.zoomLevel - hintWidth / 2}, ${(pointingPosi.y - hintLayerBBox.top) / state.zoomLevel - Hint.TIMING_HINT_HEIGHT})`);
         this.container.onmouseleave = () => {
             this.removeTimingHint();
         }
@@ -122,7 +122,10 @@ export class Hint {
                     break;
             }
             this.removeTimingHint();
-            State.tmpStateBusket.push([actionType, actionInfo]);
+            State.tmpStateBusket.push({
+                historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations },
+                currentAction: { actionType: actionType, actionVal: actionInfo }
+            })
             State.saveHistory();
             Reducer.triger(actionType, actionInfo);
         }

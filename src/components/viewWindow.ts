@@ -47,9 +47,6 @@ export default class ViewWindow {
 
         //append view widgets
         switch (this.viewTitle) {
-            // case ViewWindow.CHART_VIEW_TITLE:
-            //     this.view.appendChild(this.createChartWidget());
-            //     break;
             case ViewWindow.VIDEO_VIEW_TITLE:
                 this.view.appendChild(this.createPlayerWidget());
                 break;
@@ -59,7 +56,6 @@ export default class ViewWindow {
         switch (this.viewTitle) {
             case ViewWindow.CHART_VIEW_TITLE:
                 viewTitleContainer.appendChild(this.createSelectionTools());
-                // viewTitleContainer.appendChild(this.createChartWidget());
                 break;
             case ViewWindow.VIDEO_VIEW_TITLE:
                 break;
@@ -113,7 +109,7 @@ export default class ViewWindow {
             clickEvt: () => {
                 if (state.zoomLevel - 0.1 >= 0.5) {
                     slider.moveSlider(state.zoomLevel - 0.1);
-                }else{
+                } else {
                     slider.moveSlider(0.5);
                 }
             },
@@ -126,7 +122,7 @@ export default class ViewWindow {
             clickEvt: () => {
                 if (state.zoomLevel + 0.1 <= 1.5) {
                     slider.moveSlider(state.zoomLevel + 0.1);
-                }else{
+                } else {
                     slider.moveSlider(1.5);
                 }
             },
@@ -144,38 +140,6 @@ export default class ViewWindow {
     public createBtn(props: IViewBtnProp): HTMLSpanElement {
         const btn: HTMLSpanElement = new ViewToolBtn().btn(props);
         return btn;
-    }
-
-    public createChartWidget(): HTMLDivElement {
-        const container: HTMLDivElement = document.createElement('div');
-        container.className = 'widget';
-        const checkboxContainer: HTMLLabelElement = document.createElement('label');
-        checkboxContainer.className = 'checkbox-container';
-        checkboxContainer.innerText = 'suggestion';
-        checkboxContainer.title = 'Toggle suggestion mode'
-        const suggestBox: HTMLInputElement = document.createElement('input');
-        suggestBox.id = 'suggestBox';
-        suggestBox.type = 'checkbox';
-        suggestBox.onchange = (evt) => {
-            //save histroy before update state
-            // State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, state.suggestion]);
-
-            if ((<HTMLInputElement>evt.target).checked) {
-                State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, true]);
-                State.saveHistory();
-                Reducer.triger(action.TOGGLE_SUGGESTION, true);
-            } else {
-                State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, false]);
-                State.saveHistory();
-                Reducer.triger(action.TOGGLE_SUGGESTION, false);
-            }
-        }
-        checkboxContainer.appendChild(suggestBox);
-        const checkMark: HTMLSpanElement = document.createElement('span');
-        checkMark.className = 'checkmark';
-        checkboxContainer.appendChild(checkMark);
-        container.appendChild(checkboxContainer);
-        return container;
     }
 
     public createPlayerWidget(): HTMLDivElement {
@@ -241,18 +205,22 @@ export class ViewToolBtn {
 
     // btn listeners
     public suggestSelection(btnIcon: HTMLSpanElement): void {
-        // State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, state.suggestion]);
-        // State.saveHistory();
         if (state.suggestion) {
             btnIcon.classList.add('selection-non-suggestion-icon');
             btnIcon.classList.remove('selection-suggestion-icon');
-            State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, false]);
+            State.tmpStateBusket.push({
+                historyAction: {actionType: action.TOGGLE_SUGGESTION, actionVal: true},
+                currentAction: {actionType: action.TOGGLE_SUGGESTION, actionVal: false}
+            })
             State.saveHistory();
             Reducer.triger(action.TOGGLE_SUGGESTION, false);
         } else {
             btnIcon.classList.remove('selection-non-suggestion-icon');
             btnIcon.classList.add('selection-suggestion-icon');
-            State.tmpStateBusket.push([action.TOGGLE_SUGGESTION, true]);
+            State.tmpStateBusket.push({
+                historyAction: {actionType: action.TOGGLE_SUGGESTION, actionVal: false},
+                currentAction: {actionType: action.TOGGLE_SUGGESTION, actionVal: true}
+            })
             State.saveHistory();
             Reducer.triger(action.TOGGLE_SUGGESTION, true);
         }
@@ -345,52 +313,54 @@ export class ViewContent {
     }
 
     public createDataDashboard() {
-        //attribute container
-        const attrWrapper: HTMLDivElement = document.createElement('div');
-        attrWrapper.className = 'attr-wrapper non-sortable-attr-wrapper';
-        const attrBtnWrapper: HTMLDivElement = document.createElement('div');
-        const titleColumn: HTMLSpanElement = document.createElement('span');
-        titleColumn.className = 'data-column-title';
-        titleColumn.innerText = 'columns';
-        attrBtnWrapper.appendChild(titleColumn);
-        const attrBtnContainer: HTMLDivElement = document.createElement('div');
-        attrBtnContainer.id = 'attrBtnContainer';
-        attrBtnWrapper.appendChild(attrBtnContainer);
-        attrWrapper.appendChild(attrBtnWrapper);
+        //attribute container, for data binding
+        // const attrWrapper: HTMLDivElement = document.createElement('div');
+        // attrWrapper.className = 'attr-wrapper non-sortable-attr-wrapper';
+        // const attrBtnWrapper: HTMLDivElement = document.createElement('div');
+        // const titleColumn: HTMLSpanElement = document.createElement('span');
+        // titleColumn.className = 'data-column-title';
+        // titleColumn.innerText = 'columns';
+        // attrBtnWrapper.appendChild(titleColumn);
+        // const attrBtnContainer: HTMLDivElement = document.createElement('div');
+        // attrBtnContainer.id = 'attrBtnContainer';
+        // attrBtnWrapper.appendChild(attrBtnContainer);
+        // attrWrapper.appendChild(attrBtnWrapper);
 
-        const sortInputWrapper: HTMLDivElement = document.createElement('div');
-        sortInputWrapper.id = 'sortInputWrapper';
-        const titleSort: HTMLSpanElement = document.createElement('span');
-        titleSort.innerText = 'sort';
-        titleSort.className = 'data-column-title';
-        sortInputWrapper.appendChild(titleSort);
-        const sortInputContainer: HTMLDivElement = document.createElement('div');
-        sortInputContainer.id = 'sortInputContainer';
-        sortInputWrapper.appendChild(sortInputContainer);
-        attrWrapper.appendChild(sortInputWrapper);
-        this.container.appendChild(attrWrapper);
+        // const sortInputWrapper: HTMLDivElement = document.createElement('div');
+        // sortInputWrapper.id = 'sortInputWrapper';
+        // const titleSort: HTMLSpanElement = document.createElement('span');
+        // titleSort.innerText = 'sort';
+        // titleSort.className = 'data-column-title';
+        // sortInputWrapper.appendChild(titleSort);
+        // const sortInputContainer: HTMLDivElement = document.createElement('div');
+        // sortInputContainer.id = 'sortInputContainer';
+        // sortInputWrapper.appendChild(sortInputContainer);
+        // attrWrapper.appendChild(sortInputWrapper);
+        // this.container.appendChild(attrWrapper);
 
         //data table container
         const dataTableWrapper: HTMLDivElement = document.createElement('div');
         dataTableWrapper.className = 'data-table-wrapper';
-        const dataTableTitle: HTMLDivElement = document.createElement('div');
-        dataTableTitle.className = 'data-table-title';
-        const dataTableTitleText: HTMLSpanElement = document.createElement('span');
-        dataTableTitleText.innerText = 'table';
-        dataTableTitleText.className = 'data-table-title-text';
-        dataTableTitle.appendChild(dataTableTitleText);
-        const dataTableTitleDropdown: HTMLSpanElement = document.createElement('span');
-        dataTableTitleDropdown.className = 'drop-down left-up-icon';
-        dataTableTitleDropdown.onclick = () => {
-            dataTableTitleDropdown.classList.toggle('left-up-icon');
-            dataTableContainer.classList.toggle('hidden-data-table');
-            // attrWrapper.classList.toggle('non-sortable-attr-wrapper');
-        }
-        dataTableTitle.appendChild(dataTableTitleDropdown);
-        dataTableWrapper.appendChild(dataTableTitle);
+        //for data binding
+        // const dataTableTitle: HTMLDivElement = document.createElement('div');
+        // dataTableTitle.className = 'data-table-title';
+        // const dataTableTitleText: HTMLSpanElement = document.createElement('span');
+        // dataTableTitleText.innerText = 'table';
+        // dataTableTitleText.className = 'data-table-title-text';
+        // dataTableTitle.appendChild(dataTableTitleText);
+        // const dataTableTitleDropdown: HTMLSpanElement = document.createElement('span');
+        // dataTableTitleDropdown.className = 'drop-down left-up-icon';
+        // dataTableTitleDropdown.onclick = () => {
+        //     dataTableTitleDropdown.classList.toggle('left-up-icon');
+        //     dataTableContainer.classList.toggle('hidden-data-table');
+        //     // attrWrapper.classList.toggle('non-sortable-attr-wrapper');
+        // }
+        // dataTableTitle.appendChild(dataTableTitleDropdown);
+        // dataTableWrapper.appendChild(dataTableTitle);
         const dataTableContainer: HTMLDivElement = document.createElement('div');
         dataTableContainer.id = 'dataTabelContainer';
-        dataTableContainer.className = 'data-table-container hidden-data-table';
+        dataTableContainer.className = 'data-table-container';
+        // dataTableContainer.className = 'data-table-container hidden-data-table';//for data binding
         dataTableWrapper.appendChild(dataTableContainer);
         this.container.appendChild(dataTableWrapper);
     }

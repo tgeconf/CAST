@@ -11,6 +11,7 @@ export class KfContainer {
     static KF_SCALE_ID: string = 'kfScaleWrapper';
     static KF_LIST_ID: string = 'kfList';
     // static MASK: string = 'markContainer';
+    static DURATION_GRADIENT: string = 'durationGradient';
     static KF_BG: string = 'kfBgG';
     static KF_FG: string = 'kfFgG';
     static KF_POPUP: string = 'kfPopupG';
@@ -42,6 +43,21 @@ export class KfContainer {
         const keyframeTrackSVG: SVGElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         keyframeTrackSVG.setAttributeNS(null, 'id', KfContainer.KF_CONTAINER);
         keyframeTrackSVG.setAttributeNS(null, 'class', 'kf-tracks-container');
+
+        //add gradient 
+        const defs: SVGDefsElement = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        const linearGradient: SVGLinearGradientElement = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+        linearGradient.id = KfContainer.DURATION_GRADIENT;
+        const stop1: SVGStopElement = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        stop1.setAttributeNS(null, 'offset', '0%');
+        stop1.setAttributeNS(null, 'stop-color', 'rgba(119, 168, 214, 0)');
+        linearGradient.appendChild(stop1);
+        const stop2: SVGStopElement = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        stop2.setAttributeNS(null, 'offset', '100%');
+        stop2.setAttributeNS(null, 'stop-color', 'rgba(119, 168, 214, 255)');
+        linearGradient.appendChild(stop2);
+        defs.appendChild(linearGradient);
+        keyframeTrackSVG.appendChild(defs);
 
         this.kfTrackScaleContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.kfTrackScaleContainer.id = KfContainer.KF_SCALE_ID;
