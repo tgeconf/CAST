@@ -146,6 +146,7 @@ export default class KfGroup extends KfTimingIllus {
         this.parentObj.children.push(this);
         this.groupBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         this.groupBg.setAttributeNS(null, 'stroke', '#898989');
+        
         this.groupBg.setAttributeNS(null, 'fill', `rgb(${KfGroup.BASIC_GRAY - KfGroup.GRAY_STEP},${KfGroup.BASIC_GRAY - KfGroup.GRAY_STEP},${KfGroup.BASIC_GRAY - KfGroup.GRAY_STEP})`);
         this.groupBg.setAttributeNS(null, 'stroke-width', '1');
         this.groupBg.setAttributeNS(null, 'rx', `${KfGroup.GROUP_RX}`);
@@ -399,7 +400,7 @@ export default class KfGroup extends KfTimingIllus {
                 } else {
                     //triger action
                     State.tmpStateBusket.push({
-                        historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations },
+                        historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: JSON.stringify(state.spec.animations) },
                         currentAction: { actionType: actionType, actionVal: actionInfo }
                     })
                     State.saveHistory();
@@ -731,7 +732,7 @@ export default class KfGroup extends KfTimingIllus {
      * @param updateAlignedKfs 
      */
     public translateGroup(startTransItem: KfItem | KfOmit, transX: number, updateAlignedKfs: boolean, updateStartItem: boolean, updateStartItemAligned: boolean, extraInfo: { lastItem: boolean, extraWidth: number } = { lastItem: false, extraWidth: 0 }): void {
-        console.log('translating group: ', transX, extraInfo);
+        // console.log('translating group: ', transX, extraInfo);
         //translate kfitems after the input one within the same group
         let currentTransX: number = 0;
         if (!extraInfo.lastItem) {
@@ -739,7 +740,7 @@ export default class KfGroup extends KfTimingIllus {
         } else {
             currentTransX = Tool.extractTransNums(startTransItem.container.getAttributeNS(null, 'transform')).x + (startTransItem.container.getBoundingClientRect().width / state.zoomLevel);//fixed
         }
-        console.log('curent trans X: ', currentTransX);
+        // console.log('curent trans X: ', currentTransX);
         let count: number = 0;
         let comingThroughOmit: boolean = false;
         this.children.forEach((k: KfItem | KfOmit) => {
@@ -797,7 +798,7 @@ export default class KfGroup extends KfTimingIllus {
     }
 
     public updateSiblingAndParentSizePosi(transX: number, updateAlignedKfs: boolean) {
-        console.log('update sibling size and posi: ', transX);
+        // console.log('update sibling size and posi: ', transX);
         const currentGroupBBox: DOMRect = this.container.getBoundingClientRect();//fixed
         this.parentObj.children.forEach((c: KfGroup | KfOmit) => {
             if (c.rendered) {
@@ -806,7 +807,7 @@ export default class KfGroup extends KfTimingIllus {
                     if (c instanceof KfOmit || (c instanceof KfGroup && c.rendered)) {
                         const tmpTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
                         c.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transX}, ${tmpTrans.y})`);
-                        console.log('sibling trans ', c.container, tmpTrans.x, transX, tmpTrans.x + transX);
+                        // console.log('sibling trans ', c.container, tmpTrans.x, transX, tmpTrans.x + transX);
 
                         if (c instanceof KfGroup) {
                             if (c.children[0] instanceof KfItem && updateAlignedKfs) {//need to update the aligned kfs and their group
@@ -928,7 +929,7 @@ export default class KfGroup extends KfTimingIllus {
     }
 
     public updateParentTrackInsert() {
-        console.log('update parent track insert: ', KfTrack.aniTrackMapping, this.aniId, KfTrack.aniTrackMapping.get(this.aniId));
+        // console.log('update parent track insert: ', KfTrack.aniTrackMapping, this.aniId, KfTrack.aniTrackMapping.get(this.aniId));
         if (typeof KfTrack.aniTrackMapping.get(this.aniId) !== 'undefined') {
             [...KfTrack.aniTrackMapping.get(this.aniId)].forEach((kfTrack: KfTrack) => {
                 const tmpBBox: DOMRect = this.container.getBoundingClientRect();//fixed
@@ -1009,7 +1010,7 @@ export default class KfGroup extends KfTimingIllus {
                 const alignWithGroupBBox: DOMRect = alignWithGroup.container.getBoundingClientRect();
                 const currentBBox: DOMRect = this.container.getBoundingClientRect();
                 const diffW: number = currentBBox.right - alignWithGroupBBox.right;
-                console.log('extending group size: ', alignWithGroup, this, currentBBox, alignWithGroupBBox, diffW);
+                // console.log('extending group size: ', alignWithGroup, this, currentBBox, alignWithGroupBBox, diffW);
                 if (diffW > 0) {
                     alignWithGroup.extendSize(diffW);
                 }
@@ -1080,7 +1081,8 @@ export class GroupMenu {
         this.container.setAttributeNS(null, 'opacity', '0');
         const menuBg: SVGPathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         menuBg.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
-        menuBg.setAttributeNS(null, 'd', `M0,0 H${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING},${GroupMenu.MENU_RX} V${3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX},${3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING} H0 Z`)
+        menuBg.setAttributeNS(null, 'd', `M0,0 H${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING},${GroupMenu.MENU_RX} V${2 * GroupMenu.BTN_SIZE + 4 * GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX},${2 * GroupMenu.BTN_SIZE + 4 * GroupMenu.PADDING} H0 Z`)
+        // menuBg.setAttributeNS(null, 'd', `M0,0 H${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING},${GroupMenu.MENU_RX} V${3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX},${3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING} H0 Z`)
         this.container.appendChild(menuBg);
 
         const effectTypeBtn: SVGGElement = this.createBtn(this.action.oriActionType);
@@ -1090,10 +1092,10 @@ export class GroupMenu {
         const easingBtn: SVGGElement = this.createBtn(this.action.easing);
         easingBtn.setAttributeNS(null, 'transform', `translate(${GroupMenu.PADDING_LEFT}, ${3 * GroupMenu.PADDING + GroupMenu.BTN_SIZE})`);
         this.container.appendChild(easingBtn);
-        this.container.appendChild(this.createSplit(2));
-        const durationBtn: SVGGElement = this.createBtn(GroupMenu.DURATION, this.action.duration);
-        durationBtn.setAttributeNS(null, 'transform', `translate(${GroupMenu.PADDING_LEFT}, ${5 * GroupMenu.PADDING + 2 * GroupMenu.BTN_SIZE})`);
-        this.container.appendChild(durationBtn);
+        // this.container.appendChild(this.createSplit(2));
+        // const durationBtn: SVGGElement = this.createBtn(GroupMenu.DURATION, this.action.duration);
+        // durationBtn.setAttributeNS(null, 'transform', `translate(${GroupMenu.PADDING_LEFT}, ${5 * GroupMenu.PADDING + 2 * GroupMenu.BTN_SIZE})`);
+        // this.container.appendChild(durationBtn);
 
         return this.container;
     }
@@ -1111,7 +1113,8 @@ export class GroupMenu {
     }
 
     public updatePosition(parentOffset: number, parentHeight: number) {
-        this.container.setAttributeNS(null, 'transform', `translate(${parentOffset}, ${parentHeight / 2 - (3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING) / 2})`)
+        this.container.setAttributeNS(null, 'transform', `translate(${parentOffset}, ${parentHeight / 2 - (2 * GroupMenu.BTN_SIZE + 4 * GroupMenu.PADDING) / 2})`)
+        // this.container.setAttributeNS(null, 'transform', `translate(${parentOffset}, ${parentHeight / 2 - (3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING) / 2})`)
     }
 
     public createBtn(btnType: string, duration?: number): SVGGElement {
@@ -1274,7 +1277,7 @@ export class GroupMenu {
                 menuLayer.innerHTML = '';
                 const actionInfo: any = { aniId: this.aniId, effectPropValue: content };
                 State.tmpStateBusket.push({
-                    historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations },
+                    historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: JSON.stringify(state.spec.animations) },
                     currentAction: { actionType: actionType, actionVal: actionInfo }
                 })
                 State.saveHistory();

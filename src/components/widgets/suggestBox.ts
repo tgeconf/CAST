@@ -115,6 +115,7 @@ export class SuggestBox {
     }
 
     public pathToSpec(allSuggestedPaths: IPath[], startKf: KfItem, selectedMarks: string[], suggestOnFirstKf: boolean) {
+        console.log('rendering path to spec: ', allSuggestedPaths, suggestOnFirstKf);
         suggestBox.resetProps();
         const targetPath: IPath = allSuggestedPaths[0];
 
@@ -128,12 +129,13 @@ export class SuggestBox {
         } else {
             //extract attr value order
             const attrValueSort: string[][] = Util.extractAttrValueOrder(targetPath.sortedAttrValueComb);
-            const clsOfMarksInPath: string[] = Util.extractClsFromMarks(targetPath.lastKfMarks);
-            const clsOfMarksThisAni: string[] = Util.extractClsFromMarks(startKf.parentObj.marksThisAni());
+            const [clsOfMarksInPath, containsNonDataMarkInPath] = Util.extractClsFromMarks(targetPath.lastKfMarks);
+            const [clsOfMarksThisAni, containsNonDataMarkInAni] = Util.extractClsFromMarks(startKf.parentObj.marksThisAni());
 
             if (!suggestOnFirstKf) {//the suggestion is based on all marks in this animation as the last kf
                 if (Tool.identicalArrays(clsOfMarksInPath, clsOfMarksThisAni)) {//marks in current path have the same classes as those in current animation 
-                    if (clsOfMarksInPath.length > 1) {//create multiple animations
+                    if (clsOfMarksInPath.length > 1 && !containsNonDataMarkInPath) {//create multiple animations
+                        console.log('same create multi ani');
                         actionType = action.REMOVE_CREATE_MULTI_ANI;
                         actionInfo = { aniId: startKf.aniId, path: targetPath, attrValueSort: attrValueSort }
                     } else {//create grouping
@@ -141,10 +143,12 @@ export class SuggestBox {
                         actionInfo = { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort }
                     }
                 } else {//marks in current path don't have the same classes as those in current animation 
-                    if (clsOfMarksInPath.length > 1) {//create multiple animations
+                    if (clsOfMarksInPath.length > 1 && !containsNonDataMarkInPath) {//create multiple animations
+                        console.log('not same create multi ani');
                         actionType = action.SPLIT_CREATE_MULTI_ANI;
                         actionInfo = { aniId: startKf.aniId, path: targetPath, attrValueSort: attrValueSort };
                     } else {//create one animation
+                        console.log('not same create one ani');
                         actionType = action.SPLIT_CREATE_ONE_ANI;
                         actionInfo = { aniId: startKf.aniId, newAniSelector: `#${targetPath.lastKfMarks.join(', #')}`, attrComb: targetPath.attrComb, attrValueSort: attrValueSort };
                     }
@@ -158,8 +162,6 @@ export class SuggestBox {
                 }
             }
         }
-
-        console.log('trigering suggestion box render spec: ', state.spec, JSON.stringify(state.spec));
 
         State.tmpStateBusket.push({
             historyAction: { actionType: action.LOAD_CANIS_SPEC, actionVal: JSON.stringify(state.spec) },
@@ -208,7 +210,6 @@ export class SuggestBox {
                 let marksThisStep: string[] = marksEachStepArr[i][1];
 
                 //render kfs in between
-                console.log("render kf inbetween: ", stepIdx, preStepIdx);
                 if (stepIdx - preStepIdx - 1 > 0) {
                     for (let j = preStepIdx + 1; j < stepIdx; j++) {
                         let omittedMarksRecord: string[] = [];
@@ -259,6 +260,7 @@ export class SuggestBox {
         }
 
         const nextUniqueKfIdx: number = Suggest.findNextUniqueKf(allSuggestedPaths, preStepIdx);
+        console.log('next unique idx in path: ', nextUniqueKfIdx);
         if (nextUniqueKfIdx === -1) {
             this.pathToSpec(allSuggestedPaths, startKf, selectedMarks, suggestOnFirstKf);
         } else {

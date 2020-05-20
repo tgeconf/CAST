@@ -320,7 +320,7 @@ export default class Util {
         this.dataAttrs = [...new Set(this.dataAttrs)];
         //sort data values
         this.sortAttrValues(this.dataValues);
-        console.log('sorted data values: ', this.dataValues);
+        // console.log('sorted data values: ', this.dataValues);
     }
 
     public static extractNonDataAttrValue(markData: Map<string, IDataItem>) {
@@ -500,7 +500,7 @@ export default class Util {
     }
 
     public static aniRootToKFGroup(aniunitNode: any, aniId: string, parentObj: {} | IKeyframeGroup, parentChildIdx: number): IKeyframeGroup {
-        console.log('aniunit node: ', aniunitNode, KfGroup.allAniGroups);
+        // console.log('aniunit node: ', aniunitNode, KfGroup.allAniGroups);
         let kfGroupRoot: IKeyframeGroup = {
             groupRef: aniunitNode.groupRef,
             id: aniunitNode.id,
@@ -596,7 +596,7 @@ export default class Util {
      * @param parentId 
      */
     public static aniLeafToKF(aniLeaf: any, leafIdx: number, aniId: string, parentObj: IKeyframeGroup, parentMarks: string[]): IKeyframe {
-        console.log('creating kf info: ', aniLeaf, Animation.animations, KfGroup.allActions, aniId);
+        // console.log('creating kf info: ', aniLeaf, Animation.animations, KfGroup.allActions, aniId);
         //find the min and max duraion of kfs, in order to render kfs
         const tmpDuration: number = aniLeaf.end - aniLeaf.start;
         aniLeaf.marks = [...new Set(aniLeaf.marks)];
@@ -612,18 +612,7 @@ export default class Util {
             }
         })
         let allCurrentMarks: string[] = [];
-        // Animation.animations.forEach((ani: any, tmpAniId: string) => {
-        //     if (tmpAniId === aniId) {
-        //         allCurrentMarks = [...allCurrentMarks, ...ani.marksInOrder.slice(0, targetIdx)];
-        //     } else {
-        //         for (let i = 0, len = ani.marksInOrder.length; i < len; i++) {
-        //             if (Animation.allMarkAni.get(ani.marksInOrder[i]).startTime >= minStartTime) {
-        //                 break;
-        //             }
-        //             allCurrentMarks.push(ani.marksInOrder[i]);
-        //         }
-        //     }
-        // })
+
         Animation.animations.forEach((ani: any) => {
             const tmpMarksInOrder: string[] = ani.marksInOrder;
             tmpMarksInOrder.forEach((m: string) => {
@@ -632,8 +621,6 @@ export default class Util {
                 }
             })
         })
-        // allCurrentMarks = [...allCurrentMarks];
-        // allCurrentMarks = [...state.staticMarks, ...allCurrentMarks];
 
         let drawDelay: boolean = (aniLeaf.delay > 0 && leafIdx > 0);
         let drawDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousEnd || parentObj.marks.length === aniLeaf.marks.length;
@@ -832,12 +819,17 @@ export default class Util {
      * extract class names from the given marks
      * @param markArr 
      */
-    public static extractClsFromMarks(markArr: string[]): string[] {
+    public static extractClsFromMarks(markArr: string[]): [string[], boolean] {
         const clsOfMarks: Set<string> = new Set();
+        let nonDataCls: boolean = false;
         markArr.forEach((mId: string) => {
+            const clsToAdd: string = Animation.markClass.get(mId);
+            if (clsToAdd.includes('axis') || clsToAdd.includes('legend') || clsToAdd.includes('title')) {
+                nonDataCls = true;
+            }
             clsOfMarks.add(Animation.markClass.get(mId));
         })
-        return [...clsOfMarks];
+        return [[...clsOfMarks], nonDataCls];
     }
 
     public static cloneObj(obj: any): any {

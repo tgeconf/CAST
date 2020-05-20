@@ -25,7 +25,7 @@ export class Hint {
     public pointer: SVGPathElement;
     public content: string = '';
 
-    public createHint(mousePosi: ICoord, content: string): void {
+    public createHint(mousePosi: ICoord, content: string, w: number = -1): void {
         this.removeHint();
         this.removeTimingHint();
         this.content = content;
@@ -34,7 +34,7 @@ export class Hint {
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.container.setAttributeNS(null, 'transform', `translate(${(mousePosi.x - hintLayerBBox.left) / state.zoomLevel + 4}, ${(mousePosi.y - hintLayerBBox.top) / state.zoomLevel + 2})`);
         this.hintBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        this.hintBg.setAttributeNS(null, 'width', `${Hint.CHAR_LEN * this.content.length}`);
+        this.hintBg.setAttributeNS(null, 'width', `${w === -1 ? Hint.CHAR_LEN * this.content.length : w}`);
         this.hintBg.setAttributeNS(null, 'height', `${Hint.HINT_HEIGHT + 2 * Hint.PADDING}`);
         this.hintBg.setAttributeNS(null, 'fill', `${Hint.FILL_COLOR}`);
         this.hintBg.setAttributeNS(null, 'stroke', `${Hint.STROKE_COLOR}`);
@@ -123,7 +123,7 @@ export class Hint {
             }
             this.removeTimingHint();
             State.tmpStateBusket.push({
-                historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations },
+                historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: JSON.stringify(state.spec.animations) },
                 currentAction: { actionType: actionType, actionVal: actionInfo }
             })
             State.saveHistory();

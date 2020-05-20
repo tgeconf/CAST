@@ -146,7 +146,6 @@ export default class Suggest {
             })
         })
 
-        console.log('after ordering attrs: ', orderedAttrs);
         return orderedAttrs;
     }
 
@@ -216,17 +215,25 @@ export default class Suggest {
         console.log('all combinations of attrs: ', allCombinations);
 
         //get values of the attrs in 1st kf
-        let valuesFirstKf: Array<string | number> = [];
+        let valuesFirstKf: Set<string | number> = new Set();
+        let mShapes: Set<string> = new Set();
         sortedAttrs.forEach((attrArr: string[], channel: string) => {
             attrArr.forEach((aName: string) => {
-                valuesFirstKf.push(Util.filteredDataTable.get(firstKfMarks[0])[aName]);
+                firstKfMarks.forEach((mId: string) => {
+                    const attrValue: string | number = Util.filteredDataTable.get(mId)[aName];
+                    valuesFirstKf.add(attrValue);
+                    if (aName === 'mShape') {
+                        mShapes.add(`${attrValue}`);
+                    }
+                })
             })
         })
-        valuesFirstKf = [...new Set(valuesFirstKf)];
+        console.log('values 1st kf: ', valuesFirstKf);
 
         allCombinations.forEach((attrComb: string[]) => {
+            console.log('attr comb to create sec: ', attrComb);
             let sections: Map<string, string[]> = new Map();//key: section id, value: mark array
-            let sectionIdRecord: string[][] = [];
+            let sectionIdRecord: (string | number)[][] = [];
             let timeSecIdx: number[] = [];
             let tmpValueIdx: Map<number, number> = new Map();
             attrComb.forEach((aName: string, idx: number) => {
@@ -236,31 +243,51 @@ export default class Suggest {
                 }
             })
 
-            lastKfMarks.forEach((mId: string) => {
+            let asscendingOrder: boolean = false;
+            lastKfMarks.forEach((mId: string, idx: number) => {
                 let sectionId: string = '';
                 let seperateSecId: string[] = []; //for ordering section ids
+                // let secIsFirstKf: boolean = false;
                 attrComb.forEach((aName: string) => {
                     let tmpValue: string | number = Util.filteredDataTable.get(mId)[aName];
                     sectionId = `${sectionId}${tmpValue},`;
-                    if (valuesFirstKf.includes(tmpValue)) {
-                        let orderDirect: number = valueIdx.get(aName);
-                        if (orderDirect === 1) {
-                            tmpValue = 'zzz_' + tmpValue;//for ordering 
-                        } else {
-                            tmpValue = '000_' + tmpValue;//for ordering 
+                    if (valuesFirstKf.has(tmpValue)) {
+                        //check whether this sec is the firstKf
+                        const isFirstKf: boolean = seperateSecId.every((attrVal: string) => { return (attrVal.includes('000_')) });
+                        // const isFirstKf: boolean = seperateSecId.every((attrVal: string) => { return (attrVal.includes('zzz_') || attrVal.includes('000_')) });
+                        console.log('test: ', seperateSecId, isFirstKf);
+                        if (isFirstKf) {
+                            tmpValue = '000_' + tmpValue
+                            let orderDirect: number = valueIdx.get(aName);
+                            if (orderDirect === 1) {
+                                asscendingOrder = false;
+                                // secIsFirstKf = false;
+                                // tmpValue = 'zzz_' + tmpValue;//for ordering 
+                            } else {
+                                asscendingOrder = true;
+                                // secIsFirstKf = true;
+                                // tmpValue = '000_' + tmpValue;//for ordering 
+
+                            }
                         }
                     }
+                    console.log('tmpa value: ', tmpValue, valuesFirstKf);
                     seperateSecId.push(`${tmpValue}`);
                 })
 
                 if (typeof sections.get(sectionId) === 'undefined') {
                     sections.set(sectionId, []);
                     sectionIdRecord.push(seperateSecId);
+                    // console.log('pushing ', sectionIdRecord, seperateSecId, asscendingOrder, secIsFirstKf);
+                    // if (asscendingOrder && secIsFirstKf) {
+                    //     firstKfIdx = sectionIdRecord.length - 1;
+                    // }
                 }
                 sections.get(sectionId).push(mId);
             })
 
             if (hasOneMrak) {
+                console.log('there is only one mark in 1st kf');
                 let flag: boolean = false;//whether this one mark in the 1st kf is a section
                 for (let [sectionId, markIdArr] of sections) {
                     if (markIdArr.includes(firstKfMarks[0]) && markIdArr.length === 1) {
@@ -274,15 +301,21 @@ export default class Suggest {
                     lastKfMarks.forEach((mId: string) => {
                         let sectionId: string = '';
                         let seperateSecId: string[] = [];
+                        // let secIsFirstKf: boolean = false;
                         attrComb.forEach((aName: string) => {
                             let tmpValue: string | number = Util.filteredDataTable.get(mId)[aName];
                             sectionId = `${sectionId}${tmpValue},`;
-                            if (valuesFirstKf.includes(tmpValue)) {
+                            if (valuesFirstKf.has(tmpValue)) {
+                                tmpValue = '000_' + tmpValue
                                 let orderDirect: number = valueIdx.get(aName);
                                 if (orderDirect === 1) {
-                                    tmpValue = 'zzz_' + tmpValue;//for ordering 
+                                    asscendingOrder = false;
+                                    // secIsFirstKf = false;
+                                    // tmpValue = 'zzz_' + tmpValue;//for ordering 
                                 } else {
-                                    tmpValue = '000_' + tmpValue;//for ordering 
+                                    asscendingOrder = true;
+                                    // secIsFirstKf = true;
+                                    // tmpValue = '000_' + tmpValue;//for ordering 
                                 }
                             }
                             seperateSecId.push(`${tmpValue}`);
@@ -294,26 +327,52 @@ export default class Suggest {
                         if (typeof sections.get(sectionId) === 'undefined') {
                             sections.set(sectionId, []);
                             sectionIdRecord.push(seperateSecId);
+                            // if (asscendingOrder && secIsFirstKf) {
+                            //     firstKfIdx = seperateSecId.length - 1;
+                            // }
                         }
                         sections.get(sectionId).push(mId);
                     })
                 }
             }
 
-            //sort sectionIds
+            console.log('value idx used for sorting: ', tmpValueIdx);
+            //first round sorting sectionIds
             sectionIdRecord.sort(function (a, b) {
                 let diffValueIdx: number = 0;
+                let diffAttr: string = '';
                 for (let i = 0, len = attrComb.length; i < len; i++) {
                     if (a[i] !== b[i]) {
                         diffValueIdx = i;
+                        diffAttr = attrComb[i];
                         break;
                     }
                 }
 
                 let aComp: string | number = a[diffValueIdx], bComp: string | number = b[diffValueIdx];
+                if ((<string>aComp).includes('000_')) {
+                    aComp = (<string>aComp).substring(4);
+                }
+                if ((<string>bComp).includes('000_')) {
+                    bComp = (<string>bComp).substring(4);
+                }
                 if (timeSecIdx.includes(diffValueIdx)) {
-                    aComp = Util.fetchTimeNum(aComp);
-                    bComp = Util.fetchTimeNum(bComp);
+                    aComp = Util.fetchTimeNum(<string>aComp);
+                    bComp = Util.fetchTimeNum(<string>bComp);
+                }
+
+                if (diffAttr === 'mShape') {
+                    const aCompStr: string = `${aComp}`, bCompStr: string = `${bComp}`;
+                    const aShapeName: string = (aCompStr.includes('000_') || aCompStr.includes('zzz_')) ? aCompStr.substring(4) : aCompStr;
+                    const bShapeName: string = (bCompStr.includes('000_') || bCompStr.includes('zzz_')) ? bCompStr.substring(4) : bCompStr;
+                    //put the same mark shape as those in the firstKfMarks i nthe front
+                    if (mShapes.has(aShapeName) && !mShapes.has(bShapeName)) {
+                        return -1;
+                    } else if (!mShapes.has(aShapeName) && mShapes.has(bShapeName)) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
                 }
 
                 if (bComp > aComp) {
@@ -335,14 +394,167 @@ export default class Suggest {
                 }
             })
 
+            // console.log('first kf idx: ', firstKfIdx);
+            // if (asscendingOrder && firstKfIdx !== 0) {
+            //     //need to change the order of the secitonIds 
+            //     const tmpLen: number = sectionIdRecord.length;
+            //     for (let i = 0; i < tmpLen; i++) {
+            //         let indexToAdd: string = '';
+            //         if (i < firstKfIdx) {
+            //             indexToAdd = `${i + tmpLen - firstKfIdx}`;
+            //         } else if (i > firstKfIdx) {
+            //             indexToAdd = `${i - firstKfIdx}`;
+            //         }
+            //         if (indexToAdd.length === 1) {
+            //             indexToAdd = `00${indexToAdd}_`;
+            //         } else if (indexToAdd.length === 2) {
+            //             indexToAdd = `0${indexToAdd}_`;
+            //         }
+            //         for (let j = 0, len = sectionIdRecord[i].length; j < len; j++) {
+            //             console.log('index to add: ', indexToAdd, sectionIdRecord[i][j]);
+            //             if (!(<string>sectionIdRecord[i][j]).includes('000_')) {
+            //                 if ((<string>sectionIdRecord[i][j]).includes('zzz_')) {
+            //                     sectionIdRecord[i][j] = (<string>sectionIdRecord[i][j]).substring(4);
+            //                 }
+            //                 sectionIdRecord[i][j] = `${indexToAdd}${sectionIdRecord[i][j]}`;
+            //             }
+            //         }
+            //     }
+            // }
+
+
+            // console.log('value idx used for sorting: ', tmpValueIdx);
+            // //sort sectionIds
+            // sectionIdRecord.sort(function (a, b) {
+            //     let diffValueIdx: number = 0;
+            //     let diffAttr: string = '';
+            //     for (let i = 0, len = attrComb.length; i < len; i++) {
+            //         if (a[i] !== b[i]) {
+            //             diffValueIdx = i;
+            //             diffAttr = attrComb[i];
+            //             break;
+            //         }
+            //     }
+
+            //     let aComp: string | number = a[diffValueIdx], bComp: string | number = b[diffValueIdx];
+            //     if (timeSecIdx.includes(diffValueIdx)) {
+            //         aComp = Util.fetchTimeNum(<string>aComp);
+            //         bComp = Util.fetchTimeNum(<string>bComp);
+            //     }
+
+            //     if (diffAttr === 'mShape') {
+            //         const aCompStr: string = `${aComp}`, bCompStr: string = `${bComp}`;
+            //         const aShapeName: string = (aCompStr.includes('000_') || aCompStr.includes('zzz_')) ? aCompStr.substring(4) : aCompStr;
+            //         const bShapeName: string = (bCompStr.includes('000_') || bCompStr.includes('zzz_')) ? bCompStr.substring(4) : bCompStr;
+            //         //put the same mark shape as those in the firstKfMarks i nthe front
+            //         if (mShapes.has(aShapeName) && !mShapes.has(bShapeName)) {
+            //             return -1;
+            //         } else if (!mShapes.has(aShapeName) && mShapes.has(bShapeName)) {
+            //             return 1;
+            //         } else {
+            //             return 0;
+            //         }
+            //     }
+
+            //     if (bComp > aComp) {
+            //         switch (tmpValueIdx.get(diffValueIdx)) {
+            //             case 0:
+            //             case 2:
+            //                 return -1;
+            //             case 1:
+            //                 return 1;
+            //         }
+            //     } else {
+            //         switch (tmpValueIdx.get(diffValueIdx)) {
+            //             case 0:
+            //             case 2:
+            //                 return 1;
+            //             case 1:
+            //                 return -1;
+            //         }
+            //     }
+            // })
+
+            //find the first kf index
+            let firstKfIdx: number = -1;
+            sectionIdRecord.forEach((separaSecIds: (string | number)[], idx: number) => {
+                console.log('after first round sorting: ', separaSecIds);
+                if (separaSecIds.every((attrVal: string) => (attrVal.includes('000_')))) {
+                    firstKfIdx = idx;
+                }
+            })
+            console.log('all sections: ', sections, sectionIdRecord, firstKfIdx);
+            if (asscendingOrder) {
+                const sectionsBefore: (string | number)[][] = sectionIdRecord.slice(0, firstKfIdx);
+                const sectionsAfter: (string | number)[][] = sectionIdRecord.slice(firstKfIdx);
+                sectionIdRecord = [...sectionsAfter, ...sectionsBefore];
+            }
+
+
+
+
             //remove 000_ and zzz_ added for ordering
             for (let i = 0, len = sectionIdRecord.length; i < len; i++) {
                 for (let j = 0, len2 = sectionIdRecord[i].length; j < len2; j++) {
-                    if (sectionIdRecord[i][j].includes('000_') || sectionIdRecord[i][j].includes('zzz_')) {
-                        sectionIdRecord[i][j] = sectionIdRecord[i][j].substring(4);
+                    // if ((<string>sectionIdRecord[i][j]).includes('000_') || (<string>sectionIdRecord[i][j]).includes('zzz_')) {
+                    console.log('cuttting : ', sectionIdRecord[i][j]);
+                    if ((<string>sectionIdRecord[i][j]).indexOf('_') === 3) {
+                        const checkStr: string = (<string>sectionIdRecord[i][j]).substring(0, 3);
+                        console.log('cehckstr: ', checkStr, sectionIdRecord[i][j]);
+                        if (checkStr === 'zzz' || !isNaN(parseInt(checkStr))) {
+                            console.log('cutted');
+                            sectionIdRecord[i][j] = (<string>sectionIdRecord[i][j]).substring(4);
+                        }
                     }
                 }
             }
+
+            console.log('after cut sectionIdRecord: ', sectionIdRecord);
+
+            if (mShapes.size > 1) {//deal with mark shape situations
+                const mShapeIdx: number = attrComb.indexOf('mShape');
+                let sectionMarksToMerge: string[] = [];
+                let valExceptShape: string[] = [];
+                let mergeIdxs: [number, (string | number)[]][] = [];
+                let mergeSecId: string = [...mShapes].join('+');
+                let sectionsToDelete: string[] = [];
+                sectionIdRecord.forEach((valComb: (string | number)[], idx: number) => {
+                    const correspondingSecId: string = valComb.join(',') + ',';
+                    const tmpShape: string = `${valComb[mShapeIdx]}`;
+                    let tmpValExceptShape: Set<string> = new Set();
+                    valComb.forEach((val: string | number, valIdx: number) => {
+                        if (valIdx !== mShapeIdx) {
+                            tmpValExceptShape.add(`${val}`);
+                        }
+                    })
+                    if (!Tool.identicalArrays(valExceptShape, [...tmpValExceptShape]) || idx === sectionIdRecord.length - 1) {
+                        if (valExceptShape.length !== 0) {//add new section
+                            valExceptShape.splice(mShapeIdx, 0, mergeSecId);
+                            const tmpSecId: string = [...new Set(valExceptShape)].join(',') + ',';
+                            sections.set(tmpSecId, sectionMarksToMerge);
+                        }
+                        valExceptShape = [...tmpValExceptShape];
+                        sectionMarksToMerge = sections.get(correspondingSecId);
+                        sectionsToDelete.push(correspondingSecId);
+                        let tmpValExceptShapeArr: string[] = [...tmpValExceptShape];
+                        tmpValExceptShapeArr.splice(mShapeIdx, 0, mergeSecId)
+                        mergeIdxs.push([idx, [...new Set(tmpValExceptShapeArr)]]);
+                    } else {
+                        if (mShapes.has(tmpShape)) {
+                            sectionsToDelete.push(correspondingSecId);
+                            sectionMarksToMerge = [...sectionMarksToMerge, ...sections.get(correspondingSecId)];
+                        }
+                    }
+                })
+
+                mergeIdxs.reverse().forEach((secIdxAndId: [number, (string | number)[]]) => {
+                    sectionIdRecord.splice(secIdxAndId[0], mShapes.size, secIdxAndId[1]);
+                })
+                sectionsToDelete.forEach((secIdToDelete: string) => {
+                    sections.delete(secIdToDelete);
+                })
+            }
+
             let orderedSectionIds: string[] = sectionIdRecord.map(a => a.join(',') + ',');
             possibleKfs.push([attrComb, sections, orderedSectionIds]);
         })
@@ -438,13 +650,15 @@ export default class Suggest {
 
     public static generateSuggestionPath(selectedMarks: string[], firstKfInfoInParent: IKeyframe, targetKfg: KfGroup): boolean {
         //create suggestion list if there is one, judge whether to use current last kf as last kf or the current first as last kf
-        const clsSelMarks: string[] = Util.extractClsFromMarks(selectedMarks);
-        const clsFirstKf: string[] = Util.extractClsFromMarks(firstKfInfoInParent.marksThisKf);
+        const [clsSelMarks, containNonDataMarkInSel] = Util.extractClsFromMarks(selectedMarks);
+        const [clsFirstKf, containNonDataMarkFirstKf] = Util.extractClsFromMarks(firstKfInfoInParent.marksThisKf);
         let suggestOnFirstKf: boolean = false;
         if (Tool.arrayContained(firstKfInfoInParent.marksThisKf, selectedMarks) && Tool.identicalArrays(clsSelMarks, clsFirstKf)) {//suggest based on first kf in animation
             suggestOnFirstKf = true;
+            console.log('suggesting based on the first kf');
             Suggest.suggestPaths(selectedMarks, firstKfInfoInParent.marksThisKf);
         } else {//suggest based on all marks in animation
+            console.log('suggesting based on all marks this ani');
             const marksThisAni: string[] = targetKfg.marksThisAni();
             Suggest.suggestPaths(selectedMarks, marksThisAni);
         }
@@ -514,6 +728,7 @@ export default class Suggest {
                     let numberMostMarksInSec = 0, selectedMarks: Map<string, string[]> = new Map();//in case of one mark from each sec
 
                     orderedSectionIds.forEach((sectionId: string) => {
+                        console.log('sectionId: ', sectionId, sections);
                         let tmpSecMarks = sections.get(sectionId);
                         if (tmpSecMarks.length > numberMostMarksInSec) {
                             numberMostMarksInSec = tmpSecMarks.length;
@@ -595,9 +810,9 @@ export default class Suggest {
             console.log('1st non data kf marks: ', firstKfNonDataMarks, lastKfNonDataMarks);
 
             if (!Tool.identicalArrays(firstKfNonDataMarks, lastKfNonDataMarks)) {
-                console.log('non data table', Util.nonDataTable);
                 //count the number of types in first kf
-                const typeCount: Map<string, number> = new Map();
+                const typeCount: Map<string, string[]> = new Map();
+                const attrValstrs: Set<string> = new Set();
                 firstKfNonDataMarks.forEach((mId: string) => {
                     let attrValStr: string = '';
                     const tmpDatum: IDataItem = Util.nonDataTable.get(mId);
@@ -607,14 +822,24 @@ export default class Suggest {
                         }
                     })
                     if (typeof typeCount.get(attrValStr) === 'undefined') {
-                        typeCount.set(attrValStr, 0);
+                        typeCount.set(attrValStr, []);
                     }
-                    typeCount.set(attrValStr, typeCount.get(attrValStr) + 1);
+                    typeCount.get(attrValStr).push(mId);
+                    attrValstrs.add(attrValStr);
                 })
-                const attrValStr = [...typeCount][0][0];
-                if (typeCount.size === 1 && [...typeCount][0][1] === 1) {
+                // const attrValStr = [...typeCount][0][0];
+                //check whether there is one from each type
+                let oneFromEachType: boolean = true;
+                typeCount.forEach((mIds: string[], mType: string) => {
+                    if (mIds.length > 1) {
+                        oneFromEachType = false;
+                    }
+                })
+
+                // if (typeCount.size === 1 && [...typeCount][0][1] === 1) {
+                if (oneFromEachType) {
                     //fetch all marks with the same attr values
-                    let suggestionLastKfMarks: string[] = [...firstKfNonDataMarks];
+                    let suggestionLastKfMarks: Map<string, string[]> = new Map();//key: attrValStr, value: marks have those attr values
                     Util.nonDataTable.forEach((datum: IDataItem, mId: string) => {
                         let tmpAttrValStr: string = '';
                         Object.keys(datum).forEach((attr: string) => {
@@ -622,24 +847,53 @@ export default class Suggest {
                                 tmpAttrValStr += `*${datum[attr]}`;
                             }
                         })
-                        if (tmpAttrValStr === attrValStr) {
-                            suggestionLastKfMarks.push(mId);
+                        if (attrValstrs.has(tmpAttrValStr)) {
+                            // if (tmpAttrValStr === attrValStr) {
+                            if (typeof suggestionLastKfMarks.get(tmpAttrValStr) === 'undefined') {
+                                suggestionLastKfMarks.set(tmpAttrValStr, []);
+                            }
+                            suggestionLastKfMarks.get(tmpAttrValStr).push(mId);
                         }
                     })
-                    let asscendingOrder: string[] = suggestionLastKfMarks.sort();
 
-                    if (asscendingOrder.indexOf(firstKfNonDataMarks[0]) === 0) {
-                        suggestionLastKfMarks = asscendingOrder;
-                    } else if (asscendingOrder.indexOf(firstKfNonDataMarks[0]) === asscendingOrder.length - 1) {
-                        suggestionLastKfMarks = asscendingOrder.reverse();
-                    }
-                    suggestionLastKfMarks = [...new Set(suggestionLastKfMarks)];
+                    //sort marks from each type
+                    let kfBefore: string[][] = [];
+                    let kfAfter: string[][] = [];
+                    let targetIdx: number = -100;
+                    let allLastKfMarks: string[] = [];
+                    let reverseIdx: boolean = false;
 
-                    const tmpKfMarks: string[][] = [];
-                    suggestionLastKfMarks.forEach((mId: string) => {
-                        tmpKfMarks.push([mId]);
+                    suggestionLastKfMarks.forEach((mIds: string[], attrValStr: string) => {
+                        mIds.forEach((mId: string, idx: number) => {
+                            if (mId === typeCount.get(attrValStr)[0] && targetIdx === -100) {
+                                targetIdx = idx;
+                                if (targetIdx === mIds.length - 1) {
+                                    reverseIdx = true;
+                                }
+                            }
+                            if (targetIdx === -100 || idx < targetIdx) {
+                                if (typeof kfBefore[idx] === 'undefined') {
+                                    kfBefore[idx] = [];
+                                }
+                                kfBefore[idx].push(mId);
+                            } else {
+                                if (typeof kfAfter[idx - targetIdx] === 'undefined') {
+                                    kfAfter[idx - targetIdx] = [];
+                                }
+                                kfAfter[idx - targetIdx].push(mId);
+                            }
+                            allLastKfMarks.push(mId);
+                        })
                     })
-                    this.allPaths = [{ attrComb: ['id'], sortedAttrValueComb: suggestionLastKfMarks, kfMarks: tmpKfMarks, firstKfMarks: firstKfNonDataMarks, lastKfMarks: suggestionLastKfMarks }];
+                    let tmpKfMarks: string[][] = reverseIdx ? [...kfAfter, ...kfBefore.reverse()] : [...kfAfter, ...kfBefore];
+                    let sortedAttrValueComb: string[] = tmpKfMarks.map((mIds: string[]) => mIds.join(','));
+                    if (typeCount.size === 1) {
+                        sortedAttrValueComb = tmpKfMarks.map((mIds: string[]) => mIds[0]);
+                    } else {
+                        sortedAttrValueComb = tmpKfMarks.map((mIds: string[]) => `${Util.nonDataTable.get(mIds[0]).clsIdx}`);
+                    }
+                    const attrComb: string[] = typeCount.size === 1 ? ['id'] : ['clsIdx'];
+                    this.allPaths = [{ attrComb: attrComb, sortedAttrValueComb: sortedAttrValueComb, kfMarks: tmpKfMarks, firstKfMarks: firstKfNonDataMarks, lastKfMarks: allLastKfMarks }];
                     console.log('suggestion based on non data mark: ', this.allPaths);
                 }
             }

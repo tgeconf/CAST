@@ -80,7 +80,7 @@ export default class Nav {
         testBtn.onclick = () => {
             NavBtn.testSpec();
         }
-        this.navContainer.appendChild(testBtn);
+        // this.navContainer.appendChild(testBtn);
     }
 
     public createSeparator() {

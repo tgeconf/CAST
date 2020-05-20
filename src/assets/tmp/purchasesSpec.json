@@ -11,7 +11,7 @@
     "chartIdx": 0
   },
   {
-    "selector": "#mark2001, #mark2002, #mark2003, #mark2004, #mark2005, #mark2006, #mark2007, #mark2008, #mark2009, #mark2010",
+    "selector": "#mark2001, #mark2002, #mark2003, #mark2004, #mark2005, #mark2006, #mark2007, #mark2008, #mark2009, #mark2010, #mark1001, #mark1002, #mark1003, #mark1004, #mark1005, #mark1006, #mark1007, #mark1008, #mark1009, #mark1010",
     "effects": [
       {
         "type": "fade",
@@ -39,23 +39,6 @@
           "2014"
         ]
       }
-    }
-  },
-  {
-    "selector": "#mark1001, #mark1002, #mark1003, #mark1004, #mark1005, #mark1006, #mark1007, #mark1008, #mark1009, #mark1010",
-    "effects": [
-      {
-        "type": "fade",
-        "duration": 300,
-        "chartIdx": 0
-      }
-    ],
-    "chartIdx": 0,
-    "reference": "start with previous",
-    "align": {
-      "type": "element",
-      "target": "0_#mark1, #mark2, #mark3, #mark4, #mark5, #mark6, #mark7, #mark8, #mark9, #mark1001, #mark1002, #mark1003, #mark1004, #mark1005, #mark1006, #mark1007, #mark1008, #mark1009, #mark1010, #mark2001, #mark2002, #mark2003, #mark2004, #mark2005, #mark2006, #mark2007, #mark2008, #mark2009, #mark2010, #mark6001",
-      "merge": false
     }
   },
   {

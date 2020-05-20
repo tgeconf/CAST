@@ -29,7 +29,6 @@ export default class SelectableTable {
     }
 
     public createTable(dt: Map<string, IDataItem>): HTMLTableElement {
-        console.log('creating data table');
         const dataTable: HTMLTableElement = document.createElement('table');
         dataTable.className = 'selectable-table';
         let count = 0;
@@ -50,29 +49,35 @@ export default class SelectableTable {
                     //create sort btn
                     const sortBtn: HTMLSpanElement = document.createElement('span');
                     let iconCls: string = '';
-                    console.log('sort attrs: ', state.sortDataAttrs);
                     state.sortDataAttrs.forEach(sda => {
                         if (sda.attr === key) {
-                            console.log('testing1');
                             if (sda.sort === AttrSort.DESCENDING_ORDER) {
                                 iconCls = `${AttrSort.DESCENDING_ORDER}-icon activate-sort-btn`;
+                                th.title = `${key} in descending order`;
                                 titleContent.classList.remove('non-activate-p');
                                 th.classList.remove('non-activate-th');
                             } else if (sda.sort === AttrSort.ASSCENDING_ORDER) {
                                 iconCls = `${AttrSort.ASSCENDING_ORDER}-icon activate-sort-btn`;
+                                th.title = `${key} in asscending order`;
                                 titleContent.classList.remove('non-activate-p');
                                 th.classList.remove('non-activate-th');
+                            } else {
+                                th.title = `Click to sort by ${key}`;
                             }
                         }
                     })
                     sortBtn.className = 'sort-btn ' + iconCls;
+
                     th.onclick = () => {
                         let sort: string = AttrSort.ASSCENDING_ORDER;
                         if (!sortBtn.classList.contains('asscending-icon') && !sortBtn.classList.contains('descending-icon')) {
+                            th.title = `${key} in asscending order`;
                             sort = AttrSort.ASSCENDING_ORDER;
                         } else if (sortBtn.classList.contains('asscending-icon')) {
+                            th.title = `${key} in descending order`;
                             sort = AttrSort.DESCENDING_ORDER;
                         } else if (sortBtn.classList.contains('descending-icon')) {
+                            th.title = `${key} in asscending order`;
                             sort = AttrSort.ASSCENDING_ORDER;
                         }
                         //triger action

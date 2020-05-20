@@ -12,6 +12,7 @@ export class KfContainer {
     static KF_LIST_ID: string = 'kfList';
     // static MASK: string = 'markContainer';
     static DURATION_GRADIENT: string = 'durationGradient';
+    static SHADOW: string = 'hoverShadow';
     static KF_BG: string = 'kfBgG';
     static KF_FG: string = 'kfFgG';
     static KF_POPUP: string = 'kfPopupG';
@@ -57,6 +58,31 @@ export class KfContainer {
         stop2.setAttributeNS(null, 'stop-color', 'rgba(119, 168, 214, 255)');
         linearGradient.appendChild(stop2);
         defs.appendChild(linearGradient);
+        //add shadow 
+        const shadowFilter: SVGFilterElement = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+        shadowFilter.id = KfContainer.SHADOW;
+        const feGaussianBlur: SVGFEGaussianBlurElement = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
+        feGaussianBlur.setAttributeNS(null, 'in', 'SourceAlpha');
+        feGaussianBlur.setAttributeNS(null, 'stdDeviation', '3');
+        shadowFilter.appendChild(feGaussianBlur);
+        const feOffset: SVGFEOffsetElement = document.createElementNS('http://www.w3.org/2000/svg', 'feOffset');
+        feOffset.setAttributeNS(null, 'dx', '0.5');
+        feOffset.setAttributeNS(null, 'dy', '2');
+        shadowFilter.appendChild(feOffset);
+        const feComponentTransfer: SVGFEComponentTransferElement = document.createElementNS('http://www.w3.org/2000/svg', 'feComponentTransfer');
+        const feFuncA: SVGFEFuncAElement = document.createElementNS('http://www.w3.org/2000/svg', 'feFuncA');
+        feFuncA.setAttributeNS(null, 'type', 'linear');
+        feFuncA.setAttributeNS(null, 'slope', '0.3');
+        feComponentTransfer.appendChild(feFuncA);
+        shadowFilter.appendChild(feComponentTransfer);
+        const feMerge: SVGFEMergeElement = document.createElementNS('http://www.w3.org/2000/svg', 'feMerge');
+        const feMergeNode: SVGFEMergeNodeElement = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode');
+        feMerge.appendChild(feMergeNode);
+        const feMergeNode2: SVGFEMergeNodeElement = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode');
+        feMergeNode2.setAttributeNS(null, 'in', 'SourceGraphic');
+        feMerge.appendChild(feMergeNode2);
+        shadowFilter.appendChild(feMerge);
+        defs.appendChild(shadowFilter);
         keyframeTrackSVG.appendChild(defs);
 
         this.kfTrackScaleContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');

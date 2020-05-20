@@ -149,6 +149,9 @@
                             <g transform="translate(-204.29331226,-54.74022804) rotate(285)" opacity="1">
                                 <path id="mark1010" class=" mark axis-tick" d="M 0,0 L 0.00162372,-5.00058151" data-datum="{&quot;_TYPE&quot;:&quot;axis-tick&quot;,&quot;text&quot;:&quot;Oct&quot;}" stroke="rgb(0,0,0)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="none" text-anchor="start" opacity="1"></path>
                             </g>
+                            <g transform="translate(-149.55308422,-149.55308422) rotate(315)" opacity="1">
+                                <path id="mark1011" class=" mark axis-tick" d="M 0,0 L 0.00183848,-4.99560761" data-datum="{&quot;_TYPE&quot;:&quot;axis-tick&quot;,&quot;text&quot;:&quot;Nov&quot;}" stroke="rgb(0,0,0)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="none" text-anchor="start" opacity="1"></path>
+                            </g>
                             <g transform="translate(-54.74022804,-204.29331226) rotate(345)" opacity="1">
                                 <path id="mark1012" class=" mark axis-tick" d="M 0,0 L 0.00006859,-5.00191914" data-datum="{&quot;_TYPE&quot;:&quot;axis-tick&quot;,&quot;text&quot;:&quot;Dec&quot;}" stroke="rgb(0,0,0)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="none" text-anchor="start" opacity="1"></path>
                             </g>
@@ -174,38 +177,32 @@
                                 <text id="mark2007" class=" mark axis-label" x="-7.669921875" y="-9.536377402446128" data-datum="{&quot;_TYPE&quot;:&quot;axis-label&quot;,&quot;text&quot;:&quot;Jul&quot;}" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" text-anchor="start" font-family="Arial" font-size="12px">Jul</text>
                             </g>
                             <g transform="translate(-149.55308422,149.55308422) rotate(225)" opacity="1">
-                                
                                 <text id="mark2008" class=" mark axis-label" x="-10.67578125" y="-9.536377402446128" data-datum="{&quot;_TYPE&quot;:&quot;axis-label&quot;,&quot;text&quot;:&quot;Aug&quot;}" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" text-anchor="start" font-family="Arial" font-size="12px">Aug</text>
                             </g>
                             <g transform="translate(-204.29331226,54.74022804) rotate(255)" opacity="1">
                                 <text id="mark2009" class=" mark axis-label" x="-10.67578125" y="-9.536377402446128" data-datum="{&quot;_TYPE&quot;:&quot;axis-label&quot;,&quot;text&quot;:&quot;Sep&quot;}" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" text-anchor="start" font-family="Arial" font-size="12px">Sep</text>
                             </g>
-                            
                             <g transform="translate(-204.29331226,-54.74022804) rotate(285)" opacity="1">
                                 <text id="mark2010" class=" mark axis-label" x="-9.333984375" y="-9.536377402446128" data-datum="{&quot;_TYPE&quot;:&quot;axis-label&quot;,&quot;text&quot;:&quot;Oct&quot;}" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" text-anchor="start" font-family="Arial" font-size="12px">Oct</text>
                             </g>
-                            
                             <g transform="translate(-149.55308422,-149.55308422) rotate(315)" opacity="1">
                                 <text id="mark2011" class=" mark axis-label" x="-10.669921875" y="-9.536377402446128" data-datum="{&quot;_TYPE&quot;:&quot;axis-label&quot;,&quot;text&quot;:&quot;Nov&quot;}" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" text-anchor="start" font-family="Arial" font-size="12px">Nov</text>
-                            </g>
-                            <g transform="translate(-149.55308422,-149.55308422) rotate(315)" opacity="1">
-                                <path id="mark1011" class=" mark axis-tick" d="M 0,0 L 0.00183848,-4.99560761" data-datum="{&quot;_TYPE&quot;:&quot;axis-tick&quot;,&quot;text&quot;:&quot;Nov&quot;}" stroke="rgb(0,0,0)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="none" text-anchor="start" opacity="1"></path>
                             </g>
                             <g transform="translate(-54.74022804,-204.29331226) rotate(345)" opacity="1">
                                 <text id="mark2012" class=" mark axis-label" x="-10.669921875" y="-9.536377402446128" data-datum="{&quot;_TYPE&quot;:&quot;axis-label&quot;,&quot;text&quot;:&quot;Dec&quot;}" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" text-anchor="start" font-family="Arial" font-size="12px">Dec</text>
                             </g>
-                            
+
                         </g>
                     </g>
                 </g>
             </g>
             <g transform="translate(0,0)" opacity="1">
                 <g transform="translate(-17.92929293,-300)" opacity="1">
-                    <text  id="mark5001" class=" mark title" data-datum="{}"  x="-158.935546875" y="51.254979615608626" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" text-anchor="start" font-family="Arial" font-size="24px">Causes of Mortality over Time</text>
+                    <text id="mark5001" class=" mark title" data-datum="{}" x="-158.935546875" y="51.254979615608626" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" text-anchor="start" font-family="Arial" font-size="24px">Causes of Mortality over Time</text>
                 </g>
             </g>
             <g transform="translate(0,0)" opacity="1">
-                <g transform="translate(-284.51178451,-148)"  class="legend" data-datum="{&quot;color&quot;:&quot;Type&quot;}" opacity="1">
+                <g transform="translate(-284.51178451,-148)" class="legend" data-datum="{&quot;color&quot;:&quot;Type&quot;}" opacity="1">
                     <g transform="translate(0,-48)" opacity="1">
                         <text id="mark3001" class="mark legend-text" data-datum="{}" x="29" y="-7.377204426324983" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(0,0,0)" text-anchor="start" font-family="Arial" font-size="14px">Sick</text>
                         <path id="mark4001" class="mark legend-symbol" data-datum="{}" d="M 8,-4 L 7.99504601,-20.00086906 L 24.00279328,-20.00012267 L 23.99642421,-4.00428521 Z" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(251,106,74)" text-anchor="start" opacity="1"></path>

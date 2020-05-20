@@ -72,7 +72,6 @@ export class State implements IState {
     chartThumbNailZoomLevels: number = 3;
 
     set sortDataAttrs(sda: ISortDataAttr[]) {
-        console.log('updateing data sort', sda, this._sortDataAttrs);
         //compare incoming
         let sameAttrs: boolean = true;
         if (this._sortDataAttrs.length !== 0) {
@@ -89,7 +88,6 @@ export class State implements IState {
         } else {
             //find sort reference
             const [found, attrAndOrder] = Util.findUpdatedAttrOrder(sda);
-            console.log('found srot ref: ', found, attrAndOrder);
             //reorder data items
             if (found) {
                 this._sortDataAttrs = sda;

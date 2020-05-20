@@ -141,7 +141,6 @@ export default class Renderer {
             //top-down to init group and kf
             const rootGroup: KfGroup = this.renderKeyframeGroup(0, kfgs[i - 1], 1, kfg, treeLevel);
             //bottom-up to update size and position
-            console.log('for root group: ', rootGroup, [...KfTrack.aniTrackMapping.get(rootGroup.aniId)][0].availableInsert);
             rootGroup.updateGroupPosiAndSize([...KfTrack.aniTrackMapping.get(rootGroup.aniId)][0].availableInsert, 0, false, true);
             KfGroup.allAniGroups.set(rootGroup.aniId, rootGroup);
         })
@@ -151,7 +150,6 @@ export default class Renderer {
     }
 
     public static renderKeyframeGroup(kfgIdx: number, previousKfg: IKeyframeGroup, totalKfgNum: number, kfg: IKeyframeGroup, treeLevel: number, parentObj?: KfGroup): KfGroup {
-        // console.log('rendering group: ', kfg);
         //draw group container
         let kfGroup: KfGroup = new KfGroup();
         if (kfgIdx === 0 || kfgIdx === 1 || kfgIdx === totalKfgNum - 1) {
@@ -211,7 +209,6 @@ export default class Renderer {
             KfTrack.aniTrackMapping.get(kfg.aniId).add(targetTrack);
             let minTrackPosiYThisGroup: number = [...KfTrack.aniTrackMapping.get(kfg.aniId)][0].trackPosiY;
 
-            // console.log('target track: ', targetTrack, minTrackPosiYThisGroup, kfGroup);
             //check whether this is the group of animation, and whether to add a plus button or not
             let plusBtn: PlusBtn, addedPlusBtn: boolean = false;
             if (treeLevel === 0) {//this is the root group
@@ -454,7 +451,6 @@ export default class Renderer {
         this.renderKeyframeTracks(state.keyframeGroups);
         suggestBox.removeSuggestBox();
         const activatedPlusBtn: PlusBtn = PlusBtn.plusBtnMapping.get(state.activatePlusBtn.aniId);
-        console.log('in rendering active btn', state.activatePlusBtn.aniId, PlusBtn.plusBtnMapping, PlusBtn.allPlusBtn, PlusBtn.plusBtnMapping.get(state.activatePlusBtn.aniId), activatedPlusBtn);
         if (typeof activatedPlusBtn !== 'undefined') {
             activatedPlusBtn.dropSelOn();
         }

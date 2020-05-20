@@ -138,7 +138,6 @@ Reducer.listen(action.LOAD_CHARTS, (chartContent: string[]) => {
     });
     Reducer.triger(action.UPDATE_SELECTION, []);
     // document.getElementById('chartContainer').innerHTML = '';
-    console.log('loading chart: ', chartContent);
     state.charts = chartContent;
 })
 Reducer.listen(action.TOGGLE_SUGGESTION, (suggestion: boolean) => {
@@ -184,8 +183,8 @@ Reducer.listen(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, (kfGroupSize: IKfGroupSi
     state.kfGroupSize = kfGroupSize;
 })
 
-Reducer.listen(action.UPDATE_SPEC_ANIMATIONS, (animationSpec: IAnimationSpec[]) => {
-    state.spec = { ...state.spec, animations: animationSpec };
+Reducer.listen(action.UPDATE_SPEC_ANIMATIONS, (animationSpec: IAnimationSpec[] | string) => {
+    state.spec = { ...state.spec, animations: typeof animationSpec === 'string' ? JSON.parse(animationSpec) : animationSpec };
 })
 
 Reducer.listen(action.UPDATE_SPEC_CHARTS, (charts: string[]) => {
@@ -209,7 +208,6 @@ Reducer.listen(action.UPDATE_MOUSE_MOVING, (mm: boolean) => {
 
 
 Reducer.listen(action.UPDATE_DELAY_BETWEEN_KF, (actionInfo: { aniId: string, delay: number }) => {
-    console.log('updating delay: ', actionInfo.delay);
     const animations: IAnimationSpec[] = state.spec.animations;
     animations.forEach((a: IAnimationSpec) => {
         if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {

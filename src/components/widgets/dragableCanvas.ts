@@ -70,9 +70,6 @@ export default class DragableCanvas {
             canvas.remove();
             //update kf if drop on plus button or kf
             if (typeof PlusBtn.dragoverBtn !== 'undefined') {
-                // PlusBtn.dragoverBtn.dropSelOn(state.selection);
-                //TODO: save history
-                console.log('trigering active: ', PlusBtn.dragoverBtn, PlusBtn.dragoverBtn.aniId);
                 const selectedMarks: string[] = state.selection;
                 Reducer.triger(action.UPDATE_SELECTION, []);//reset state selection
 

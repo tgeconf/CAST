@@ -1,8 +1,8 @@
 import '../assets/style/floating-window.scss'
 import MushroomImg from '../assets/img/examples/mushroom.png'
 import MushroomChart from '../assets/charts/mushrooms.svg'
-import GanttImg from '../assets/img/examples/gantt.png'
-import GanttChart from '../assets/charts/gantt.svg'
+// import GanttImg from '../assets/img/examples/gantt.png'
+// import GanttChart from '../assets/charts/gantt.svg'
 import OsImg from '../assets/img/examples/os.png'
 import OsChart from '../assets/charts/os.svg'
 import PurchasesImg from '../assets/img/examples/purchases.png'
@@ -16,7 +16,7 @@ import { State, state } from '../app/state'
 /**for test!!!!!!!!!!!!!!!!!!!!!!!! */
 import Renderer from '../app/renderer';//for test!!!!!
 import mushroomSpec from '../assets/tmp/mushroomSpec.json'
-import ganttSpec from '../assets/tmp/ganttSpec.json'
+// import ganttSpec from '../assets/tmp/ganttSpec.json'
 import osSpec from '../assets/tmp/osSpec.json'
 import purchasesSpec from '../assets/tmp/purchasesSpec.json'
 import nightingaleSpec from '../assets/tmp/nightingaleSpec.json'
@@ -30,7 +30,7 @@ export default class FloatingWindow {
     static TYPE_SPEC: string = 'SpecContainer';//type of the floating window is spec test
 
     static MUSHROOM_CHART: string = 'mushroom';
-    static GANTT_CHART: string = 'gantt';
+    // static GANTT_CHART: string = 'gantt';
     static OS_CHART: string = 'mobileOS';
     static PURCHASE_CHART: string = 'purchases';
     static NIGHTINGALE_CHART: string = 'nightingale';
@@ -123,13 +123,14 @@ export default class FloatingWindow {
         const exampleItemContainer1: HTMLDivElement = document.createElement('div');
         exampleItemContainer1.className = 'list-item-container';
         exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.MUSHROOM_CHART, 'Mushroom'));
-        exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.GANTT_CHART, 'Gantt'));
+        exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.NIGHTINGALE_CHART, 'Nightingale'));
+        // exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.GANTT_CHART, 'Gantt'));
         exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.OS_CHART, 'Mobile OS'));
         exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.PURCHASE_CHART, 'Doughnut Purchases'));
         exampleList.appendChild(exampleItemContainer1);
         const exampleItemContainer2: HTMLDivElement = document.createElement('div');
         exampleItemContainer2.className = 'list-item-container';
-        exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.NIGHTINGALE_CHART, 'Nightingale'));
+        // exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.NIGHTINGALE_CHART, 'Nightingale'));
         exampleList.appendChild(exampleItemContainer2);
         return exampleList;
     }
@@ -144,10 +145,10 @@ export default class FloatingWindow {
                 img.src = MushroomImg;
                 item.onclick = () => this.loadExampleChart(MushroomChart);
                 break;
-            case FloatingWindow.GANTT_CHART:
-                img.src = GanttImg;
-                item.onclick = () => this.loadExampleChart(GanttChart);
-                break;
+            // case FloatingWindow.GANTT_CHART:
+            //     img.src = GanttImg;
+            //     item.onclick = () => this.loadExampleChart(GanttChart);
+            //     break;
             case FloatingWindow.OS_CHART:
                 img.src = OsImg;
                 item.onclick = () => this.loadExampleChart(OsChart);
@@ -199,7 +200,7 @@ export default class FloatingWindow {
         specWrapper.style.height = '30px';
         specWrapper.appendChild(this.createTestSpecBtn('mushroomSpec', mushroomSpec));
         specWrapper.appendChild(this.createTestSpecBtn('mushroomTest1', mushroomTest1));
-        specWrapper.appendChild(this.createTestSpecBtn('ganttSpec', ganttSpec));
+        // specWrapper.appendChild(this.createTestSpecBtn('ganttSpec', ganttSpec));
         specWrapper.appendChild(this.createTestSpecBtn('osSpec', osSpec));
         specWrapper.appendChild(this.createTestSpecBtn('purchasesSpec', purchasesSpec));
         specWrapper.appendChild(this.createTestSpecBtn('nightingaleSpec', nightingaleSpec));

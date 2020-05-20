@@ -164,8 +164,10 @@ export default class KfTimingIllus {
             this.mouseIsOver = true;
         }
         this.durationIllus.onmouseleave = (leaveEvt: any) => {
-            if (!hintTag.container.contains(leaveEvt.toElement)) {
-                hintTag.removeTimingHint();
+            if (typeof hintTag.container !== 'undefined') {
+                if (!hintTag.container.contains(leaveEvt.toElement)) {
+                    hintTag.removeTimingHint();
+                }
             }
             this.mouseIsOver = false;
         }
@@ -288,7 +290,7 @@ export default class KfTimingIllus {
                     this.bindDurationHover();
                     const durationTime: number = this.widthToTiming(parseFloat(this.durationBg.getAttributeNS(null, 'width')));
                     State.tmpStateBusket.push({
-                        historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations },
+                        historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: JSON.stringify(state.spec.animations) },
                         currentAction: { actionType: action.UPDATE_DURATION, actionVal: { aniId: this.aniId, duration: durationTime } }
                     })
                     State.saveHistory();
@@ -299,24 +301,24 @@ export default class KfTimingIllus {
                     switch (type) {
                         case 'offset-animation':
                             State.tmpStateBusket.push({
-                                historyAction: {actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations},
-                                currentAction: {actionType: action.UPDATE_ANI_OFFSET, actionVal: { aniId: this.aniId, offset: delayTime }}
+                                historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: JSON.stringify(state.spec.animations) },
+                                currentAction: { actionType: action.UPDATE_ANI_OFFSET, actionVal: { aniId: this.aniId, offset: delayTime } }
                             })
                             State.saveHistory();
                             Reducer.triger(action.UPDATE_ANI_OFFSET, { aniId: this.aniId, offset: delayTime });
                             break;
                         case 'offset-group':
                             State.tmpStateBusket.push({
-                                historyAction: {actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations},
-                                currentAction: {actionType: action.UPDATE_DELAY_BETWEEN_GROUP, actionVal: { aniId: this.aniId, groupRef: actionInfo.groupRef, delay: delayTime }}
+                                historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: JSON.stringify(state.spec.animations) },
+                                currentAction: { actionType: action.UPDATE_DELAY_BETWEEN_GROUP, actionVal: { aniId: this.aniId, groupRef: actionInfo.groupRef, delay: delayTime } }
                             })
                             State.saveHistory();
                             Reducer.triger(action.UPDATE_DELAY_BETWEEN_GROUP, { aniId: this.aniId, groupRef: actionInfo.groupRef, delay: delayTime });
                             break;
                         case 'offset-kf':
                             State.tmpStateBusket.push({
-                                historyAction: {actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: state.spec.animations},
-                                currentAction: {actionType: action.UPDATE_DELAY_BETWEEN_KF, actionVal: { aniId: this.aniId, delay: delayTime }}
+                                historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: JSON.stringify(state.spec.animations) },
+                                currentAction: { actionType: action.UPDATE_DELAY_BETWEEN_KF, actionVal: { aniId: this.aniId, delay: delayTime } }
                             })
                             State.saveHistory();
                             Reducer.triger(action.UPDATE_DELAY_BETWEEN_KF, { aniId: this.aniId, delay: delayTime });
