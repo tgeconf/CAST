@@ -477,12 +477,15 @@ export default class Suggest {
 
             //find the first kf index
             let firstKfIdx: number = -1;
-            sectionIdRecord.forEach((separaSecIds: (string | number)[], idx: number) => {
+            for (let i = 0, len = sectionIdRecord.length; i < len; i++) {
+                // sectionIdRecord.forEach((separaSecIds: (string | number)[], idx: number) => {
+                const separaSecIds: (string | number)[] = sectionIdRecord[i];
                 console.log('after first round sorting: ', separaSecIds);
                 if (separaSecIds.every((attrVal: string) => (attrVal.includes('000_')))) {
-                    firstKfIdx = idx;
+                    firstKfIdx = i;
+                    break;
                 }
-            })
+            }
             console.log('all sections: ', sections, sectionIdRecord, firstKfIdx);
             if (asscendingOrder) {
                 const sectionsBefore: (string | number)[][] = sectionIdRecord.slice(0, firstKfIdx);
@@ -509,7 +512,7 @@ export default class Suggest {
                 }
             }
 
-            console.log('after cut sectionIdRecord: ', sectionIdRecord);
+            console.log('after cut sectionIdRecord: ', sectionIdRecord, sections);
 
             if (mShapes.size > 1) {//deal with mark shape situations
                 const mShapeIdx: number = attrComb.indexOf('mShape');
@@ -531,10 +534,12 @@ export default class Suggest {
                         if (valExceptShape.length !== 0) {//add new section
                             valExceptShape.splice(mShapeIdx, 0, mergeSecId);
                             const tmpSecId: string = [...new Set(valExceptShape)].join(',') + ',';
+                            console.log('setting merge sections: ', tmpSecId, sectionMarksToMerge);
                             sections.set(tmpSecId, sectionMarksToMerge);
                         }
                         valExceptShape = [...tmpValExceptShape];
                         sectionMarksToMerge = sections.get(correspondingSecId);
+                        console.log('test merge: ', correspondingSecId, sectionMarksToMerge)
                         sectionsToDelete.push(correspondingSecId);
                         let tmpValExceptShapeArr: string[] = [...tmpValExceptShape];
                         tmpValExceptShapeArr.splice(mShapeIdx, 0, mergeSecId)
@@ -767,7 +772,9 @@ export default class Suggest {
                         for (let i = 0, len = orderedSectionIds.length; i < len; i++) {
                             let tmpSecMarks = sections.get(orderedSectionIds[i]);
                             let judgeSame = Tool.identicalArrays(firstKfMarks, tmpSecMarks);
+                            console.log('judge same: ', allSelected, firstKfMarks, tmpSecMarks, orderedSectionIds[i]);
                             if (!allSelected && judgeSame && !oneMarkInFirstKf) {
+                                console.log('setting true');
                                 allSelected = true;
                             }
                             if (!judgeSame) {//dont show the 1st kf twice
@@ -785,7 +792,7 @@ export default class Suggest {
                     }
                     // repeatKfRecord.push(repeatKfs);
                     this.allPaths.push({ attrComb: attrComb, sortedAttrValueComb: orderedSectionIds, kfMarks: repeatKfs, firstKfMarks: firstKfDataMarks, lastKfMarks: lastKfDataMarks });
-
+                    console.log('test pushing path: ', allSelected, oneMarkInFirstKf, oneMarkFromEachSec, samePath, attrComb, orderedSectionIds, repeatKfs, firstKfDataMarks);
                     //check if the selection is one mark from each sec
                     if ((!allSelected && !oneMarkInFirstKf && !oneMarkFromEachSec) || samePath) {
                         filterAllPaths.push(count);

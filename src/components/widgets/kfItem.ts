@@ -493,6 +493,7 @@ export default class KfItem extends KfTimingIllus {
 
         this.dragBtn.onmousedown = (downEvt) => {
             Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
+            this.parentObj.transHideTitle();
             let oriMousePosi: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
             hintTag.removeHint();
             const targetMoveItem: KfGroup | KfItem = typeof this.kfInfo.alignTo !== 'undefined' ? this.parentObj.fetchAniGroup() : this;
@@ -513,7 +514,11 @@ export default class KfItem extends KfTimingIllus {
             }
 
             //set new transform
-            targetMoveItem.container.setAttributeNS(null, 'transform', `translate(${(containerBBox.left - popKfContainerBbox.left) / state.zoomLevel}, ${(containerBBox.top - popKfContainerBbox.top) / state.zoomLevel})`);
+            if (targetMoveItem instanceof KfGroup) {
+                targetMoveItem.container.setAttributeNS(null, 'transform', `translate(${(containerBBox.left - popKfContainerBbox.left) / state.zoomLevel}, ${(containerBBox.top - popKfContainerBbox.top + KfGroup.TITLE_HEIHGT) / state.zoomLevel})`);
+            } else {
+                targetMoveItem.container.setAttributeNS(null, 'transform', `translate(${(containerBBox.left - popKfContainerBbox.left) / state.zoomLevel}, ${(containerBBox.top - popKfContainerBbox.top) / state.zoomLevel})`);
+            }
 
             let updateSpec: boolean = false;
             let actionType: string = '';
