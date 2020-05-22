@@ -184,12 +184,12 @@ export default class Tool {
             Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
             downEvt.preventDefault();
             //get the scale of the chart since the size of the svg container is different from that of the chart
-            let scaleW: number = 1, scaleH: number = 1;
+            // let scaleW: number = 1, scaleH: number = 1;
             const svg: any = document.getElementById('visChart');
-            if (svg) {
-                scaleW = parseFloat(svg.getAttribute('width')) / document.getElementById('chartContainer').offsetWidth;
-                scaleH = parseFloat(svg.getAttribute('height')) / document.getElementById('chartContainer').offsetHeight;
-            }
+            // if (svg) {
+            //     scaleW = parseFloat(svg.getAttribute('width')) / document.getElementById('chartContainer').offsetWidth;
+            //     scaleH = parseFloat(svg.getAttribute('height')) / document.getElementById('chartContainer').offsetHeight;
+            // }
 
             const evtTarget: HTMLElement = <HTMLElement>downEvt.target;
             if (evtTarget.id === 'highlightSelectionFrame' ||
@@ -206,12 +206,12 @@ export default class Tool {
                     document.onmousemove = (moveEvt) => {
                         if (isDragging) {
                             const rectPosi2: ICoord = this.screenToSvgCoords(svg, moveEvt.pageX, moveEvt.pageY);
-                            const possibleMarks: string[] = rectangularSelection.rectangularSelect({
-                                x1: rectPosi1.x,
-                                y1: rectPosi1.y,
-                                x2: rectPosi2.x,
-                                y2: rectPosi2.y
-                            }, state.selection);
+                            // // const possibleMarks: string[] = rectangularSelection.rectangularSelect({
+                            //     x1: rectPosi1.x,
+                            //     y1: rectPosi1.y,
+                            //     x2: rectPosi2.x,
+                            //     y2: rectPosi2.y
+                            // }, state.selection);
 
                             //can't move outside the view
                             if ((moveEvt.pageX - svgBBox.x) >= 0 &&
@@ -307,7 +307,7 @@ export default class Tool {
         //         }
         //     }
         // })
-       
+
         return dragOverItem;
     }
 

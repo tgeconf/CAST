@@ -211,6 +211,8 @@ export default class KfTimingIllus {
 
     public startAdjustingTime() { }
     public findNextSibling(): KfItem | KfOmit { return }
+    public hideHoverBtn(){}
+    public showHoverBtn() { }
 
     public createStretchBar(barHeight: number, type: string, hiddenDuration: boolean, actionInfo: any = {}): SVGRectElement {
         //create stretchable bar
@@ -227,6 +229,7 @@ export default class KfTimingIllus {
             hintTag.removeHint();
             this.startAdjustingTime();
             this.removeEasingTransform();//eg: groupTitle
+            this.hideHoverBtn();
             //unbind mouse over of the next kf
             const nextSibling: KfItem | KfOmit = this.findNextSibling();
             if(nextSibling instanceof KfItem){

@@ -84,11 +84,14 @@ export default class Util {
     public static suggestSelBasedOnData(markIds: string[]): string[] {
         //find the same and diff attributes of the selected marks
         const [sameAttrs, diffAttrs] = this.compareAttrs(markIds, this.filteredDataTable, Object.keys(this.attrType), true);
+        console.log('same and diff attrs: ', sameAttrs, diffAttrs);
         //filter attributes according to the effectiveness ranking
         const filteredDiffAttrs = this.filterAttrs(diffAttrs);
+        console.log('filtered attrs:', filteredDiffAttrs);
         //list all data-encoded marks
         let allMarkIds: string[] = Array.from(this.filteredDataTable.keys());
         const [sections, orderedSectionIds] = this.partitionChart(sameAttrs, filteredDiffAttrs, allMarkIds, this.filteredDataTable);
+        console.log('partitioned sections: ', sections);
 
         //judge if marks from one section are selected all, otherwise repeat selection with the one with the most selected marks
         let allSelected: boolean = false, mostSelectionNumInSec: number = 0;
@@ -183,14 +186,18 @@ export default class Util {
     public static suggestSelBasedOnChart(markIds: string[]): string[] {
         const [sameAttrs, diffAttrs] = this.compareAttrs(markIds, this.nonDataTable, this.nonDataAttrs, false);
         // const allNonDataMarks: string[] = Array.from(this.nonDataTable.keys());
+        console.log('suggest based on non data: ', sameAttrs);
         let suggestMarks: string[] = [];
         this.nonDataTable.forEach((d: IDataItem, mId: string) => {
             let flag = true;
+            console.log('testing ', mId);
             sameAttrs.forEach((an: string) => {
+                console.log(an, d[an], this.nonDataTable.get(markIds[0])[an]);
                 if (d[an] !== this.nonDataTable.get(markIds[0])[an]) {
                     flag = false;
                 }
             })
+            console.log('flag: ', flag);
             if (flag) {
                 suggestMarks.push(mId);
             }
@@ -257,6 +264,7 @@ export default class Util {
         for (let i = 0, len = this.EFFECTIVENESS_RANKING.length; i < len; i++) {
             for (let j = 0, len2 = attrs.length; j < len2; j++) {
                 let tmpAttrType = ChartSpec.chartUnderstanding[attrs[j]];
+                console.log('testing ', this.EFFECTIVENESS_RANKING[i], tmpAttrType, typeRecorder, ChartSpec.chartUnderstanding);
                 if (tmpAttrType === this.EFFECTIVENESS_RANKING[i] && (tmpAttrType === typeRecorder || typeRecorder === '')) {
                     filteredAttrs.push(attrs[j]);
                     typeRecorder = tmpAttrType;

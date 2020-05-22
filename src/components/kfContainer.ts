@@ -20,6 +20,7 @@ export class KfContainer {
     static KF_MENU: string = 'kfMenuG';
     static SLIDER_W: number = 10;
     static WHEEL_STEP: number = 20;
+    // static CLICK_SCROLL_STEP: number = 40;
 
     public kfWidgetContainer: HTMLDivElement;
     public kfTrackScaleContainer: SVGGElement;
@@ -126,7 +127,9 @@ export class KfContainer {
         //create x slider
         this.createXSlider();
 
-        this.kfWidgetContainer.onmouseover = () => {
+        this.kfWidgetContainer.onmouseenter = (enterEvt) => {
+            enterEvt.stopPropagation();
+            console.log('mouse over kf container, ', enterEvt);
             if (!state.mousemoving) {
                 this.updateKfSlider({});
                 if (parseFloat(this.xSlider.getAttributeNS(null, 'width')) < parseFloat(this.xSliderBg.getAttributeNS(null, 'width'))) {
@@ -137,7 +140,9 @@ export class KfContainer {
                 }
             }
         }
-        this.kfWidgetContainer.onmouseout = () => {
+        this.kfWidgetContainer.onmouseleave = (leaveEvt) => {
+            leaveEvt.stopPropagation();
+            console.log('mouse out kf container, ', leaveEvt);
             this.xSliderContainer.setAttribute('style', `height:${KfContainer.SLIDER_W + 4}px; margin-top:3px;`);
             this.ySliderContainer.setAttribute('style', `width:${KfContainer.SLIDER_W + 4}px; margin-top:${-this.ySliderContainerH}px; margin-right:${-KfContainer.SLIDER_W - 7}`)
         }
@@ -166,11 +171,86 @@ export class KfContainer {
         }
     }
 
+    /**
+     * return whether the kfcontainer is translated
+     * @param diffX 
+     */
+    public kfContainerTransX(diffX: number): boolean {
+        let translated: boolean = false;
+        const currentSliderX: number = parseFloat(this.xSlider.getAttributeNS(null, 'x'));
+        const currentSliderW: number = parseFloat(this.xSlider.getAttributeNS(null, 'width'));
+        if (currentSliderX + diffX >= 0 && currentSliderX + diffX + currentSliderW <= this.xSliderContainerW) {
+            this.xSlider.setAttributeNS(null, 'x', `${currentSliderX + diffX}`);
+
+            //update viewBox of keyframe
+            if (this.kfTrackContainer.getAttributeNS(null, 'transform')) {
+                let oriTrans: ICoord = Tool.extractTransNums(this.kfTrackContainer.getAttributeNS(null, 'transform'));
+                this.transDistance.w = oriTrans.x - diffX * this.xSliderPercent;
+                this.kfTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x - diffX * this.xSliderPercent}, ${oriTrans.y})`);
+            }
+            translated = true;
+        }
+        return translated;
+    }
+
+    public kfContainerTransXStep(downEvtX: number) {
+        const clickX: number = downEvtX - this.xSliderContainer.getBoundingClientRect().x;
+        const currentSliderX: number = parseFloat(this.xSlider.getAttributeNS(null, 'x'));
+        const currentSliderW: number = parseFloat(this.xSlider.getAttributeNS(null, 'width'));
+        let transDist: number = 0;
+        if (clickX > currentSliderX) {
+            const diffX: number = clickX - currentSliderX - currentSliderW;
+            transDist = diffX > KfContainer.WHEEL_STEP ? KfContainer.WHEEL_STEP : diffX;
+        } else {
+            const diffX: number = clickX - currentSliderX;
+            transDist = diffX < -KfContainer.WHEEL_STEP ? -KfContainer.WHEEL_STEP : diffX;
+        }
+        this.kfContainerTransX(transDist);
+    }
+
+    /**
+     * return whether the kfcontainer is translated
+     * @param diffY
+     */
+    public kfContainerTransY(diffY: number): boolean {
+        let translated: boolean = false;
+        const currentSliderY: number = parseFloat(this.ySlider.getAttributeNS(null, 'y'));
+        const currentSliderH: number = parseFloat(this.ySlider.getAttributeNS(null, 'height'));
+        if (currentSliderY + diffY >= 0 && currentSliderY + diffY + currentSliderH <= this.ySliderContainerH) {
+            this.ySlider.setAttributeNS(null, 'y', `${currentSliderY + diffY}`);
+
+            //update translate of keyframe tracks
+            if (this.kfTrackContainer.getAttributeNS(null, 'transform')) {
+                let oriTrans: ICoord = Tool.extractTransNums(this.kfTrackContainer.getAttributeNS(null, 'transform'));
+                this.transDistance.h = oriTrans.y - diffY * this.ySliderPercent;
+                this.kfTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${this.transDistance.h})`);
+            }
+            translated = true;
+        }
+        return translated;
+    }
+
+    public kfContainerTransYStep(downEvtY: number) {
+        const clickY: number = downEvtY - this.ySliderContainer.getBoundingClientRect().y;
+        const currentSliderY: number = parseFloat(this.xSlider.getAttributeNS(null, 'y'));
+        const currentSliderH: number = parseFloat(this.xSlider.getAttributeNS(null, 'height'));
+        let transDist: number = 0;
+        if (clickY > currentSliderY) {
+            const diffY: number = clickY - currentSliderY - currentSliderH;
+            transDist = diffY > KfContainer.WHEEL_STEP ? KfContainer.WHEEL_STEP : diffY;
+        } else {
+            const diffY: number = clickY - currentSliderY;
+            transDist = diffY < -KfContainer.WHEEL_STEP ? -KfContainer.WHEEL_STEP : diffY;
+        }
+        this.kfContainerTransY(transDist);
+    }
+
     public createYSlider() {
         this.ySliderContainer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         this.ySliderContainer.setAttributeNS(null, 'class', 'kf-y-slider-container');
         this.ySliderContainer.setAttribute('style', `width:${KfContainer.SLIDER_W + 4}px; margin-top:${-this.ySliderContainerH}px; margin-right:${-KfContainer.SLIDER_W - 7}`)
         this.ySliderBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        this.ySliderBg.classList.add('sliderContainerBg');
         this.ySliderBg.setAttributeNS(null, 'x', '0');
         this.ySliderBg.setAttributeNS(null, 'y', '0');
         this.ySliderBg.setAttributeNS(null, 'width', `${KfContainer.SLIDER_W + 4}`);
@@ -191,17 +271,7 @@ export class KfContainer {
             document.onmousemove = (moveEvt) => {
                 const currentY: number = moveEvt.pageY;
                 const diffY: number = currentY - preY;
-                const currentSliderY: number = parseFloat(this.ySlider.getAttributeNS(null, 'y'));
-                const currentSliderH: number = parseFloat(this.ySlider.getAttributeNS(null, 'height'));
-                if (currentSliderY + diffY >= 0 && currentSliderY + diffY + currentSliderH <= this.ySliderContainerH) {
-                    this.ySlider.setAttributeNS(null, 'y', `${currentSliderY + diffY}`);
-
-                    //update translate of keyframe tracks
-                    if (this.kfTrackContainer.getAttributeNS(null, 'transform')) {
-                        let oriTrans: ICoord = Tool.extractTransNums(this.kfTrackContainer.getAttributeNS(null, 'transform'));
-                        this.transDistance.h = oriTrans.y - diffY * this.ySliderPercent;
-                        this.kfTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${this.transDistance.h})`);
-                    }
+                if (this.kfContainerTransY(diffY)) {
                     preY = currentY;
                 }
             }
@@ -212,6 +282,20 @@ export class KfContainer {
             }
         }
         this.ySliderContainer.appendChild(this.ySlider);
+        let yTransInterval: NodeJS.Timeout;
+        this.ySliderContainer.onmousedown = (downEvt) => {
+            if ((<SVGElement>downEvt.target).classList.contains('sliderContainerBg')) {
+                this.kfContainerTransYStep(downEvt.pageY);
+                yTransInterval = setInterval(() => {
+                    this.kfContainerTransYStep(downEvt.pageY);
+                }, 200)
+            }
+        }
+        this.ySliderContainer.onmouseup = (upEvt) => {
+            if (typeof yTransInterval !== 'undefined') {
+                clearInterval(yTransInterval);
+            }
+        }
         this.kfWidgetContainer.appendChild(this.ySliderContainer);
     }
 
@@ -220,6 +304,7 @@ export class KfContainer {
         this.xSliderContainer.setAttributeNS(null, 'class', 'kf-x-slider-container');
         this.xSliderContainer.setAttribute('style', `height:${KfContainer.SLIDER_W + 4}px; margin-top:3px;`)
         this.xSliderBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        this.xSliderBg.classList.add('sliderContainerBg');
         this.xSliderBg.setAttributeNS(null, 'x', '0');
         this.xSliderBg.setAttributeNS(null, 'y', '0');
         this.xSliderBg.setAttributeNS(null, 'width', '10000');
@@ -238,22 +323,12 @@ export class KfContainer {
             Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
             let preX: number = downEvt.pageX;
             document.onmousemove = (moveEvt) => {
+                moveEvt.stopPropagation();
                 const currentX: number = moveEvt.pageX;
                 const diffX: number = currentX - preX;
-                const currentSliderX: number = parseFloat(this.xSlider.getAttributeNS(null, 'x'));
-                const currentSliderW: number = parseFloat(this.xSlider.getAttributeNS(null, 'width'));
-                if (currentSliderX + diffX >= 0 && currentSliderX + diffX + currentSliderW <= this.xSliderContainerW) {
-                    this.xSlider.setAttributeNS(null, 'x', `${currentSliderX + diffX}`);
-
-                    //update viewBox of keyframe
-                    if (this.kfTrackContainer.getAttributeNS(null, 'transform')) {
-                        let oriTrans: ICoord = Tool.extractTransNums(this.kfTrackContainer.getAttributeNS(null, 'transform'));
-                        this.transDistance.w = oriTrans.x - diffX * this.xSliderPercent;
-                        this.kfTrackContainer.setAttributeNS(null, 'transform', `translate(${oriTrans.x - diffX * this.xSliderPercent}, ${oriTrans.y})`);
-                    }
+                if (this.kfContainerTransX(diffX)) {
                     preX = currentX;
                 }
-
             }
             document.onmouseup = (upEvt) => {
                 document.onmousemove = null;
@@ -262,6 +337,22 @@ export class KfContainer {
             }
         }
         this.xSliderContainer.appendChild(this.xSlider);
+
+        let xTransInterval: NodeJS.Timeout;
+        this.xSliderContainer.onmousedown = (downEvt) => {
+            if ((<SVGElement>downEvt.target).classList.contains('sliderContainerBg')) {
+                this.kfContainerTransXStep(downEvt.pageX);
+                xTransInterval = setInterval(() => {
+                    this.kfContainerTransXStep(downEvt.pageX);
+                }, 200)
+            }
+        }
+        this.xSliderContainer.onmouseup = (upEvt) => {
+            if (typeof xTransInterval !== 'undefined') {
+                clearInterval(xTransInterval);
+            }
+        }
+
         this.kfWidgetContainer.appendChild(this.xSliderContainer);
     }
 

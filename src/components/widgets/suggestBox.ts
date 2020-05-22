@@ -296,6 +296,10 @@ export class SuggestBox {
             transX += (suggestBox.boxWidth + suggestBox.menuWidth - PlusBtn.BTN_SIZE);
             let transStartKf: KfItem = typeof lastKf === 'undefined' ? startKf : lastKf;
             startKf.parentObj.translateGroup(transStartKf, transX, false, false, false, { lastItem: true, extraWidth: suggestBox.boxWidth + SuggestBox.PADDING + suggestBox.menuWidth });
+
+            //update the container slider
+            const rootGroupBBox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();
+            Reducer.triger(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, { width: rootGroupBBox.width, height: rootGroupBBox.height });
         }
     }
 

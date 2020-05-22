@@ -180,16 +180,24 @@ export default class KfItem extends KfTimingIllus {
         }
     }
 
+    public hideHoverBtn() {
+        this.hoverBtnContainer.setAttributeNS(null, 'opacity', '0');
+    }
+
+    public showHoverBtn() {
+        this.hoverBtnContainer.setAttributeNS(null, 'opacity', '1');
+    }
+
     public renderItem(startX: number, size?: ISize) {
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.container.setAttributeNS(null, 'transform', `translate(${startX + KfItem.PADDING}, ${KfItem.PADDING})`);
         this.container.onmouseenter = () => {
             this.container.classList.add('drop-shadow-ele');
-            this.hoverBtnContainer.setAttributeNS(null, 'opacity', '1');
+            this.showHoverBtn();
         }
         this.container.onmouseleave = () => {
             this.container.classList.remove('drop-shadow-ele');
-            this.hoverBtnContainer.setAttributeNS(null, 'opacity', '0');
+            this.hideHoverBtn();
         }
         if (typeof this.kfInfo.alignTo !== 'undefined') {//this kf is align to others
             const aniGroup: KfGroup = this.parentObj.fetchAniGroup();
