@@ -435,21 +435,21 @@ export default class KfItem extends KfTimingIllus {
         }
     }
 
-    public bindHoverBgHover() {
-        this.hoverBtnBg.onmouseover = (overEvt) => {
-            if (!state.mousemoving) {
-                hintTag.createHint({ x: overEvt.pageX, y: overEvt.pageY }, 'Click to start from this keyframe', 190);
-            }
-        }
-        this.hoverBtnBg.onmouseout = () => {
-            hintTag.removeHint();
-        }
-    }
+    // public bindHoverBgHover() {
+    //     this.hoverBtnBg.onmouseover = (overEvt) => {
+    //         if (!state.mousemoving) {
+    //             hintTag.createHint({ x: overEvt.pageX, y: overEvt.pageY }, 'Click to start from this keyframe', 190);
+    //         }
+    //     }
+    //     this.hoverBtnBg.onmouseout = () => {
+    //         hintTag.removeHint();
+    //     }
+    // }
 
-    public unbindHoverBgHover() {
-        this.hoverBtnBg.onmouseover = null;
-        this.hoverBtnBg.onmouseout = null;
-    }
+    // public unbindHoverBgHover() {
+    //     this.hoverBtnBg.onmouseover = null;
+    //     this.hoverBtnBg.onmouseout = null;
+    // }
 
     public findNextSibling(): KfItem | KfOmit {
         return this.parentObj.children[this.idxInGroup + 1];
@@ -459,14 +459,22 @@ export default class KfItem extends KfTimingIllus {
         this.hoverBtnContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.hoverBtnContainer.classList.add('ease-fade');
         this.hoverBtnContainer.setAttributeNS(null, 'opacity', '0');
+        const hintTxt: SVGTextContentElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        hintTxt.setAttributeNS(null, 'x', `${this.kfWidth / 2 - 90}`);
+        hintTxt.setAttributeNS(null, 'y', `${this.kfHeight / 2}`);
+        hintTxt.setAttributeNS(null, 'font-size', '12pt');
+        hintTxt.setAttributeNS(null, 'font-weight', 'bold');
+        hintTxt.setAttributeNS(null, 'fill', '#484848');
+        hintTxt.innerHTML = 'Click to preview from here';
+        this.hoverBtnContainer.appendChild(hintTxt);
         this.hoverBtnBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         this.hoverBtnBg.setAttributeNS(null, 'x', `${typeof this.offsetIllus === 'undefined' ? 0 : this.offsetWidth}`);
         this.hoverBtnBg.setAttributeNS(null, 'y', '0');
         this.hoverBtnBg.setAttributeNS(null, 'width', `${this.kfWidth}`);
         this.hoverBtnBg.setAttributeNS(null, 'height', `${this.kfHeight}`);
-        this.hoverBtnBg.setAttributeNS(null, 'fill', 'rgba(0,0,0,0)');
+        this.hoverBtnBg.setAttributeNS(null, 'fill', 'rgba(200,200,200,0.3)');
         this.hoverBtnBg.classList.add('clickable-component');
-        this.bindHoverBgHover();
+        // this.bindHoverBgHover();
         this.hoverBtnBg.onclick = () => {
             //play animation from this keyframe
             const startTimeThisKf: number = Animation.allMarkAni.get(this.kfInfo.marksThisKf[0]).startTime;
@@ -485,19 +493,15 @@ export default class KfItem extends KfTimingIllus {
         btnBg.setAttributeNS(null, 'y', '0');
         btnBg.setAttributeNS(null, 'width', `${this.totalWidth}`);
         btnBg.setAttributeNS(null, 'height', '20');
-        // btnBg.setAttributeNS(null, 'fill', 'rgb(120,120,120)');
         btnBg.setAttributeNS(null, 'fill', 'rgb(180, 180, 180)');
-        // btnBg.setAttributeNS(null, 'opacity', '0.35');
         btnBg.setAttributeNS(null, 'opacity', '0.9');
         this.dragBtn.onmouseenter = (enterEvt: MouseEvent) => {
-            // btnBg.setAttributeNS(null, 'opacity', '0.5');
             btnBg.setAttributeNS(null, 'fill', 'rgb(210, 210, 210)');
             if (!state.mousemoving) {
                 hintTag.createHint({ x: enterEvt.pageX, y: enterEvt.pageY }, 'Drag to change the relative starting time', 240);
             }
         }
         this.dragBtn.onmouseleave = () => {
-            // btnBg.setAttributeNS(null, 'opacity', '0.35');
             btnBg.setAttributeNS(null, 'fill', 'rgb(180, 180, 180)');
             hintTag.removeHint();
         }

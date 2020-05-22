@@ -232,9 +232,9 @@ export default class KfTimingIllus {
             this.hideHoverBtn();
             //unbind mouse over of the next kf
             const nextSibling: KfItem | KfOmit = this.findNextSibling();
-            if(nextSibling instanceof KfItem){
-                nextSibling.unbindHoverBgHover();
-            }
+            // if(nextSibling instanceof KfItem){
+            //     nextSibling.unbindHoverBgHover();
+            // }
             const strectchBarBBox: DOMRect = stretchBar.getBoundingClientRect();//fixed
             const timingBBox: DOMRect = type === 'duration' ? this.durationBg.getBoundingClientRect() : this.offsetBg.getBoundingClientRect();//fixed
             const timingWidth: number = timingBBox.width;
@@ -296,9 +296,9 @@ export default class KfTimingIllus {
                 document.onmousemove = null;
                 document.onmouseup = null;
                 this.addEasingTransform();
-                if(nextSibling instanceof KfItem){
-                    nextSibling.bindHoverBgHover();
-                }
+                // if(nextSibling instanceof KfItem){
+                //     nextSibling.bindHoverBgHover();
+                // }
                 //triger action to update spec
                 if (type === 'duration') {
                     this.bindDurationHover();
