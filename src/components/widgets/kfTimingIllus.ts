@@ -6,6 +6,8 @@ import * as action from "../../app/action";
 import KfTrack from "./kfTrack";
 import Tool from "../../util/tool";
 import { state, State } from "../../app/state";
+import KfItem from './kfItem';
+import KfOmit from './kfOmit';
 
 export default class KfTimingIllus {
     static BASIC_OFFSET_DURATION_W: number = 20;
@@ -208,6 +210,7 @@ export default class KfTimingIllus {
     }
 
     public startAdjustingTime() { }
+    public findNextSibling(): KfItem | KfOmit { return }
 
     public createStretchBar(barHeight: number, type: string, hiddenDuration: boolean, actionInfo: any = {}): SVGRectElement {
         //create stretchable bar
@@ -224,6 +227,11 @@ export default class KfTimingIllus {
             hintTag.removeHint();
             this.startAdjustingTime();
             this.removeEasingTransform();//eg: groupTitle
+            //unbind mouse over of the next kf
+            const nextSibling: KfItem | KfOmit = this.findNextSibling();
+            if(nextSibling instanceof KfItem){
+                nextSibling.unbindHoverBgHover();
+            }
             const strectchBarBBox: DOMRect = stretchBar.getBoundingClientRect();//fixed
             const timingBBox: DOMRect = type === 'duration' ? this.durationBg.getBoundingClientRect() : this.offsetBg.getBoundingClientRect();//fixed
             const timingWidth: number = timingBBox.width;
@@ -285,6 +293,9 @@ export default class KfTimingIllus {
                 document.onmousemove = null;
                 document.onmouseup = null;
                 this.addEasingTransform();
+                if(nextSibling instanceof KfItem){
+                    nextSibling.bindHoverBgHover();
+                }
                 //triger action to update spec
                 if (type === 'duration') {
                     this.bindDurationHover();

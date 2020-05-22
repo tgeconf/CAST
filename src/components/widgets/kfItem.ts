@@ -48,6 +48,7 @@ export default class KfItem extends KfTimingIllus {
     // public container: SVGGElement
     public kfHeight: number
     public hoverBtnContainer: SVGGElement
+    public hoverBtnBg: SVGRectElement
     public playBtn: SVGGElement
     public playIcon: SVGPathElement
     public dragBtn: SVGGElement
@@ -426,32 +427,45 @@ export default class KfItem extends KfTimingIllus {
         }
     }
 
-    public drawHoverBtns(): void {
-        this.hoverBtnContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        this.hoverBtnContainer.classList.add('ease-fade');
-        this.hoverBtnContainer.setAttributeNS(null, 'opacity', '0');
-        const bg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        bg.setAttributeNS(null, 'x', `${typeof this.offsetIllus === 'undefined' ? 0 : this.offsetWidth}`);
-        bg.setAttributeNS(null, 'y', '0');
-        bg.setAttributeNS(null, 'width', `${this.kfWidth}`);
-        bg.setAttributeNS(null, 'height', `${this.kfHeight}`);
-        bg.setAttributeNS(null, 'fill', 'rgba(0,0,0,0)');
-        bg.classList.add('clickable-component');
-        bg.onmouseover = (overEvt) => {
+    public bindHoverBgHover() {
+        this.hoverBtnBg.onmouseover = (overEvt) => {
             if (!state.mousemoving) {
                 hintTag.createHint({ x: overEvt.pageX, y: overEvt.pageY }, 'Click to start from this keyframe', 190);
             }
         }
-        bg.onmouseout = () => {
+        this.hoverBtnBg.onmouseout = () => {
             hintTag.removeHint();
         }
-        bg.onclick = () => {
+    }
+
+    public unbindHoverBgHover() {
+        this.hoverBtnBg.onmouseover = null;
+        this.hoverBtnBg.onmouseout = null;
+    }
+
+    public findNextSibling(): KfItem | KfOmit {
+        return this.parentObj.children[this.idxInGroup + 1];
+    }
+
+    public drawHoverBtns(): void {
+        this.hoverBtnContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.hoverBtnContainer.classList.add('ease-fade');
+        this.hoverBtnContainer.setAttributeNS(null, 'opacity', '0');
+        this.hoverBtnBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        this.hoverBtnBg.setAttributeNS(null, 'x', `${typeof this.offsetIllus === 'undefined' ? 0 : this.offsetWidth}`);
+        this.hoverBtnBg.setAttributeNS(null, 'y', '0');
+        this.hoverBtnBg.setAttributeNS(null, 'width', `${this.kfWidth}`);
+        this.hoverBtnBg.setAttributeNS(null, 'height', `${this.kfHeight}`);
+        this.hoverBtnBg.setAttributeNS(null, 'fill', 'rgba(0,0,0,0)');
+        this.hoverBtnBg.classList.add('clickable-component');
+        this.bindHoverBgHover();
+        this.hoverBtnBg.onclick = () => {
             //play animation from this keyframe
             const startTimeThisKf: number = Animation.allMarkAni.get(this.kfInfo.marksThisKf[0]).startTime;
             player.currentTime = startTimeThisKf;
             player.playAnimation();
         }
-        this.hoverBtnContainer.appendChild(bg);
+        this.hoverBtnContainer.appendChild(this.hoverBtnBg);
 
         //draggable button
         this.dragBtn = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -859,10 +873,10 @@ export default class KfItem extends KfTimingIllus {
         //stroke enlarge range: 1 to 4, mark enlarge range: 1 to 3
         const shownThumbnail: number = Math.floor((state.zoomLevel - 0.5) / (1 / (state.chartThumbNailZoomLevels - 1)));
         for (let i = 0; i < state.chartThumbNailZoomLevels; i++) {
-            Tool.enlargeMarks(svg, 'translucent-mark', 4 - i * (3 / (state.chartThumbNailZoomLevels - 1)), 3 - i * (2 / (state.chartThumbNailZoomLevels - 1)), false);
+            // Tool.enlargeMarks(svg, 'translucent-mark', 4 - i * (3 / (state.chartThumbNailZoomLevels - 1)), 3 - i * (2 / (state.chartThumbNailZoomLevels - 1)), false);
             this.chartThumbnails.push(this.createImage(svg, shownThumbnail === i));
         }
-        Tool.resetMarkSize(svg, 'translucent-mark', false);
+        // Tool.resetMarkSize(svg, 'translucent-mark', false);
     }
 
     public createImage(svg: HTMLElement, shown: boolean): SVGImageElement {
