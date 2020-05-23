@@ -14,6 +14,7 @@ import { state, State } from '../../app/state';
 import KfTrack from './kfTrack';
 import { hintTag } from './hint';
 import { player } from '../player';
+import ViewWindow from '../viewWindow';
 
 export default class KfItem extends KfTimingIllus {
     static KF_HEIGHT: number = 178;
@@ -882,13 +883,12 @@ export default class KfItem extends KfTimingIllus {
     }
 
     public renderChartToCanvas(svg: HTMLElement): void {
-        //stroke enlarge range: 1 to 4, mark enlarge range: 1 to 3
-        const shownThumbnail: number = Math.floor((state.zoomLevel - 0.5) / (1 / (state.chartThumbNailZoomLevels - 1)));
-        for (let i = 0; i < state.chartThumbNailZoomLevels; i++) {
-            // Tool.enlargeMarks(svg, 'translucent-mark', 4 - i * (3 / (state.chartThumbNailZoomLevels - 1)), 3 - i * (2 / (state.chartThumbNailZoomLevels - 1)), false);
-            this.chartThumbnails.push(this.createImage(svg, shownThumbnail === i));
+        const shownThumbnail: number = Math.floor((state.zoomLevel - ViewWindow.MIN_ZOOM_LEVEL) / ((ViewWindow.MAX_ZOOM_LEVEL - ViewWindow.MIN_ZOOM_LEVEL) / (state.chartThumbNailZoomLevels / 2)));
+        for (let i = 0; i < state.chartThumbNailZoomLevels / 2; i++) {
+            Tool.enlargeMarks(svg, 'translucent-mark', state.chartThumbNailZoomLevels / 2 - i, false);
+            this.chartThumbnails.push(this.createImage(svg, shownThumbnail - 1 === i));
         }
-        // Tool.resetMarkSize(svg, 'translucent-mark', false);
+        Tool.resetMarkSize(svg, 'translucent-mark', false);
     }
 
     public createImage(svg: HTMLElement, shown: boolean): SVGImageElement {

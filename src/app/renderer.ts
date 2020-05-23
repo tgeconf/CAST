@@ -2,7 +2,7 @@ import { state, IState, State } from './state'
 import { IDataItem, ISortDataAttr, IKeyframeGroup, IKeyframe, IKfGroupSize, IPath } from './core/ds'
 import { ChartSpec, Animation } from 'canis_toolkit'
 import CanisGenerator, { canis, ICanisSpec } from './core/canisGenerator'
-import { ViewToolBtn, ViewContent } from '../components/viewWindow'
+import ViewWindow, { ViewToolBtn, ViewContent } from '../components/viewWindow'
 import AttrBtn from '../components/widgets/attrBtn'
 import AttrSort from '../components/widgets/attrSort'
 import Util from './core/util'
@@ -387,10 +387,10 @@ export default class Renderer {
     public static zoomKfContainer(zl: number): void {
         kfContainer.kfTrackScaleContainer.setAttributeNS(null, 'transform', `scale(${zl}, ${zl})`);
         //set visbility of chart thumbnails
-        if (zl === 1.5) {
-            zl -= 0.01;
+        if (zl === ViewWindow.MAX_ZOOM_LEVEL) {
+            zl -= 0.001;
         }
-        const shownThumbnail: number = Math.floor((zl - 0.5) / (1.0 / state.chartThumbNailZoomLevels));
+        const shownThumbnail: number = Math.floor((zl - ViewWindow.MIN_ZOOM_LEVEL) / ((ViewWindow.MAX_ZOOM_LEVEL - ViewWindow.MIN_ZOOM_LEVEL) / (state.chartThumbNailZoomLevels / 2)));
         KfItem.allKfItems.forEach((kfItem: KfItem) => {
             kfItem.chartThumbnails.forEach((ct: SVGImageElement, i: number) => {
                 if (i === shownThumbnail) {

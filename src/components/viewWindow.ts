@@ -20,6 +20,9 @@ export default class ViewWindow {
     static VIDEO_VIEW_TITLE: string = 'animation';
     static HIDDEN_LOTTIE_ID: string = 'hiddenLottie';
     static KF_VIEW_TITLE: string = 'keyframe';
+    static MIN_ZOOM_LEVEL: number = 0.9
+    static MAX_ZOOM_LEVEL: number = 1
+    static ZOOM_STEP: number = 0.01;
 
     viewTitle: string;
     view: HTMLDivElement;
@@ -98,7 +101,8 @@ export default class ViewWindow {
             iconClass: 'zoom-icon'
         }));
         //create zooming slider
-        const slider: Slider = new Slider([0.5, 1.5], 1);
+
+        const slider: Slider = new Slider([ViewWindow.MIN_ZOOM_LEVEL, ViewWindow.MAX_ZOOM_LEVEL], ViewWindow.MAX_ZOOM_LEVEL);
         slider.createSlider()
         slider.callbackFunc = (zl: number) => {
             Reducer.triger(action.KEYFRAME_ZOOM_LEVEL, zl);
@@ -107,10 +111,10 @@ export default class ViewWindow {
             title: 'Zoom Out',
             clickEvtType: ViewToolBtn.CUSTOM,
             clickEvt: () => {
-                if (state.zoomLevel - 0.1 >= 0.5) {
-                    slider.moveSlider(state.zoomLevel - 0.1);
+                if (state.zoomLevel - ViewWindow.ZOOM_STEP >= ViewWindow.MIN_ZOOM_LEVEL) {
+                    slider.moveSlider(state.zoomLevel - ViewWindow.ZOOM_STEP);
                 } else {
-                    slider.moveSlider(0.5);
+                    slider.moveSlider(ViewWindow.MIN_ZOOM_LEVEL);
                 }
             },
             iconClass: 'zoom-out-icon'
@@ -120,10 +124,10 @@ export default class ViewWindow {
             title: 'Zoom In',
             clickEvtType: ViewToolBtn.CUSTOM,
             clickEvt: () => {
-                if (state.zoomLevel + 0.1 <= 1.5) {
-                    slider.moveSlider(state.zoomLevel + 0.1);
+                if (state.zoomLevel + ViewWindow.ZOOM_STEP <= ViewWindow.MAX_ZOOM_LEVEL) {
+                    slider.moveSlider(state.zoomLevel + ViewWindow.ZOOM_STEP);
                 } else {
-                    slider.moveSlider(1.5);
+                    slider.moveSlider(ViewWindow.MAX_ZOOM_LEVEL);
                 }
             },
             iconClass: 'zoom-in-icon'
@@ -209,8 +213,8 @@ export class ViewToolBtn {
             btnIcon.classList.add('selection-non-suggestion-icon');
             btnIcon.classList.remove('selection-suggestion-icon');
             State.tmpStateBusket.push({
-                historyAction: {actionType: action.TOGGLE_SUGGESTION, actionVal: true},
-                currentAction: {actionType: action.TOGGLE_SUGGESTION, actionVal: false}
+                historyAction: { actionType: action.TOGGLE_SUGGESTION, actionVal: true },
+                currentAction: { actionType: action.TOGGLE_SUGGESTION, actionVal: false }
             })
             State.saveHistory();
             Reducer.triger(action.TOGGLE_SUGGESTION, false);
@@ -218,8 +222,8 @@ export class ViewToolBtn {
             btnIcon.classList.remove('selection-non-suggestion-icon');
             btnIcon.classList.add('selection-suggestion-icon');
             State.tmpStateBusket.push({
-                historyAction: {actionType: action.TOGGLE_SUGGESTION, actionVal: false},
-                currentAction: {actionType: action.TOGGLE_SUGGESTION, actionVal: true}
+                historyAction: { actionType: action.TOGGLE_SUGGESTION, actionVal: false },
+                currentAction: { actionType: action.TOGGLE_SUGGESTION, actionVal: true }
             })
             State.saveHistory();
             Reducer.triger(action.TOGGLE_SUGGESTION, true);

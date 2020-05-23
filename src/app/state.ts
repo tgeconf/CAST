@@ -69,7 +69,7 @@ export class State implements IState {
 
     _mousemoving: boolean = false
     _zoomLevel: number = 1;
-    chartThumbNailZoomLevels: number = 3;
+    chartThumbNailZoomLevels: number = 4;
 
     set sortDataAttrs(sda: ISortDataAttr[]) {
         //compare incoming

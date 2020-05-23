@@ -129,7 +129,6 @@ export class KfContainer {
 
         this.kfWidgetContainer.onmouseenter = (enterEvt) => {
             enterEvt.stopPropagation();
-            console.log('mouse over kf container, ', enterEvt);
             if (!state.mousemoving) {
                 this.updateKfSlider({});
                 if (parseFloat(this.xSlider.getAttributeNS(null, 'width')) < parseFloat(this.xSliderBg.getAttributeNS(null, 'width'))) {
@@ -142,7 +141,6 @@ export class KfContainer {
         }
         this.kfWidgetContainer.onmouseleave = (leaveEvt) => {
             leaveEvt.stopPropagation();
-            console.log('mouse out kf container, ', leaveEvt);
             this.xSliderContainer.setAttribute('style', `height:${KfContainer.SLIDER_W + 4}px; margin-top:3px;`);
             this.ySliderContainer.setAttribute('style', `width:${KfContainer.SLIDER_W + 4}px; margin-top:${-this.ySliderContainerH}px; margin-right:${-KfContainer.SLIDER_W - 7}`)
         }
