@@ -887,6 +887,7 @@ export default class KfItem extends KfTimingIllus {
         for (let i = 0; i < state.chartThumbNailZoomLevels / 2; i++) {
             Tool.enlargeMarks(svg, 'translucent-mark', state.chartThumbNailZoomLevels / 2 - i, false);
             this.chartThumbnails.push(this.createImage(svg, shownThumbnail - 1 === i));
+            Tool.resetTxtCover(svg);
         }
         Tool.resetMarkSize(svg, 'translucent-mark', false);
     }

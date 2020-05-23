@@ -368,6 +368,8 @@ export default class Tool {
      */
     public static enlargeMarks(svg: HTMLElement, clsName: string, scale: number, includeCls: boolean) {
         const targetMarks: Element[] = includeCls ? Array.from(svg.getElementsByClassName(clsName)) : Array.from(svg.querySelectorAll(`.mark:not(.${clsName})`));
+        console.log('test scale', scale, state.chartThumbNailZoomLevels / 2);
+
         targetMarks.forEach((m: HTMLElement) => {
             const oriStrokeWidth: string = m.getAttributeNS(null, 'stroke-width');
             const strokeWidthRecord: string = m.getAttributeNS(null, 'tmp-stroke-width');
@@ -376,7 +378,6 @@ export default class Tool {
                 m.setAttributeNS(null, 'stroke', typeof m.getAttributeNS(null, 'fill') === 'undefined' ? '#fff' : m.getAttributeNS(null, 'fill'));
             }
             if (typeof strokeWidthRecord !== 'undefined' && strokeWidthRecord) {
-                console.log('stroke recird : ', strokeWidthRecord);
                 strokeWidthToScale = parseFloat(strokeWidthRecord);
             } else {
                 if (typeof oriStrokeWidth !== 'undefined' && oriStrokeWidth) {
@@ -387,9 +388,38 @@ export default class Tool {
                     strokeWidthToScale = 0;
                 }
             }
-            console.log('setting stroke width: ', scale * 2, strokeWidthToScale, scale * 2 + strokeWidthToScale);
+
+            if (m.tagName === 'text' && scale >= state.chartThumbNailZoomLevels / 2) {
+                const txtBBox: DOMRect = m.getBoundingClientRect();
+                const txtCover: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                txtCover.setAttributeNS(null, 'class', 'txt-cover');
+                txtCover.setAttributeNS(null, 'x', m.getAttributeNS(null, 'x'));
+                txtCover.setAttributeNS(null, 'y', `${parseFloat(m.getAttributeNS(null, 'y')) - txtBBox.height / state.zoomLevel}`);
+                txtCover.setAttributeNS(null, 'width', `${txtBBox.width * 1.4 / state.zoomLevel}`);
+                txtCover.setAttributeNS(null, 'height', `${txtBBox.height * 1.4 / state.zoomLevel}`);
+                txtCover.setAttributeNS(null, 'opacity', '0.7');
+                txtCover.setAttributeNS(null, 'fill', m.getAttributeNS(null, 'fill'));
+                if (m.getAttributeNS(null, 'transform')) {
+                    txtCover.setAttributeNS(null, 'transform', m.getAttributeNS(null, 'transform'));
+                }
+                m.parentElement.appendChild(txtCover);
+                m.classList.add('fadeout-text');
+                m.setAttributeNS(null, 'opacity', '0');
+            }
             m.setAttributeNS(null, 'stroke-width', `${scale * 2 + strokeWidthToScale}`);
 
+        })
+    }
+
+    public static resetTxtCover(svg: HTMLElement) {
+        //remove all text covers
+        Array.from(document.getElementsByClassName('txt-cover')).forEach((txtCover: HTMLElement) => {
+            console.log('removing', txtCover);
+            txtCover.remove();
+        })
+        Array.from(document.getElementsByClassName('fadeout-text')).forEach((txt: HTMLElement) => {
+            txt.classList.remove('fadeout-text');
+            txt.setAttributeNS(null, 'opacity', null);
         })
     }
 
