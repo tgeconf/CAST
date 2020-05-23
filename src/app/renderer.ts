@@ -65,8 +65,9 @@ export default class Renderer {
             //create the highlight box
             const highlightBox: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             highlightBox.setAttributeNS(null, 'id', 'highlightSelectionFrame');
-            highlightBox.setAttributeNS(null, 'class', 'highlight-selection-frame');
-            highlightBox.setAttributeNS(null, 'fill', 'rgba(255, 255, 255, 0.01)');
+            // highlightBox.setAttributeNS(null, 'class', 'highlight-selection-frame');
+            highlightBox.setAttributeNS(null, 'fill', 'none');
+            // highlightBox.setAttributeNS(null, 'fill', 'rgba(255, 255, 255, 0.01)');
             highlightBox.setAttributeNS(null, 'stroke', '#2196f3');
             highlightBox.setAttributeNS(null, 'stroke-width', '2');
             svg.appendChild(highlightBox);
@@ -406,6 +407,12 @@ export default class Renderer {
      * @param selection 
      */
     public static renderSelectedMarks(selection: string[]): void {
+        const svg = document.getElementById('visChart');
+        //remove the dragAreas
+        Array.from(document.getElementsByClassName('highlight-selection-frame')).forEach((da: HTMLElement) => {
+            da.remove();
+        })
+
         let highlightSelectionBox: HTMLElement = document.getElementById('highlightSelectionFrame');
         //highlight selection in data table
         SelectableTable.renderSelection(selection);
@@ -431,6 +438,16 @@ export default class Renderer {
                     minY = tmpBBox.y < minY ? tmpBBox.y : minY;
                     maxX = tmpBBox.x + tmpBBox.width > maxX ? (tmpBBox.x + tmpBBox.width) : maxX;
                     maxY = tmpBBox.y + tmpBBox.height > maxY ? (tmpBBox.y + tmpBBox.height) : maxY;
+
+                    //render a dragable area
+                    const mDragArea = <SVGElement>m.cloneNode(true);
+                    mDragArea.setAttributeNS(null, 'class', 'highlight-selection-frame');
+                    mDragArea.id = null;
+                    mDragArea.setAttributeNS(null, 'fill', '#000');
+                    mDragArea.setAttributeNS(null, 'stroke', '#000');
+                    mDragArea.setAttributeNS(null, 'stroke-width', '4');
+                    mDragArea.setAttributeNS(null, 'opacity', '0');
+                    svg.appendChild(mDragArea);
                 } else {//this is not a selected mark
                     m.classList.add('non-framed-mark');
                 }

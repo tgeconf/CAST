@@ -125,9 +125,9 @@ export default class Tool {
             Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
             const lassoSelection = new Lasso();
             const evtTarget: HTMLElement = <HTMLElement>downEvt.target;
-            if (evtTarget.id === 'highlightSelectionFrame' ||
+            if (evtTarget.classList.contains('highlight-selection-frame') ||
                 (evtTarget.classList.contains('mark') && state.selection.includes(evtTarget.id) && state.selection.length > 0)) {//clicked within the selection frame
-
+                dragableCanvas.createCanvas(document.querySelector('#' + containerId + ' > svg:first-of-type'), { x: downEvt.pageX, y: downEvt.pageY });
             } else {//doing selection
                 const svg: HTMLElement = document.getElementById('visChart');
                 if (svg) {
@@ -192,7 +192,7 @@ export default class Tool {
             // }
 
             const evtTarget: HTMLElement = <HTMLElement>downEvt.target;
-            if (evtTarget.id === 'highlightSelectionFrame' ||
+            if (evtTarget.classList.contains('highlight-selection-frame') ||
                 (evtTarget.classList.contains('mark') && state.selection.includes(evtTarget.id) && state.selection.length > 0)) {//clicked within the selection frame
                 dragableCanvas.createCanvas(document.querySelector('#' + containerId + ' > svg:first-of-type'), { x: downEvt.pageX, y: downEvt.pageY });
             } else {//doing selection

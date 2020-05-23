@@ -24,7 +24,9 @@ declare module 'canis_toolkit' {
     export class ChartSpec {
         static dataMarkDatum: Map<string, any>;
         static nonDataMarkDatum: Map<string, any>;
-        static chartUnderstanding: any;
+        static chartUnderstanding: {
+            [propName: string]: string[]
+        };
     }
     export class Animation {
         static FIRST_ANI_ID: string;

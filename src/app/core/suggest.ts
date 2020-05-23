@@ -113,20 +113,20 @@ export default class Suggest {
      * filter the attribute names according to the effectiveness ranking of visual channels
      * @param attrArr 
      */
-    public static filterAttrs(attrArr: string[]): string[] {
-        let filteredAttrs: string[] = [];
-        let typeRecorder: string = '';
-        Util.EFFECTIVENESS_RANKING.forEach((channel: string) => {
-            attrArr.forEach((aName: string) => {
-                const tmpAttrChannel: string = ChartSpec.chartUnderstanding[aName];
-                if (tmpAttrChannel === channel && (tmpAttrChannel === typeRecorder || typeRecorder === '')) {
-                    filteredAttrs.push(aName);
-                    typeRecorder = tmpAttrChannel;
-                }
-            })
-        })
-        return filteredAttrs;
-    }
+    // public static filterAttrs(attrArr: string[]): string[] {
+    //     let filteredAttrs: string[] = [];
+    //     let typeRecorder: string = '';
+    //     Util.EFFECTIVENESS_RANKING.forEach((channel: string) => {
+    //         attrArr.forEach((aName: string) => {
+    //             const tmpAttrChannel: string = ChartSpec.chartUnderstanding[aName];
+    //             if (tmpAttrChannel === channel && (tmpAttrChannel === typeRecorder || typeRecorder === '')) {
+    //                 filteredAttrs.push(aName);
+    //                 typeRecorder = tmpAttrChannel;
+    //             }
+    //         })
+    //     })
+    //     return filteredAttrs;
+    // }
 
     /**
      * order the attribute names according to the effectiveness ranking of visual channels 
@@ -136,8 +136,8 @@ export default class Suggest {
         let orderedAttrs: Map<string, string[]> = new Map();
         Util.EFFECTIVENESS_RANKING.forEach((channel: string) => {
             attrArr.forEach((aName: string) => {
-                let tmpAttrChannel: string = ChartSpec.chartUnderstanding[aName];
-                if (tmpAttrChannel === channel) {
+                let tmpAttrChannel: string[] = ChartSpec.chartUnderstanding[aName];
+                if (tmpAttrChannel.includes(channel)) {
                     if (typeof orderedAttrs.get(channel) === 'undefined') {
                         orderedAttrs.set(channel, []);
                     }
@@ -152,11 +152,14 @@ export default class Suggest {
     public static assignChannelName(attrArr: string[]): Map<string, string[]> {
         let channelAttrs: Map<string, string[]> = new Map();
         attrArr.forEach((aName: string) => {
-            const tmpAttrChannel: string = ChartSpec.chartUnderstanding[aName];
-            if (typeof channelAttrs.get(tmpAttrChannel) === 'undefined') {
-                channelAttrs.set(tmpAttrChannel, []);
-            }
-            channelAttrs.get(tmpAttrChannel).push(aName);
+            const tmpAttrChannels: string[] = ChartSpec.chartUnderstanding[aName];
+            tmpAttrChannels.forEach((tmpAttrChannel: string) => {
+                if (typeof channelAttrs.get(tmpAttrChannel) === 'undefined') {
+                    channelAttrs.set(tmpAttrChannel, []);
+                }
+                channelAttrs.get(tmpAttrChannel).push(aName);
+            })
+            
         })
         return channelAttrs;
     }
@@ -693,7 +696,7 @@ export default class Suggest {
                 let flag: boolean = false;
                 if (attrWithDiffValues.length === 0) {
                     flag = true;
-                    const filteredDiffAttrs: string[] = this.filterAttrs(diffAttrs);
+                    const filteredDiffAttrs: string[] = Util.filterAttrs(diffAttrs);
                     attrWithDiffValues = [...sameAttrs, ...filteredDiffAttrs];
                 }
                 //remove empty cell problem
