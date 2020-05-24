@@ -181,25 +181,29 @@ export default class KfItem extends KfTimingIllus {
         }
     }
 
-    public hideHoverBtn() {
-        this.hoverBtnContainer.setAttributeNS(null, 'opacity', '0');
+    public bindHoverBtn() {
+        this.container.onmouseenter = () => {
+            this.container.classList.add('drop-shadow-ele');
+            this.hoverBtnContainer.setAttributeNS(null, 'opacity', '1');
+        }
+        this.container.onmouseleave = () => {
+            this.container.classList.remove('drop-shadow-ele');
+            this.hoverBtnContainer.setAttributeNS(null, 'opacity', '0');
+        }
     }
 
-    public showHoverBtn() {
-        this.hoverBtnContainer.setAttributeNS(null, 'opacity', '1');
+    public unbindHoverBtn() {
+        this.container.classList.remove('drop-shadow-ele');
+        this.hoverBtnContainer.setAttributeNS(null, 'opacity', '0');
+        this.container.onmouseenter = null;
+        this.container.onmouseleave = null;
     }
 
     public renderItem(startX: number, size?: ISize) {
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.container.setAttributeNS(null, 'transform', `translate(${startX + KfItem.PADDING}, ${KfItem.PADDING})`);
-        this.container.onmouseenter = () => {
-            this.container.classList.add('drop-shadow-ele');
-            this.showHoverBtn();
-        }
-        this.container.onmouseleave = () => {
-            this.container.classList.remove('drop-shadow-ele');
-            this.hideHoverBtn();
-        }
+        this.bindHoverBtn();
+
         if (typeof this.kfInfo.alignTo !== 'undefined') {//this kf is align to others
             const aniGroup: KfGroup = this.parentObj.fetchAniGroup();
             this.container.onmouseover = () => {

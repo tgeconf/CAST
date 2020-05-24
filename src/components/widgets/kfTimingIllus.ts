@@ -15,6 +15,8 @@ export default class KfTimingIllus {
     static OFFSET_STRETCH_COLOR: string = '#ea5514';
     static DURATION_COLOR: string = '#71b1ed';
     static DURATION_STRETCH_COLOR: string = '#358bcb';
+    static TIMING_TYPE_OFFSET: string = 'offset';
+    static TIMING_TYPE_DURATION: string = 'duration';
     static EXTRA_HEIGHT: number = 7;//for hidden duration
     static minDuration: number = 300;
     static maxDuration: number = 0;
@@ -26,6 +28,7 @@ export default class KfTimingIllus {
     public parentObj: any;
     public id: number;
     public groupRef: string;
+    public timingType: string;
 
     public mouseIsOver: boolean = false;
 
@@ -110,6 +113,7 @@ export default class KfTimingIllus {
     }
 
     public drawOffset(offset: number, widgetHeight: number, groupRx: number, fake: boolean = false): void {
+        this.timingType = KfTimingIllus.TIMING_TYPE_OFFSET;
         this.offsetNum = offset;
         this.groupRx = groupRx;
         if (KfTimingIllus.minOffset === 0) {
@@ -129,7 +133,7 @@ export default class KfTimingIllus {
         this.offsetBg.setAttributeNS(null, 'height', `${widgetHeight}`);
         this.offsetBg.setAttributeNS(null, 'fill', KfTimingIllus.OFFSET_COLOR);
         this.offsetIllus.appendChild(this.offsetBg);
-        this.offsetIcon = this.drawArrowIcon({ x: this.offsetWidth / 2 - 6, y: widgetHeight / 2 - 6 });
+        this.drawArrowIcon({ x: this.offsetWidth / 2 - 6, y: widgetHeight / 2 - 6 }, KfTimingIllus.TIMING_TYPE_OFFSET);
         this.offsetIllus.appendChild(this.offsetIcon);
 
         //create stretchable bar
@@ -181,6 +185,7 @@ export default class KfTimingIllus {
     }
 
     public drawDuration(duration: number, widgetX: number, widgetHeight: number, hiddenDuration: boolean): void {
+        this.timingType = KfTimingIllus.TIMING_TYPE_DURATION;
         this.durationNum = duration
         if (KfTimingIllus.minDuration === 0) {
             this.durationWidth = KfTimingIllus.BASIC_OFFSET_DURATION_W;
@@ -197,7 +202,7 @@ export default class KfTimingIllus {
         this.durationBg.setAttributeNS(null, 'width', `${this.durationWidth}`);
         this.durationBg.setAttributeNS(null, 'height', `${hiddenDuration ? widgetHeight + KfTimingIllus.EXTRA_HEIGHT : widgetHeight}`);
         this.durationIllus.appendChild(this.durationBg);
-        this.durationIcon = this.drawArrowIcon({ x: this.durationWidth / 2 - 6, y: widgetHeight / 2 - 6 });
+        this.drawArrowIcon({ x: this.durationWidth / 2 - 6, y: widgetHeight / 2 - 6 }, KfTimingIllus.TIMING_TYPE_DURATION);
         this.durationIllus.appendChild(this.durationIcon);
 
         // this.createTimeText({ x: this.durationWidth / 2 - 6, y: widgetHeight / 2 - 26 });
@@ -211,8 +216,30 @@ export default class KfTimingIllus {
 
     public startAdjustingTime() { }
     public findNextSibling(): KfItem | KfOmit { return }
-    public hideHoverBtn(){}
-    public showHoverBtn() { }
+    public bindHoverBtn() { }
+    public unbindHoverBtn() { }
+
+    public hideArrow() {
+        switch (this.timingType) {
+            case KfTimingIllus.TIMING_TYPE_OFFSET:
+                this.offsetIcon.setAttributeNS(null, 'opacity', '0');
+                break;
+            case KfTimingIllus.TIMING_TYPE_DURATION:
+                this.durationIcon.setAttributeNS(null, 'opacity', '0');
+                break;
+        }
+    }
+
+    public showArrow() {
+        switch (this.timingType) {
+            case KfTimingIllus.TIMING_TYPE_OFFSET:
+                this.offsetIcon.setAttributeNS(null, 'opacity', '1');
+                break;
+            case KfTimingIllus.TIMING_TYPE_DURATION:
+                this.durationIcon.setAttributeNS(null, 'opacity', '1');
+                break;
+        }
+    }
 
     public createStretchBar(barHeight: number, type: string, hiddenDuration: boolean, actionInfo: any = {}): SVGRectElement {
         //create stretchable bar
@@ -229,12 +256,8 @@ export default class KfTimingIllus {
             hintTag.removeHint();
             this.startAdjustingTime();
             this.removeEasingTransform();//eg: groupTitle
-            this.hideHoverBtn();
-            //unbind mouse over of the next kf
-            const nextSibling: KfItem | KfOmit = this.findNextSibling();
-            // if(nextSibling instanceof KfItem){
-            //     nextSibling.unbindHoverBgHover();
-            // }
+            this.unbindHoverBtn();
+            this.hideArrow();//hide the arrow
             const strectchBarBBox: DOMRect = stretchBar.getBoundingClientRect();//fixed
             const timingBBox: DOMRect = type === 'duration' ? this.durationBg.getBoundingClientRect() : this.offsetBg.getBoundingClientRect();//fixed
             const timingWidth: number = timingBBox.width;
@@ -296,9 +319,8 @@ export default class KfTimingIllus {
                 document.onmousemove = null;
                 document.onmouseup = null;
                 this.addEasingTransform();
-                // if(nextSibling instanceof KfItem){
-                //     nextSibling.bindHoverBgHover();
-                // }
+                this.bindHoverBtn();
+                this.showArrow();//show the arrow
                 //triger action to update spec
                 if (type === 'duration') {
                     this.bindDurationHover();
@@ -348,14 +370,26 @@ export default class KfTimingIllus {
         return Math.floor(KfTimingIllus.minDuration * 100 * w / KfTimingIllus.BASIC_OFFSET_DURATION_W) / 100;
     }
 
-    public drawArrowIcon(trans: ICoord): SVGGElement {
-        const icon: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        icon.setAttributeNS(null, 'transform', `translate(${trans.x}, ${trans.y})`);
+    public drawArrowIcon(trans: ICoord, type: string): void {
         const iconPolygon: SVGPolygonElement = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         iconPolygon.setAttributeNS(null, 'fill', '#fff');
         iconPolygon.setAttributeNS(null, 'points', '10.1,0 10.1,4.1 5.6,0.1 4.3,1.5 8.3,5.1 0,5.1 0,6.9 8.3,6.9 4.3,10.5 5.6,11.9 10.1,7.9 10.1,12 12,12 12,0 ');
-        icon.appendChild(iconPolygon);
-        return icon;
+
+        switch (type) {
+            case KfTimingIllus.TIMING_TYPE_OFFSET:
+                this.offsetIcon = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                this.offsetIcon.classList.add('ease-fade');
+                this.offsetIcon.setAttributeNS(null, 'transform', `translate(${trans.x}, ${trans.y})`);
+                this.offsetIcon.appendChild(iconPolygon);
+                break;
+            case KfTimingIllus.TIMING_TYPE_DURATION:
+                this.durationIcon = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                this.durationIcon.classList.add('ease-fade');
+                this.durationIcon.setAttributeNS(null, 'transform', `translate(${trans.x}, ${trans.y})`);
+                this.durationIcon.appendChild(iconPolygon);
+                break;
+        }
+
     }
 
 
