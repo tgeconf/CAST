@@ -235,7 +235,7 @@ export default class Renderer {
             }
         } else if (totalKfgNum > 3 && kfgIdx === totalKfgNum - 2) {
             let kfOmit: KfOmit = new KfOmit();
-            kfOmit.createOmit(0, 0, parentObj, false, false);
+            kfOmit.createOmit(0, 0, parentObj, false, false, 0);
             parentObj.children.push(kfOmit);//why comment this out!!!!
             parentObj.kfOmits.push(kfOmit);
         }
@@ -391,14 +391,21 @@ export default class Renderer {
             zl -= 0.001;
         }
         const shownThumbnail: number = Math.floor((zl - ViewWindow.MIN_ZOOM_LEVEL) / ((ViewWindow.MAX_ZOOM_LEVEL - ViewWindow.MIN_ZOOM_LEVEL) / (state.chartThumbNailZoomLevels / 2)));
-        KfItem.allKfItems.forEach((kfItem: KfItem) => {
-            kfItem.chartThumbnails.forEach((ct: SVGImageElement, i: number) => {
-                if (i === shownThumbnail) {
-                    ct.classList.remove('no-display-ele');
-                } else {
-                    ct.classList.add('no-display-ele');
-                }
-            })
+        const kfZoomLevel: number = Math.floor((zl - ViewWindow.MIN_ZOOM_LEVEL) / ((ViewWindow.MAX_ZOOM_LEVEL - ViewWindow.MIN_ZOOM_LEVEL) / state.chartThumbNailZoomLevels));
+        console.log('kf zoom level: ', kfZoomLevel);
+        // KfItem.allKfItems.forEach((kfItem: KfItem) => {
+        //     kfItem.chartThumbnails.forEach((ct: SVGImageElement, i: number) => {
+        //         if (i === shownThumbnail) {
+        //             ct.classList.remove('no-display-ele');
+        //         } else {
+        //             ct.classList.add('no-display-ele');
+        //         }
+        //     })
+        // })
+
+        //set visibility of kfgroups and kfitems
+        KfGroup.allAniGroups.forEach((aniKfGroup: KfGroup) => {
+            aniKfGroup.zoomGroup(kfZoomLevel, shownThumbnail);
         })
     }
 

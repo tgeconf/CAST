@@ -30,11 +30,11 @@ export default class KfOmit {
         this.omitIdx = 0;
     }
 
-    public createOmit(startX: number, omittedKfNum: number, parentObj: KfGroup, hasOffset: boolean, hasDuration: boolean, startY: number = 0): void {
+    public createOmit(startX: number, omittedKfNum: number, parentObj: KfGroup, hasOffset: boolean, hasDuration: boolean, startY: number, preItemIdx: number = -1): void {
         this.hasOffset = hasOffset;
         this.hasDuration = hasDuration;
         this.parentObj = parentObj;
-        this.preItem = this.parentObj.children[this.parentObj.children.length - 1];
+        this.preItem = preItemIdx === -1 ? this.parentObj.children[this.parentObj.children.length - 1] : this.parentObj.children[preItemIdx];
         this.omittedKfNum = omittedKfNum;
         this.startX = startX;
         this.startY = startY;

@@ -146,7 +146,7 @@ export default class KfGroup extends KfTimingIllus {
         this.parentObj.children.push(this);
         this.groupBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         this.groupBg.setAttributeNS(null, 'stroke', '#898989');
-        
+
         this.groupBg.setAttributeNS(null, 'fill', `rgb(${KfGroup.BASIC_GRAY - KfGroup.GRAY_STEP},${KfGroup.BASIC_GRAY - KfGroup.GRAY_STEP},${KfGroup.BASIC_GRAY - KfGroup.GRAY_STEP})`);
         this.groupBg.setAttributeNS(null, 'stroke-width', '1');
         this.groupBg.setAttributeNS(null, 'rx', `${KfGroup.GROUP_RX}`);
@@ -744,6 +744,9 @@ export default class KfGroup extends KfTimingIllus {
         let count: number = 0;
         let comingThroughOmit: boolean = false;
         this.children.forEach((k: KfItem | KfOmit) => {
+            // for (let i = 0, len = this.children.length; i < len; i++) {
+            //     const k: KfItem | KfOmit = this.children[i];
+            console.log('test count: ', count);
             const tmpTrans: ICoord = Tool.extractTransNums(k.container.getAttributeNS(null, 'transform'));
             if (updateStartItem) {//need to update startitem and its aligned elements too
                 if (tmpTrans.x >= currentTransX && !(count === 0 && k instanceof KfOmit)) {
@@ -765,7 +768,10 @@ export default class KfGroup extends KfTimingIllus {
                         count++;
                     }
                 } else {
-                    if (k.id !== startTransItem.id && tmpTrans.x >= currentTransX && !(count === 0 && k instanceof KfOmit)) {
+                    console.log('translating : ', k, k.id !== startTransItem.id, tmpTrans.x >= currentTransX, !(count === 0 && k instanceof KfOmit), count);
+                    if (k.id !== startTransItem.id && tmpTrans.x >= currentTransX) {
+                        console.log('setting transfrom: ', k, tmpTrans.x + transX);
+                        // if (k.id !== startTransItem.id && tmpTrans.x >= currentTransX && !(count === 0 && k instanceof KfOmit)) {
                         k.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transX}, ${tmpTrans.y})`);
                         if (k instanceof KfItem && updateAlignedKfs) {
                             k.translateAlignedGroups(transX, updateAlignedKfs);
@@ -787,6 +793,7 @@ export default class KfGroup extends KfTimingIllus {
             }
 
         })
+        // }
         //update the group size and position
         let extraWidth: number = extraInfo.lastItem ? extraInfo.extraWidth : 0;
         let [diffX, currentGroupWidth, childHeight] = this.updateSize(extraWidth);
@@ -810,6 +817,11 @@ export default class KfGroup extends KfTimingIllus {
                         // console.log('sibling trans ', c.container, tmpTrans.x, transX, tmpTrans.x + transX);
 
                         if (c instanceof KfGroup) {
+                            //translate plus btn is there is one
+                            console.log('translating sibling: ', c, c.plusBtn, typeof c.plusBtn);
+                            if (typeof c.plusBtn !== 'undefined') {
+                                c.plusBtn.translateBtn(transX);
+                            }
                             if (c.children[0] instanceof KfItem && updateAlignedKfs) {//need to update the aligned kfs and their group
                                 c.children.forEach((cc: KfItem | KfOmit) => {
                                     if (cc instanceof KfItem) {
@@ -929,7 +941,6 @@ export default class KfGroup extends KfTimingIllus {
     }
 
     public updateParentTrackInsert() {
-        // console.log('update parent track insert: ', KfTrack.aniTrackMapping, this.aniId, KfTrack.aniTrackMapping.get(this.aniId));
         if (typeof KfTrack.aniTrackMapping.get(this.aniId) !== 'undefined') {
             [...KfTrack.aniTrackMapping.get(this.aniId)].forEach((kfTrack: KfTrack) => {
                 const tmpBBox: DOMRect = this.container.getBoundingClientRect();//fixed
@@ -940,7 +951,6 @@ export default class KfGroup extends KfTimingIllus {
                 }
             })
         }
-
     }
 
     public updateGroupPosiAndSize(lastGroupStart: number, lastGroupWidth: number, lastGroup: boolean, rootGroup: boolean = false): void {
@@ -1018,7 +1028,6 @@ export default class KfGroup extends KfTimingIllus {
             } else {
                 this.groupBg.setAttributeNS(null, 'fill', `rgb(${grayColor}, ${grayColor}, ${grayColor})`);
             }
-
         }
     }
 
@@ -1030,6 +1039,46 @@ export default class KfGroup extends KfTimingIllus {
         }
     }
 
+    /**
+     * 
+     * @param kzl : levels deeper than kzl will be simplified
+     */
+    public zoomGroup(kzl: number, showThumbnail: number) {
+        console.log('current tree level: ', this.treeLevel, this.container);
+        if (this.children.length > 0) {
+            if (this.children[0] instanceof KfGroup) {
+                this.children.forEach((c: KfGroup | KfOmit) => {
+                    if (c instanceof KfGroup && c.rendered) {
+                        c.zoomGroup(kzl, showThumbnail);
+                    }
+                })
+            } else {//children are kfitems
+                const leafLevel: number = this.treeLevel + 1;
+                let kfItemCount: number = 0;
+                this.children.forEach((c: KfItem | KfOmit, idx: number) => {
+                    if (leafLevel > kzl) {
+                        if (c instanceof KfItem && (kfItemCount === 1 || kfItemCount === 2) && idx !== this.children.length - 1) {//hide this kfitem
+                            console.log('hidding kf item when zooming: ', c);
+                            c.renderWhenZooming = false;
+                        }
+                    } else {
+                        if (c instanceof KfItem && !c.renderWhenZooming) {
+                            c.renderWhenZooming = true;
+                        }
+                    }
+
+                    //show the corresponding thumbnail of this level
+                    if (c instanceof KfItem) {
+                        kfItemCount++;
+                        if (c.rendered && c.renderWhenZooming) {
+                            //TODO: c can not be a group that align to other groups
+                            c.zoomItem(showThumbnail);
+                        }
+                    }
+                })
+            }
+        }
+    }
 }
 
 export class GroupMenu {

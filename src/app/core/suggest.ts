@@ -215,7 +215,6 @@ export default class Suggest {
 
         //get all possible combinations of attrs
         const allCombinations: string[][] = this.generateAttrCombs(sortedAttrs);
-        console.log('all combinations of attrs: ', allCombinations);
 
         //get values of the attrs in 1st kf
         let valuesFirstKf: Set<string | number> = new Set();
@@ -231,10 +230,8 @@ export default class Suggest {
                 })
             })
         })
-        console.log('values 1st kf: ', valuesFirstKf);
 
-        allCombinations.forEach((attrComb: string[]) => {
-            console.log('attr comb to create sec: ', attrComb);
+        allCombinations.forEach((attrComb: string[]) => {//attrs to create sections
             let sections: Map<string, string[]> = new Map();//key: section id, value: mark array
             let sectionIdRecord: (string | number)[][] = [];
             let timeSecIdx: number[] = [];
@@ -576,7 +573,6 @@ export default class Suggest {
     }
 
     public static findUniqueKfs(allPaths: IPath[], kfStartIdx: number): { uniqueKfIdxs: number[], hasNextUniqueKf: boolean } {
-        console.log('all paths fidning unique: ', allPaths);
         let len: number = 0;
         if (typeof allPaths !== 'undefined') {
             allPaths.forEach((p: IPath) => {
@@ -643,10 +639,8 @@ export default class Suggest {
         let suggestOnFirstKf: boolean = false;
         if (Tool.arrayContained(firstKfInfoInParent.marksThisKf, selectedMarks) && Tool.identicalArrays(clsSelMarks, clsFirstKf)) {//suggest based on first kf in animation
             suggestOnFirstKf = true;
-            console.log('suggesting based on the first kf');
             Suggest.suggestPaths(selectedMarks, firstKfInfoInParent.marksThisKf);
         } else {//suggest based on all marks in animation
-            console.log('suggesting based on all marks this ani');
             const marksThisAni: string[] = targetKfg.marksThisAni();
             Suggest.suggestPaths(selectedMarks, marksThisAni);
         }
@@ -655,7 +649,6 @@ export default class Suggest {
 
     public static suggestPaths(firstKfMarks: string[], lastKfMarks: string[]) {
         this.allPaths = [];
-        console.log('1st kf marks: ', firstKfMarks, 'last kf marks: ', lastKfMarks);
         const sepFirstKfMarks: { dataMarks: string[], nonDataMarks: string[] } = this.separateDataAndNonDataMarks(firstKfMarks);
         const sepLastKfMarks: { dataMarks: string[], nonDataMarks: string[] } = this.separateDataAndNonDataMarks(lastKfMarks);
         if (sepFirstKfMarks.dataMarks.length > 0 && sepFirstKfMarks.nonDataMarks.length > 0) {//there are both data encoded and non data encoded marks in the first kf
@@ -670,9 +663,7 @@ export default class Suggest {
 
             } else {
                 let attrWithDiffValues: string[] = this.findAttrWithDiffValue(firstKfDataMarks, lastKfDataMarks, true);
-                console.log('found attrs with diff values: ', attrWithDiffValues);
                 const [sameAttrs, diffAttrs] = this.findSameDiffAttrs(firstKfDataMarks, true);
-                console.log('found same and diff attrs', sameAttrs, diffAttrs);
                 let flag: boolean = false;
                 if (attrWithDiffValues.length === 0) {
                     flag = true;
@@ -682,7 +673,6 @@ export default class Suggest {
                 //remove empty cell problem
                 attrWithDiffValues = this.removeEmptyCell(firstKfMarks, attrWithDiffValues, sameAttrs, diffAttrs, true);
 
-                console.log('attrs to make secs: ', attrWithDiffValues);
                 let valueIdx: Map<string, number> = new Map();//key: attr name, value: index of the value in all values
                 attrWithDiffValues.forEach((aName: string) => {
                     const targetValue: string | number = Util.filteredDataTable.get(firstKfDataMarks[0])[aName];
@@ -694,12 +684,10 @@ export default class Suggest {
                     } else {
                         valueIdx.set(aName, 2);//this value is in the middle of all values
                     }
-                    console.log('value index: ', aName, valueIdx.get(aName));
                 })
 
                 //sortedAttrs: key: channel, value: attr array
                 const sortedAttrs: Map<string, string[]> = flag ? this.assignChannelName(attrWithDiffValues) : this.sortAttrs(attrWithDiffValues);
-                console.log('ordered attrs: ', sortedAttrs);
 
                 const oneMarkInFirstKf: boolean = firstKfDataMarks.length === 1;
                 let allPossibleKfs = this.generateRepeatKfs(sortedAttrs, valueIdx, firstKfDataMarks, lastKfDataMarks, oneMarkInFirstKf);
@@ -709,14 +697,12 @@ export default class Suggest {
                     let attrComb: string[] = possiblePath[0];
                     let sections: Map<string, string[]> = possiblePath[1];
                     let orderedSectionIds: string[] = possiblePath[2];
-                    console.log('current comb: ', attrComb, orderedSectionIds, sections);
                     let repeatKfs = [];
                     let allSelected = false;
                     let oneMarkFromEachSec = false, oneMarkEachSecRecorder: Set<string> = new Set();
                     let numberMostMarksInSec = 0, selectedMarks: Map<string, string[]> = new Map();//in case of one mark from each sec
 
                     orderedSectionIds.forEach((sectionId: string) => {
-                        console.log('sectionId: ', sectionId, sections);
                         let tmpSecMarks = sections.get(sectionId);
                         if (tmpSecMarks.length > numberMostMarksInSec) {
                             numberMostMarksInSec = tmpSecMarks.length;
@@ -794,7 +780,6 @@ export default class Suggest {
             //suggest based on non data attrs
             const firstKfNonDataMarks: string[] = sepFirstKfMarks.nonDataMarks;
             const lastKfNonDataMarks: string[] = sepLastKfMarks.nonDataMarks;
-            console.log('1st non data kf marks: ', firstKfNonDataMarks, lastKfNonDataMarks);
 
             if (!Tool.identicalArrays(firstKfNonDataMarks, lastKfNonDataMarks)) {
                 //count the number of types in first kf

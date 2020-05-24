@@ -38,7 +38,7 @@ export default class PlusBtn {
     public btnBg: SVGRectElement;
     public btnIcon: SVGTextElement;
 
-    public static highlightPlusBtns(selectedCls: string[]) {
+    public static highlightPlusBtns(selectedCls: string[]): void {
         //filter which button to highlight (has the same accepatable classes)
         this.allPlusBtn.forEach((pb: PlusBtn) => {
             if (Tool.arrayContained(pb.acceptableCls, selectedCls) && pb.onShow) {
@@ -49,7 +49,7 @@ export default class PlusBtn {
         })
     }
 
-    public static cancelHighlightPlusBtns() {
+    public static cancelHighlightPlusBtns(): void {
         this.allPlusBtn.forEach((pb: PlusBtn) => {
             if (pb.isHighlighted && pb.onShow) {
                 pb.cancelHighlightBtn();
@@ -104,12 +104,13 @@ export default class PlusBtn {
      * @param kfSize 
      * @param acceptableCls 
      */
-    public createBtn(targetKfg: KfGroup, firstKfArrInTargetKfg: IKeyframe[], parentTrack: KfTrack, startX: number, kfSize: ISize, acceptableCls: string[]) {
+    public createBtn(targetKfg: KfGroup, firstKfArrInTargetKfg: IKeyframe[], parentTrack: KfTrack, startX: number, kfSize: ISize, acceptableCls: string[]): void {
         //create a blank kfg
         this.fakeKfg = new KfGroup();
         this.fakeKfg.createBlankKfg(parentTrack, targetKfg.aniId, startX + KfGroup.PADDING);
         this.aniId = targetKfg.aniId;
         this.targetKfg = targetKfg;
+        this.targetKfg.plusBtn = this;
         this.firstKfArrInTargetKfg = firstKfArrInTargetKfg;
         this.parentTrack = parentTrack;
         this.kfSize = kfSize;
@@ -136,16 +137,13 @@ export default class PlusBtn {
         this.btnIcon.setAttributeNS(null, 'font-size', '16pt');
         this.btnIcon.innerHTML = '+';
         this.container.appendChild(this.btnIcon);
-        // this.parentTrack.container.appendChild(this.container);
         this.fakeKfg.container.appendChild(this.container);
         this.fakeKfg.plusBtn = this;
 
         PlusBtn.allPlusBtn.push(this);
-        // PlusBtn.plusBtnMapping.set(this.aniId, PlusBtn.allPlusBtn.length - 1);
-
     }
 
-    public removeBtn() {
+    public removeBtn(): void {
         for (let i = 0, len = PlusBtn.allPlusBtn.length; i < len; i++) {
             if (PlusBtn.allPlusBtn[i].id === this.id) {
                 PlusBtn.allPlusBtn[i].onShow = false;
@@ -157,12 +155,17 @@ export default class PlusBtn {
         }
     }
 
-    public restoreBtn() {
+    public restoreBtn(): void {
         this.onShow = true;
         this.fakeKfg.container.appendChild(this.container);
     }
 
-    public highlightBtn() {
+    public translateBtn(transX: number): void {
+        const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
+        this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + transX}, ${oriTrans.y})`);
+    }
+
+    public highlightBtn(): void {
         this.isHighlighted = true;
         const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
         this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x},${PlusBtn.PADDING + 2})`);
@@ -174,7 +177,7 @@ export default class PlusBtn {
         this.btnIcon.setAttributeNS(null, 'fill', `${PlusBtn.BTN_HIGHLIGHT_COLOR}`);
     }
 
-    public cancelHighlightBtn() {
+    public cancelHighlightBtn(): void {
         this.isHighlighted = false;
         const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
         this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x},${PlusBtn.PADDING + this.kfSize.h / 2 - PlusBtn.BTN_SIZE / 2})`);
@@ -186,20 +189,20 @@ export default class PlusBtn {
         this.btnIcon.setAttributeNS(null, 'fill', `${PlusBtn.BTN_COLOR}`);
     }
 
-    public dragSelOver() {
+    public dragSelOver(): void {
         this.btnBg.setAttributeNS(null, 'stroke', `${PlusBtn.BTN_DRAGOVER_COLOR}`);
         this.btnIcon.setAttributeNS(null, 'fill', `${PlusBtn.BTN_DRAGOVER_COLOR}`);
         Tool.clearDragOver();
         PlusBtn.dragoverBtn = this;
     }
 
-    public dragSelOut() {
+    public dragSelOut(): void {
         this.btnBg.setAttributeNS(null, 'stroke', `${PlusBtn.BTN_HIGHLIGHT_COLOR}`);
         this.btnIcon.setAttributeNS(null, 'fill', `${PlusBtn.BTN_HIGHLIGHT_COLOR}`);
         PlusBtn.dragoverBtn = undefined;
     }
 
-    public dropSelOn() {
+    public dropSelOn(): void {
         const selectedMarks: string[] = state.activatePlusBtn.selection;
         let firstKfInfoInParent: IKeyframe = this.firstKfArrInTargetKfg[0];
         const tmpKfInfo: IKeyframe = KfItem.createKfInfo(selectedMarks,

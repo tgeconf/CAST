@@ -368,7 +368,6 @@ export default class Tool {
      */
     public static enlargeMarks(svg: HTMLElement, clsName: string, scale: number, includeCls: boolean) {
         const targetMarks: Element[] = includeCls ? Array.from(svg.getElementsByClassName(clsName)) : Array.from(svg.querySelectorAll(`.mark:not(.${clsName})`));
-        console.log('test scale', scale, state.chartThumbNailZoomLevels / 2);
 
         targetMarks.forEach((m: HTMLElement) => {
             const oriStrokeWidth: string = m.getAttributeNS(null, 'stroke-width');
@@ -414,7 +413,6 @@ export default class Tool {
     public static resetTxtCover(svg: HTMLElement) {
         //remove all text covers
         Array.from(document.getElementsByClassName('txt-cover')).forEach((txtCover: HTMLElement) => {
-            console.log('removing', txtCover);
             txtCover.remove();
         })
         Array.from(document.getElementsByClassName('fadeout-text')).forEach((txt: HTMLElement) => {
@@ -429,30 +427,6 @@ export default class Tool {
             if (typeof m.getAttributeNS(null, 'tmp-stroke-width') !== 'undefined') {
                 m.setAttributeNS(null, 'stroke-width', m.getAttributeNS(null, 'tmp-stroke-width'));
             }
-
-            // //judge whether this is a line
-            // let isLine: boolean = false;
-            // if (m.tagName === 'path'
-            //     && (typeof m.getAttributeNS(null, 'stroke-width') !== 'undefined')
-            //     && (typeof m.getAttributeNS(null, 'fill') === 'undefined' || m.getAttributeNS(null, 'fill') === 'none' || m.getAttributeNS(null, 'fill') === '')
-            //     && (typeof m.style.fill === 'undefined' || m.style.fill === 'none' || m.style.fill === '')) {
-            //     const oriStrokeWidth: number = isNaN(parseFloat(m.getAttributeNS(null, 'stroke-width'))) ? 0 : parseFloat(m.getAttributeNS(null, 'stroke-width'));
-            //     if (oriStrokeWidth > 0) {
-            //         isLine = true;
-            //     }
-            // }
-
-            // if (isLine) {
-            //     m.setAttributeNS(null, 'stroke-width', m.getAttributeNS(null, 'tmp_strokeWidth'));
-            // } else {
-            //     if (m.tagName !== 'text') {
-            //         if (m.getAttributeNS(null, 'tmp_transform') && m.getAttributeNS(null, 'tmp_transform') !== 'null') {
-            //             m.setAttributeNS(null, 'transform', m.getAttributeNS(null, 'tmp_transform'));
-            //         } else {
-            //             m.setAttributeNS(null, 'transform', '');
-            //         }
-            //     }
-            // }
         })
     }
 }

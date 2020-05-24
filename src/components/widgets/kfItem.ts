@@ -57,9 +57,8 @@ export default class KfItem extends KfTimingIllus {
     public kfWidth: number
     public alignFrame: SVGRectElement
     public totalWidth: number = 0
-    // public chartThumbnail: SVGImageElement
-    // public chartSmallThumbnail: SVGImageElement
     public chartThumbnails: SVGImageElement[] = []
+    public _renderWhenZooming: boolean = true;
 
     set offsetDiff(od: number) {
         this._offsetDiff = od;
@@ -73,14 +72,23 @@ export default class KfItem extends KfTimingIllus {
 
     set durationDiff(dd: number) {
         this._durationDiff = dd;
-        // this.transNextKf(df);
-        // this.parentObj.translateGroup(this, df, true, { lastItem: true, extraWidth: 0 });
         this.parentObj.translateGroup(this, dd, true, false, true);
-
     }
 
     get durationDiff(): number {
         return this._durationDiff;
+    }
+
+    set renderWhenZooming(rwz: boolean) {
+        const changed: boolean = rwz !== this.renderWhenZooming;
+        this._renderWhenZooming = rwz;
+        if (changed) {
+            this.showItemWhenZooming();
+        }
+    }
+
+    get renderWhenZooming(): boolean {
+        return this._renderWhenZooming;
     }
 
     public static highlightKfs(selectedCls: string[]) {
@@ -115,20 +123,6 @@ export default class KfItem extends KfTimingIllus {
         }
     }
 
-    // public createStaticItem(staticMarks: string[]): void {
-    //     this.id = KfItem.STATIC_KF_ID;
-    //     this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    //     this.container.setAttributeNS(null, 'transform', `translate(${KfItem.PADDING}, ${KfItem.PADDING})`);
-    //     this.kfHeight = KfItem.KF_HEIGHT - 2 * KfItem.PADDING;
-    //     this.drawKfBg(0);
-    //     this.container.appendChild(this.kfBg);
-    //     if (staticMarks.length > 0) {
-    //         this.drawStaticChart(staticMarks);
-    //         this.container.appendChild(this.chartThumbnail);
-    //     }
-    //     KfItem.staticKf = this;
-    // }
-
     public createOptionKfItem(allCurrentMarks: string[], allGroupMarks: string[], marksThisKf: string[], kfWidth: number, kfHeight: number) {
         this.kfWidth = kfWidth;
         this.kfHeight = kfHeight;
@@ -137,7 +131,6 @@ export default class KfItem extends KfTimingIllus {
         this.drawKfBg(-1, { w: kfWidth, h: kfHeight });
         this.container.appendChild(this.kfBg);
         this.drawChart(allCurrentMarks, allGroupMarks, marksThisKf);
-        // this.container.appendChild(this.chartThumbnail);
     }
 
     public createItem(kf: IKeyframe, treeLevel: number, parentObj: KfGroup, startX: number, size?: ISize): void {
@@ -439,22 +432,6 @@ export default class KfItem extends KfTimingIllus {
             IntelliRefLine.updateLine(alignTo);
         }
     }
-
-    // public bindHoverBgHover() {
-    //     this.hoverBtnBg.onmouseover = (overEvt) => {
-    //         if (!state.mousemoving) {
-    //             hintTag.createHint({ x: overEvt.pageX, y: overEvt.pageY }, 'Click to start from this keyframe', 190);
-    //         }
-    //     }
-    //     this.hoverBtnBg.onmouseout = () => {
-    //         hintTag.removeHint();
-    //     }
-    // }
-
-    // public unbindHoverBgHover() {
-    //     this.hoverBtnBg.onmouseover = null;
-    //     this.hoverBtnBg.onmouseout = null;
-    // }
 
     public findNextSibling(): KfItem | KfOmit {
         return this.parentObj.children[this.idxInGroup + 1];
@@ -959,7 +936,7 @@ export default class KfItem extends KfTimingIllus {
      * @param transX 
      * @param updateAlignedKfs: might further influence other aligned elements 
      */
-    public translateAlignedGroups(transX: number, updateAlignedKfs: boolean) {
+    public translateAlignedGroups(transX: number, updateAlignedKfs: boolean): void {
         if (typeof KfItem.allKfInfo.get(this.id).alignWithKfs !== 'undefined') {
             IntelliRefLine.updateLine(this.id);//k is a alignwith kf, update refline
             KfItem.allKfInfo.get(this.id).alignWithKfs.forEach((kfId: number) => {
@@ -981,6 +958,76 @@ export default class KfItem extends KfTimingIllus {
                     })
                 }
             })
+        }
+    }
+
+    public zoomItem(shownThumbnail: number): void {
+        this.chartThumbnails.forEach((ct: SVGImageElement, i: number) => {
+            if (i === shownThumbnail) {
+                ct.classList.remove('no-display-ele');
+            } else {
+                ct.classList.add('no-display-ele');
+            }
+        })
+    }
+
+    public showItemWhenZooming(): void {
+        if (this.rendered) {
+            let kfWidthWithWhiteSpace: number = this.totalWidth;
+            const currentKfTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
+            let currentKfIdx: number = this.idxInGroup;
+            let passedOmits: number = 0;
+            while (true) {
+                if (currentKfIdx - 1 >= 0) {
+                    const preChild: KfItem | KfOmit = this.parentObj.children[currentKfIdx - 1];
+                    const preChildTrans: ICoord = Tool.extractTransNums(preChild.container.getAttributeNS(null, 'transform'));
+                    if (preChild instanceof KfItem) {
+                        if (preChildTrans.x + preChild.totalWidth + passedOmits * (KfGroup.PADDING * 2 + KfOmit.OMIT_W) === currentKfTrans.x) {
+                            break;
+                        } else if (currentKfTrans.x > preChildTrans.x + preChild.totalWidth + passedOmits * (KfGroup.PADDING * 2 + KfOmit.OMIT_W)) {
+                            kfWidthWithWhiteSpace += (currentKfTrans.x - preChildTrans.x - preChild.totalWidth - passedOmits * (KfGroup.PADDING * 2 + KfOmit.OMIT_W));
+                        }
+                    } else if (preChild instanceof KfOmit) {
+                        passedOmits++;
+                    }
+                    currentKfIdx--;
+                } else {
+                    break;
+                }
+            }
+
+            if (!this.renderWhenZooming) {//rendered -> not rendered
+                this.container.setAttributeNS(null, 'opacity', '0');
+                console.log('the removed kf idx in group: ;', this.idxInGroup, this.parentObj.kfOmits);
+                if (this.parentObj.kfOmits.length === 0) {
+                    const kfTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
+                    const kfOmit: KfOmit = new KfOmit();
+                    kfOmit.createOmit(kfTrans.x + this.totalWidth, 1, this.parentObj, this.hasOffset, this.hasDuration, this.kfHeight / 2, this.idxInGroup);
+                    this.parentObj.children.splice(this.idxInGroup + 1, 0, kfOmit);
+                    this.parentObj.kfOmits.push(kfOmit);
+                    this.parentObj.translateGroup(this, -kfWidthWithWhiteSpace + KfOmit.OMIT_W, true, false, false);
+                    //update the position of omits
+                    const oriOmitTrans: ICoord = Tool.extractTransNums(kfOmit.container.getAttributeNS(null, 'transform'));
+                    kfOmit.updateTrans(oriOmitTrans.x - KfOmit.OMIT_W, oriOmitTrans.y + KfOmit.OMIT_H / 2);
+                } else {
+                    this.parentObj.kfOmits[0].updateNum(this.parentObj.kfOmits[0].omittedKfNum + 1);
+                    this.parentObj.translateGroup(this, -kfWidthWithWhiteSpace, true, false, false);
+                }
+            } else {//not rendered -> rendered
+                this.container.setAttributeNS(null, 'opacity', '1');
+                if (this.parentObj.kfOmits[0].omittedKfNum === 1) {//remove kfOmit
+                    const tmpOmit: KfOmit = this.parentObj.kfOmits[0];
+                    if (this.parentObj.container.contains(tmpOmit.container)) {
+                        this.parentObj.container.removeChild(tmpOmit.container);
+                    }
+                    this.parentObj.children.splice(this.idxInGroup + 1, 1);
+                    this.parentObj.kfOmits.splice(0, 1);
+                    this.parentObj.translateGroup(this, kfWidthWithWhiteSpace - KfGroup.PADDING * 2 - KfOmit.OMIT_W, true, false, false);
+                } else {//update number
+                    this.parentObj.kfOmits[0].updateNum(this.parentObj.kfOmits[0].omittedKfNum - 1);
+                    this.parentObj.translateGroup(this, kfWidthWithWhiteSpace, true, false, false);
+                }
+            }
         }
     }
 }
