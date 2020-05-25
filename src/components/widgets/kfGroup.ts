@@ -67,6 +67,7 @@ export default class KfGroup extends KfTimingIllus {
     public kfOmits: KfOmit[] = [];
     public parentObj: KfGroup | KfTrack;
     public alignLines: number[] = [];
+    public _renderWhenZooming: boolean = true;
 
     set offsetDiff(od: number) {//for dragging the offset stretch bar
         this._offsetDiff = od;
@@ -76,6 +77,18 @@ export default class KfGroup extends KfTimingIllus {
     }
     get offsetDiff(): number {
         return this._offsetDiff;
+    }
+
+    set renderWhenZooming(rwz: boolean) {
+        const changed: boolean = rwz !== this.renderWhenZooming;
+        this._renderWhenZooming = rwz;
+        if (changed) {
+            this.showGroupWhenZooming();
+        }
+    }
+
+    get renderWhenZooming(): boolean {
+        return this._renderWhenZooming;
     }
 
     public static reset() {
@@ -732,7 +745,7 @@ export default class KfGroup extends KfTimingIllus {
      * @param updateAlignedKfs 
      */
     public translateGroup(startTransItem: KfItem | KfOmit, transX: number, updateAlignedKfs: boolean, updateStartItem: boolean, updateStartItemAligned: boolean, extraInfo: { lastItem: boolean, extraWidth: number } = { lastItem: false, extraWidth: 0 }): void {
-        // console.log('translating group: ', transX, extraInfo);
+        console.log('translating group: ', this.container, transX, extraInfo);
         //translate kfitems after the input one within the same group
         let currentTransX: number = 0;
         if (!extraInfo.lastItem) {
@@ -805,8 +818,8 @@ export default class KfGroup extends KfTimingIllus {
     }
 
     public updateSiblingAndParentSizePosi(transX: number, updateAlignedKfs: boolean) {
-        console.log('update sibling size and posi: ', transX);
         const currentGroupBBox: DOMRect = this.container.getBoundingClientRect();//fixed
+        console.log('update sibling size and posi: ', transX, this.container);
         this.parentObj.children.forEach((c: KfGroup | KfOmit) => {
             if (c.rendered) {
                 const tmpGroupBBox: DOMRect = c.container.getBoundingClientRect();//fixed
@@ -1052,9 +1065,24 @@ export default class KfGroup extends KfTimingIllus {
     public zoomGroup(kzl: number, showThumbnail: number) {
         if (this.children.length > 0) {
             if (this.children[0] instanceof KfGroup) {
-                this.children.forEach((c: KfGroup | KfOmit) => {
+                let kfGroupCount: number = 0;
+                console.log('kf zoom level: ', kzl);
+                this.children.forEach((c: KfGroup | KfOmit, idx: number) => {
                     if (c instanceof KfGroup && c.rendered) {
-                        c.zoomGroup(kzl, showThumbnail);
+                        // console.log('current group: ', c.container, )
+                        if (c.treeLevel > kzl) {//hide kfs whose level is deeper than level of this group
+                            if (kfGroupCount === 1 && idx !== this.children.length - 1) {
+                                c.renderWhenZooming = false;
+                            } else {
+                                c.zoomGroup(kzl, showThumbnail);
+                            }
+                        } else {
+                            if (!c.renderWhenZooming) {
+                                c.renderWhenZooming = true;
+                            }
+                            c.zoomGroup(kzl, showThumbnail);
+                        }
+                        kfGroupCount++;
                     }
                 })
             } else {//children are kfitems
@@ -1076,16 +1104,42 @@ export default class KfGroup extends KfTimingIllus {
                                 c.renderWhenZooming = true;
                             }
                         }
-                    }
 
-                    //show the corresponding thumbnail of this level
-                    if (c instanceof KfItem) {
+                        //show the corresponding thumbnail of this level
                         kfItemCount++;
                         if (c.rendered && c.renderWhenZooming) {
                             c.zoomItem(showThumbnail);
                         }
                     }
                 })
+            }
+        }
+    }
+
+    public showGroupWhenZooming() {
+        console.log('in show group when zooming');
+        if (this.rendered) {
+            if (!this.renderWhenZooming) {//rendered -> not rendered
+                console.log('test parent: ', this.parentObj);
+                if ((<KfGroup>this.parentObj).kfOmits.length === 0) {
+                    // const groupTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
+                    // const kfOmit: KfOmit = new KfOmit();
+                    // kfOmit.createOmit(groupTrans.x + this.width, 1, <KfGroup>this.parentObj, this.hasOffset, this.hasDuration, parseFloat(this.groupBg.getAttributeNS(null, 'height')) / 2, this.idxInGroup);
+                    // this.parentObj.children.splice(this.idxInGroup + 1, 0, kfOmit);
+                    // (<KfGroup>this.parentObj).kfOmits.push(kfOmit);
+                    // (<KfGroup>this.parentObj).translateGroup(kfOmit, -this.width + KfOmit.OMIT_W, false, false, false);
+                    // //update the position of omits
+                    // const oriOmitTrans: ICoord = Tool.extractTransNums(kfOmit.container.getAttributeNS(null, 'transform'));
+                    // kfOmit.updateTrans(oriOmitTrans.x - KfOmit.OMIT_W, oriOmitTrans.y + KfOmit.OMIT_H / 2);
+                } else {
+                    (<KfGroup>this.parentObj).kfOmits[0].updateNum((<KfGroup>this.parentObj).kfOmits[0].omittedKfNum + 1);
+                    // this.translateWholeGroup(this.container.getBoundingClientRect().width / state.zoomLevel);
+                    const groupWidth: number = this.width;
+                    this.translateGroup((<KfGroup>this.parentObj).kfOmits[0], -groupWidth, true, false, false);
+                }
+                this.container.setAttributeNS(null, 'display', 'none');
+            } else {//not rendered -> rendered
+                this.container.setAttributeNS(null, 'display', '');
             }
         }
     }

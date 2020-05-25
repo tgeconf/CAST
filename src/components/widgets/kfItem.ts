@@ -999,9 +999,6 @@ export default class KfItem extends KfTimingIllus {
                     break;
                 }
             }
-            // if (this.idxInGroup === this.parentObj.children.length - 1) {//this is the last kf in the group which is aligned to other groups 
-            //     // kfWidthWithWhiteSpace = 0;
-            // }
 
             //if this kf is aligned to or with some kf, fetch the line
             let refLine: IntelliRefLine;
@@ -1011,8 +1008,9 @@ export default class KfItem extends KfTimingIllus {
 
             if (!this.renderWhenZooming) {//rendered -> not rendered
                 this.container.setAttributeNS(null, 'display', 'none');
-                refLine.zoomHideLine();
-                console.log('the removed kf idx in group: ;', this.idxInGroup, this.parentObj.kfOmits);
+                if (typeof refLine !== 'undefined') {
+                    refLine.zoomHideLine();
+                }
                 if (this.parentObj.kfOmits.length === 0) {
                     const kfTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
                     const kfOmit: KfOmit = new KfOmit();
@@ -1029,7 +1027,9 @@ export default class KfItem extends KfTimingIllus {
                 }
             } else {//not rendered -> rendered
                 this.container.setAttributeNS(null, 'display', '');
-                refLine.zoomShowLine();
+                if (typeof refLine !== 'undefined') {
+                    refLine.zoomShowLine();
+                }
                 if (this.parentObj.kfOmits[0].omittedKfNum === 1) {//remove kfOmit
                     const tmpOmit: KfOmit = this.parentObj.kfOmits[0];
                     if (this.parentObj.container.contains(tmpOmit.container)) {

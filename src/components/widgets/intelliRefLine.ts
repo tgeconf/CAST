@@ -110,15 +110,11 @@ export default class IntelliRefLine {
     }
 
     public zoomHideLine(): void {
-        if (typeof this !== 'undefined') {
-            this.line.setAttributeNS(null, 'display', 'none');
-        }
+        this.line.setAttributeNS(null, 'display', 'none');
     }
 
     public zoomShowLine(): void {
-        if (typeof this !== 'undefined') {
-            this.line.setAttributeNS(null, 'display', '');
-        }
+        this.line.setAttributeNS(null, 'display', '');
     }
 
     public hideLine(): void {
