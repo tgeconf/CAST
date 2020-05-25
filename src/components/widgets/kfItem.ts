@@ -50,6 +50,7 @@ export default class KfItem extends KfTimingIllus {
     public kfHeight: number
     public hoverBtnContainer: SVGGElement
     public hoverBtnBg: SVGRectElement
+    public hoverBtnTxt: SVGTextContentElement
     public playBtn: SVGGElement
     public playIcon: SVGPathElement
     public dragBtn: SVGGElement
@@ -441,14 +442,14 @@ export default class KfItem extends KfTimingIllus {
         this.hoverBtnContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.hoverBtnContainer.classList.add('ease-fade');
         this.hoverBtnContainer.setAttributeNS(null, 'opacity', '0');
-        const hintTxt: SVGTextContentElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        hintTxt.setAttributeNS(null, 'x', `${this.kfWidth / 2 - 90}`);
-        hintTxt.setAttributeNS(null, 'y', `${this.kfHeight / 2}`);
-        hintTxt.setAttributeNS(null, 'font-size', '12pt');
-        hintTxt.setAttributeNS(null, 'font-weight', 'bold');
-        hintTxt.setAttributeNS(null, 'fill', '#484848');
-        hintTxt.innerHTML = 'Click to preview from here';
-        this.hoverBtnContainer.appendChild(hintTxt);
+        this.hoverBtnTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        this.hoverBtnTxt.setAttributeNS(null, 'x', `${this.kfWidth / 2 - 90 + this.offsetWidth}`);
+        this.hoverBtnTxt.setAttributeNS(null, 'y', `${this.kfHeight / 2}`);
+        this.hoverBtnTxt.setAttributeNS(null, 'font-size', '12pt');
+        this.hoverBtnTxt.setAttributeNS(null, 'font-weight', 'bold');
+        this.hoverBtnTxt.setAttributeNS(null, 'fill', '#484848');
+        this.hoverBtnTxt.innerHTML = 'Click to preview from here';
+        this.hoverBtnContainer.appendChild(this.hoverBtnTxt);
         this.hoverBtnBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         this.hoverBtnBg.setAttributeNS(null, 'x', `${typeof this.offsetIllus === 'undefined' ? 0 : this.offsetWidth}`);
         this.hoverBtnBg.setAttributeNS(null, 'y', '0');
@@ -1010,7 +1011,7 @@ export default class KfItem extends KfTimingIllus {
 
             if (!this.renderWhenZooming) {//rendered -> not rendered
                 this.container.setAttributeNS(null, 'display', 'none');
-                refLine.hideLine();
+                refLine.zoomHideLine();
                 console.log('the removed kf idx in group: ;', this.idxInGroup, this.parentObj.kfOmits);
                 if (this.parentObj.kfOmits.length === 0) {
                     const kfTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
@@ -1028,7 +1029,7 @@ export default class KfItem extends KfTimingIllus {
                 }
             } else {//not rendered -> rendered
                 this.container.setAttributeNS(null, 'display', '');
-                refLine.showLine();
+                refLine.zoomShowLine();
                 if (this.parentObj.kfOmits[0].omittedKfNum === 1) {//remove kfOmit
                     const tmpOmit: KfOmit = this.parentObj.kfOmits[0];
                     if (this.parentObj.container.contains(tmpOmit.container)) {

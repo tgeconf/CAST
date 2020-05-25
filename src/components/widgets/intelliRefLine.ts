@@ -109,6 +109,18 @@ export default class IntelliRefLine {
         return hintLines;
     }
 
+    public zoomHideLine(): void {
+        if (typeof this !== 'undefined') {
+            this.line.setAttributeNS(null, 'display', 'none');
+        }
+    }
+
+    public zoomShowLine(): void {
+        if (typeof this !== 'undefined') {
+            this.line.setAttributeNS(null, 'display', '');
+        }
+    }
+
     public hideLine(): void {
         if (typeof this !== 'undefined') {
             this.line.setAttributeNS(null, 'opacity', '0');
