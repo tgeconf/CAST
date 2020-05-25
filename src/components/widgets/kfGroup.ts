@@ -805,7 +805,7 @@ export default class KfGroup extends KfTimingIllus {
     }
 
     public updateSiblingAndParentSizePosi(transX: number, updateAlignedKfs: boolean) {
-        // console.log('update sibling size and posi: ', transX);
+        console.log('update sibling size and posi: ', transX);
         const currentGroupBBox: DOMRect = this.container.getBoundingClientRect();//fixed
         this.parentObj.children.forEach((c: KfGroup | KfOmit) => {
             if (c.rendered) {
@@ -814,7 +814,7 @@ export default class KfGroup extends KfTimingIllus {
                     if (c instanceof KfOmit || (c instanceof KfGroup && c.rendered)) {
                         const tmpTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
                         c.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transX}, ${tmpTrans.y})`);
-                        // console.log('sibling trans ', c.container, tmpTrans.x, transX, tmpTrans.x + transX);
+                        console.log('sibling trans ', c.container, tmpTrans.x, transX, tmpTrans.x + transX);
 
                         if (c instanceof KfGroup) {
                             //translate plus btn is there is one
@@ -897,18 +897,24 @@ export default class KfGroup extends KfTimingIllus {
                     const currentTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
                     c.container.setAttributeNS(null, 'transform', `translate(${currentTrans.x - diffX}, ${currentTrans.y})`);
                 }
-                const tmpBBox: DOMRect = c.container.getBoundingClientRect();//fixed
-                if (tmpBBox.top < maxBoundry.top) {
-                    maxBoundry.top = tmpBBox.top;
+                let countingBBox: boolean = true;//check whether this child is counted for calculating bbox
+                if (c instanceof KfItem) {
+                    countingBBox = c.renderWhenZooming
                 }
-                if (tmpBBox.right > maxBoundry.right) {
-                    maxBoundry.right = tmpBBox.right;
-                }
-                if (tmpBBox.bottom > maxBoundry.bottom) {
-                    maxBoundry.bottom = tmpBBox.bottom;
-                }
-                if (tmpBBox.left < maxBoundry.left) {
-                    maxBoundry.left = tmpBBox.left;
+                if (countingBBox) {
+                    const tmpBBox: DOMRect = c.container.getBoundingClientRect();//fixed
+                    if (tmpBBox.top < maxBoundry.top) {
+                        maxBoundry.top = tmpBBox.top;
+                    }
+                    if (tmpBBox.right > maxBoundry.right) {
+                        maxBoundry.right = tmpBBox.right;
+                    }
+                    if (tmpBBox.bottom > maxBoundry.bottom) {
+                        maxBoundry.bottom = tmpBBox.bottom;
+                    }
+                    if (tmpBBox.left < maxBoundry.left) {
+                        maxBoundry.left = tmpBBox.left;
+                    }
                 }
             }
         })
@@ -1044,7 +1050,6 @@ export default class KfGroup extends KfTimingIllus {
      * @param kzl : levels deeper than kzl will be simplified
      */
     public zoomGroup(kzl: number, showThumbnail: number) {
-        console.log('current tree level: ', this.treeLevel, this.container);
         if (this.children.length > 0) {
             if (this.children[0] instanceof KfGroup) {
                 this.children.forEach((c: KfGroup | KfOmit) => {
@@ -1056,14 +1061,20 @@ export default class KfGroup extends KfTimingIllus {
                 const leafLevel: number = this.treeLevel + 1;
                 let kfItemCount: number = 0;
                 this.children.forEach((c: KfItem | KfOmit, idx: number) => {
-                    if (leafLevel > kzl) {
-                        if (c instanceof KfItem && (kfItemCount === 1 || kfItemCount === 2) && idx !== this.children.length - 1) {//hide this kfitem
-                            console.log('hidding kf item when zooming: ', c);
-                            c.renderWhenZooming = false;
-                        }
-                    } else {
-                        if (c instanceof KfItem && !c.renderWhenZooming) {
-                            c.renderWhenZooming = true;
+                    if (c instanceof KfItem) {
+                        //whether this kf is aligned to other kfs
+                        const alignToOthers: boolean = (typeof KfGroup.allAniGroups.get(c.aniId).alignTarget !== 'undefined' && KfGroup.allAniGroups.get(c.aniId).alignType === Animation.alignTarget.withEle);
+                        let hidingThisKf = alignToOthers ?
+                            (!KfItem.allKfItems.get(IntelliRefLine.kfLineMapping.get(c.id).theOtherEnd).renderWhenZooming) :
+                            ((kfItemCount === 1 || kfItemCount === 2) && idx !== this.children.length - 1);
+                        if (leafLevel > kzl) {//hide kfs whose level is deeper than leafLevel
+                            if (hidingThisKf) {
+                                c.renderWhenZooming = false;
+                            }
+                        } else {
+                            if (!c.renderWhenZooming) {
+                                c.renderWhenZooming = true;
+                            }
                         }
                     }
 
@@ -1071,7 +1082,6 @@ export default class KfGroup extends KfTimingIllus {
                     if (c instanceof KfItem) {
                         kfItemCount++;
                         if (c.rendered && c.renderWhenZooming) {
-                            //TODO: c can not be a group that align to other groups
                             c.zoomItem(showThumbnail);
                         }
                     }

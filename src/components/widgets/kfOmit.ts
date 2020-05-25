@@ -135,6 +135,7 @@ export default class KfOmit {
     }
 
     public updateNum(omittedKfNum: number): void {
+        this.omittedKfNum = omittedKfNum;
         this.num.innerHTML = `x${omittedKfNum}`;
     }
 

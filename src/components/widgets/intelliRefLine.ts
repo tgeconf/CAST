@@ -110,11 +110,15 @@ export default class IntelliRefLine {
     }
 
     public hideLine(): void {
-        this.line.setAttributeNS(null, 'opacity', '0');
+        if (typeof this !== 'undefined') {
+            this.line.setAttributeNS(null, 'opacity', '0');
+        }
     }
 
     public showLine(): void {
-        this.line.setAttributeNS(null, 'opacity', '1');
+        if (typeof this !== 'undefined') {
+            this.line.setAttributeNS(null, 'opacity', '1');
+        }
     }
 
     public hintAlign(targetPosi: ICoord, targetHeight: number, highlight: boolean) {

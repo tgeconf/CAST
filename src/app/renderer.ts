@@ -147,6 +147,7 @@ export default class Renderer {
         })
         const rootGroupBBox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();
         Reducer.triger(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, { width: rootGroupBBox.width, height: rootGroupBBox.height });
+        Reducer.triger(action.KEYFRAME_ZOOM_LEVEL, state.zoomLevel);
         Reducer.triger(action.UPDATE_LOADING_STATUS, { il: false });
     }
 
@@ -194,11 +195,19 @@ export default class Renderer {
                 if (typeof KfTrack.aniTrackMapping.get(kfg.aniId) !== 'undefined') {
                     targetTrack = [...KfTrack.aniTrackMapping.get(kfg.aniId)][0];//this is the group within an existing animation
                 } else {
-                    //target track is the last track
-                    let maxTrackPosiY: number = 0;
+                    // //target track is the last track
+                    // let maxTrackPosiY: number = 0;
+                    // KfTrack.allTracks.forEach((kft: KfTrack, trackId: string) => {
+                    //     if (kft.trackPosiY >= maxTrackPosiY) {
+                    //         maxTrackPosiY = kft.trackPosiY;
+                    //         targetTrack = kft;
+                    //     }
+                    // })
+                    //target track is the one with the max available insert
+                    let maxAvailableInsert: number = 0;
                     KfTrack.allTracks.forEach((kft: KfTrack, trackId: string) => {
-                        if (kft.trackPosiY >= maxTrackPosiY) {
-                            maxTrackPosiY = kft.trackPosiY;
+                        if (kft.availableInsert >= maxAvailableInsert) {
+                            maxAvailableInsert = kft.availableInsert;
                             targetTrack = kft;
                         }
                     })
@@ -405,7 +414,11 @@ export default class Renderer {
 
         //set visibility of kfgroups and kfitems
         KfGroup.allAniGroups.forEach((aniKfGroup: KfGroup) => {
+            //aniKfGroup can not be a group that align to other groups
+            console.log('test whether c is alignto others', aniKfGroup.container, aniKfGroup.alignTarget, aniKfGroup);
+            // if (!(typeof aniKfGroup.alignTarget !== 'undefined' && aniKfGroup.alignType === Animation.alignTarget.withEle)) {
             aniKfGroup.zoomGroup(kfZoomLevel, shownThumbnail);
+            // }
         })
     }
 
