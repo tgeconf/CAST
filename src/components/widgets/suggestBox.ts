@@ -217,11 +217,11 @@ export class SuggestBox {
                             if (j === stepIdx - 1) {//put omit
                                 const kfOmit: KfOmit = new KfOmit();
                                 const omitStartX: number = Tool.extractTransNums(preKf.container.getAttributeNS(null, 'transform')).x + preKf.kfWidth + transX;
-                                kfOmit.createOmit(omitStartX, stepIdx - preStepIdx - 3, startKf.parentObj, false, true, startKf.kfHeight / 2);
+                                kfOmit.createOmit(KfOmit.KF_OMIT, omitStartX, stepIdx - preStepIdx - 3, startKf.parentObj, false, true, startKf.kfHeight / 2);
                                 startKf.parentObj.children.push(kfOmit);
                                 startKf.parentObj.kfOmits.push(kfOmit);
                                 insertIdx++;
-                                transX += KfOmit.OMIT_W + 2 * KfItem.PADDING;
+                                transX += kfOmit.oWidth + 2 * KfItem.PADDING;
                             } else if (j > preStepIdx + 1 && j < stepIdx - 1) {
                                 omittedMarksRecord = [...omittedMarksRecord, ...allSuggestedPaths[0].kfMarks[j]];
                             }
@@ -272,11 +272,11 @@ export class SuggestBox {
                     if (j === nextUniqueKfIdx - 1) {//put omit
                         const kfOmit: KfOmit = new KfOmit();
                         const omitStartX: number = Tool.extractTransNums(preKf.container.getAttributeNS(null, 'transform')).x + preKf.kfWidth + transX;
-                        kfOmit.createOmit(omitStartX, nextUniqueKfIdx - preStepIdx - 3, startKf.parentObj, false, true, startKf.kfHeight / 2);
+                        kfOmit.createOmit(KfOmit.KF_OMIT, omitStartX, nextUniqueKfIdx - preStepIdx - 3, startKf.parentObj, false, true, startKf.kfHeight / 2);
                         startKf.parentObj.children.push(kfOmit);
                         startKf.parentObj.kfOmits.push(kfOmit);
                         insertIdx++;
-                        transX += KfOmit.OMIT_W + 2 * KfItem.PADDING;
+                        transX += kfOmit.oWidth + 2 * KfItem.PADDING;
                     } else if (j > preStepIdx + 1 && j < nextUniqueKfIdx - 1) {
                         omittedMarksRecord = [...omittedMarksRecord, ...allSuggestedPaths[0].kfMarks[j]];
                     }

@@ -164,6 +164,7 @@ Reducer.listen(action.UPDATE_KEYFRAME_TRACKS, (animations: Map<string, any>) => 
     KfItem.allKfInfo.clear();
     KfGroup.allActions.clear();
     KfGroup.allAniGroups.clear();
+    KfGroup.allAniGroupInfo.clear();
     const rootGroup: IKeyframeGroup[] = [];
     [...animations].forEach((a: any) => {
         let aniId: string = a[0];

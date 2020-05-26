@@ -136,6 +136,11 @@ export default class Renderer {
     }
 
     public static renderKeyframeTracks(kfgs: IKeyframeGroup[]): void {
+        //save kf group info
+        kfgs.forEach((kfg: IKeyframeGroup) => {
+            KfGroup.allAniGroupInfo.set(kfg.aniId, kfg);
+        })
+
         kfgs.forEach((kfg: IKeyframeGroup, i: number) => {
             KfGroup.leafLevel = 0;
             let treeLevel = 0;//use this to decide the background color of each group
@@ -152,6 +157,7 @@ export default class Renderer {
     }
 
     public static renderKeyframeGroup(kfgIdx: number, previousKfg: IKeyframeGroup, totalKfgNum: number, kfg: IKeyframeGroup, treeLevel: number, parentObj?: KfGroup): KfGroup {
+        console.log('input kfg : ', kfg);
         //draw group container
         let kfGroup: KfGroup = new KfGroup();
         if (kfgIdx === 0 || kfgIdx === 1 || kfgIdx === totalKfgNum - 1) {
@@ -244,7 +250,7 @@ export default class Renderer {
             }
         } else if (totalKfgNum > 3 && kfgIdx === totalKfgNum - 2) {
             let kfOmit: KfOmit = new KfOmit();
-            kfOmit.createOmit(0, 0, parentObj, false, false, 0);
+            kfOmit.createOmit(KfOmit.KF_GROUP_OMIT, 0, 0, parentObj, false, false, 0);
             parentObj.children.push(kfOmit);//why comment this out!!!!
             parentObj.kfOmits.push(kfOmit);
         }
@@ -281,11 +287,18 @@ export default class Renderer {
             })
             let kfIdxToDraw: number[] = [0, 1, kfg.keyframes.length - 1];
             let isAlignWith: number = 0;//0 -> neither align with nor align to, 1 -> align with, 2 -> align to 
-
+            let kfOmitType: string = KfOmit.KF_OMIT;
+            let mergePattern: boolean[] = [];
+            let timingPattern: string[] = [];
             //this group is the align target
             if (alignWithAnis.size > 0) {
                 isAlignWith = 1;
+                kfOmitType = KfOmit.KF_ALIGN;
                 alignWithAnis.forEach((se: number[], aniId: string) => {
+                    console.log('checking alignmerge: ', aniId, KfGroup.allAniGroupInfo.get(aniId), KfGroup.allAniGroupInfo);
+                    const tmpKfg: IKeyframeGroup = KfGroup.allAniGroupInfo.get(aniId);
+                    mergePattern.push(typeof tmpKfg.merge === 'undefined' ? false : tmpKfg.merge);
+                    timingPattern.push(tmpKfg.timingRef);
                     kfIdxToDraw.push(se[0]);
                     kfIdxToDraw.push(se[1]);
                     if (se[0] + 1 < se[1]) {
@@ -304,16 +317,21 @@ export default class Renderer {
             let kfPosiX = kfGroup.offsetWidth;
             kfg.keyframes.forEach((k: any, i: number) => {
                 //whether to draw this kf or not
+                let kfOmit: KfOmit;
                 if (kfIdxToDraw.includes(i)) {
                     //whether to draw '...'
                     if (i > 0 && kfIdxToDraw[kfIdxToDraw.indexOf(i) - 1] !== i - 1) {
                         const omitNum: number = i - kfIdxToDraw[kfIdxToDraw.indexOf(i) - 1] - 1;
                         if (omitNum > 0) {
-                            const kfOmit: KfOmit = new KfOmit();
-                            kfOmit.createOmit(kfPosiX, omitNum, kfGroup, kfg.keyframes[1].delayIcon, kfg.keyframes[1].durationIcon, kfGroup.children[1].kfHeight / 2);
+                            kfOmit = new KfOmit();
+                            if (kfOmitType === KfOmit.KF_ALIGN) {
+                                kfOmit.omitMergePattern = mergePattern;
+                                kfOmit.omitTimingPattern = timingPattern;
+                            }
+                            kfOmit.createOmit(kfOmitType, kfPosiX, omitNum, kfGroup, kfg.keyframes[1].delayIcon, kfg.keyframes[1].durationIcon, kfGroup.children[1].kfHeight / 2);
                             kfGroup.children.push(kfOmit);
                             kfGroup.kfOmits.push(kfOmit);
-                            kfPosiX += KfOmit.OMIT_W;
+                            kfPosiX += kfOmit.oWidth;
                         }
                     }
                     //draw render
@@ -329,6 +347,10 @@ export default class Renderer {
                         kfItem.createItem(k, treeLevel, kfGroup, kfPosiX, targetSize);
                     } else {
                         kfItem.createItem(k, treeLevel, kfGroup, kfPosiX);
+                    }
+                    if (typeof kfOmit !== 'undefined') {
+                        kfItem.preOmit = kfOmit;
+                        console.log('kfitem with preomit:', kfItem.container, kfOmit.container);
                     }
 
                     // KfItem.allKfItems.set(k.id, kfItem);
