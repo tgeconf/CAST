@@ -420,7 +420,7 @@ export default class Util {
                 let found: boolean = false;
                 for (let j = 0; j < len; j++) {
                     if (sda[j].attr === state.sortDataAttrs[i].attr) {
-                        found = sda[j].sort !== state.sortDataAttrs[i].sort;
+                        found = (sda[j].sort !== state.sortDataAttrs[i].sort && sda[j].sort !== AttrSort.INDEX_ORDER);
                         if (found) {
                             result.attr = sda[j].attr;
                             result.sort = sda[j].sort;

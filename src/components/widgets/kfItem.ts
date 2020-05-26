@@ -1040,12 +1040,12 @@ export default class KfItem extends KfTimingIllus {
                     this.parentObj.translateGroup(this, kfWidthWithWhiteSpace - KfOmit.OMIT_W, false, false, false);
                 } else {//update number
                     this.parentObj.kfOmits[0].updateNum(this.parentObj.kfOmits[0].omittedKfNum - 1);
+                    this.parentObj.translateGroup(this, kfWidthWithWhiteSpace, false, false, false);
                     //restore the omit position to the right side of its preItem
                     const preItemTrans: ICoord = Tool.extractTransNums(this.parentObj.kfOmits[0].preItem.container.getAttributeNS(null, 'transform'));
                     const oriOmitTrans: ICoord = Tool.extractTransNums(this.parentObj.kfOmits[0].container.getAttributeNS(null, 'transform'));
                     const preKfWidth: number = (<KfItem>this.parentObj.kfOmits[0].preItem).container.getBoundingClientRect().width / state.zoomLevel;
-                    this.parentObj.kfOmits[0].updateTrans(preItemTrans.x + preKfWidth + KfGroup.PADDING, oriOmitTrans.y + KfOmit.OMIT_H / 2);
-                    this.parentObj.translateGroup(this, kfWidthWithWhiteSpace, false, false, false);
+                    this.parentObj.kfOmits[0].updateTrans(preItemTrans.x + preKfWidth, oriOmitTrans.y + KfOmit.OMIT_H / 2);
                 }
             }
         }

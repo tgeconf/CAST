@@ -73,28 +73,28 @@ export class State implements IState {
 
     set sortDataAttrs(sda: ISortDataAttr[]) {
         //compare incoming
-        let sameAttrs: boolean = true;
-        if (this._sortDataAttrs.length !== 0) {
-            if (sda.length !== this._sortDataAttrs.length) {
-                sameAttrs = false;
-            } else {
-                let oriAttrs: string[] = this._sortDataAttrs.map(a => { return a.attr });
-                let newAttrs: string[] = sda.map(a => { return a.attr });
-                sameAttrs = Tool.identicalArrays(oriAttrs, newAttrs);
-            }
+        // let sameAttrs: boolean = true;
+        // if (this._sortDataAttrs.length !== 0) {
+        //     if (sda.length !== this._sortDataAttrs.length) {
+        //         sameAttrs = false;
+        //     } else {
+        //         let oriAttrs: string[] = this._sortDataAttrs.map(a => { return a.attr });
+        //         let newAttrs: string[] = sda.map(a => { return a.attr });
+        //         sameAttrs = Tool.identicalArrays(oriAttrs, newAttrs);
+        //     }
+        // }
+        // if (!sameAttrs) {
+        //     // Renderer.renderDataAttrs(sda);//for data binding
+        // } else {
+        //find sort reference
+        const [found, attrAndOrder] = Util.findUpdatedAttrOrder(sda);
+        //reorder data items
+        if (found) {
+            this._sortDataAttrs = sda;
+            Reducer.triger(action.UPDATE_DATA_ORDER, Util.sortDataTable(attrAndOrder));
+            Renderer.renderDataTable(this.dataTable);
         }
-        if (!sameAttrs) {
-            // Renderer.renderDataAttrs(sda);//for data binding
-        } else {
-            //find sort reference
-            const [found, attrAndOrder] = Util.findUpdatedAttrOrder(sda);
-            //reorder data items
-            if (found) {
-                this._sortDataAttrs = sda;
-                Reducer.triger(action.UPDATE_DATA_ORDER, Util.sortDataTable(attrAndOrder));
-                Renderer.renderDataTable(this.dataTable);
-            }
-        }
+        // }
         this._sortDataAttrs = sda;
     }
     get sortDataAttrs(): ISortDataAttr[] {

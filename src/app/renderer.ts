@@ -401,7 +401,6 @@ export default class Renderer {
         }
         const shownThumbnail: number = Math.floor((zl - ViewWindow.MIN_ZOOM_LEVEL) / ((ViewWindow.MAX_ZOOM_LEVEL - ViewWindow.MIN_ZOOM_LEVEL) / (state.chartThumbNailZoomLevels / 2)));
         const kfZoomLevel: number = Math.floor((zl - ViewWindow.MIN_ZOOM_LEVEL) / ((ViewWindow.MAX_ZOOM_LEVEL - ViewWindow.MIN_ZOOM_LEVEL) / state.chartThumbNailZoomLevels));
-        console.log('kf zoom level: ', kfZoomLevel);
         // KfItem.allKfItems.forEach((kfItem: KfItem) => {
         //     kfItem.chartThumbnails.forEach((ct: SVGImageElement, i: number) => {
         //         if (i === shownThumbnail) {
@@ -415,7 +414,6 @@ export default class Renderer {
         //set visibility of kfgroups and kfitems
         KfGroup.allAniGroups.forEach((aniKfGroup: KfGroup) => {
             //aniKfGroup can not be a group that align to other groups
-            console.log('test whether c is alignto others', aniKfGroup.container, aniKfGroup.alignTarget, aniKfGroup);
             // if (!(typeof aniKfGroup.alignTarget !== 'undefined' && aniKfGroup.alignType === Animation.alignTarget.withEle)) {
             aniKfGroup.zoomGroup(kfZoomLevel, shownThumbnail);
             // }
