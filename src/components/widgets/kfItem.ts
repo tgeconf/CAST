@@ -434,7 +434,7 @@ export default class KfItem extends KfTimingIllus {
         if (typeof this.preOmit !== 'undefined') {
             const currentKfTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
             const oriTrans: ICoord = Tool.extractTransNums(this.preOmit.container.getAttributeNS(null, 'transform'));
-            this.preOmit.container.setAttributeNS(null, 'transform', `translate(${currentKfTrans.x - this.preOmit.oWidth - KfGroup.PADDING}, ${oriTrans.y})`);
+            this.preOmit.container.setAttributeNS(null, 'transform', `translate(${this.preOmit.omitType === KfOmit.KF_ALIGN ? currentKfTrans.x - this.preOmit.oWidth - KfGroup.PADDING : currentKfTrans.x - this.preOmit.oWidth}, ${oriTrans.y})`);
             console.log('test translating kfomit with kf: ', this.container, this.preOmit.container);
             // this.preOmit.updateTrans(oriTrans.x + transX, oriTrans.y + KfOmit.OMIT_H / 1);
         }
@@ -1050,10 +1050,11 @@ export default class KfItem extends KfTimingIllus {
                     this.parentObj.kfOmits[0].updateNum(this.parentObj.kfOmits[0].omittedNum - 1);
                     this.parentObj.translateGroup(this, kfWidthWithWhiteSpace, false, false, false);
                     //restore the omit position to the right side of its preItem
-                    const preItemTrans: ICoord = Tool.extractTransNums(this.parentObj.kfOmits[0].preItem.container.getAttributeNS(null, 'transform'));
-                    const oriOmitTrans: ICoord = Tool.extractTransNums(this.parentObj.kfOmits[0].container.getAttributeNS(null, 'transform'));
-                    const preKfWidth: number = (<KfItem>this.parentObj.kfOmits[0].preItem).container.getBoundingClientRect().width / state.zoomLevel;
-                    this.parentObj.kfOmits[0].updateTrans(preItemTrans.x + preKfWidth, oriOmitTrans.y + this.parentObj.kfOmits[0].oHeight / 2);
+                    // const preItemTrans: ICoord = Tool.extractTransNums(this.parentObj.kfOmits[0].preItem.container.getAttributeNS(null, 'transform'));
+                    // const oriOmitTrans: ICoord = Tool.extractTransNums(this.parentObj.kfOmits[0].container.getAttributeNS(null, 'transform'));
+                    // const preKfWidth: number = (<KfItem>this.parentObj.kfOmits[0].preItem).container.getBoundingClientRect().width / state.zoomLevel;
+                    // this.parentObj.kfOmits[0].updateTrans(preItemTrans.x + preKfWidth, oriOmitTrans.y + this.parentObj.kfOmits[0].oHeight / 2);
+                    this.transOmitsWithItem();
                 }
             }
         }

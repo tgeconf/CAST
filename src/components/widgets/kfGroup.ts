@@ -180,28 +180,25 @@ export default class KfGroup extends KfTimingIllus {
         this.container.setAttributeNS(null, 'id', `group${this.id}`);
         if (this.parentObj instanceof KfTrack) {
             this.posiY = 1;
-            if (this.alignMerge) {
+            if (typeof this.alignTarget !== 'undefined' && this.alignType === Animation.alignTarget.withEle) {
                 //find the aligned group
                 const alignWithGroup: KfGroup = this.fetchAlignWithGroup();
-                //align to the lowest group
-                const lowestGroupBBox: DOMRect = alignWithGroup.fetchFirstKf().parentObj.container.getBoundingClientRect();//fixed
-                const transY: number = (this.parentObj.container.getBoundingClientRect().top - lowestGroupBBox.top) / state.zoomLevel + 2;
-                this.posiY -= transY;
-                //hide omits in alignTo group
-                // alignWithGroup.kfOmits.forEach((kfo: KfOmit) => {
-                //     kfo.hideOmit();
-                // })
+
+                if (this.alignMerge) {
+                    //align to the lowest group
+                    const lowestGroupBBox: DOMRect = alignWithGroup.fetchFirstKf().parentObj.container.getBoundingClientRect();//fixed
+                    const transY: number = (this.parentObj.container.getBoundingClientRect().top - lowestGroupBBox.top) / state.zoomLevel + 2;
+                    this.posiY -= transY;
+                } else {
+                    //translate the omit in alignWith group
+                    const heightDiff: number = this.parentObj.trackPosiY - KfTrack.allTracks.get(alignWithGroup.targetTrackId).trackPosiY + KfTrack.TRACK_HEIGHT - KfGroup.TITLE_HEIHGT;
+                    alignWithGroup.kfOmits.forEach((omit: KfOmit) => {
+                        const oriTrans: ICoord = Tool.extractTransNums(omit.container.getAttributeNS(null, 'transform'));
+                        omit.updateTrans(oriTrans.x, heightDiff / 2);
+                        omit.createUseTag();
+                    })
+                }
             }
-
-            //hide omits in alignto group
-            // console.log('check hiding: ', this.container, this, this.alignTarget, this.alignType);
-            // if (typeof this.alignTarget !== 'undefined' && this.alignType === Animation.alignTarget.withEle) {
-            //     this.kfOmits.forEach((kfo: KfOmit) => {
-            //         console.log('hidiing: ', kfo.container);
-            //         kfo.hideOmit();
-            //     })
-            // }
-
             let transX: number = this.parentObj.availableInsert;
             if (this.preAniId !== '' && this.timingRef === TimingSpec.timingRef.previousStart) {
                 transX = Tool.extractTransNums(KfGroup.allAniGroups.get(this.preAniId).container.getAttributeNS(null, 'transform')).x;
@@ -935,13 +932,13 @@ export default class KfGroup extends KfTimingIllus {
                 }
                 if (countingBBox) {
                     const tmpBBox: DOMRect = c.container.getBoundingClientRect();//fixed
-                    if (tmpBBox.top < maxBoundry.top) {
+                    if (tmpBBox.top < maxBoundry.top && !(c instanceof KfOmit)) {
                         maxBoundry.top = tmpBBox.top;
                     }
                     if (tmpBBox.right > maxBoundry.right) {
                         maxBoundry.right = tmpBBox.right;
                     }
-                    if (tmpBBox.bottom > maxBoundry.bottom) {
+                    if (tmpBBox.bottom > maxBoundry.bottom && !(c instanceof KfOmit)) {
                         maxBoundry.bottom = tmpBBox.bottom;
                     }
                     if (tmpBBox.left < maxBoundry.left) {

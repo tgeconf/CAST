@@ -1,5 +1,5 @@
 import { state, IState, State } from './state'
-import { IDataItem, ISortDataAttr, IKeyframeGroup, IKeyframe, IKfGroupSize, IPath } from './core/ds'
+import { IDataItem, ISortDataAttr, IKeyframeGroup, IKeyframe, IKfGroupSize, IPath, IOmitPattern } from './core/ds'
 import { ChartSpec, Animation } from 'canis_toolkit'
 import CanisGenerator, { canis, ICanisSpec } from './core/canisGenerator'
 import ViewWindow, { ViewToolBtn, ViewContent } from '../components/viewWindow'
@@ -122,6 +122,7 @@ export default class Renderer {
         //reset
         document.getElementById(KfContainer.KF_BG).innerHTML = '';
         document.getElementById(KfContainer.KF_FG).innerHTML = '';
+        document.getElementById(KfContainer.KF_OMIT).innerHTML = '';
         const placeHolder: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         placeHolder.setAttributeNS(null, 'width', '1');
         placeHolder.setAttributeNS(null, 'height', '18');
@@ -288,17 +289,26 @@ export default class Renderer {
             let kfIdxToDraw: number[] = [0, 1, kfg.keyframes.length - 1];
             let isAlignWith: number = 0;//0 -> neither align with nor align to, 1 -> align with, 2 -> align to 
             let kfOmitType: string = KfOmit.KF_OMIT;
-            let mergePattern: boolean[] = [];
-            let timingPattern: string[] = [];
+            let omitPattern: IOmitPattern[] = [];
             //this group is the align target
             if (alignWithAnis.size > 0) {
                 isAlignWith = 1;
                 kfOmitType = KfOmit.KF_ALIGN;
+                omitPattern.push({
+                    merge: typeof kfg.merge === 'undefined' ? false : kfg.merge,
+                    timing: kfg.timingRef,
+                    hasOffset: kfg.offsetIcon,
+                    hasDuration: true
+                })
                 alignWithAnis.forEach((se: number[], aniId: string) => {
                     console.log('checking alignmerge: ', aniId, KfGroup.allAniGroupInfo.get(aniId), KfGroup.allAniGroupInfo);
                     const tmpKfg: IKeyframeGroup = KfGroup.allAniGroupInfo.get(aniId);
-                    mergePattern.push(typeof tmpKfg.merge === 'undefined' ? false : tmpKfg.merge);
-                    timingPattern.push(tmpKfg.timingRef);
+                    omitPattern.push({
+                        merge: typeof tmpKfg.merge === 'undefined' ? false : tmpKfg.merge,
+                        timing: tmpKfg.timingRef,
+                        hasOffset: tmpKfg.offsetIcon,
+                        hasDuration: true
+                    });
                     kfIdxToDraw.push(se[0]);
                     kfIdxToDraw.push(se[1]);
                     if (se[0] + 1 < se[1]) {
@@ -325,8 +335,7 @@ export default class Renderer {
                         if (omitNum > 0) {
                             kfOmit = new KfOmit();
                             if (kfOmitType === KfOmit.KF_ALIGN) {
-                                kfOmit.omitMergePattern = mergePattern;
-                                kfOmit.omitTimingPattern = timingPattern;
+                                kfOmit.omitPattern = omitPattern;
                             }
                             kfOmit.createOmit(kfOmitType, kfPosiX, omitNum, kfGroup, kfg.keyframes[1].delayIcon, kfg.keyframes[1].durationIcon, kfGroup.children[1].kfHeight / 2);
                             kfGroup.children.push(kfOmit);

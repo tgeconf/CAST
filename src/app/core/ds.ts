@@ -81,3 +81,10 @@ export interface IActivatePlusBtn {
     selectedMarksEachStep: Map<number, string[]>,
     renderedUniqueIdx: number
 }
+
+export interface IOmitPattern {
+    merge: boolean
+    timing: string
+    hasOffset: boolean
+    hasDuration: boolean
+}

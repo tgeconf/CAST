@@ -16,6 +16,7 @@ export class KfContainer {
     static KF_BG: string = 'kfBgG';
     static KF_FG: string = 'kfFgG';
     static KF_POPUP: string = 'kfPopupG';
+    static KF_OMIT:string = 'kfOmits';
     static KF_HINT: string = 'kfHintG';
     static KF_MENU: string = 'kfMenuG';
     static SLIDER_W: number = 10;
@@ -106,6 +107,10 @@ export class KfContainer {
         placeHolder.setAttributeNS(null, 'fill', '#00000000');
         kfFgG.appendChild(placeHolder);
         this.kfTrackContainer.appendChild(kfFgG);
+
+        const kfOmitG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        kfOmitG.setAttributeNS(null, 'id', KfContainer.KF_OMIT);
+        this.kfTrackContainer.appendChild(kfOmitG);
 
         const kfPopupG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         kfPopupG.setAttributeNS(null, 'id', KfContainer.KF_POPUP);

@@ -3,12 +3,18 @@ import KfItem from "./kfItem";
 import { ICoord } from "../../util/ds";
 import Tool from "../../util/tool";
 import { state } from "../../app/state";
-import { Animation } from 'canis_toolkit'
+import { Animation, TimingSpec } from 'canis_toolkit'
+import { IOmitPattern } from "../../app/core/ds";
+import IntelliRefLine from "./intelliRefLine";
+import { KfContainer } from "../kfContainer";
 
 export default class KfOmit {
     static OMIT_WIDTH: number = 36;
     static OMIT_W_UNIT: number = KfOmit.OMIT_WIDTH / 6;
+    static OMIT_SUB_WIDTH: number = 24;
+    static OMIT_SUB_W_UNIT: number = KfOmit.OMIT_SUB_WIDTH / 6;
     static OMIT_HEIGHT: number = 20;
+    static OMIT_SUB_HEIGHT: number = 14;
     static KF_OMIT: string = 'kfOmit';
     static KF_GROUP_OMIT: string = 'kfGroupOmit';
     static KF_ALIGN: string = 'kfAlign';
@@ -27,22 +33,19 @@ export default class KfOmit {
     public startX: number;
     public startY: number;
     public omitType: string;
-    public omitMergePattern: boolean[] = [];
-    public omitTimingPattern: string[] = [];
+    public omitPattern: {
+        merge: boolean
+        timing: string
+        hasOffset: boolean
+        hasDuration: boolean
+    }[] = [];
     public omittedNum: number;//could be kfitem or kfgroup
     public kfIcon: SVGRectElement;
     public offsetIcon: SVGRectElement;
     public durationIcon: SVGRectElement;
     public IconComb: SVGGElement;
-    // public subIconContainer1: SVGGElement;
-    // public subIcon1: SVGRectElement;
-    // public subOffsetIcon1: SVGRectElement;
-    // public subDurationIcon1: SVGRectElement;
-    // public subIconContainer2: SVGGElement;
-    // public subIcon2: SVGRectElement;
-    // public subOffsetIcon2: SVGRectElement;
-    // public subDurationIcon2: SVGRectElement;
     public rendered: boolean = true;
+    public useTag: SVGUseElement;
 
     public static reset() {
         this.omitIdx = 0;
@@ -67,6 +70,7 @@ export default class KfOmit {
 
     public renderOmit() {
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.container.id = this.id;
         console.log('render omit : ', this.container, this.preItem);
         //create thumbnail
         this.createThumbnail(this.omittedNum);
@@ -82,6 +86,21 @@ export default class KfOmit {
         this.container.setAttributeNS(null, 'transform', `translate(${this.startX + KfGroup.PADDING}, ${this.startY - this.oHeight / 2})`);
     }
 
+    public createUseTag() {
+        this.useTag = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        this.useTag.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `#${this.id}`);
+        document.getElementById(KfContainer.KF_OMIT).appendChild(this.useTag);
+        this.updateUseTagPosi();
+        // this.hideOmit();
+    }
+
+    public updateUseTagPosi() {
+        const kfFgBbox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();
+        const parentBbox: DOMRect = this.parentObj.container.getBoundingClientRect();
+        this.useTag.setAttributeNS(null, 'x', `${(parentBbox.x - kfFgBbox.x) / state.zoomLevel}`);
+        this.useTag.setAttributeNS(null, 'y', `${(parentBbox.y - kfFgBbox.y) / state.zoomLevel}`);
+    }
+
     public createThumbnail(omittedNum: number): void {
         this.iconContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.iconContainer.setAttributeNS(null, 'transform', `translate(${KfOmit.OMIT_W_UNIT / 2}, 0)`);
@@ -94,15 +113,8 @@ export default class KfOmit {
                 this.iconContainer.appendChild(this.kfIcon);
                 break;
             case KfOmit.KF_ALIGN:
-                console.log('creating align kfs omtis');
-                this.oWidth = KfOmit.OMIT_WIDTH * 3;
-                this.oHeight = KfOmit.OMIT_HEIGHT * 2;
-                this.kfIcon = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                this.kfIcon.setAttributeNS(null, 'y', '0');
-                this.kfIcon.setAttributeNS(null, 'fill', '#ff0000');
-                this.kfIcon.setAttributeNS(null, 'width', `${this.oWidth}`);
-                this.kfIcon.setAttributeNS(null, 'height', `${this.oHeight}`);
-                this.iconContainer.appendChild(this.kfIcon);
+                this.createThumbnailComb();
+                this.iconContainer.appendChild(this.IconComb);
                 break;
             case KfOmit.KF_GROUP_OMIT:
                 this.kfIcon = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -130,6 +142,82 @@ export default class KfOmit {
         this.updateThumbnail(this.hasOffset, this.hasDuration);
         this.createNum(omittedNum);
         this.container.appendChild(this.iconContainer);
+    }
+
+    public createThumbnailComb() {
+        this.IconComb = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        let trackCount: number = 0;
+        this.oWidth = KfOmit.OMIT_SUB_WIDTH;
+        this.oHeight = KfOmit.OMIT_SUB_HEIGHT;
+        this.omitPattern.forEach((ommittedKf: IOmitPattern, idx: number) => {
+            if (ommittedKf.timing === TimingSpec.timingRef.previousStart || !ommittedKf.merge) {
+                trackCount++;
+            }
+            this.IconComb.appendChild(this.createSubThumbnail(
+                ommittedKf.hasOffset,
+                trackCount,
+                idx,
+                ommittedKf.timing === TimingSpec.timingRef.previousEnd,
+                ommittedKf.merge
+            ))
+        })
+    }
+
+    /**
+     * create single thumbnail in the combination
+     * @param hasOffset 
+     * @param index 
+     */
+    public createSubThumbnail(hasOffset: boolean, trackNum: number, index: number, afterPre: boolean, merge: boolean): SVGGElement {
+        const tmpContainer: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        tmpContainer.setAttributeNS(null, 'transform', `translate(${afterPre ? KfOmit.OMIT_SUB_WIDTH : 0}, ${trackNum * KfOmit.OMIT_SUB_HEIGHT})`);
+        //update the omit size 
+        if (afterPre) {
+            this.oWidth = KfOmit.OMIT_SUB_WIDTH * 2;
+        }
+        // this.oWidth = afterPre ? this.oWidth + KfOmit.OMIT_SUB_WIDTH : this.oWidth;
+        this.oHeight = (trackNum + 1) * KfOmit.OMIT_SUB_HEIGHT > this.oHeight ? (trackNum + 1) * KfOmit.OMIT_SUB_HEIGHT : this.oHeight;
+        if (hasOffset) {
+            const offsetBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            offsetBg.setAttributeNS(null, 'fill', KfItem.OFFSET_COLOR);
+            offsetBg.setAttributeNS(null, 'width', `${KfOmit.OMIT_SUB_W_UNIT}`);
+            offsetBg.setAttributeNS(null, 'height', `${KfOmit.OMIT_SUB_HEIGHT}`);
+            tmpContainer.appendChild(offsetBg);
+        }
+        const kfBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        kfBg.setAttributeNS(null, 'fill', '#ffffff');
+        kfBg.setAttributeNS(null, 'x', `${hasOffset ? KfOmit.OMIT_SUB_W_UNIT : 0}`);
+        kfBg.setAttributeNS(null, 'width', `${hasOffset ? KfOmit.OMIT_SUB_W_UNIT * 4 : KfOmit.OMIT_SUB_W_UNIT * 5}`);
+        kfBg.setAttributeNS(null, 'height', `${KfOmit.OMIT_SUB_HEIGHT}`);
+        tmpContainer.appendChild(kfBg);
+        const duraitonBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        duraitonBg.setAttributeNS(null, 'fill', KfItem.DURATION_COLOR);
+        duraitonBg.setAttributeNS(null, 'x', `${KfOmit.OMIT_SUB_W_UNIT * 5}`);
+        duraitonBg.setAttributeNS(null, 'height', `${KfOmit.OMIT_SUB_HEIGHT}`);
+        duraitonBg.setAttributeNS(null, 'width', `${KfOmit.OMIT_SUB_W_UNIT}`);
+        tmpContainer.appendChild(duraitonBg);
+
+        if (index > 0 && afterPre && merge) {
+            const frame: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            frame.setAttributeNS(null, 'width', `${KfOmit.OMIT_SUB_WIDTH}`);
+            frame.setAttributeNS(null, 'height', `${KfOmit.OMIT_SUB_HEIGHT}`);
+            frame.setAttributeNS(null, 'fill', 'none');
+            frame.setAttributeNS(null, 'stroke', IntelliRefLine.STROKE_COLOR);
+            frame.setAttributeNS(null, 'stroke-dasharray', '2 1');
+            tmpContainer.appendChild(frame);
+        } else if (afterPre && !merge) {
+            const lineStartY: number = -(trackNum - 1) * KfOmit.OMIT_SUB_HEIGHT;
+            const lineHeight: number = (trackNum + 1) * KfOmit.OMIT_SUB_HEIGHT;
+            const refLine: SVGLineElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            refLine.setAttributeNS(null, 'x1', '0');
+            refLine.setAttributeNS(null, 'x2', '0');
+            refLine.setAttributeNS(null, 'y1', `${lineStartY}`);
+            refLine.setAttributeNS(null, 'y2', `${KfOmit.OMIT_SUB_HEIGHT}`);
+            refLine.setAttributeNS(null, 'stroke', IntelliRefLine.STROKE_COLOR);
+            refLine.setAttributeNS(null, 'stroke-dasharray', '2 1');
+            tmpContainer.appendChild(refLine);
+        }
+        return tmpContainer;
     }
 
     public updateThumbnail(hasOffset: boolean, hasDuration: boolean): void {
@@ -180,7 +268,7 @@ export default class KfOmit {
     public createNum(omittedNum: number): void {
         this.num = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         this.num.setAttributeNS(null, 'x', `${this.oWidth / 2}`);
-        this.num.setAttributeNS(null, 'y', '15');
+        this.num.setAttributeNS(null, 'y', `${this.omitType === KfOmit.KF_ALIGN ? this.oHeight + 15 : 15}`);
         this.num.setAttributeNS(null, 'font-size', '12px');
         this.num.setAttributeNS(null, 'text-anchor', 'middle');
         this.num.innerHTML = `x${omittedNum}`;
@@ -195,7 +283,7 @@ export default class KfOmit {
     public createDots(): void {
         const dots: SVGTextElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         dots.setAttributeNS(null, 'x', `${this.oWidth / 2}`);
-        dots.setAttributeNS(null, 'y', `${this.oHeight + 10}`);
+        dots.setAttributeNS(null, 'y', `${this.omitType === KfOmit.KF_ALIGN ? this.oHeight + 25 : this.oHeight + 10}`);
         dots.setAttributeNS(null, 'font-size', '32px');
         dots.setAttributeNS(null, 'text-anchor', 'middle');
         dots.innerHTML = '...';
