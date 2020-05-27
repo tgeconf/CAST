@@ -290,6 +290,7 @@ export default class Renderer {
             let isAlignWith: number = 0;//0 -> neither align with nor align to, 1 -> align with, 2 -> align to 
             let kfOmitType: string = KfOmit.KF_OMIT;
             let omitPattern: IOmitPattern[] = [];
+            console.log('align anis: ', kfGroup.container, alignWithAnis);
             //this group is the align target
             if (alignWithAnis.size > 0) {
                 isAlignWith = 1;
@@ -300,6 +301,7 @@ export default class Renderer {
                     hasOffset: kfg.offsetIcon,
                     hasDuration: true
                 })
+
                 alignWithAnis.forEach((se: number[], aniId: string) => {
                     console.log('checking alignmerge: ', aniId, KfGroup.allAniGroupInfo.get(aniId), KfGroup.allAniGroupInfo);
                     const tmpKfg: IKeyframeGroup = KfGroup.allAniGroupInfo.get(aniId);
@@ -321,6 +323,7 @@ export default class Renderer {
                 kfIdxToDraw = [...kfIdxToDraw, ...alignToAni];
             }
             kfIdxToDraw = [...new Set(kfIdxToDraw)].sort((a: number, b: number) => a - b);
+            console.log('omit pattern: ', omitPattern);
 
             //rendering kf
             //check whether there should be a plus btn

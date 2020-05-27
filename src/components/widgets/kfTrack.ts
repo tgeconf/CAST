@@ -28,7 +28,8 @@ export default class KfTrack {
 
     public createTrack(fake: boolean = false): void {
         //TODO: consider insert new tracks
-        const numExistTracks: number = document.getElementsByClassName('kf-track').length;
+        const numExistTracks: number = document.querySelectorAll('.kf-track:not(.fake-track)').length;
+        // const numExistTracks: number = document.getElementsByClassName('kf-track').length;
         this.trackPosiY = numExistTracks * KfTrack.TRACK_HEIGHT + KfTrack.TRACK_PADDING_TOP;
         this.trackBgContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.trackBgContainer.setAttributeNS(null, 'transform', `translate(0, ${this.trackPosiY})`);
@@ -39,7 +40,7 @@ export default class KfTrack {
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.container.setAttributeNS(null, 'transform', `translate(0, ${numExistTracks * KfTrack.TRACK_HEIGHT + KfTrack.TRACK_PADDING_TOP})`);
         this.container.setAttributeNS(null, 'id', this.trackId);
-        this.container.setAttributeNS(null, 'class', 'kf-track');
+        this.container.setAttributeNS(null, 'class', `kf-track ${fake ? 'fake-track' : ''}`);
         document.getElementById(KfContainer.KF_FG).appendChild(this.container);
 
         KfTrack.trackIdx++;

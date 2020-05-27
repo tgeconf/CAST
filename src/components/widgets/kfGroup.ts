@@ -1107,9 +1107,15 @@ export default class KfGroup extends KfTimingIllus {
                     if (c instanceof KfItem) {
                         //whether this kf is aligned to other kfs
                         const alignToOthers: boolean = (typeof KfGroup.allAniGroups.get(c.aniId).alignTarget !== 'undefined' && KfGroup.allAniGroups.get(c.aniId).alignType === Animation.alignTarget.withEle);
-                        let hidingThisKf = alignToOthers ?
-                            (!KfItem.allKfItems.get(IntelliRefLine.kfLineMapping.get(c.id).theOtherEnd).renderWhenZooming) :
-                            ((kfItemCount === 1 || kfItemCount === 2) && idx !== this.children.length - 1);
+                        let hidingThisKf = false;
+                        if (alignToOthers) {
+                            let kflinePair: { theOtherEnd: number, lineId: number } = IntelliRefLine.kfLineMapping.get(c.id);
+                            if (typeof kflinePair !== 'undefined') {
+                                hidingThisKf = (!KfItem.allKfItems.get(IntelliRefLine.kfLineMapping.get(c.id).theOtherEnd).renderWhenZooming);
+                            }
+                        } else {
+                            hidingThisKf = ((kfItemCount === 1 || kfItemCount === 2) && idx !== this.children.length - 1);
+                        }
                         if (leafLevel > kzl) {//hide kfs whose level is deeper than leafLevel
                             if (hidingThisKf) {
                                 c.renderWhenZooming = false;

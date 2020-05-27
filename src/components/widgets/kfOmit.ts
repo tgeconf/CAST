@@ -150,12 +150,16 @@ export default class KfOmit {
         this.oWidth = KfOmit.OMIT_SUB_WIDTH;
         this.oHeight = KfOmit.OMIT_SUB_HEIGHT;
         this.omitPattern.forEach((ommittedKf: IOmitPattern, idx: number) => {
+            let trackNum: number = 1;
             if (ommittedKf.timing === TimingSpec.timingRef.previousStart || !ommittedKf.merge) {
                 trackCount++;
+                trackNum = trackCount;
             }
+            // const trackNum: number = ((!ommittedKf.merge && ommittedKf.timing === TimingSpec.timingRef.previousEnd) || ommittedKf.timing === TimingSpec.timingRef.previousStart) ? trackCount : 0;
+            console.log('track number: ', trackNum, ommittedKf.merge, ommittedKf.timing);
             this.IconComb.appendChild(this.createSubThumbnail(
                 ommittedKf.hasOffset,
-                trackCount,
+                trackNum,
                 idx,
                 ommittedKf.timing === TimingSpec.timingRef.previousEnd,
                 ommittedKf.merge
@@ -170,12 +174,9 @@ export default class KfOmit {
      */
     public createSubThumbnail(hasOffset: boolean, trackNum: number, index: number, afterPre: boolean, merge: boolean): SVGGElement {
         const tmpContainer: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        tmpContainer.setAttributeNS(null, 'transform', `translate(${afterPre ? KfOmit.OMIT_SUB_WIDTH : 0}, ${trackNum * KfOmit.OMIT_SUB_HEIGHT})`);
+        tmpContainer.setAttributeNS(null, 'transform', `translate(${afterPre ? this.oWidth : 0}, ${trackNum * KfOmit.OMIT_SUB_HEIGHT})`);
         //update the omit size 
-        if (afterPre) {
-            this.oWidth = KfOmit.OMIT_SUB_WIDTH * 2;
-        }
-        // this.oWidth = afterPre ? this.oWidth + KfOmit.OMIT_SUB_WIDTH : this.oWidth;
+        this.oWidth = afterPre ? this.oWidth + KfOmit.OMIT_SUB_WIDTH : this.oWidth;
         this.oHeight = (trackNum + 1) * KfOmit.OMIT_SUB_HEIGHT > this.oHeight ? (trackNum + 1) * KfOmit.OMIT_SUB_HEIGHT : this.oHeight;
         if (hasOffset) {
             const offsetBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
