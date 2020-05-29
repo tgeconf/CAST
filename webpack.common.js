@@ -9,7 +9,7 @@ module.exports = {
     plugins: [
         new CleanWebpackPlugin(),//clean un-used files in /dist 
         new HtmlWebpackPlugin({//create a new index.html
-            title: 'Canis GEditor',
+            title: 'CAST',
             favicon: './src/assets/img/logo.ico',
         }),
     ],

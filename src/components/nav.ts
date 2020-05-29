@@ -22,7 +22,7 @@ export default class Nav {
         logo.src = LogoImg;
         logoContainer.appendChild(logo);
         const logoText: HTMLSpanElement = document.createElement('span');
-        logoText.textContent = 'Canis';
+        logoText.textContent = 'CAST';
         logoText.className = 'title';
         logoContainer.appendChild(logoText);
         this.navContainer.appendChild(logoContainer);
@@ -36,11 +36,6 @@ export default class Nav {
             title: 'new project',
             evtType: NavBtn.CREATE_NEW
         }));
-        // this.navContainer.appendChild(new NavBtn().createNavBtn({
-        //     classNameStr: 'open-eg',
-        //     title: 'load example',
-        //     evtType: NavBtn.LOAD_EXAMPLES
-        // }));
         this.navContainer.appendChild(new NavBtn().createNavBtn({
             classNameStr: 'open',
             title: 'open project',
