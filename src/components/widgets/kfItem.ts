@@ -1028,7 +1028,7 @@ export default class KfItem extends KfTimingIllus {
                     this.parentObj.translateGroup(this, -kfWidthWithWhiteSpace + kfOmit.oWidth, false, false, false);
                     //update the position of omits
                     const oriOmitTrans: ICoord = Tool.extractTransNums(kfOmit.container.getAttributeNS(null, 'transform'));
-                    kfOmit.updateTrans(oriOmitTrans.x - kfOmit.oWidth, oriOmitTrans.y + kfOmit.oHeight / 2);
+                    kfOmit.updateTrans(oriOmitTrans.x - kfOmit.oWidth - KfGroup.PADDING, oriOmitTrans.y + kfOmit.oHeight / 2);
                 } else {
                     this.parentObj.kfOmits[0].updateNum(this.parentObj.kfOmits[0].omittedNum + 1);
                     this.parentObj.translateGroup(this, -kfWidthWithWhiteSpace, false, false, false);

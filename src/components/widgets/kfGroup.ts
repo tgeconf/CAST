@@ -782,6 +782,7 @@ export default class KfGroup extends KfTimingIllus {
                 if (updateStartItemAligned) {//update its aligned elements
                     if (tmpTrans.x >= currentTransX && !(count === 0 && k instanceof KfOmit)) {
                         if (k.id !== startTransItem.id) {
+                            console.log('going to trasnlate2 : ', k.container, tmpTrans.x + transX, transX);
                             k.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transX}, ${tmpTrans.y})`);
                             if (k instanceof KfItem) {
                                 k.transOmitsWithItem();
@@ -1155,7 +1156,7 @@ export default class KfGroup extends KfTimingIllus {
                 } else {
                     (<KfGroup>this.parentObj).kfOmits[0].updateNum((<KfGroup>this.parentObj).kfOmits[0].omittedNum + 1);
                     // this.translateWholeGroup(this.container.getBoundingClientRect().width / state.zoomLevel);
-                    this.translateGroup((<KfGroup>this.parentObj).kfOmits[0], -groupWidth, true, false, false);
+                    this.translateGroup((<KfGroup>this.parentObj).kfOmits[0], -groupWidth, true, true, false);
                 }
                 this.container.setAttributeNS(null, 'display', 'none');
             } else {//not rendered -> rendered
