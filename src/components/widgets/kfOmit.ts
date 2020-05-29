@@ -153,6 +153,7 @@ export default class KfOmit {
         let trackCount: number = 0;
         this.oWidth = KfOmit.OMIT_SUB_WIDTH;
         this.oHeight = KfOmit.OMIT_SUB_HEIGHT;
+        console.log('rendering omit pattern: ', this.omitPattern);
         this.omitPattern.forEach((ommittedKf: IOmitPattern, idx: number) => {
             let trackNum: number = 1;
             if (ommittedKf.timing === TimingSpec.timingRef.previousStart || !ommittedKf.merge) {
@@ -181,9 +182,10 @@ export default class KfOmit {
      */
     public createSubThumbnail(hasOffset: boolean, trackNum: number, index: number, afterPre: boolean, merge: boolean): SVGGElement {
         const tmpContainer: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        tmpContainer.setAttributeNS(null, 'transform', `translate(${afterPre ? this.oWidth : 0}, ${trackNum * KfOmit.OMIT_SUB_HEIGHT})`);
+
+        tmpContainer.setAttributeNS(null, 'transform', `translate(${(afterPre && index > 0) ? this.oWidth : 0}, ${trackNum * KfOmit.OMIT_SUB_HEIGHT})`);
         //update the omit size 
-        this.oWidth = afterPre ? this.oWidth + KfOmit.OMIT_SUB_WIDTH : this.oWidth;
+        this.oWidth = (afterPre && index > 0) ? this.oWidth + KfOmit.OMIT_SUB_WIDTH : this.oWidth;
         this.oHeight = (trackNum + 1) * KfOmit.OMIT_SUB_HEIGHT > this.oHeight ? (trackNum + 1) * KfOmit.OMIT_SUB_HEIGHT : this.oHeight;
         if (hasOffset) {
             const offsetBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -213,7 +215,7 @@ export default class KfOmit {
             frame.setAttributeNS(null, 'stroke', IntelliRefLine.STROKE_COLOR);
             frame.setAttributeNS(null, 'stroke-dasharray', '2 1');
             tmpContainer.appendChild(frame);
-        } else if (afterPre && !merge) {
+        } else if (index > 0 && afterPre && !merge) {
             const lineStartY: number = -(trackNum - 1) * KfOmit.OMIT_SUB_HEIGHT;
             const lineHeight: number = (trackNum + 1) * KfOmit.OMIT_SUB_HEIGHT;
             const refLine: SVGLineElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');

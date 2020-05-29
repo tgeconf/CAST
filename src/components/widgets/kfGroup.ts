@@ -1007,7 +1007,7 @@ export default class KfGroup extends KfTimingIllus {
                     } else if (this.children.length > 3 && i === this.children.length - 2) {
                         this.kfOmits.forEach((kfO: KfOmit) => {
                             kfO.updateThumbnail(this.kfHasOffset, this.kfHasDuration);
-                            kfO.updateNum(this.kfNum - 3);
+                            // kfO.updateNum(this.kfNum - 3);
                             kfO.updateTrans(this.children[1].posiX + this.children[1].width, KfGroup.PADDING + this.children[1].posiY + (this.children[1].container.getBoundingClientRect().height / state.zoomLevel / 2));//fixed
                         })
                     }

@@ -251,7 +251,7 @@ export default class Renderer {
             }
         } else if (totalKfgNum > 3 && kfgIdx === totalKfgNum - 2) {
             let kfOmit: KfOmit = new KfOmit();
-            kfOmit.createOmit(KfOmit.KF_GROUP_OMIT, 0, 0, parentObj, false, false, 0);
+            kfOmit.createOmit(KfOmit.KF_GROUP_OMIT, 0, totalKfgNum - 3, parentObj, false, false, 0);
             parentObj.children.push(kfOmit);//why comment this out!!!!
             parentObj.kfOmits.push(kfOmit);
         }
