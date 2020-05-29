@@ -1022,13 +1022,14 @@ export default class KfItem extends KfTimingIllus {
                 if (this.parentObj.kfOmits.length === 0) {
                     const kfTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
                     const kfOmit: KfOmit = new KfOmit();
-                    kfOmit.createOmit(KfOmit.KF_OMIT, kfTrans.x + currentKfWidth, 1, this.parentObj, this.hasOffset, this.hasDuration, this.kfHeight / 2, this.idxInGroup);
+                    kfOmit.createOmit(KfOmit.KF_OMIT, kfTrans.x + kfWidthWithWhiteSpace - KfGroup.PADDING, 1, this.parentObj, this.hasOffset, this.hasDuration, this.kfHeight / 2, this.idxInGroup);
                     this.parentObj.children.splice(this.idxInGroup + 1, 0, kfOmit);
                     this.parentObj.kfOmits.push(kfOmit);
                     this.parentObj.translateGroup(this, -kfWidthWithWhiteSpace + kfOmit.oWidth, false, false, false);
                     //update the position of omits
                     const oriOmitTrans: ICoord = Tool.extractTransNums(kfOmit.container.getAttributeNS(null, 'transform'));
-                    kfOmit.updateTrans(oriOmitTrans.x - kfOmit.oWidth - KfGroup.PADDING, oriOmitTrans.y + kfOmit.oHeight / 2);
+                    kfOmit.updateTrans(oriOmitTrans.x - kfOmit.oWidth, oriOmitTrans.y + kfOmit.oHeight / 2);
+                    console.log('update omit posit: ', kfOmit.container, oriOmitTrans.x - kfOmit.oWidth);
                 } else {
                     this.parentObj.kfOmits[0].updateNum(this.parentObj.kfOmits[0].omittedNum + 1);
                     this.parentObj.translateGroup(this, -kfWidthWithWhiteSpace, false, false, false);
@@ -1040,12 +1041,10 @@ export default class KfItem extends KfTimingIllus {
                 }
                 if (this.parentObj.kfOmits[0].omittedNum === 1) {//remove kfOmit
                     const tmpOmit: KfOmit = this.parentObj.kfOmits[0];
-                    if (this.parentObj.container.contains(tmpOmit.container)) {
-                        this.parentObj.container.removeChild(tmpOmit.container);
-                    }
+                    tmpOmit.removeOmit(this.parentObj);
                     this.parentObj.children.splice(this.idxInGroup + 1, 1);
-                    this.parentObj.kfOmits.splice(0, 1);
                     this.parentObj.translateGroup(this, kfWidthWithWhiteSpace - this.parentObj.kfOmits[0].oWidth, false, false, false);
+                    this.parentObj.kfOmits.splice(0, 1);
                 } else {//update number
                     this.parentObj.kfOmits[0].updateNum(this.parentObj.kfOmits[0].omittedNum - 1);
                     this.parentObj.translateGroup(this, kfWidthWithWhiteSpace, false, false, false);

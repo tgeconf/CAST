@@ -20,9 +20,9 @@ export default class ViewWindow {
     static VIDEO_VIEW_TITLE: string = 'animation';
     static HIDDEN_LOTTIE_ID: string = 'hiddenLottie';
     static KF_VIEW_TITLE: string = 'keyframe';
-    static MIN_ZOOM_LEVEL: number = 0.5
+    static MIN_ZOOM_LEVEL: number = 0.6
     static MAX_ZOOM_LEVEL: number = 1
-    static ZOOM_STEP: number = 0.01;
+    static ZOOM_STEP: number = 0.05;
 
     viewTitle: string;
     view: HTMLDivElement;

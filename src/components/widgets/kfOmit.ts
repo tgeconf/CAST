@@ -7,6 +7,7 @@ import { Animation, TimingSpec } from 'canis_toolkit'
 import { IOmitPattern } from "../../app/core/ds";
 import IntelliRefLine from "./intelliRefLine";
 import { KfContainer } from "../kfContainer";
+import KfTrack from "./kfTrack";
 
 export default class KfOmit {
     static OMIT_WIDTH: number = 36;
@@ -19,6 +20,7 @@ export default class KfOmit {
     static KF_GROUP_OMIT: string = 'kfGroupOmit';
     static KF_ALIGN: string = 'kfAlign';
     static omitIdx: number = 0;
+    static maxOmitWidth: number = KfOmit.OMIT_WIDTH;
 
     public id: string;
     public oWidth: number = KfOmit.OMIT_WIDTH;
@@ -49,6 +51,7 @@ export default class KfOmit {
 
     public static reset() {
         this.omitIdx = 0;
+        this.maxOmitWidth = KfOmit.OMIT_WIDTH;
     }
 
     public createOmit(omitType: string, startX: number, omittedNum: number, parentObj: KfGroup, hasOffset: boolean, hasDuration: boolean, startY: number, preItemIdx: number = -1): void {
@@ -77,10 +80,11 @@ export default class KfOmit {
         //create dots
         this.createDots();
         this.parentObj.container.appendChild(this.container);
-        if (this.parentObj.children[this.parentObj.children.length - 1] instanceof KfItem) {
-            this.correctTrans(this.startY - this.oHeight / 2);
-        }
+        // if (this.parentObj.children[this.parentObj.children.length - 1] instanceof KfItem) {
+        // this.correctTrans(this.startY - this.oHeight / 2);
+        // }
         if (typeof this.parentObj.alignTarget !== 'undefined' && this.parentObj.alignType === Animation.alignTarget.withEle) {
+            console.log('find omit align to: ', this.parentObj);
             this.hideOmit();
         }
         this.container.setAttributeNS(null, 'transform', `translate(${this.startX + KfGroup.PADDING}, ${this.startY - this.oHeight / 2})`);
@@ -165,6 +169,9 @@ export default class KfOmit {
                 ommittedKf.merge
             ))
         })
+        if (this.oWidth > KfOmit.maxOmitWidth) {
+            KfOmit.maxOmitWidth = this.oWidth;
+        }
     }
 
     /**
@@ -256,10 +263,12 @@ export default class KfOmit {
     /**
      * when this group is aligned to other groups, then the startX is not correct
      */
-    public correctTrans(currentTransY: number): void {
-        const preKfTrans: ICoord = Tool.extractTransNums(this.preItem.container.getAttributeNS(null, 'transform'));
-        const preKfBBox: DOMRect = this.preItem.container.getBoundingClientRect();
-        this.container.setAttributeNS(null, 'transform', `translate(${preKfTrans.x + preKfBBox.width / state.zoomLevel}, ${currentTransY})`);
+    public correctTrans(targetKf: KfItem): void {
+        const targetKfTrans: ICoord = Tool.extractTransNums(targetKf.container.getAttributeNS(null, 'transform'));
+        const targetKfBBox: DOMRect = targetKf.container.getBoundingClientRect();
+        const currentOmitBbox: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
+        console.log('kfomit pre: ', targetKf.container, targetKfTrans.x, targetKfBBox.width / state.zoomLevel, targetKfTrans.x + targetKfBBox.width / state.zoomLevel);
+        this.container.setAttributeNS(null, 'transform', `translate(${targetKfTrans.x + targetKfBBox.width / state.zoomLevel + KfGroup.PADDING}, ${currentOmitBbox.y})`);
     }
 
     public updateTrans(startX: number, startY: number): void {
@@ -300,6 +309,12 @@ export default class KfOmit {
     public hideOmit(): void {
         if (typeof this.container !== 'undefined') {
             this.container.setAttributeNS(null, 'opacity', '0');
+        }
+    }
+
+    public removeOmit(parentObj: KfGroup | KfTrack): void {
+        if (parentObj.container.contains(this.container)) {
+            parentObj.container.removeChild(this.container);
         }
     }
 }
