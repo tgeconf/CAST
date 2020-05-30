@@ -23,6 +23,8 @@ export default class KfOmit {
     static maxOmitWidth: number = KfOmit.OMIT_WIDTH;
 
     public id: string;
+    public idxInGroup: number = -1;
+    public isHidden: boolean = false;
     public oWidth: number = KfOmit.OMIT_WIDTH;
     public oHeight: number = KfOmit.OMIT_HEIGHT;
     public container: SVGGElement;
@@ -277,6 +279,10 @@ export default class KfOmit {
         this.container.setAttributeNS(null, 'transform', `translate(${startX}, ${startY - this.oHeight / 2})`);
     }
 
+    public translateItem(x: number, y: number) {
+        this.container.setAttributeNS(null, 'transform', `translate(${x}, ${y})`);
+    }
+
     public createNum(omittedNum: number): void {
         this.num = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         this.num.setAttributeNS(null, 'x', `${this.oWidth / 2}`);
@@ -304,12 +310,14 @@ export default class KfOmit {
 
     public showOmit(): void {
         if (typeof this.container !== 'undefined') {
+            this.isHidden = false;
             this.container.setAttributeNS(null, 'opacity', '1');
         }
     }
 
     public hideOmit(): void {
         if (typeof this.container !== 'undefined') {
+            this.isHidden = true;
             this.container.setAttributeNS(null, 'opacity', '0');
         }
     }

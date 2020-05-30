@@ -253,6 +253,7 @@ export default class Renderer {
             let kfOmit: KfOmit = new KfOmit();
             kfOmit.createOmit(KfOmit.KF_GROUP_OMIT, 0, totalKfgNum - 3, parentObj, false, false, 0);
             parentObj.children.push(kfOmit);//why comment this out!!!!
+            kfOmit.idxInGroup = parentObj.children.length - 1;
             parentObj.kfOmits.push(kfOmit);
         }
 
@@ -342,6 +343,7 @@ export default class Renderer {
                             }
                             kfOmit.createOmit(kfOmitType, kfPosiX, omitNum, kfGroup, kfg.keyframes[1].delayIcon, kfg.keyframes[1].durationIcon, kfGroup.children[1].kfHeight / 2);
                             kfGroup.children.push(kfOmit);
+                            kfOmit.idxInGroup = kfGroup.children.length - 1;
                             kfGroup.kfOmits.push(kfOmit);
                             kfPosiX += kfOmit.oWidth;
                         }

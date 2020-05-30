@@ -67,13 +67,15 @@ export default class IntelliRefLine {
                 alignWithKfBBox = alignWithKf.container.getBoundingClientRect();//fixed
                 alignToKfBBox = alignToKf.container.getBoundingClientRect();//fixed
 
-                if (alignToKfInfo.timingRef === TimingSpec.timingRef.previousEnd) {
-                    lineItem.line.setAttributeNS(null, 'x1', `${(alignWithKfBBox.right - containerBBox.left) / state.zoomLevel}`);
-                    lineItem.line.setAttributeNS(null, 'x2', `${(alignWithKfBBox.right - containerBBox.left) / state.zoomLevel}`);
-                } else {
-                    lineItem.line.setAttributeNS(null, 'x1', `${(alignWithKfBBox.left - containerBBox.left) / state.zoomLevel}`);
-                    lineItem.line.setAttributeNS(null, 'x2', `${(alignWithKfBBox.left - containerBBox.left) / state.zoomLevel}`);
-                }
+                // if (alignToKfInfo.timingRef === TimingSpec.timingRef.previousEnd) {
+                //     lineItem.line.setAttributeNS(null, 'x1', `${(alignWithKfBBox.right - containerBBox.left) / state.zoomLevel}`);
+                //     lineItem.line.setAttributeNS(null, 'x2', `${(alignWithKfBBox.right - containerBBox.left) / state.zoomLevel}`);
+                // } else {
+                //     lineItem.line.setAttributeNS(null, 'x1', `${(alignWithKfBBox.left - containerBBox.left) / state.zoomLevel}`);
+                //     lineItem.line.setAttributeNS(null, 'x2', `${(alignWithKfBBox.left - containerBBox.left) / state.zoomLevel}`);
+                // }
+                lineItem.line.setAttributeNS(null, 'x1', `${(alignToKfBBox.left - containerBBox.left) / state.zoomLevel}`);
+                lineItem.line.setAttributeNS(null, 'x2', `${(alignToKfBBox.left - containerBBox.left) / state.zoomLevel}`);
 
                 // lineItem.line.setAttributeNS(null, 'y1', `${24}`);
                 lineItem.line.setAttributeNS(null, 'y1', `${(alignWithKfBBox.top - containerBBox.top) / state.zoomLevel}`);

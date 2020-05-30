@@ -85,6 +85,7 @@ export default class KfItem extends KfTimingIllus {
         const changed: boolean = rwz !== this.renderWhenZooming;
         this._renderWhenZooming = rwz;
         if (changed) {
+            console.log('updated renderwhenzooming');
             this.showItemWhenZooming();
         }
     }
@@ -250,7 +251,8 @@ export default class KfItem extends KfTimingIllus {
             this.updateAlignPosi(this.kfInfo.alignTo);
             // KfItem.allKfItems.set(this.id, this);
             //check whether there is already a line
-            if (typeof IntelliRefLine.kfLineMapping.get(this.kfInfo.alignTo) !== 'undefined') {//already a line
+            if (typeof IntelliRefLine.kfLineMapping.get(this.id) !== 'undefined') {//already a line
+                // if (typeof IntelliRefLine.kfLineMapping.get(this.kfInfo.alignTo) !== 'undefined') {//already a line
                 const refLineId: number = IntelliRefLine.kfLineMapping.get(this.kfInfo.alignTo).lineId;
                 const oriToKf: number = IntelliRefLine.kfLineMapping.get(this.kfInfo.alignTo).theOtherEnd;
                 const oriToKfBottom: number = KfItem.allKfItems.get(oriToKf).container.getBoundingClientRect().bottom;//fixed
@@ -264,6 +266,7 @@ export default class KfItem extends KfTimingIllus {
             } else {// create a line
                 let refLine: IntelliRefLine = new IntelliRefLine();
                 refLine.createLine(this.kfInfo.alignTo, this.id);
+                console.log('created line: ', refLine.line);
                 KfItem.allKfItems.get(this.kfInfo.alignTo).parentObj.alignLines.push(refLine.id);
                 this.parentObj.alignLines.push(refLine.id);
             }
@@ -431,13 +434,18 @@ export default class KfItem extends KfTimingIllus {
      * reset the omit position to the left side of the kf
      */
     public transOmitsWithItem(): void {
-        if (typeof this.preOmit !== 'undefined') {
+        if (typeof this.preOmit !== 'undefined' && this.rendered && this.renderWhenZooming) {
+            // if (typeof this.preOmit !== 'undefined') {
             const currentKfTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
             const oriTrans: ICoord = Tool.extractTransNums(this.preOmit.container.getAttributeNS(null, 'transform'));
             this.preOmit.container.setAttributeNS(null, 'transform', `translate(${this.preOmit.omitType === KfOmit.KF_ALIGN ? currentKfTrans.x - this.preOmit.oWidth - KfGroup.PADDING : currentKfTrans.x - this.preOmit.oWidth}, ${oriTrans.y})`);
             console.log('test translating kfomit with kf: ', this.container, this.preOmit.container);
             // this.preOmit.updateTrans(oriTrans.x + transX, oriTrans.y + KfOmit.OMIT_H / 1);
         }
+    }
+
+    public translateItem(x: number, y: number) {
+        this.container.setAttributeNS(null, 'transform', `translate(${x}, ${y})`);
     }
 
     public findNextSibling(): KfItem | KfOmit {
@@ -986,6 +994,7 @@ export default class KfItem extends KfTimingIllus {
             let currentKfIdx: number = this.idxInGroup;
             let passedOmits: number = 0;
             let omitWidth: number = KfOmit.OMIT_WIDTH;
+
             while (true) {
                 if (currentKfIdx - 1 >= 0) {
                     const preChild: KfItem | KfOmit = this.parentObj.children[currentKfIdx - 1];
@@ -999,7 +1008,8 @@ export default class KfItem extends KfTimingIllus {
                             break;
                         }
                     } else if (preChild instanceof KfOmit) {
-                        omitWidth = preChild.oWidth;
+                        omitWidth = KfOmit.maxOmitWidth;
+                        // omitWidth = preChild.oWidth;
                         passedOmits++;
                     }
                     currentKfIdx--;
@@ -1008,14 +1018,25 @@ export default class KfItem extends KfTimingIllus {
                 }
             }
 
+            console.log('test show item when zooming: ', this.container, this.parentObj.children, kfWidthWithWhiteSpace, omitWidth);
+
             //if this kf is aligned to or with some kf, fetch the line
             let refLine: IntelliRefLine;
             if (typeof IntelliRefLine.kfLineMapping.get(this.id) !== 'undefined') {
+                console.log('found by it self');
                 refLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(this.id).lineId);
+            } else {
+                //check whether this is an alignto kf
+                if (typeof KfItem.allKfInfo.get(this.id).alignTo !== 'undefined' && typeof IntelliRefLine.kfLineMapping.get(KfItem.allKfInfo.get(this.id).alignTo) !== 'undefined') {
+                    console.log('found by alignwiht kf');
+                    refLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(KfItem.allKfInfo.get(this.id).alignTo).lineId);
+                }
             }
 
+            console.log('found ref line', refLine);
+
             if (!this.renderWhenZooming) {//rendered -> not rendered
-                this.container.setAttributeNS(null, 'display', 'none');
+                // this.container.setAttributeNS(null, 'display', 'none');
                 if (typeof refLine !== 'undefined') {
                     refLine.zoomHideLine();
                 }
@@ -1024,12 +1045,15 @@ export default class KfItem extends KfTimingIllus {
                     const kfOmit: KfOmit = new KfOmit();
                     kfOmit.createOmit(KfOmit.KF_OMIT, kfTrans.x + kfWidthWithWhiteSpace - KfGroup.PADDING, 1, this.parentObj, this.hasOffset, this.hasDuration, this.kfHeight / 2, this.idxInGroup);
                     this.parentObj.children.splice(this.idxInGroup + 1, 0, kfOmit);
+                    kfOmit.idxInGroup = this.idxInGroup + 1;
                     this.parentObj.kfOmits.push(kfOmit);
-                    this.parentObj.translateGroup(this, -kfWidthWithWhiteSpace + kfOmit.oWidth, false, false, false);
+                    this.parentObj.translateGroup(this, -kfWidthWithWhiteSpace + KfOmit.maxOmitWidth, false, false, false);
+                    // this.parentObj.translateGroup(this, -kfWidthWithWhiteSpace + kfOmit.oWidth, false, false, false);
                     //update the position of omits
                     const oriOmitTrans: ICoord = Tool.extractTransNums(kfOmit.container.getAttributeNS(null, 'transform'));
-                    kfOmit.updateTrans(oriOmitTrans.x - kfOmit.oWidth, oriOmitTrans.y + kfOmit.oHeight / 2);
-                    console.log('update omit posit: ', kfOmit.container, oriOmitTrans.x - kfOmit.oWidth);
+                    // kfOmit.updateTrans(oriOmitTrans.x - kfOmit.oWidth - KfGroup.PADDING, oriOmitTrans.y + kfOmit.oHeight / 2);
+                    kfOmit.updateTrans(oriOmitTrans.x - KfOmit.maxOmitWidth - KfGroup.PADDING, oriOmitTrans.y + kfOmit.oHeight / 2);
+                    // console.log('update omit posit: ', kfOmit.container, oriOmitTrans.x - kfOmit.oWidth);
                 } else {
                     this.parentObj.kfOmits[0].updateNum(this.parentObj.kfOmits[0].omittedNum + 1);
                     this.parentObj.translateGroup(this, -kfWidthWithWhiteSpace, false, false, false);
@@ -1043,7 +1067,8 @@ export default class KfItem extends KfTimingIllus {
                     const tmpOmit: KfOmit = this.parentObj.kfOmits[0];
                     tmpOmit.removeOmit(this.parentObj);
                     this.parentObj.children.splice(this.idxInGroup + 1, 1);
-                    this.parentObj.translateGroup(this, kfWidthWithWhiteSpace - this.parentObj.kfOmits[0].oWidth, false, false, false);
+                    this.parentObj.translateGroup(this, kfWidthWithWhiteSpace - KfOmit.maxOmitWidth, false, false, false);
+                    // this.parentObj.translateGroup(this, kfWidthWithWhiteSpace - this.parentObj.kfOmits[0].oWidth, false, false, false);
                     this.parentObj.kfOmits.splice(0, 1);
                 } else {//update number
                     this.parentObj.kfOmits[0].updateNum(this.parentObj.kfOmits[0].omittedNum - 1);
