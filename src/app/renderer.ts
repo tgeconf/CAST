@@ -169,7 +169,7 @@ export default class Renderer {
                     let lastChild: KfGroup;
                     for (let i = parentObj.children.length - 1; i >= 0; i--) {
                         if (parentObj.children[i] instanceof KfGroup) {
-                            lastChild = parentObj.children[i];
+                            lastChild = <KfGroup>parentObj.children[i];
                             break;
                         }
                     }
@@ -329,7 +329,7 @@ export default class Renderer {
             //rendering kf
             //check whether there should be a plus btn
             let kfPosiX = kfGroup.offsetWidth;
-            kfg.keyframes.forEach((k: any, i: number) => {
+            kfg.keyframes.forEach((k: IKeyframe, i: number) => {
                 //whether to draw this kf or not
                 let kfOmit: KfOmit;
                 if (kfIdxToDraw.includes(i)) {
@@ -341,7 +341,7 @@ export default class Renderer {
                             if (kfOmitType === KfOmit.KF_ALIGN) {
                                 kfOmit.omitPattern = omitPattern;
                             }
-                            kfOmit.createOmit(kfOmitType, kfPosiX, omitNum, kfGroup, kfg.keyframes[1].delayIcon, kfg.keyframes[1].durationIcon, kfGroup.children[1].kfHeight / 2);
+                            kfOmit.createOmit(kfOmitType, kfPosiX, omitNum, kfGroup, kfg.keyframes[1].delayIcon, kfg.keyframes[1].durationIcon, (<KfItem>kfGroup.children[1]).kfHeight / 2);
                             kfGroup.children.push(kfOmit);
                             kfOmit.idxInGroup = kfGroup.children.length - 1;
                             kfGroup.kfOmits.push(kfOmit);

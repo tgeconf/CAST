@@ -364,7 +364,7 @@ export default class KfItem extends KfTimingIllus {
                 let transXForNextKf: number = 0;
                 let nextKf: KfItem;
                 for (let i: number = 0, len: number = alignedKfItem.parentObj.children.length; i < len; i++) {
-                    const c: KfItem | KfOmit = alignedKfItem.parentObj.children[i];
+                    const c: KfItem | KfOmit = <KfItem | KfOmit>alignedKfItem.parentObj.children[i];
                     if (flag) {
                         if (c instanceof KfOmit) {
                             transXForNextKf = bgDiffX;
@@ -400,7 +400,7 @@ export default class KfItem extends KfTimingIllus {
                 let nextKf: KfItem;
                 let passedOmit: KfOmit;
                 for (let i: number = 0, len: number = alignedKfItem.parentObj.children.length; i < len; i++) {
-                    const c: KfItem | KfOmit = alignedKfItem.parentObj.children[i];
+                    const c: KfItem | KfOmit = <KfItem | KfOmit>alignedKfItem.parentObj.children[i];
                     if (reachTarget) {
                         if (c instanceof KfOmit) {
                             // transXForNextKf += KfOmit.OMIT_W + KfGroup.PADDING;
@@ -449,7 +449,7 @@ export default class KfItem extends KfTimingIllus {
     }
 
     public findNextSibling(): KfItem | KfOmit {
-        return this.parentObj.children[this.idxInGroup + 1];
+        return <KfItem | KfOmit>this.parentObj.children[this.idxInGroup + 1];
     }
 
     public drawHoverBtns(): void {
@@ -546,8 +546,8 @@ export default class KfItem extends KfTimingIllus {
             let updateSpec: boolean = false;
             let actionType: string = '';
             let actionInfo: any = {};
-            const preSibling: KfItem | KfOmit = this.parentObj.children[this.idxInGroup - 1];
-            const firstSibling: KfItem = this.parentObj.children[0];
+            const preSibling: KfItem | KfOmit = <KfItem | KfOmit>this.parentObj.children[this.idxInGroup - 1];
+            const firstSibling: KfItem = <KfItem>this.parentObj.children[0];
             let preKfRight: number = containerBBox.left;
             // let visualPresiblingDurationW: number = 0;
             if (typeof preSibling !== 'undefined' && typeof firstSibling !== 'undefined') {
@@ -917,7 +917,7 @@ export default class KfItem extends KfTimingIllus {
         let nextKf: KfItem | KfOmit;
         for (let i = 0, len = this.parentObj.children.length; i < len; i++) {
             if (this.parentObj.children[i].id === this.id) {
-                nextKf = this.parentObj.children[i + 1];
+                nextKf = <KfItem | KfOmit>this.parentObj.children[i + 1];
                 break;
             }
         }
@@ -997,7 +997,7 @@ export default class KfItem extends KfTimingIllus {
 
             while (true) {
                 if (currentKfIdx - 1 >= 0) {
-                    const preChild: KfItem | KfOmit = this.parentObj.children[currentKfIdx - 1];
+                    const preChild: KfItem | KfOmit = <KfItem | KfOmit>this.parentObj.children[currentKfIdx - 1];
                     const preChildWidth: number = preChild.container.getBoundingClientRect().width / state.zoomLevel;
                     const preChildTrans: ICoord = Tool.extractTransNums(preChild.container.getAttributeNS(null, 'transform'));
                     if (preChild instanceof KfItem) {
@@ -1036,7 +1036,7 @@ export default class KfItem extends KfTimingIllus {
             console.log('found ref line', refLine);
 
             if (!this.renderWhenZooming) {//rendered -> not rendered
-                // this.container.setAttributeNS(null, 'display', 'none');
+                this.container.setAttributeNS(null, 'display', 'none');
                 if (typeof refLine !== 'undefined') {
                     refLine.zoomHideLine();
                 }
@@ -1052,7 +1052,7 @@ export default class KfItem extends KfTimingIllus {
                     //update the position of omits
                     const oriOmitTrans: ICoord = Tool.extractTransNums(kfOmit.container.getAttributeNS(null, 'transform'));
                     // kfOmit.updateTrans(oriOmitTrans.x - kfOmit.oWidth - KfGroup.PADDING, oriOmitTrans.y + kfOmit.oHeight / 2);
-                    kfOmit.updateTrans(oriOmitTrans.x - KfOmit.maxOmitWidth - KfGroup.PADDING, oriOmitTrans.y + kfOmit.oHeight / 2);
+                    kfOmit.updateTrans(oriOmitTrans.x - KfOmit.maxOmitWidth, oriOmitTrans.y + kfOmit.oHeight / 2);
                     // console.log('update omit posit: ', kfOmit.container, oriOmitTrans.x - kfOmit.oWidth);
                 } else {
                     this.parentObj.kfOmits[0].updateNum(this.parentObj.kfOmits[0].omittedNum + 1);

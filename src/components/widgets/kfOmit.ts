@@ -61,7 +61,7 @@ export default class KfOmit {
         this.hasOffset = hasOffset;
         this.hasDuration = hasDuration;
         this.parentObj = parentObj;
-        this.preItem = preItemIdx === -1 ? this.parentObj.children[this.parentObj.children.length - 1] : this.parentObj.children[preItemIdx];
+        this.preItem = preItemIdx === -1 ? <KfGroup | KfItem>this.parentObj.children[this.parentObj.children.length - 1] : <KfGroup | KfItem>this.parentObj.children[preItemIdx];
         this.omittedNum = omittedNum;
         this.startX = startX;
         this.startY = startY;

@@ -63,7 +63,7 @@ export default class KfGroup extends KfTimingIllus {
     public groupTitleBg: SVGRectElement;
     public groupTitleContent: SVGTextContentElement;
     public groupTitleCover: SVGRectElement;//same color as the group bg
-    public children: any[] = [];
+    public children: (KfGroup | KfItem | KfOmit)[] = [];
     public kfNum: number = 0;
     public kfOmits: KfOmit[] = [];
     public parentObj: KfGroup | KfTrack;
@@ -381,7 +381,7 @@ export default class KfGroup extends KfTimingIllus {
             let updateSpec: boolean = false;
             let actionType: string = '';
             let actionInfo: any = {};
-            const preSibling: KfGroup = this.parentObj.children[this.idxInGroup - 1];
+            const preSibling: KfGroup = <KfGroup>this.parentObj.children[this.idxInGroup - 1];
 
             //if dragging ani group, create hint lines
             let hintLines: IntelliRefLine[] = [];
@@ -651,7 +651,7 @@ export default class KfGroup extends KfTimingIllus {
         if (this.children[0] instanceof KfItem) {
             return this.children[0];
         } else {
-            return this.children[0].fetchFirstKf();
+            return (<KfGroup>this.children[0]).fetchFirstKf();
         }
     }
     public fetchAniGroup(): KfGroup {
@@ -1023,19 +1023,19 @@ export default class KfGroup extends KfTimingIllus {
                 this.children.forEach((c: KfGroup, i: number) => {
                     if (i === 0 || i === 1 || i === this.children.length - 1) {
                         if (i === 0) {
-                            this.children[i].updateGroupPosiAndSize(KfGroup.PADDING + this.offsetWidth, 0, false);
+                            (<KfGroup>this.children[i]).updateGroupPosiAndSize(KfGroup.PADDING + this.offsetWidth, 0, false);
                         } else {
                             if (this.children.length > 3 && i === this.children.length - 1) {
-                                this.children[i].updateGroupPosiAndSize(this.children[1].posiX, this.children[1].width + this.kfOmits[0].oWidth, true);
+                                (<KfGroup>this.children[i]).updateGroupPosiAndSize((<KfGroup>this.children[1]).posiX, (<KfGroup>this.children[1]).width + this.kfOmits[0].oWidth, true);
                             } else {
-                                this.children[i].updateGroupPosiAndSize(this.children[i - 1].posiX, this.children[i - 1].width, false);
+                                (<KfGroup>this.children[i]).updateGroupPosiAndSize((<KfGroup>this.children[i - 1]).posiX, (<KfGroup>this.children[i - 1]).width, false);
                             }
                         }
                     } else if (this.children.length > 3 && i === this.children.length - 2) {
                         this.kfOmits.forEach((kfO: KfOmit) => {
                             kfO.updateThumbnail(this.kfHasOffset, this.kfHasDuration);
                             // kfO.updateNum(this.kfNum - 3);
-                            kfO.updateTrans(this.children[1].posiX + this.children[1].width, KfGroup.PADDING + this.children[1].posiY + (this.children[1].container.getBoundingClientRect().height / state.zoomLevel / 2));//fixed
+                            kfO.updateTrans((<KfGroup>this.children[1]).posiX + (<KfGroup>this.children[1]).width, KfGroup.PADDING + (<KfGroup>this.children[1]).posiY + (this.children[1].container.getBoundingClientRect().height / state.zoomLevel / 2));//fixed
                         })
                     }
                     if (c instanceof KfGroup) {
@@ -1104,6 +1104,41 @@ export default class KfGroup extends KfTimingIllus {
     }
 
     /**
+     * check whether the index of omits are correct within group
+     */
+    public checkChildrenOrder(): boolean {
+        let omitRightPosi: boolean = true, omitCount: number = 0;
+        for (let i = 0, len = this.children.length; i < len; i++) {
+            if (this.children[i] instanceof KfOmit) {
+                omitRightPosi = i === (2 + omitCount * 4);
+                if (!omitRightPosi) {
+                    break;
+                }
+                omitCount++;
+            }
+        }
+        return omitRightPosi;
+    }
+
+    /**
+     * if the omits within group are not in the right position, re-insert the omits into the group
+     */
+    public reorderKfChildren() {
+        //delete all omits in the group 
+        for (let i = 0, len = this.children.length; i < len;) {
+            if (this.children[i] instanceof KfOmit) {
+                this.children.splice(i, 1);
+            } else {
+                i++;
+            }
+        }
+        //re-insert omits 
+        this.kfOmits.forEach((omit: KfOmit, idx: number) => {
+            this.children.splice(2 + idx * 4, 0, omit);
+        })
+    }
+
+    /**
      * 
      * @param kzl : levels deeper than kzl will be simplified
      */
@@ -1132,21 +1167,11 @@ export default class KfGroup extends KfTimingIllus {
             } else {//children are kfitems
                 const leafLevel: number = this.treeLevel + 1;
                 let kfItemCount: number = 0;
-
-                const oriKfItemsAfterOmit: number[] = [];
-                const oriKfOmitX: number = this.kfOmits.length > 0 ? Tool.extractTransNums(this.kfOmits[0].container.getAttributeNS(null, 'transform')).x : 1000000;
-                let lastKfId: number;
-                this.children.forEach((c: KfItem | KfOmit, idx: number) => {
-                    if (c instanceof KfItem) {
-                        const cTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
-                        console.log('going to test: ', c.container, cTrans, oriKfOmitX);
-                        if (cTrans.x > oriKfOmitX) {
-                            console.log('kfitem after omit: ', c.container);
-                            oriKfItemsAfterOmit.push(c.id);
-                        }
-                        lastKfId = c.id;
-                    }
-                })
+                //check whther the position of the kfomits are correct 
+                const omitRightPosi: boolean = this.checkChildrenOrder();
+                if (!omitRightPosi) {
+                    this.reorderKfChildren();
+                }
 
                 this.children.forEach((c: KfItem | KfOmit, idx: number) => {
                     if (c instanceof KfItem) {
@@ -1180,56 +1205,27 @@ export default class KfGroup extends KfTimingIllus {
                     }
                 })
 
-                if (oriKfOmitX === 1000000 && this.kfOmits.length > 0) {
-                    oriKfItemsAfterOmit.push(lastKfId);
-                }
-
                 //update kfomit position, cause there might be newly added omits, so need to go through the children again 
-                let numKfAfterOmit: number = 0;
-                let preVisibleKf: KfItem;
-                let lastVisibleKf: KfItem;
-                let lastVisibleKfX: number = 0;
-                this.children.forEach((c: KfItem | KfOmit) => {
-                    if (c instanceof KfItem && c.rendered && c.renderWhenZooming) {
-                        const cTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
-                        const kfOmitX: number = this.kfOmits.length > 0 ? Tool.extractTransNums(this.kfOmits[0].container.getAttributeNS(null, 'transform')).x : 1000000;
-                        console.log('check whether c after: ', c.container, cTrans.x, kfOmitX, oriKfItemsAfterOmit, c.id);
-                        if (oriKfItemsAfterOmit.includes(c.id)) {
-                            if (cTrans.x > kfOmitX) {
-                                numKfAfterOmit++;
-                            }
-                        } else {
-                            preVisibleKf = c;
-                        }
-                        if (cTrans.x > lastVisibleKfX) {
-                            lastVisibleKfX = cTrans.x;
-                            lastVisibleKf = c;
-                        }
-                        // if (cTrans.x > kfOmitX && oriKfItemsAfterOmit.includes(c.id)) {
-                        //     numKfAfterOmit++;
-                        // } else if (cTrans.x < kfOmitX && !oriKfItemsAfterOmit.includes(c.id)) {
-                        //     console.log(oriKfItemsAfterOmit, c.id, c.container);
-                        //     lastVisibleKf = c;
-                        // }
+                let omitIsLast: boolean = false;
+                let preVisibleKf: KfItem, visKfRecorder: KfItem;
+                let numVisKfAfterLastOmit: number = 0;
+                this.children.forEach((c: KfItem | KfOmit, idx: number) => {
+                    omitIsLast = (idx === this.children.length - 1 && c instanceof KfOmit);
+                    if (c instanceof KfOmit) {
+                        numVisKfAfterLastOmit = 0;
+                        preVisibleKf = visKfRecorder;
+                    } else if (c instanceof KfItem && c.rendered && c.renderWhenZooming) {
+                        visKfRecorder = c;
+                        numVisKfAfterLastOmit++;
                     }
                 })
-                // if (typeof lastVisibleKf === 'undefined') {
-                //     lastVisibleKf = preVisibleKf;
-                // }
 
                 if (this.kfOmits.length > 0) {
-                    if (numKfAfterOmit === 0) {//omits becomes the last visible member in this group
-                        console.log('going to correct omit posi with 2nd kf: ', preVisibleKf.container);
+                    if (omitIsLast) {
+                        console.log('going to correct omit posi with pre visible kf: ', preVisibleKf.container);
                         this.kfOmits[0].correctTrans(preVisibleKf);
-
-                        //the relative position of kf and omtis has changed
-                        if (lastVisibleKf.id === preVisibleKf.id) {
-                            this.updateSize(KfOmit.maxOmitWidth - this.kfOmits[0].oWidth);
-                        } else {
-                            this.updateSize();
-                        }
+                        this.updateSize(KfOmit.maxOmitWidth - this.kfOmits[0].oWidth);
                     } else {
-                        console.log('going to update size: tedsagfdasgverg');
                         this.updateSize();
                     }
                 }
