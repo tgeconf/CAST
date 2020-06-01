@@ -129,7 +129,7 @@ export default class KfItem extends KfTimingIllus {
         this.kfWidth = kfWidth;
         this.kfHeight = kfHeight;
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        this.container.setAttributeNS(null, 'transform', `translate(${KfItem.PADDING}, ${KfItem.PADDING})`);
+        this.translateContainer(KfItem.PADDING, KfItem.PADDING);
         this.drawKfBg(-1, { w: kfWidth, h: kfHeight });
         this.container.appendChild(this.kfBg);
         this.drawChart(allCurrentMarks, allGroupMarks, marksThisKf);
@@ -196,7 +196,7 @@ export default class KfItem extends KfTimingIllus {
 
     public renderItem(startX: number, size?: ISize) {
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        this.container.setAttributeNS(null, 'transform', `translate(${startX + KfItem.PADDING}, ${KfItem.PADDING})`);
+        this.translateContainer(startX + KfItem.PADDING, KfItem.PADDING);
         this.bindHoverBtn();
 
         if (typeof this.kfInfo.alignTo !== 'undefined') {//this kf is align to others
@@ -350,8 +350,7 @@ export default class KfItem extends KfTimingIllus {
 
                 //update aligned kfs, together with those kfs after it, and those in its parent group
                 const currentAlignedKfTransX: number = Tool.extractTransNums(alignedKfItem.container.getAttributeNS(null, 'transform')).x;
-                alignedKfItem.container.setAttributeNS(null, 'transform', `translate(${currentAlignedKfTransX + bgDiffX}, ${KfItem.PADDING})`);
-                // alignedKfItem.transOmitsWithItem();
+                alignedKfItem.translateContainer(currentAlignedKfTransX + bgDiffX, KfItem.PADDING);
                 const alignedKfItemBBox: DOMRect = alignedKfItem.container.getBoundingClientRect();//fixed
                 if (alignedKfItemBBox.right > posiXForNextKf) {
                     posiXForNextKf = alignedKfItemBBox.right;
@@ -367,7 +366,7 @@ export default class KfItem extends KfTimingIllus {
                         if (c instanceof KfOmit) {
                             transXForNextKf = bgDiffX;
                             const tmpTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
-                            c.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transXForNextKf}, ${tmpTrans.y})`);
+                            c.translateContainer(tmpTrans.x + transXForNextKf, tmpTrans.y);
                         } else {
                             const tmpBBox: DOMRect = c.container.getBoundingClientRect();//fixed
                             if (tmpBBox.left + transXForNextKf * state.zoomLevel < posiXForNextKf) {
@@ -388,7 +387,7 @@ export default class KfItem extends KfTimingIllus {
                 }
             } else if (currentPosiX <= alignedKfBgX) {//translate current kf
                 const currentTransX: number = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform')).x;
-                this.container.setAttributeNS(null, 'transform', `translate(${currentTransX + bgDiffX}, ${KfItem.PADDING})`);
+                this.translateContainer(currentTransX + bgDiffX, KfItem.PADDING);
                 this.transOmitsWithItem();
                 this.totalWidth += bgDiffX;
 
@@ -436,13 +435,44 @@ export default class KfItem extends KfTimingIllus {
             // if (typeof this.preOmit !== 'undefined') {
             const currentKfTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
             const oriTrans: ICoord = Tool.extractTransNums(this.preOmit.container.getAttributeNS(null, 'transform'));
-            this.preOmit.container.setAttributeNS(null, 'transform', `translate(${this.preOmit.omitType === KfOmit.KF_ALIGN ? currentKfTrans.x - this.preOmit.oWidth - KfGroup.PADDING : currentKfTrans.x - this.preOmit.oWidth}, ${oriTrans.y})`);
+            this.preOmit.translateContainer(this.preOmit.omitType === KfOmit.KF_ALIGN ? currentKfTrans.x - this.preOmit.oWidth - KfGroup.PADDING : currentKfTrans.x - this.preOmit.oWidth, oriTrans.y);
             // this.preOmit.updateTrans(oriTrans.x + transX, oriTrans.y + KfOmit.OMIT_H / 1);
         }
     }
 
-    public translateItem(x: number, y: number) {
+    public translateContainer(x: number, y: number) {
+        console.log('translating: ', this.container);
         this.container.setAttributeNS(null, 'transform', `translate(${x}, ${y})`);
+        //check whether need to update the size of the alignwith kfgroup
+        // const kfBBox: DOMRect = this.container.getBoundingClientRect();
+        // console.log(this.id, KfItem.allKfInfo);
+        // if (typeof this.id !== 'undefined') {
+        //     const lastKfInParent: KfItem = this.parentObj.findLastKf();
+        //     console.log('last kf in parent: ', lastKfInParent, this.parentObj);
+        //     if (typeof lastKfInParent !== 'undefined') {
+        //         if (this.id === lastKfInParent.id) {
+        //             console.log('testing !!!!!!', this.container);
+        //             const alignTargetKfId: number = KfItem.allKfInfo.get(this.id).alignTo;
+        //             if (typeof alignTargetKfId !== 'undefined' && this.parentObj.alignMerge) {
+        //                 let alignTargetKfGroup: KfGroup = KfItem.allKfItems.get(alignTargetKfId).parentObj;
+        //                 const tmpGroupBBox: DOMRect = alignTargetKfGroup.container.getBoundingClientRect();
+        //                 console.log(kfBBox.right, tmpGroupBBox.right, KfItem.allKfItems.get(alignTargetKfId).container.getBoundingClientRect().right);
+        //                 if (kfBBox.right > tmpGroupBBox.right) {
+        //                     console.log('going to update size of teh aligned group: ', alignTargetKfGroup.container)
+        //                     alignTargetKfGroup.updateSize((kfBBox.right - tmpGroupBBox.right) / state.zoomLevel + KfGroup.PADDING);
+        //                     while (true) {
+        //                         if (alignTargetKfGroup.parentObj instanceof KfGroup) {
+        //                             alignTargetKfGroup = alignTargetKfGroup.parentObj;
+        //                             alignTargetKfGroup.updateSize((kfBBox.right - tmpGroupBBox.right) / state.zoomLevel + KfGroup.PADDING);
+        //                         } else {
+        //                             break;
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     public findNextSibling(): KfItem | KfOmit {
@@ -535,9 +565,9 @@ export default class KfItem extends KfTimingIllus {
 
             //set new transform
             if (targetMoveItem instanceof KfGroup) {
-                targetMoveItem.container.setAttributeNS(null, 'transform', `translate(${(containerBBox.left - popKfContainerBbox.left) / state.zoomLevel}, ${(containerBBox.top - popKfContainerBbox.top + KfGroup.TITLE_HEIHGT) / state.zoomLevel})`);
+                targetMoveItem.translateContainer((containerBBox.left - popKfContainerBbox.left) / state.zoomLevel, (containerBBox.top - popKfContainerBbox.top + KfGroup.TITLE_HEIHGT) / state.zoomLevel);
             } else {
-                targetMoveItem.container.setAttributeNS(null, 'transform', `translate(${(containerBBox.left - popKfContainerBbox.left) / state.zoomLevel}, ${(containerBBox.top - popKfContainerBbox.top) / state.zoomLevel})`);
+                targetMoveItem.translateContainer((containerBBox.left - popKfContainerBbox.left) / state.zoomLevel, (containerBBox.top - popKfContainerBbox.top) / state.zoomLevel);
             }
 
             let updateSpec: boolean = false;
@@ -568,7 +598,7 @@ export default class KfItem extends KfTimingIllus {
                     const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
                     const posiDiff: ICoord = { x: (currentMousePosi.x - oriMousePosi.x) / state.zoomLevel, y: (currentMousePosi.y - oriMousePosi.y) / state.zoomLevel };
                     const oriTrans: ICoord = Tool.extractTransNums(targetMoveItem.container.getAttributeNS(null, 'transform'));
-                    targetMoveItem.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x}, ${oriTrans.y + posiDiff.y})`);
+                    targetMoveItem.translateContainer(oriTrans.x, oriTrans.y + posiDiff.y);
 
                     const currentBBox: DOMRect = targetMoveItem.container.getBoundingClientRect();//fixed
                     if ((currentBBox.top - alignWithGroupBBox.top) / state.zoomLevel <= KfTrack.TRACK_HEIGHT * 0.6 && (currentBBox.top - alignWithGroupBBox.top) / state.zoomLevel >= 0) {//set merge to true
@@ -638,7 +668,7 @@ export default class KfItem extends KfTimingIllus {
                     const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
                     const posiDiff: ICoord = { x: (currentMousePosi.x - oriMousePosi.x) / state.zoomLevel, y: (currentMousePosi.y - oriMousePosi.y) / state.zoomLevel };
                     const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
-                    this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + posiDiff.x}, ${oriTrans.y + posiDiff.y})`);
+                    this.translateContainer(oriTrans.x + posiDiff.x, oriTrans.y + posiDiff.y);
 
                     if (this.idxInGroup > 0) {//this is not the first kf in group, need to check the position relation with previous kf
                         // if (this.idxInGroup > 0 && preSibling instanceof KfItem) {//this is not the first kf in group, need to check the position relation with previous kf
@@ -920,7 +950,7 @@ export default class KfItem extends KfTimingIllus {
         }
         // this.parentObj.translateGroup(nextKf, transX, true);
         const oriTrans: ICoord = Tool.extractTransNums(nextKf.container.getAttributeNS(null, 'transform'));
-        nextKf.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + transX}, ${oriTrans.y})`);
+        nextKf.translateContainer(oriTrans.x + transX, oriTrans.y);
         this.parentObj.updateSize();
     }
 
@@ -954,16 +984,16 @@ export default class KfItem extends KfTimingIllus {
                 if (typeof tmpKfItem !== 'undefined') {
                     // tmpKfItem.parentObj.translateGroup(tmpKfItem, transX, updateAlignedKfs, true, true);
                     const tmpTrans: ICoord = Tool.extractTransNums(tmpKfItem.container.getAttributeNS(null, 'transform'));
-                    tmpKfItem.container.setAttributeNS(null, 'transform', `translate(${tmpTrans.x + transX}, ${tmpTrans.y})`);
+                    tmpKfItem.translateContainer(tmpTrans.x + transX, tmpTrans.y);
                     let [diffX, currentGroupWidth, childHeight] = tmpKfItem.parentObj.updateSize();
                     const oriTrans: ICoord = Tool.extractTransNums(tmpKfItem.parentObj.container.getAttributeNS(null, 'transform'));
-                    tmpKfItem.parentObj.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + diffX}, ${oriTrans.y})`);
+                    tmpKfItem.parentObj.translateContainer(oriTrans.x + diffX, oriTrans.y);
                     //check whether need to update omit
                     tmpKfItem.parentObj.kfOmits.forEach((kfo: KfOmit) => {
                         const omitTrans: ICoord = Tool.extractTransNums(kfo.container.getAttributeNS(null, 'transform'));
                         if (omitTrans.x >= tmpTrans.x) {
                             let omitTransX: number = diffX === 0 ? transX : 0;
-                            kfo.container.setAttributeNS(null, 'transform', `translate(${omitTrans.x + omitTransX}, ${omitTrans.y})`)
+                            kfo.translateContainer(omitTrans.x + omitTransX, omitTrans.y);
                         }
                     })
                 }
