@@ -76,7 +76,6 @@ export default class KfOmit {
     public renderOmit() {
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.container.id = this.id;
-        console.log('render omit : ', this.container, this.preItem);
         //create thumbnail
         this.createThumbnail(this.omittedNum);
         //create dots
@@ -86,7 +85,6 @@ export default class KfOmit {
         // this.correctTrans(this.startY - this.oHeight / 2);
         // }
         if (typeof this.parentObj.alignTarget !== 'undefined' && this.parentObj.alignType === Animation.alignTarget.withEle) {
-            console.log('find omit align to: ', this.parentObj);
             this.hideOmit();
         }
         this.container.setAttributeNS(null, 'transform', `translate(${this.startX + KfGroup.PADDING}, ${this.startY - this.oHeight / 2})`);
@@ -103,6 +101,7 @@ export default class KfOmit {
     public updateUseTagPosi() {
         const kfFgBbox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();
         const parentBbox: DOMRect = this.parentObj.container.getBoundingClientRect();
+        console.log('updating omit use tag posi: ', this.parentObj.container, parentBbox.x);
         this.useTag.setAttributeNS(null, 'x', `${(parentBbox.x - kfFgBbox.x) / state.zoomLevel}`);
         this.useTag.setAttributeNS(null, 'y', `${(parentBbox.y - kfFgBbox.y) / state.zoomLevel}`);
     }
@@ -155,7 +154,6 @@ export default class KfOmit {
         let trackCount: number = 0;
         this.oWidth = KfOmit.OMIT_SUB_WIDTH;
         this.oHeight = KfOmit.OMIT_SUB_HEIGHT;
-        console.log('rendering omit pattern: ', this.omitPattern);
         this.omitPattern.forEach((ommittedKf: IOmitPattern, idx: number) => {
             let trackNum: number = 1;
             if (ommittedKf.timing === TimingSpec.timingRef.previousStart || !ommittedKf.merge) {
@@ -163,7 +161,6 @@ export default class KfOmit {
                 trackNum = trackCount;
             }
             // const trackNum: number = ((!ommittedKf.merge && ommittedKf.timing === TimingSpec.timingRef.previousEnd) || ommittedKf.timing === TimingSpec.timingRef.previousStart) ? trackCount : 0;
-            console.log('track number: ', trackNum, ommittedKf.merge, ommittedKf.timing);
             this.IconComb.appendChild(this.createSubThumbnail(
                 ommittedKf.hasOffset,
                 trackNum,
@@ -184,7 +181,6 @@ export default class KfOmit {
      */
     public createSubThumbnail(hasOffset: boolean, trackNum: number, index: number, afterPre: boolean, merge: boolean): SVGGElement {
         const tmpContainer: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-
         tmpContainer.setAttributeNS(null, 'transform', `translate(${(afterPre && index > 0) ? this.oWidth : 0}, ${trackNum * KfOmit.OMIT_SUB_HEIGHT})`);
         //update the omit size 
         this.oWidth = (afterPre && index > 0) ? this.oWidth + KfOmit.OMIT_SUB_WIDTH : this.oWidth;
@@ -271,7 +267,6 @@ export default class KfOmit {
         const targetKfTrans: ICoord = Tool.extractTransNums(targetKf.container.getAttributeNS(null, 'transform'));
         const targetKfBBox: DOMRect = targetKf.container.getBoundingClientRect();
         const currentOmitBbox: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
-        console.log('kfomit pre: ', targetKf.container, targetKfTrans.x, targetKfBBox.width / state.zoomLevel, targetKfTrans.x + targetKfBBox.width / state.zoomLevel);
         this.container.setAttributeNS(null, 'transform', `translate(${targetKfTrans.x + targetKfBBox.width / state.zoomLevel + KfGroup.PADDING}, ${currentOmitBbox.y})`);
     }
 

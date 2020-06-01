@@ -489,6 +489,7 @@ Reducer.listen(action.SPLIT_CREATE_MULTI_ANI, (actionInfo: { aniId: string, path
         if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
             //create multiple animations
             let selectorRecorder: string[] = [];
+            let alignTarget: string;
             [...shapeMarkMap].forEach((shapeMarks: [string, string[]], idx: number) => {
                 const newSelector: string = `#${shapeMarks[1].join(', #')}`;
                 selectorRecorder.push(...newSelector.split(', '));
@@ -498,6 +499,7 @@ Reducer.listen(action.SPLIT_CREATE_MULTI_ANI, (actionInfo: { aniId: string, path
                     chartIdx: a.chartIdx
                 }
                 if (idx === 0) {
+                    alignTarget = `${newAni.chartIdx}_${newAni.selector}`;
                     if (typeof a.reference !== 'undefined') {
                         newAni.reference = a.reference;
                     }
@@ -508,6 +510,7 @@ Reducer.listen(action.SPLIT_CREATE_MULTI_ANI, (actionInfo: { aniId: string, path
                 } else {
                     newAni.reference = TimingSpec.timingRef.previousEnd;
                     newAni.align = { target: actionInfo.aniId, type: 'element', merge: true };
+                    // newAni.align = { target: alignTarget, type: 'element', merge: true };
                 }
                 if (actionInfo.path.attrComb.length > 0) {
                     CanisGenerator.createGrouping(newAni, actionInfo.path.attrComb, actionInfo.attrValueSort);

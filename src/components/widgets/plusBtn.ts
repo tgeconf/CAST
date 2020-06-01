@@ -11,6 +11,7 @@ import Util from "../../app/core/util";
 import KfTrack from "./kfTrack";
 import { ICoord, ISize } from "../../util/ds";
 import { suggestBox, SuggestMenu } from "./suggestBox";
+import KfOmit from "./kfOmit";
 
 export default class PlusBtn {
     static BTN_SIZE: number = 16;
@@ -218,7 +219,12 @@ export default class PlusBtn {
         this.removeBtn();
         let tmpKf: KfItem = new KfItem();
         tmpKf.createItem(tmpKfInfo, 1, this.fakeKfg, btnX);
+        //update other idxInGroup
+        this.fakeKfg.children.forEach((c: KfGroup | KfItem | KfOmit) => {
+            c.idxInGroup++;
+        })
         this.fakeKfg.children.unshift(tmpKf);
+        tmpKf.idxInGroup = 0;
         this.fakeKfg.updateSize();
 
         const suggestOnFirstKf: boolean = Suggest.generateSuggestionPath(selectedMarks, firstKfInfoInParent, this.targetKfg);

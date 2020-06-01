@@ -187,6 +187,7 @@ export class SuggestBox {
         const startX: number = Tool.extractTransNums(startKf.container.getAttributeNS(null, 'transform')).x + transX - KfGroup.PADDING;
         tmpKf.createItem(tmpKfInfo, startKf.parentObj.treeLevel + 1, startKf.parentObj, startX);
         startKf.parentObj.children.push(tmpKf);
+        tmpKf.idxInGroup = startKf.parentObj.children.length - 1;
         return [tmpKfInfo, tmpKf];
     }
 

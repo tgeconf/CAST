@@ -158,7 +158,6 @@ export default class Renderer {
     }
 
     public static renderKeyframeGroup(kfgIdx: number, previousKfg: IKeyframeGroup, totalKfgNum: number, kfg: IKeyframeGroup, treeLevel: number, parentObj?: KfGroup): KfGroup {
-        console.log('input kfg : ', kfg);
         //draw group container
         let kfGroup: KfGroup = new KfGroup();
         if (kfgIdx === 0 || kfgIdx === 1 || kfgIdx === totalKfgNum - 1) {
@@ -291,7 +290,6 @@ export default class Renderer {
             let isAlignWith: number = 0;//0 -> neither align with nor align to, 1 -> align with, 2 -> align to 
             let kfOmitType: string = KfOmit.KF_OMIT;
             let omitPattern: IOmitPattern[] = [];
-            console.log('align anis: ', kfGroup.container, alignWithAnis);
             //this group is the align target
             if (alignWithAnis.size > 0) {
                 isAlignWith = 1;
@@ -304,7 +302,6 @@ export default class Renderer {
                 })
 
                 alignWithAnis.forEach((se: number[], aniId: string) => {
-                    console.log('checking alignmerge: ', aniId, KfGroup.allAniGroupInfo.get(aniId), KfGroup.allAniGroupInfo);
                     const tmpKfg: IKeyframeGroup = KfGroup.allAniGroupInfo.get(aniId);
                     omitPattern.push({
                         merge: typeof tmpKfg.merge === 'undefined' ? false : tmpKfg.merge,
@@ -324,7 +321,7 @@ export default class Renderer {
                 kfIdxToDraw = [...kfIdxToDraw, ...alignToAni];
             }
             kfIdxToDraw = [...new Set(kfIdxToDraw)].sort((a: number, b: number) => a - b);
-            console.log('omit pattern: ', omitPattern);
+            // console.log('omit pattern: ', omitPattern);
 
             //rendering kf
             //check whether there should be a plus btn
@@ -364,7 +361,6 @@ export default class Renderer {
                     }
                     if (typeof kfOmit !== 'undefined') {
                         kfItem.preOmit = kfOmit;
-                        console.log('kfitem with preomit:', kfItem.container, kfOmit.container);
                     }
 
                     // KfItem.allKfItems.set(k.id, kfItem);

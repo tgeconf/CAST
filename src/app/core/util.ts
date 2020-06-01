@@ -500,7 +500,7 @@ export default class Util {
     }
 
     public static aniRootToKFGroup(aniunitNode: any, aniId: string, parentObj: {} | IKeyframeGroup, parentChildIdx: number): IKeyframeGroup {
-        // console.log('aniunit node: ', aniunitNode, KfGroup.allAniGroups);
+        // console.log('aniunit node: ', aniId, aniunitNode.align, aniunitNode, KfGroup.allAniGroups);
         let kfGroupRoot: IKeyframeGroup = {
             groupRef: aniunitNode.groupRef,
             id: aniunitNode.id,

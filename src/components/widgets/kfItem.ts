@@ -85,7 +85,6 @@ export default class KfItem extends KfTimingIllus {
         const changed: boolean = rwz !== this.renderWhenZooming;
         this._renderWhenZooming = rwz;
         if (changed) {
-            console.log('updated renderwhenzooming');
             this.showItemWhenZooming();
         }
     }
@@ -266,7 +265,6 @@ export default class KfItem extends KfTimingIllus {
             } else {// create a line
                 let refLine: IntelliRefLine = new IntelliRefLine();
                 refLine.createLine(this.kfInfo.alignTo, this.id);
-                console.log('created line: ', refLine.line);
                 KfItem.allKfItems.get(this.kfInfo.alignTo).parentObj.alignLines.push(refLine.id);
                 this.parentObj.alignLines.push(refLine.id);
             }
@@ -439,7 +437,6 @@ export default class KfItem extends KfTimingIllus {
             const currentKfTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
             const oriTrans: ICoord = Tool.extractTransNums(this.preOmit.container.getAttributeNS(null, 'transform'));
             this.preOmit.container.setAttributeNS(null, 'transform', `translate(${this.preOmit.omitType === KfOmit.KF_ALIGN ? currentKfTrans.x - this.preOmit.oWidth - KfGroup.PADDING : currentKfTrans.x - this.preOmit.oWidth}, ${oriTrans.y})`);
-            console.log('test translating kfomit with kf: ', this.container, this.preOmit.container);
             // this.preOmit.updateTrans(oriTrans.x + transX, oriTrans.y + KfOmit.OMIT_H / 1);
         }
     }
@@ -942,9 +939,7 @@ export default class KfItem extends KfTimingIllus {
         KfItem.dragoverKf = undefined;
     }
 
-    public dropSelOn() {
-        console.log('drop on kf');
-    }
+    public dropSelOn() { }
 
     /**
      * translate kfs and groups aligned to this kf
@@ -1018,22 +1013,16 @@ export default class KfItem extends KfTimingIllus {
                 }
             }
 
-            console.log('test show item when zooming: ', this.container, this.parentObj.children, kfWidthWithWhiteSpace, omitWidth);
-
             //if this kf is aligned to or with some kf, fetch the line
             let refLine: IntelliRefLine;
             if (typeof IntelliRefLine.kfLineMapping.get(this.id) !== 'undefined') {
-                console.log('found by it self');
                 refLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(this.id).lineId);
             } else {
                 //check whether this is an alignto kf
                 if (typeof KfItem.allKfInfo.get(this.id).alignTo !== 'undefined' && typeof IntelliRefLine.kfLineMapping.get(KfItem.allKfInfo.get(this.id).alignTo) !== 'undefined') {
-                    console.log('found by alignwiht kf');
                     refLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(KfItem.allKfInfo.get(this.id).alignTo).lineId);
                 }
             }
-
-            console.log('found ref line', refLine);
 
             if (!this.renderWhenZooming) {//rendered -> not rendered
                 this.container.setAttributeNS(null, 'display', 'none');
