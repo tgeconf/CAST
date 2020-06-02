@@ -158,7 +158,29 @@ class NavBtn {
         input.style.display = 'none';
         switch (props.evtType) {
             case NavBtn.CREATE_NEW:
-                input.onchange = () => this.createNew();
+                // input.onchange = () => this.createNew();
+                input.onchange = () => {
+                    let chartFile = input.files[0];
+                    var fr = new FileReader();
+                    fr.readAsText(chartFile);
+                    fr.onload = function () {
+                        const chart: string = <string>fr.result;
+                        console.log('chart is: ', chart);
+                        Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID), content: Loading.LOADING });
+                        setTimeout(() => {
+                            //reset state history
+                            State.stateHistoryIdx = -1;
+                            State.stateHistory = [];
+                            State.tmpStateBusket = [];
+                            State.tmpStateBusket.push({
+                                historyAction: { actionType: action.LOAD_CHARTS, actionVal: state.charts },
+                                currentAction: { actionType: action.LOAD_CHARTS, actionVal: [chart] }
+                            })
+                            State.saveHistory();
+                            Reducer.triger(action.LOAD_CHARTS, [chart]);
+                        }, 1);
+                    }
+                }
                 break;
             // case NavBtn.OPEN_PROJECT:
             //     input.onchange = () => this.openProject();
@@ -176,6 +198,7 @@ class NavBtn {
     // btn listeners
     public createNew() {
         console.log('load new charts to create new porject');
+
     }
 
     public openProject() {

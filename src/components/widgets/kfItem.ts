@@ -441,8 +441,12 @@ export default class KfItem extends KfTimingIllus {
     }
 
     public translateContainer(x: number, y: number) {
-        console.log('translating: ', this.container);
+        // console.log('translating: ', this.container);
         this.container.setAttributeNS(null, 'transform', `translate(${x}, ${y})`);
+
+        //translate the refline if there is one
+        // const refLine: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(this.id).lineId);
+        IntelliRefLine.updateLine(this.id);
         //check whether need to update the size of the alignwith kfgroup
         // const kfBBox: DOMRect = this.container.getBoundingClientRect();
         // console.log(this.id, KfItem.allKfInfo);
@@ -1011,6 +1015,24 @@ export default class KfItem extends KfTimingIllus {
         })
     }
 
+    /**
+     * check whether there are ancessters which are not rendered when zoomming
+     */
+    public checkParentRenderedWhenZooming(): boolean {
+        let parent: KfGroup | KfTrack = this.parentObj;
+        while (true) {
+            if (parent instanceof KfTrack) {
+                break;
+            } else {
+                if (!parent.renderWhenZooming) {
+                    return false;
+                }
+                parent = parent.parentObj;
+            }
+        }
+        return true;
+    }
+
     public showItemWhenZooming(): void {
         if (this.rendered) {
             const currentKfWidth: number = this.container.getBoundingClientRect().width / state.zoomLevel;//current width with no white space (when align to others, the white space is included in the totalWidth attrbute)
@@ -1023,8 +1045,8 @@ export default class KfItem extends KfTimingIllus {
             while (true) {
                 if (currentKfIdx - 1 >= 0) {
                     const preChild: KfItem | KfOmit = <KfItem | KfOmit>this.parentObj.children[currentKfIdx - 1];
-                    const preChildWidth: number = preChild.container.getBoundingClientRect().width / state.zoomLevel;
-                    const preChildTrans: ICoord = Tool.extractTransNums(preChild.container.getAttributeNS(null, 'transform'));
+                    let preChildWidth: number = preChild.container.getBoundingClientRect().width / state.zoomLevel;
+                    let preChildTrans: ICoord = Tool.extractTransNums(preChild.container.getAttributeNS(null, 'transform'));
                     if (preChild instanceof KfItem) {
                         if (preChildTrans.x + preChildWidth + passedOmits * (KfGroup.PADDING * 2 + omitWidth) === currentKfTrans.x) {
                             break;
@@ -1042,6 +1064,21 @@ export default class KfItem extends KfTimingIllus {
                     break;
                 }
             }
+
+            // let nextKf: KfItem | KfOmit;
+            // for (let i = 0, len = this.parentObj.children.length; i < len; i++) {
+            //     if (i > this.idxInGroup && this.parentObj.children[i] instanceof KfItem && (<KfItem>this.parentObj.children[i]).renderWhenZooming) {
+            //         nextKf = <KfItem>this.parentObj.children[i];
+            //     }
+            // }
+            // if (typeof nextKf !== 'undefined') {
+            //     console.log('next kf: ', nextKf);
+            //     const nextKfTrans: ICoord = Tool.extractTransNums(nextKf.container.getAttributeNS(null, 'transform'));
+            //     console.log(nextKfTrans, currentKfTrans);
+            //     if (nextKfTrans.x < currentKfTrans.x + currentKfWidth) {
+            //         kfWidthWithWhiteSpace = 0;
+            //     }
+            // }
 
             //if this kf is aligned to or with some kf, fetch the line
             let refLine: IntelliRefLine;
@@ -1075,6 +1112,7 @@ export default class KfItem extends KfTimingIllus {
                     // console.log('update omit posit: ', kfOmit.container, oriOmitTrans.x - kfOmit.oWidth);
                 } else {
                     this.parentObj.kfOmits[0].updateNum(this.parentObj.kfOmits[0].omittedNum + 1);
+                    console.log('going to translate group: ', -kfWidthWithWhiteSpace, currentKfWidth);
                     this.parentObj.translateGroup(this, -kfWidthWithWhiteSpace, false, false, false);
                 }
             } else {//not rendered -> rendered

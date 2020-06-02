@@ -1,5 +1,5 @@
 import { IState, state } from '../state'
-import Canis, { TimingSpec } from 'canis_toolkit';
+import Canis, { TimingSpec, ChartSpec } from 'canis_toolkit';
 import { ActionSpec, Animation } from 'canis_toolkit';
 
 export let canis = new Canis();
@@ -67,8 +67,12 @@ export default class CanisGenerator {
     public static generateChartSpec(charts: string[]): IChartSpec[] {
         let chartSpecs: IChartSpec[] = [];
         for (let i = 0; i < charts.length; i++) {
+            //judge the content of charts[i], url or chart content
+            console.log('chart i: ', charts[i]);
+            const chartType: string = charts[i].indexOf('<svg') >= 0 ? ChartSpec.CHART_CONTENT : ChartSpec.CHART_URL;
             const chartSpec: IChartSpec = {
-                source: charts[i]
+                source: charts[i],
+                type: chartType
             }
             chartSpecs.push(chartSpec);
             // this.canisSpec.charts.push(chartSpec);

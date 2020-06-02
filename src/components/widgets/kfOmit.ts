@@ -61,12 +61,25 @@ export default class KfOmit {
         this.hasOffset = hasOffset;
         this.hasDuration = hasDuration;
         this.parentObj = parentObj;
-        this.preItem = preItemIdx === -1 ? <KfGroup | KfItem>this.parentObj.children[this.parentObj.children.length - 1] : <KfGroup | KfItem>this.parentObj.children[preItemIdx];
+        // this.preItem = preItemIdx === -1 ? <KfGroup | KfItem>this.parentObj.children[this.parentObj.children.length - 1] : <KfGroup | KfItem>this.parentObj.children[preItemIdx];
         this.omittedNum = omittedNum;
         this.startX = startX;
         this.startY = startY;
         this.id = `kfOmit${KfOmit.omitIdx}`;
         KfOmit.omitIdx++;
+
+        //assign pre item
+        if (preItemIdx !== -1 && this.parentObj.children[preItemIdx].rendered) {
+            this.preItem = <KfGroup | KfItem>this.parentObj.children[preItemIdx];
+        } else {
+            let lastRenderedItem: KfGroup | KfItem;
+            this.parentObj.children.forEach((c: KfGroup | KfItem | KfOmit) => {
+                if ((c instanceof KfGroup || c instanceof KfItem) && c.rendered) {
+                    lastRenderedItem = c;
+                }
+            })
+            this.preItem = lastRenderedItem;
+        }
 
         if (typeof this.parentObj.container !== 'undefined') {
             this.renderOmit();

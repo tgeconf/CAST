@@ -22,6 +22,8 @@ declare module 'canis_toolkit' {
         public attribute: any;
     }
     export class ChartSpec {
+        static CHART_URL: string;
+        static CHART_CONTENT: string;
         static dataMarkDatum: Map<string, any>;
         static nonDataMarkDatum: Map<string, any>;
         static chartUnderstanding: {

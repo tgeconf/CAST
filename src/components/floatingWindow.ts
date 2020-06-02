@@ -115,6 +115,23 @@ export default class FloatingWindow {
                 that.floatingWindow.remove();
             }
         }
+        clickableArea.onclick = (clickEvt) => {
+            const that = this;
+            const input: HTMLInputElement = document.createElement("input");
+            input.setAttribute('type', 'file');
+            input.onchange = (changeEvt) => {
+                let projectFile = input.files[0];
+                var fr = new FileReader();
+                fr.readAsText(projectFile);
+                fr.onload = function () {
+                    const spec: string = <string>fr.result;
+                    Reducer.triger(action.LOAD_CANIS_SPEC, JSON.parse(spec).spec);
+                    that.floatingWindow.remove();
+                }
+            }
+            input.click();
+            return false;
+        }
 
         const chartTitle: HTMLHeadingElement = document.createElement('h3');
         chartTitle.innerText = 'Load Example Projects';
@@ -179,8 +196,8 @@ export default class FloatingWindow {
             State.stateHistory = [];
             State.tmpStateBusket = [];
             State.tmpStateBusket.push({
-                historyAction: {actionType: action.LOAD_CHARTS, actionVal: state.charts},
-                currentAction: {actionType: action.LOAD_CHARTS, actionVal: [chart]}
+                historyAction: { actionType: action.LOAD_CHARTS, actionVal: state.charts },
+                currentAction: { actionType: action.LOAD_CHARTS, actionVal: [chart] }
             })
             State.saveHistory();
             Reducer.triger(action.LOAD_CHARTS, [chart]);
