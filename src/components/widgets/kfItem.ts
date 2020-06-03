@@ -443,40 +443,80 @@ export default class KfItem extends KfTimingIllus {
     public translateContainer(x: number, y: number) {
         // console.log('translating: ', this.container);
         this.container.setAttributeNS(null, 'transform', `translate(${x}, ${y})`);
-
         //translate the refline if there is one
-        // const refLine: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(this.id).lineId);
         IntelliRefLine.updateLine(this.id);
-        //check whether need to update the size of the alignwith kfgroup
-        // const kfBBox: DOMRect = this.container.getBoundingClientRect();
-        // console.log(this.id, KfItem.allKfInfo);
-        // if (typeof this.id !== 'undefined') {
-        //     const lastKfInParent: KfItem = this.parentObj.findLastKf();
-        //     console.log('last kf in parent: ', lastKfInParent, this.parentObj);
-        //     if (typeof lastKfInParent !== 'undefined') {
-        //         if (this.id === lastKfInParent.id) {
-        //             console.log('testing !!!!!!', this.container);
-        //             const alignTargetKfId: number = KfItem.allKfInfo.get(this.id).alignTo;
-        //             if (typeof alignTargetKfId !== 'undefined' && this.parentObj.alignMerge) {
-        //                 let alignTargetKfGroup: KfGroup = KfItem.allKfItems.get(alignTargetKfId).parentObj;
-        //                 const tmpGroupBBox: DOMRect = alignTargetKfGroup.container.getBoundingClientRect();
-        //                 console.log(kfBBox.right, tmpGroupBBox.right, KfItem.allKfItems.get(alignTargetKfId).container.getBoundingClientRect().right);
-        //                 if (kfBBox.right > tmpGroupBBox.right) {
-        //                     console.log('going to update size of teh aligned group: ', alignTargetKfGroup.container)
-        //                     alignTargetKfGroup.updateSize((kfBBox.right - tmpGroupBBox.right) / state.zoomLevel + KfGroup.PADDING);
-        //                     while (true) {
-        //                         if (alignTargetKfGroup.parentObj instanceof KfGroup) {
-        //                             alignTargetKfGroup = alignTargetKfGroup.parentObj;
-        //                             alignTargetKfGroup.updateSize((kfBBox.right - tmpGroupBBox.right) / state.zoomLevel + KfGroup.PADDING);
-        //                         } else {
-        //                             break;
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+    }
+
+    /**
+     * check whether there is a malposition between this kf and the kf it aligned to 
+     */
+    public checkMalposition() {
+        if (typeof KfItem.allKfInfo.get(this.id) !== 'undefined') {
+            if (typeof KfItem.allKfInfo.get(this.id).alignTo !== 'undefined') {
+                const alignWithKf: KfItem = KfItem.allKfItems.get(KfItem.allKfInfo.get(this.id).alignTo);
+                if (typeof alignWithKf !== 'undefined') {
+                    if (alignWithKf.rendered && alignWithKf.renderWhenZooming && alignWithKf.checkParentRenderedWhenZooming()) {
+                        const currentKfBBox: DOMRect = this.container.getBoundingClientRect();
+                        const alignWithKfBBox: DOMRect = alignWithKf.container.getBoundingClientRect();
+                        let targetPosi: number = 0;
+                        if (this.timingType === TimingSpec.timingRef.previousStart) {
+                            targetPosi = alignWithKfBBox.x;
+                        } else {
+                            //find all the kfs aligned to this alignWith and cal the bbox
+                            let maxX: number = alignWithKfBBox.right;
+                            KfItem.allKfInfo.get(KfItem.allKfInfo.get(this.id).alignTo).alignWithKfs.forEach((kfId: number) => {
+                                const tmpKf: KfItem = KfItem.allKfItems.get(kfId);
+                                if (typeof tmpKf !== 'undefined') {
+                                    if (tmpKf.rendered && tmpKf.renderWhenZooming && tmpKf.id !== this.id) {
+                                        const tmpBBox: DOMRect = tmpKf.container.getBoundingClientRect();
+                                        if (tmpBBox.y <= currentKfBBox.y) {//kfs above this one
+                                            if (tmpBBox.right > maxX) {
+                                                maxX = tmpBBox.right;
+                                            }
+                                        }
+                                    }
+                                }
+                            })
+                            targetPosi = maxX;
+                        }
+
+                        if (currentKfBBox.x !== targetPosi) {
+                            const diff: number = (targetPosi - currentKfBBox.x) / state.zoomLevel;
+                            const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
+                            console.log('checking position: ', this.container, alignWithKf.container, alignWithKfBBox, targetPosi, currentKfBBox.x, oriTrans, diff);
+                            this.translateContainer(oriTrans.x + diff, oriTrans.y);
+                        }
+                    }
+                }
+            } else if (typeof KfItem.allKfInfo.get(this.id).alignWithKfs !== 'undefined') {
+                // if (this.rendered &&   this.renderWhenZooming) {
+                //     const currentKfBBox: DOMRect = this.container.getBoundingClientRect();
+                //     let alignLeft: number = currentKfBBox.left, alignRight: number = currentKfBBox.right;
+                //     KfItem.allKfInfo.get(this.id).alignWithKfs.forEach((kfId: number) => {
+                //         const tmpKf: KfItem = KfItem.allKfItems.get(kfId);
+                //         if (typeof tmpKf !== 'undefined') {
+                //             if (tmpKf.rendered && tmpKf.renderWhenZooming) {
+                //                 let targetPosi: number = alignLeft;
+                //                 if (tmpKf.timingType = TimingSpec.timingRef.previousEnd) {
+                //                     targetPosi = alignRight;
+                //                 }
+                //                 const tmpBBox: DOMRect = tmpKf.container.getBoundingClientRect();
+                //                 if (tmpBBox.left !== targetPosi) {
+                //                     console.log('parent checking position: ', this.container, tmpKf.container);
+                //                     const diff: number = (targetPosi - tmpBBox.left) / state.zoomLevel;
+                //                     const oriTrans: ICoord = Tool.extractTransNums(tmpKf.container.getAttributeNS(null, 'transform'));
+                //                     tmpKf.translateContainer(oriTrans.x + diff, oriTrans.y);
+                //                 }
+
+                //                 if (tmpBBox.right > alignRight) {
+                //                     alignRight = tmpBBox.right;
+                //                 }
+                //             }
+                //         }
+                //     })
+                // }
+            }
+        }
     }
 
     public findNextSibling(): KfItem | KfOmit {

@@ -159,7 +159,7 @@ export default class Suggest {
                 }
                 channelAttrs.get(tmpAttrChannel).push(aName);
             })
-            
+
         })
         return channelAttrs;
     }
@@ -365,6 +365,14 @@ export default class Suggest {
                         return -1;
                     } else if (!mShapes.has(aShapeName) && mShapes.has(bShapeName)) {
                         return 1;
+                    } else if (!mShapes.has(aShapeName) && !mShapes.has(bShapeName)) {
+                        if (aShapeName === 'path' && bShapeName !== 'path') {
+                            return 1;
+                        } else if (aShapeName !== 'path' && bShapeName === 'path') {
+                            return -1;
+                        } else {
+                            return 0;
+                        }
                     } else {
                         return 0;
                     }

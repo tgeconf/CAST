@@ -834,9 +834,11 @@ export default class KfGroup extends KfTimingIllus {
                         k.translateContainer(tmpTrans.x + transX, tmpTrans.y);
                         if (k instanceof KfItem) {
                             k.transOmitsWithItem();
-                        }
-                        if (k instanceof KfItem && updateAlignedKfs) {
-                            k.translateAlignedGroups(transX, updateAlignedKfs);
+                            if (updateAlignedKfs) {
+                                k.translateAlignedGroups(transX, updateAlignedKfs);
+                            } else {//check whether there is malposition between this kf and its aligned one
+                                // k.checkMalposition();
+                            }
                         }
                         count++;
                     }
@@ -1255,6 +1257,7 @@ export default class KfGroup extends KfTimingIllus {
                     } else if (c instanceof KfItem && c.rendered && c.renderWhenZooming) {
                         visKfRecorder = c;
                         numVisKfAfterLastOmit++;
+                        c.checkMalposition();
                     }
                 })
 
@@ -1322,7 +1325,7 @@ export default class KfGroup extends KfTimingIllus {
                     kfOmit.updateTrans(oriOmitTrans.x - kfOmit.oWidth - KfGroup.PADDING, oriOmitTrans.y + kfOmit.oHeight / 2);
                 } else {
                     (<KfGroup>this.parentObj).kfOmits[0].updateNum((<KfGroup>this.parentObj).kfOmits[0].omittedNum + 1);
-                    
+
                     this.translateGroup((<KfGroup>this.parentObj).kfOmits[0], -groupWidth, true, false, false);
                 }
                 this.container.setAttributeNS(null, 'display', 'none');

@@ -71,11 +71,13 @@ export default class Nav {
         this.navContainer.appendChild(this.createSeparator());
 
         const testBtn: HTMLButtonElement = document.createElement('button');
-        testBtn.innerHTML = 'testSpec';
+        // testBtn.innerHTML = 'testSpec';
+        testBtn.innerHTML = 'testGif';
         testBtn.onclick = () => {
-            NavBtn.testSpec();
+            // NavBtn.testSpec();
+            NavBtn.testGif();
         }
-        // this.navContainer.appendChild(testBtn);
+        this.navContainer.appendChild(testBtn);
     }
 
     public createSeparator() {
@@ -278,5 +280,16 @@ class NavBtn {
         const floatingWindow: FloatingWindow = new FloatingWindow();
         floatingWindow.createFloatingWindow(FloatingWindow.TYPE_SPEC);
         document.getElementById('appWrapper').appendChild(floatingWindow.floatingWindow);
+    }
+
+    public static async testGif() {
+        console.log(state.lottieSpec);
+        // const gif = new LottieRenderer();
+        // await gif({
+        //     animationData: state.lottieSpec,
+        //     // path: 'fixtures/bodymovin.json',
+        //     output: 'example.gif',
+        //     width: 640
+        // })
     }
 }
