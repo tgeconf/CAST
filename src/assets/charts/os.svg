@@ -1,4 +1,6 @@
-<svg id="visChart" x="0" y="0" width="900" height="450" viewBox="0 0 900.000000 600.000000" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve">
+<svg id="visChart" x="0" y="0" width="900" height="450" viewBox="0 0 900.000000 600.000000" 
+    xmlns="http://www.w3.org/2000/svg" 
+    xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve">
     <g id="chartContent" transform="translate(450.000000,300.000000)">
         <g transform="translate(0,0)">
             <g transform="translate(0,0)"></g>

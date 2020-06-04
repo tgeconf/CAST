@@ -33,7 +33,7 @@ export default class Nav {
         this.navContainer.appendChild(new NavBtn().createNavFileBtn({
             inputId: 'createNew',
             classNameStr: 'new',
-            title: 'new project',
+            title: 'load chart',
             evtType: NavBtn.CREATE_NEW
         }));
         this.navContainer.appendChild(new NavBtn().createNavBtn({
@@ -77,7 +77,7 @@ export default class Nav {
             // NavBtn.testSpec();
             NavBtn.testGif();
         }
-        this.navContainer.appendChild(testBtn);
+        // this.navContainer.appendChild(testBtn);
     }
 
     public createSeparator() {
@@ -167,7 +167,7 @@ class NavBtn {
                     fr.readAsText(chartFile);
                     fr.onload = function () {
                         const chart: string = <string>fr.result;
-                        console.log('chart is: ', chart);
+                        // console.log('chart is: ', chart);
                         Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID), content: Loading.LOADING });
                         setTimeout(() => {
                             //reset state history
@@ -284,8 +284,8 @@ class NavBtn {
 
     public static async testGif() {
         console.log(state.lottieSpec);
-        // const gif = new LottieRenderer();
-        // await gif({
+        // // const gif = new LottieRenderer();
+        // await LottieRenderer({
         //     animationData: state.lottieSpec,
         //     // path: 'fixtures/bodymovin.json',
         //     output: 'example.gif',

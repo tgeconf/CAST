@@ -1064,9 +1064,11 @@ export default class KfItem extends KfTimingIllus {
             if (parent instanceof KfTrack) {
                 break;
             } else {
-                if (!parent.renderWhenZooming) {
+                if (!parent.renderWhenZooming || !parent.rendered) {
                     return false;
                 }
+                console.log(parent, parent.parentObj);
+
                 parent = parent.parentObj;
             }
         }

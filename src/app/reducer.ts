@@ -509,7 +509,9 @@ Reducer.listen(action.SPLIT_CREATE_MULTI_ANI, (actionInfo: { aniId: string, path
                     newAni.id = actionInfo.aniId;
                 } else {
                     newAni.reference = TimingSpec.timingRef.previousEnd;
-                    newAni.align = { target: actionInfo.aniId, type: 'element', merge: true };
+                    if(shapeAttrIdx !== 0){
+                        newAni.align = { target: actionInfo.aniId, type: 'element', merge: true };
+                    }
                     // newAni.align = { target: alignTarget, type: 'element', merge: true };
                 }
                 if (actionInfo.path.attrComb.length > 0) {
