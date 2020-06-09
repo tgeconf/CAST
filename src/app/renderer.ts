@@ -433,6 +433,7 @@ export default class Renderer {
         }
         const shownThumbnail: number = Math.floor((zl - ViewWindow.MIN_ZOOM_LEVEL) / ((ViewWindow.MAX_ZOOM_LEVEL - ViewWindow.MIN_ZOOM_LEVEL) / (state.chartThumbNailZoomLevels / 2)));
         const kfZoomLevel: number = Math.floor((zl - ViewWindow.MIN_ZOOM_LEVEL) / ((ViewWindow.MAX_ZOOM_LEVEL - ViewWindow.MIN_ZOOM_LEVEL) / state.chartThumbNailZoomLevels));
+        console.log('kf zoom level: ', kfZoomLevel);
         // KfItem.allKfItems.forEach((kfItem: KfItem) => {
         //     kfItem.chartThumbnails.forEach((ct: SVGImageElement, i: number) => {
         //         if (i === shownThumbnail) {
@@ -443,12 +444,32 @@ export default class Renderer {
         //     })
         // })
 
+        let sortedAniGroupAniIds: string[] = [...KfGroup.allAniGroups.keys()].sort((a: string, b: string) => {
+            if (KfGroup.allAniGroups.get(a).alignType === Animation.alignTarget.withEle && KfGroup.allAniGroups.get(b).alignType !== Animation.alignTarget.withEle) {
+                return 1;
+            } else if (KfGroup.allAniGroups.get(a).alignType !== Animation.alignTarget.withEle && KfGroup.allAniGroups.get(b).alignType === Animation.alignTarget.withEle) {
+                return -1;
+            } else if (KfGroup.allAniGroups.get(a).alignType === Animation.alignTarget.withEle && KfGroup.allAniGroups.get(b).alignType === Animation.alignTarget.withEle) {
+                const bbox1: DOMRect = KfGroup.allAniGroups.get(a).container.getBoundingClientRect();
+                const bbox2: DOMRect = KfGroup.allAniGroups.get(b).container.getBoundingClientRect();
+                return bbox1.top - bbox2.top;
+            } else {
+                return 0;
+            }
+            return -1;
+        })
+
         //set visibility of kfgroups and kfitems
-        KfGroup.allAniGroups.forEach((aniKfGroup: KfGroup) => {
-            //aniKfGroup can not be a group that align to other groups
-            // if (!(typeof aniKfGroup.alignTarget !== 'undefined' && aniKfGroup.alignType === Animation.alignTarget.withEle)) {
+        // KfGroup.allAniGroups.forEach((aniKfGroup: KfGroup) => {
+        sortedAniGroupAniIds.forEach((aniKfGroupAniId: string) => {
+            const aniKfGroup: KfGroup = KfGroup.allAniGroups.get(aniKfGroupAniId);
+            console.log('zooming anigroup: ', aniKfGroup.alignType, aniKfGroup);
             aniKfGroup.zoomGroup(kfZoomLevel, shownThumbnail);
-            // }
+            if (aniKfGroup.alignType === Animation.alignTarget.withEle) {//check kf positions
+                console.log('updating align ani group: ', aniKfGroup.container);
+                aniKfGroup.updateAlignGroupKfPosis();
+            }
+
         })
     }
 

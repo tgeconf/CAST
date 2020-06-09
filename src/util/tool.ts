@@ -11,6 +11,7 @@ import KfItem from '../components/widgets/kfItem'
 import { GroupMenu } from '../components/widgets/kfGroup'
 import { group, thresholdFreedmanDiaconis } from 'd3'
 import Util from '../app/core/util'
+import ViewWindow from '../components/viewWindow'
 
 export default class Tool {
     static ENLARGE_THRESHOLD: number = 200;
@@ -428,5 +429,13 @@ export default class Tool {
                 m.setAttributeNS(null, 'stroke-width', m.getAttributeNS(null, 'tmp-stroke-width'));
             }
         })
+    }
+
+    public static calKfZoomLevel(): number {
+        let currentZoomNum: number = state.zoomLevel;
+        if (currentZoomNum === ViewWindow.MAX_ZOOM_LEVEL) {
+            currentZoomNum -= 0.001;
+        }
+        return Math.floor((currentZoomNum - ViewWindow.MIN_ZOOM_LEVEL) / ((ViewWindow.MAX_ZOOM_LEVEL - ViewWindow.MIN_ZOOM_LEVEL) / state.chartThumbNailZoomLevels));
     }
 }

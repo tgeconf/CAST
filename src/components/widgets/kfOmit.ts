@@ -101,6 +101,9 @@ export default class KfOmit {
             this.hideOmit();
         }
         this.translateContainer(this.startX + KfGroup.PADDING, this.startY - this.oHeight / 2);
+        if (this.omitType === KfOmit.KF_ALIGN) {
+            this.createUseTag();
+        }
     }
 
     public createUseTag() {

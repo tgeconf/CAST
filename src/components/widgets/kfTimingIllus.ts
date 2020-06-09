@@ -10,6 +10,9 @@ import KfItem from './kfItem';
 import KfOmit from './kfOmit';
 
 export default class KfTimingIllus {
+    static SCALE_DOWN: string = 'scaleDown';
+    static SCALE_UP: string = 'scaleUp';
+
     static BASIC_OFFSET_DURATION_W: number = 20;
     static OFFSET_COLOR: string = '#ff9246';
     static OFFSET_STRETCH_COLOR: string = '#ea5514';

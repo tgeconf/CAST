@@ -45,8 +45,10 @@ export default class IntelliRefLine {
      * @param kfId : either alignwith kf or alignto kf
      */
     public static updateLine(kfId: number) {
+        console.log('updateing line: ', IntelliRefLine.kfLineMapping.get(kfId));
         if (typeof IntelliRefLine.kfLineMapping.get(kfId) !== 'undefined') {
             const lineItem: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kfId).lineId);
+            console.log('line item: ', lineItem.line);
             const containerBBox: DOMRect = lineItem.container.getBoundingClientRect();//fixed
             const alignKf1: IKeyframe = KfItem.allKfInfo.get(kfId);
             const alignKf2: IKeyframe = KfItem.allKfInfo.get(IntelliRefLine.kfLineMapping.get(kfId).theOtherEnd);
@@ -66,16 +68,15 @@ export default class IntelliRefLine {
             if (alignWithKf.rendered && alignToKf.rendered) {
                 alignWithKfBBox = alignWithKf.container.getBoundingClientRect();//fixed
                 alignToKfBBox = alignToKf.container.getBoundingClientRect();//fixed
-
-                // if (alignToKfInfo.timingRef === TimingSpec.timingRef.previousEnd) {
-                //     lineItem.line.setAttributeNS(null, 'x1', `${(alignWithKfBBox.right - containerBBox.left) / state.zoomLevel}`);
-                //     lineItem.line.setAttributeNS(null, 'x2', `${(alignWithKfBBox.right - containerBBox.left) / state.zoomLevel}`);
-                // } else {
-                //     lineItem.line.setAttributeNS(null, 'x1', `${(alignWithKfBBox.left - containerBBox.left) / state.zoomLevel}`);
-                //     lineItem.line.setAttributeNS(null, 'x2', `${(alignWithKfBBox.left - containerBBox.left) / state.zoomLevel}`);
-                // }
-                lineItem.line.setAttributeNS(null, 'x1', `${(alignToKfBBox.left - containerBBox.left) / state.zoomLevel}`);
-                lineItem.line.setAttributeNS(null, 'x2', `${(alignToKfBBox.left - containerBBox.left) / state.zoomLevel}`);
+                const [minX, maxX]: [number, number] = alignToKf.calAlignRange();
+                console.log('update line with align wiht and align to: ', alignWithKf, alignToKf, alignWithKfBBox.right, maxX);
+                if (alignToKfInfo.timingRef === TimingSpec.timingRef.previousEnd) {
+                    lineItem.line.setAttributeNS(null, 'x1', `${(maxX - containerBBox.left) / state.zoomLevel}`);
+                    lineItem.line.setAttributeNS(null, 'x2', `${(maxX - containerBBox.left) / state.zoomLevel}`);
+                } else {
+                    lineItem.line.setAttributeNS(null, 'x1', `${(minX - containerBBox.left) / state.zoomLevel}`);
+                    lineItem.line.setAttributeNS(null, 'x2', `${(minX - containerBBox.left) / state.zoomLevel}`);
+                }
 
                 // lineItem.line.setAttributeNS(null, 'y1', `${24}`);
                 lineItem.line.setAttributeNS(null, 'y1', `${(alignWithKfBBox.top - containerBBox.top) / state.zoomLevel}`);
