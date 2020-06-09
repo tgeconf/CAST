@@ -68,7 +68,7 @@ export default class CanisGenerator {
         let chartSpecs: IChartSpec[] = [];
         for (let i = 0; i < charts.length; i++) {
             //judge the content of charts[i], url or chart content
-            // console.log('chart i: ', charts[i]);
+            console.log('chart i: ', charts[i]);
             const chartType: string = charts[i].indexOf('<svg') >= 0 ? ChartSpec.CHART_CONTENT : ChartSpec.CHART_URL;
             const chartSpec: IChartSpec = {
                 source: charts[i],
