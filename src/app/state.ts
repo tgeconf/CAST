@@ -204,6 +204,7 @@ export class State implements IState {
     }
     set activatePlusBtn(plusBtnInfo: IActivatePlusBtn) {
         this._activatePlusBtn = plusBtnInfo;
+        Renderer.renderActivatedPlusBtn();
     }
     get activatePlusBtn(): IActivatePlusBtn {
         return this._activatePlusBtn;

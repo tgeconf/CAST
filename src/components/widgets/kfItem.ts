@@ -218,7 +218,6 @@ export default class KfItem extends KfTimingIllus {
     public renderItem(startX: number, size?: ISize) {
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.translateContainer(startX + KfItem.PADDING, KfItem.PADDING);
-        console.log('rendering item: ', this.container, startX + KfItem.PADDING, KfItem.PADDING);
         this.bindHoverBtn();
 
         if (typeof this.kfInfo.alignTo !== 'undefined') {//this kf is align to others
@@ -457,7 +456,6 @@ export default class KfItem extends KfTimingIllus {
             // if (typeof this.preOmit !== 'undefined') {
             const currentKfTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
             const oriTrans: ICoord = Tool.extractTransNums(this.preOmit.container.getAttributeNS(null, 'transform'));
-            console.log('translating omit: ', this.container, this.preOmit.container);
             this.preOmit.translateContainer(this.preOmit.omitType === KfOmit.KF_ALIGN ? currentKfTrans.x - this.preOmit.oWidth - KfGroup.PADDING : currentKfTrans.x - this.preOmit.oWidth, oriTrans.y);
             // this.preOmit.updateTrans(oriTrans.x + transX, oriTrans.y + KfOmit.OMIT_H / 1);
         }
@@ -465,7 +463,6 @@ export default class KfItem extends KfTimingIllus {
 
     public translateContainer(x: number, y: number) {
         this.container.setAttributeNS(null, 'transform', `translate(${x}, ${y})`);
-        console.log('translating: ', this.container, x, y);
         //translate the refline if there is one
         IntelliRefLine.updateLine(this.id);
     }
@@ -1148,8 +1145,6 @@ export default class KfItem extends KfTimingIllus {
                 if (!parent.renderWhenZooming || !parent.rendered) {
                     return false;
                 }
-                console.log(parent, parent.parentObj);
-
                 parent = parent.parentObj;
             }
         }
@@ -1231,7 +1226,6 @@ export default class KfItem extends KfTimingIllus {
                     refLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(KfItem.allKfInfo.get(this.id).alignTo).lineId);
                 }
             }
-            console.log('testing ', this.container, this.renderWhenZooming);
             const kfZoomLevel: number = Tool.calKfZoomLevel();
             if (!this.renderWhenZooming) {//rendered -> not rendered : scale down
                 this.container.setAttributeNS(null, 'display', 'none');
@@ -1251,7 +1245,6 @@ export default class KfItem extends KfTimingIllus {
                             omitStartY /= 2;
                         }
                     }
-                    console.log('creating kf omit in zooming: ', KfItem.allKfInfo.get(this.id), KfItem.allKfInfo.get(this.id).alignTo, omitType, kfOmit.omitPattern, kfTrans, kfWidthWithWhiteSpace);
                     kfOmit.createOmit(omitType, kfTrans.x + kfWidthWithWhiteSpace - KfGroup.PADDING, 1, this.parentObj, this.hasOffset, this.hasDuration, omitStartY, this.idxInGroup);
                     this.parentObj.insertChild(kfOmit, this.idxInGroup + 1)
                     kfOmit.idxInGroup = this.idxInGroup + 1;
@@ -1260,10 +1253,8 @@ export default class KfItem extends KfTimingIllus {
                     //update the position of omits
                     const oriOmitTrans: ICoord = Tool.extractTransNums(kfOmit.container.getAttributeNS(null, 'transform'));
                     kfOmit.updateTrans(oriOmitTrans.x - KfOmit.maxOmitWidth, oriOmitTrans.y + kfOmit.oHeight / 2);
-                    console.log('updated trans in zooming: ', oriOmitTrans.x - KfOmit.maxOmitWidth, oriOmitTrans.y + kfOmit.oHeight / 2);
                 } else {
                     this.parentObj.kfOmits[0].updateNum(this.parentObj.kfOmits[0].omittedNum + 1);
-                    console.log('going to translate group: ', -kfWidthWithWhiteSpace, currentKfWidth);
                     this.parentObj.translateGroup(this, -kfWidthWithWhiteSpace, false, false, false);
                 }
             } else {//not rendered -> rendered: scale up
@@ -1272,18 +1263,15 @@ export default class KfItem extends KfTimingIllus {
                     refLine.zoomShowLine();
                 }
                 if (this.parentObj.kfOmits[0].omittedNum === 1) {//remove kfOmit
-                    console.log('removing omit when show this kf: ', this.container);
                     const tmpOmit: KfOmit = this.parentObj.kfOmits[0];
                     tmpOmit.removeOmit(this.parentObj);
                     this.parentObj.removeChild(this.parentObj.kfOmits[0].idxInGroup);
-
                     this.parentObj.translateGroup(<KfItem | KfOmit>this.parentObj.children[this.idxInGroup - 1], -omitWidth, false, false, false);
                     this.parentObj.translateGroup(this, kfWidthWithWhiteSpace, false, false, false);
                     this.parentObj.kfOmits.splice(0, 1);
                 } else {//update number
                     this.parentObj.kfOmits[0].updateNum(this.parentObj.kfOmits[0].omittedNum - 1);
                     this.parentObj.translateGroup(this, kfWidthWithWhiteSpace, false, false, false);
-                    console.log('translating in scale up', this.container, kfWidthWithWhiteSpace, passedOmits, this.parentObj.kfOmits);
                     //restore the omit position to the right side of its preItem
                     // const preItemTrans: ICoord = Tool.extractTransNums(this.parentObj.kfOmits[0].preItem.container.getAttributeNS(null, 'transform'));
                     // const oriOmitTrans: ICoord = Tool.extractTransNums(this.parentObj.kfOmits[0].container.getAttributeNS(null, 'transform'));

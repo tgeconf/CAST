@@ -3,7 +3,7 @@ import { Animation, ChartSpec } from 'canis_toolkit';
 import Tool from "../../util/tool";
 import KfItem from "./kfItem";
 import { state, State } from "../../app/state";
-import { IKeyframe } from "../../app/core/ds";
+import { IKeyframe, IKeyframeGroup } from "../../app/core/ds";
 import Reducer from "../../app/reducer";
 import * as action from "../../app/action";
 import Suggest from "../../app/core/suggest";
@@ -60,40 +60,44 @@ export default class PlusBtn {
         })
     }
 
-    public static detectAdding(kfs: IKeyframe[]): [boolean, string[]] {
+    public static detectAdding(kfg: IKeyframeGroup, kfs: IKeyframe[]): [boolean, string[]] {
         const kf0Marks = kfs[0].marksThisKf;
         let mClassCount: string[] = [];
         kf0Marks.forEach((mId: string) => {
             mClassCount.push(Animation.markClass.get(mId));
         })
         mClassCount = [...new Set(mClassCount)];
-        if (mClassCount.length === 1) {
-            let allDataEncoded: boolean = true;
-            let hasDiffAttrValue: boolean = false;
-            let datum0: any = ChartSpec.dataMarkDatum.get(kf0Marks[0]);
-            for (let i = 1, len = kf0Marks.length; i < len; i++) {
-                if (typeof ChartSpec.dataMarkDatum.get(kf0Marks[i]) === 'undefined') {
-                    allDataEncoded = false;
-                    break;
-                } else {
-                    const datum: any = ChartSpec.dataMarkDatum.get(kf0Marks[i]);
-                    for (let key in datum) {
-                        if (datum[key] !== datum0[key] && typeof datum0[key] !== 'undefined') {
-                            hasDiffAttrValue = true;
+        if (typeof kfg.merge !== 'undefined' && kfg.merge) {
+            return [false, []];
+        } else {
+            if (mClassCount.length === 1) {
+                let allDataEncoded: boolean = true;
+                let hasDiffAttrValue: boolean = false;
+                let datum0: any = ChartSpec.dataMarkDatum.get(kf0Marks[0]);
+                for (let i = 1, len = kf0Marks.length; i < len; i++) {
+                    if (typeof ChartSpec.dataMarkDatum.get(kf0Marks[i]) === 'undefined') {
+                        allDataEncoded = false;
+                        break;
+                    } else {
+                        const datum: any = ChartSpec.dataMarkDatum.get(kf0Marks[i]);
+                        for (let key in datum) {
+                            if (datum[key] !== datum0[key] && typeof datum0[key] !== 'undefined') {
+                                hasDiffAttrValue = true;
+                            }
+                        }
+                        if (hasDiffAttrValue) {
+                            break;
                         }
                     }
-                    if (hasDiffAttrValue) {
-                        break;
-                    }
                 }
-            }
-            if (hasDiffAttrValue || (kfs.length === 1 && kf0Marks.length > 1)) {
-                return [true, mClassCount];
+                if (hasDiffAttrValue || (kfs.length === 1 && kf0Marks.length > 1)) {
+                    return [true, mClassCount];
+                } else {
+                    return [false, []]
+                }
             } else {
-                return [false, []]
+                return [true, mClassCount];
             }
-        } else {
-            return [true, mClassCount];
         }
     }
 

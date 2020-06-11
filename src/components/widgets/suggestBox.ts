@@ -131,7 +131,6 @@ export class SuggestBox {
             const attrValueSort: string[][] = Util.extractAttrValueOrder(targetPath.sortedAttrValueComb);
             const [clsOfMarksInPath, containsNonDataMarkInPath] = Util.extractClsFromMarks(targetPath.lastKfMarks);
             const [clsOfMarksThisAni, containsNonDataMarkInAni] = Util.extractClsFromMarks(startKf.parentObj.marksThisAni());
-
             if (!suggestOnFirstKf) {//the suggestion is based on all marks in this animation as the last kf
                 if (Tool.identicalArrays(clsOfMarksInPath, clsOfMarksThisAni)) {//marks in current path have the same classes as those in current animation 
                     if (clsOfMarksInPath.length > 1 && !containsNonDataMarkInPath) {//create multiple animations

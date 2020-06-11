@@ -137,11 +137,13 @@ export default class Suggest {
         Util.EFFECTIVENESS_RANKING.forEach((channel: string) => {
             attrArr.forEach((aName: string) => {
                 let tmpAttrChannel: string[] = ChartSpec.chartUnderstanding[aName];
-                if (tmpAttrChannel.includes(channel)) {
-                    if (typeof orderedAttrs.get(channel) === 'undefined') {
-                        orderedAttrs.set(channel, []);
+                if (typeof tmpAttrChannel !== 'undefined') {
+                    if (tmpAttrChannel.includes(channel)) {
+                        if (typeof orderedAttrs.get(channel) === 'undefined') {
+                            orderedAttrs.set(channel, []);
+                        }
+                        orderedAttrs.get(channel).push(aName);
                     }
-                    orderedAttrs.get(channel).push(aName);
                 }
             })
         })
@@ -186,7 +188,7 @@ export default class Suggest {
                     if (multiPosiAttrs) {//check for attr continuity
                         tmpCombRecord = Util.checkConti(tmpCombRecord, positionAttrs);
                     }
-                    allCombinations = [...allCombinations, ...tmpCombRecord];
+                    allCombinations = [...allCombinations, ...tmpCombRecord.map((oneComb: string[]) => [...new Set(oneComb)])];
                     break;
                 }
             }
@@ -246,14 +248,15 @@ export default class Suggest {
             let asscendingOrder: boolean = false;
             lastKfMarks.forEach((mId: string, idx: number) => {
                 let sectionId: string = '';
-                let seperateSecId: string[] = []; //for ordering section ids
+                let sepSecIdRecord: Set<string> = new Set();
+                let seperateSecId: Set<string> = new Set(); //for ordering section ids
                 // let secIsFirstKf: boolean = false;
                 attrComb.forEach((aName: string) => {
                     let tmpValue: string | number = Util.filteredDataTable.get(mId)[aName];
-                    sectionId = `${sectionId}${tmpValue},`;
+                    sectionId = [...sepSecIdRecord.add(`${tmpValue}`)].join(',');
                     if (valuesFirstKf.has(tmpValue)) {
                         //check whether this sec is the firstKf
-                        const isFirstKf: boolean = seperateSecId.every((attrVal: string) => { return (attrVal.includes('000_')) });
+                        const isFirstKf: boolean = [...seperateSecId].every((attrVal: string) => { return (attrVal.includes('000_')) });
                         // const isFirstKf: boolean = seperateSecId.every((attrVal: string) => { return (attrVal.includes('zzz_') || attrVal.includes('000_')) });
                         if (isFirstKf) {
                             tmpValue = '000_' + tmpValue
@@ -270,12 +273,13 @@ export default class Suggest {
                             }
                         }
                     }
-                    seperateSecId.push(`${tmpValue}`);
+                    Util.addAttrValue(seperateSecId, `${tmpValue}`);
+                    // seperateSecId.add(`${tmpValue}`);
                 })
 
                 if (typeof sections.get(sectionId) === 'undefined') {
                     sections.set(sectionId, []);
-                    sectionIdRecord.push(seperateSecId);
+                    sectionIdRecord.push([...seperateSecId]);
                     // if (asscendingOrder && secIsFirstKf) {
                     //     firstKfIdx = sectionIdRecord.length - 1;
                     // }
@@ -296,11 +300,12 @@ export default class Suggest {
                     sectionIdRecord = [];
                     lastKfMarks.forEach((mId: string) => {
                         let sectionId: string = '';
-                        let seperateSecId: string[] = [];
+                        let sepSecIdRecord: Set<string> = new Set();
+                        let seperateSecId: Set<string> = new Set();
                         // let secIsFirstKf: boolean = false;
                         attrComb.forEach((aName: string) => {
                             let tmpValue: string | number = Util.filteredDataTable.get(mId)[aName];
-                            sectionId = `${sectionId}${tmpValue},`;
+                            sectionId = [...sepSecIdRecord.add(`${tmpValue}`)].join(',');
                             if (valuesFirstKf.has(tmpValue)) {
                                 tmpValue = '000_' + tmpValue
                                 let orderDirect: number = valueIdx.get(aName);
@@ -314,15 +319,16 @@ export default class Suggest {
                                     // tmpValue = '000_' + tmpValue;//for ordering 
                                 }
                             }
-                            seperateSecId.push(`${tmpValue}`);
+                            Util.addAttrValue(seperateSecId, `${tmpValue}`);
+                            // seperateSecId.add(`${tmpValue}`);
                         })
                         if (hasOneMrak) {
-                            sectionId = `${sectionId}${mId},`;
-                            seperateSecId.push(mId);
+                            sectionId = `${sectionId},${mId}`;
+                            seperateSecId.add(mId);
                         }
                         if (typeof sections.get(sectionId) === 'undefined') {
                             sections.set(sectionId, []);
-                            sectionIdRecord.push(seperateSecId);
+                            sectionIdRecord.push([...seperateSecId]);
                             // if (asscendingOrder && secIsFirstKf) {
                             //     firstKfIdx = seperateSecId.length - 1;
                             // }
@@ -354,6 +360,9 @@ export default class Suggest {
                 if (timeSecIdx.includes(diffValueIdx)) {
                     aComp = Util.fetchTimeNum(<string>aComp);
                     bComp = Util.fetchTimeNum(<string>bComp);
+                } else {
+                    aComp = isNaN(parseFloat(`${aComp}`)) ? aComp : parseFloat(`${aComp}`);
+                    bComp = isNaN(parseFloat(`${bComp}`)) ? bComp : parseFloat(`${bComp}`);
                 }
 
                 if (diffAttr === 'mShape') {
@@ -366,9 +375,9 @@ export default class Suggest {
                     } else if (!mShapes.has(aShapeName) && mShapes.has(bShapeName)) {
                         return 1;
                     } else if (!mShapes.has(aShapeName) && !mShapes.has(bShapeName)) {
-                        if (aShapeName === 'path' && bShapeName !== 'path') {
+                        if (aShapeName.toLocaleLowerCase().includes('link') && !bShapeName.toLocaleLowerCase().includes('link')) {
                             return 1;
-                        } else if (aShapeName !== 'path' && bShapeName === 'path') {
+                        } else if (!aShapeName.toLocaleLowerCase().includes('link') && bShapeName.toLocaleLowerCase().includes('link')) {
                             return -1;
                         } else {
                             return 0;
@@ -396,85 +405,6 @@ export default class Suggest {
                     }
                 }
             })
-
-            // if (asscendingOrder && firstKfIdx !== 0) {
-            //     //need to change the order of the secitonIds 
-            //     const tmpLen: number = sectionIdRecord.length;
-            //     for (let i = 0; i < tmpLen; i++) {
-            //         let indexToAdd: string = '';
-            //         if (i < firstKfIdx) {
-            //             indexToAdd = `${i + tmpLen - firstKfIdx}`;
-            //         } else if (i > firstKfIdx) {
-            //             indexToAdd = `${i - firstKfIdx}`;
-            //         }
-            //         if (indexToAdd.length === 1) {
-            //             indexToAdd = `00${indexToAdd}_`;
-            //         } else if (indexToAdd.length === 2) {
-            //             indexToAdd = `0${indexToAdd}_`;
-            //         }
-            //         for (let j = 0, len = sectionIdRecord[i].length; j < len; j++) {
-            //             if (!(<string>sectionIdRecord[i][j]).includes('000_')) {
-            //                 if ((<string>sectionIdRecord[i][j]).includes('zzz_')) {
-            //                     sectionIdRecord[i][j] = (<string>sectionIdRecord[i][j]).substring(4);
-            //                 }
-            //                 sectionIdRecord[i][j] = `${indexToAdd}${sectionIdRecord[i][j]}`;
-            //             }
-            //         }
-            //     }
-            // }
-
-
-            // //sort sectionIds
-            // sectionIdRecord.sort(function (a, b) {
-            //     let diffValueIdx: number = 0;
-            //     let diffAttr: string = '';
-            //     for (let i = 0, len = attrComb.length; i < len; i++) {
-            //         if (a[i] !== b[i]) {
-            //             diffValueIdx = i;
-            //             diffAttr = attrComb[i];
-            //             break;
-            //         }
-            //     }
-
-            //     let aComp: string | number = a[diffValueIdx], bComp: string | number = b[diffValueIdx];
-            //     if (timeSecIdx.includes(diffValueIdx)) {
-            //         aComp = Util.fetchTimeNum(<string>aComp);
-            //         bComp = Util.fetchTimeNum(<string>bComp);
-            //     }
-
-            //     if (diffAttr === 'mShape') {
-            //         const aCompStr: string = `${aComp}`, bCompStr: string = `${bComp}`;
-            //         const aShapeName: string = (aCompStr.includes('000_') || aCompStr.includes('zzz_')) ? aCompStr.substring(4) : aCompStr;
-            //         const bShapeName: string = (bCompStr.includes('000_') || bCompStr.includes('zzz_')) ? bCompStr.substring(4) : bCompStr;
-            //         //put the same mark shape as those in the firstKfMarks i nthe front
-            //         if (mShapes.has(aShapeName) && !mShapes.has(bShapeName)) {
-            //             return -1;
-            //         } else if (!mShapes.has(aShapeName) && mShapes.has(bShapeName)) {
-            //             return 1;
-            //         } else {
-            //             return 0;
-            //         }
-            //     }
-
-            //     if (bComp > aComp) {
-            //         switch (tmpValueIdx.get(diffValueIdx)) {
-            //             case 0:
-            //             case 2:
-            //                 return -1;
-            //             case 1:
-            //                 return 1;
-            //         }
-            //     } else {
-            //         switch (tmpValueIdx.get(diffValueIdx)) {
-            //             case 0:
-            //             case 2:
-            //                 return 1;
-            //             case 1:
-            //                 return -1;
-            //         }
-            //     }
-            // })
-
             //find the first kf index
             let firstKfIdx: number = -1;
             for (let i = 0, len = sectionIdRecord.length; i < len; i++) {
@@ -490,7 +420,6 @@ export default class Suggest {
                 const sectionsAfter: (string | number)[][] = sectionIdRecord.slice(firstKfIdx);
                 sectionIdRecord = [...sectionsAfter, ...sectionsBefore];
             }
-
             //remove 000_ and zzz_ added for ordering
             for (let i = 0, len = sectionIdRecord.length; i < len; i++) {
                 for (let j = 0, len2 = sectionIdRecord[i].length; j < len2; j++) {
@@ -503,7 +432,6 @@ export default class Suggest {
                     }
                 }
             }
-
             if (mShapes.size > 1) {//deal with mark shape situations
                 const mShapeIdx: number = attrComb.indexOf('mShape');
                 let sectionMarksToMerge: string[] = [];
@@ -512,7 +440,7 @@ export default class Suggest {
                 let mergeSecId: string = [...mShapes].join('+');
                 let sectionsToDelete: string[] = [];
                 sectionIdRecord.forEach((valComb: (string | number)[], idx: number) => {
-                    const correspondingSecId: string = valComb.join(',') + ',';
+                    const correspondingSecId: string = valComb.join(',');
                     const tmpShape: string = `${valComb[mShapeIdx]}`;
                     let tmpValExceptShape: Set<string> = new Set();
                     valComb.forEach((val: string | number, valIdx: number) => {
@@ -523,7 +451,7 @@ export default class Suggest {
                     if (!Tool.identicalArrays(valExceptShape, [...tmpValExceptShape]) || idx === sectionIdRecord.length - 1) {
                         if (valExceptShape.length !== 0) {//add new section
                             valExceptShape.splice(mShapeIdx, 0, mergeSecId);
-                            const tmpSecId: string = [...new Set(valExceptShape)].join(',') + ',';
+                            const tmpSecId: string = [...new Set(valExceptShape)].join(',');
                             sections.set(tmpSecId, sectionMarksToMerge);
                         }
                         valExceptShape = [...tmpValExceptShape];
@@ -547,8 +475,7 @@ export default class Suggest {
                     sections.delete(secIdToDelete);
                 })
             }
-
-            let orderedSectionIds: string[] = sectionIdRecord.map(a => a.join(',') + ',');
+            let orderedSectionIds: string[] = sectionIdRecord.map(a => a.join(','));
             possibleKfs.push([attrComb, sections, orderedSectionIds]);
         })
 

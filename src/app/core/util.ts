@@ -14,7 +14,7 @@ export default class Util {
     static DATA_SUGGESTION: string = 'dataSuggestion';
     static NON_DATA_SUGGESTION: string = 'nonDataSuggestion';
     static NO_SUGGESTION: string = 'noSuggestion';
-    static NUMERIC_CATEGORICAL_ATTR: string[] = ['Year', 'year', 'Month', 'month', 'Day', 'day'];
+    static NUMERIC_CATEGORICAL_ATTR: string[] = ['Year', 'year', 'YEAR', 'Month', 'month', 'MONTH', 'Day', 'day', 'DAY', 'date', 'Date', 'DATE'];
     static EFFECTIVENESS_RANKING: string[] = ['position', 'color', 'shape'];
     static EXCLUDED_DATA_ATTR: string[] = ['_TYPE', 'text', '_x', '_y', '_id', '_MARKID'];
     static TIME_ATTR_VALUE: string[] = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
@@ -257,9 +257,11 @@ export default class Util {
         for (let i = 0, len = this.EFFECTIVENESS_RANKING.length; i < len; i++) {
             for (let j = 0, len2 = attrs.length; j < len2; j++) {
                 let tmpAttrType: string[] = ChartSpec.chartUnderstanding[attrs[j]];
-                if (tmpAttrType.includes(this.EFFECTIVENESS_RANKING[i]) && (Tool.arrayContained(tmpAttrType, typeRecorder) || Tool.arrayContained(typeRecorder, tmpAttrType) || typeRecorder.length === 0)) {
-                    filteredAttrs.push(attrs[j]);
-                    typeRecorder = tmpAttrType;
+                if (typeof tmpAttrType !== 'undefined') {
+                    if (tmpAttrType.includes(this.EFFECTIVENESS_RANKING[i]) && (Tool.arrayContained(tmpAttrType, typeRecorder) || Tool.arrayContained(typeRecorder, tmpAttrType) || typeRecorder.length === 0)) {
+                        filteredAttrs.push(attrs[j]);
+                        typeRecorder = tmpAttrType;
+                    }
                 }
             }
         }
@@ -500,7 +502,7 @@ export default class Util {
     }
 
     public static aniRootToKFGroup(aniunitNode: any, aniId: string, parentObj: {} | IKeyframeGroup, parentChildIdx: number): IKeyframeGroup {
-        // console.log('aniunit node: ', aniId, aniunitNode.align, aniunitNode, KfGroup.allAniGroups);
+        console.log('aniunit node: ', aniId, aniunitNode.align, aniunitNode, KfGroup.allAniGroups);
         let kfGroupRoot: IKeyframeGroup = {
             groupRef: aniunitNode.groupRef,
             id: aniunitNode.id,
@@ -833,5 +835,20 @@ export default class Util {
     public static cloneObj(obj: any): any {
         let objStr: string = JSON.stringify(obj);
         return JSON.parse(objStr);
+    }
+
+    public static addAttrValue(valueSet: Set<string>, val: string): void {
+        if (!valueSet.has(val) && !valueSet.has(`000_${val}`) && !valueSet.has(`zzz_${val}`)) {
+            valueSet.add(val);
+        }
+    }
+
+    public static extractNumInStr(str: string): string | number {
+        const firstStr: string = str.split(/[^0-9]/ig)[0];
+        const num: number = parseFloat(firstStr);
+        if (!isNaN(num)) {
+            return num;
+        }
+        return str;
     }
 }

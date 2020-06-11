@@ -1,14 +1,23 @@
 import '../assets/style/floating-window.scss'
 import MushroomImg from '../assets/img/examples/mushroom.png'
 import MushroomChart from '../assets/charts/mushrooms.svg'
-// import GanttImg from '../assets/img/examples/gantt.png'
-// import GanttChart from '../assets/charts/gantt.svg'
 import OsImg from '../assets/img/examples/os.png'
 import OsChart from '../assets/charts/os.svg'
 import PurchasesImg from '../assets/img/examples/purchases.png'
 import PurchasesChart from '../assets/charts/purchases.svg'
 import NightingaleImg from '../assets/img/examples/nightingale.png'
 import NightingaleChart from '../assets/charts/nightingale.svg'
+import Co2Img from '../assets/img/examples/co2.png'
+import Co2Chart from '../assets/charts/co2.svg'
+// import ChinaPMImg from '../assets/img/examples/chinapm.png'
+// import ChinaPMChart from '../assets/charts/chinapm.svg'
+import DessertImg from '../assets/img/examples/dessert.png'
+import DessertChart from '../assets/charts/desserts.svg'
+import BostonImg from '../assets/img/examples/bostonWeather.png'
+import BostonChart from '../assets/charts/bostonWeather.svg'
+import WorldPopuImg from '../assets/img/examples/worldPopulation.png'
+import WorldPopuChart from '../assets/charts/worldPopulation.svg'
+
 import Reducer from '../app/reducer'
 import * as action from '../app/action'
 import { State, state } from '../app/state'
@@ -34,6 +43,11 @@ export default class FloatingWindow {
     static OS_CHART: string = 'mobileOS';
     static PURCHASE_CHART: string = 'purchases';
     static NIGHTINGALE_CHART: string = 'nightingale';
+    static CO2_CHART: string = 'co2';
+    static DESSERT_CHART: string = 'dessert';
+    static BOSTON_CHART: string = 'boston';
+    static CHINAPM_CHART: string = 'chinapm';
+    static WORLDPOPULATION_CHART: string = 'worldPopulation';
 
     floatingWindow: HTMLDivElement;
 
@@ -147,7 +161,10 @@ export default class FloatingWindow {
         exampleList.appendChild(exampleItemContainer1);
         const exampleItemContainer2: HTMLDivElement = document.createElement('div');
         exampleItemContainer2.className = 'list-item-container';
-        // exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.NIGHTINGALE_CHART, 'Nightingale'));
+        exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.CO2_CHART, 'CO2 Emissions'));
+        // exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.DESSERT_CHART, 'Most Requested Diner Desserts'));
+        exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.BOSTON_CHART, 'Boston Weather'));
+        exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.WORLDPOPULATION_CHART, 'World Population Pyramid'));
         exampleList.appendChild(exampleItemContainer2);
         return exampleList;
     }
@@ -178,6 +195,27 @@ export default class FloatingWindow {
                 img.src = NightingaleImg;
                 item.onclick = () => this.loadExampleChart(NightingaleChart);
                 break;
+            case FloatingWindow.CO2_CHART:
+                img.src = Co2Img;
+                item.onclick = () => this.loadExampleChart(Co2Chart);
+                break;
+            case FloatingWindow.DESSERT_CHART:
+                img.src = DessertImg;
+                item.onclick = () => this.loadExampleChart(DessertChart);
+                break;
+            case FloatingWindow.BOSTON_CHART:
+                img.src = BostonImg;
+                item.onclick = () => this.loadExampleChart(BostonChart);
+                break;
+            case FloatingWindow.WORLDPOPULATION_CHART:
+                img.src = WorldPopuImg;
+                item.onclick = () => this.loadExampleChart(WorldPopuChart);
+                break;
+            // case FloatingWindow.CHINAPM_CHART:
+            //     img.src = ChinaPMImg;
+            //     item.onclick = () => this.loadExampleChart(ChinaPMChart);
+            //     break;
+
         }
         imgWrapper.appendChild(img);
         item.appendChild(imgWrapper);

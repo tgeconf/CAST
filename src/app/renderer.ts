@@ -137,12 +137,14 @@ export default class Renderer {
     }
 
     public static renderKeyframeTracks(kfgs: IKeyframeGroup[]): void {
+        console.log('rendering kf tracks: ', kfgs);
         //save kf group info
         kfgs.forEach((kfg: IKeyframeGroup) => {
             KfGroup.allAniGroupInfo.set(kfg.aniId, kfg);
         })
 
         kfgs.forEach((kfg: IKeyframeGroup, i: number) => {
+            // console.log('redner each kfg', kfg);
             KfGroup.leafLevel = 0;
             let treeLevel = 0;//use this to decide the background color of each group
             //top-down to init group and kf
@@ -158,6 +160,7 @@ export default class Renderer {
     }
 
     public static renderKeyframeGroup(kfgIdx: number, previousKfg: IKeyframeGroup, totalKfgNum: number, kfg: IKeyframeGroup, treeLevel: number, parentObj?: KfGroup): KfGroup {
+        console.log('render kf group: ', kfg);
         //draw group container
         let kfGroup: KfGroup = new KfGroup();
         if (kfgIdx === 0 || kfgIdx === 1 || kfgIdx === totalKfgNum - 1) {
@@ -230,7 +233,7 @@ export default class Renderer {
             if (treeLevel === 0) {//this is the root group
                 //find the keyframes of the first group
                 const tmpKfs: IKeyframe[] = Util.findFirstKfs(kfg);
-                let [addingPlusBtn, acceptableMarkClasses] = PlusBtn.detectAdding(tmpKfs);
+                let [addingPlusBtn, acceptableMarkClasses] = PlusBtn.detectAdding(kfg, tmpKfs);
                 if (addingPlusBtn) {
                     addedPlusBtn = addingPlusBtn;
                     plusBtn = new PlusBtn()
@@ -321,7 +324,6 @@ export default class Renderer {
                 kfIdxToDraw = [...kfIdxToDraw, ...alignToAni];
             }
             kfIdxToDraw = [...new Set(kfIdxToDraw)].sort((a: number, b: number) => a - b);
-            // console.log('omit pattern: ', omitPattern);
 
             //rendering kf
             //check whether there should be a plus btn
@@ -433,7 +435,6 @@ export default class Renderer {
         }
         const shownThumbnail: number = Math.floor((zl - ViewWindow.MIN_ZOOM_LEVEL) / ((ViewWindow.MAX_ZOOM_LEVEL - ViewWindow.MIN_ZOOM_LEVEL) / (state.chartThumbNailZoomLevels / 2)));
         const kfZoomLevel: number = Math.floor((zl - ViewWindow.MIN_ZOOM_LEVEL) / ((ViewWindow.MAX_ZOOM_LEVEL - ViewWindow.MIN_ZOOM_LEVEL) / state.chartThumbNailZoomLevels));
-        console.log('kf zoom level: ', kfZoomLevel);
         // KfItem.allKfItems.forEach((kfItem: KfItem) => {
         //     kfItem.chartThumbnails.forEach((ct: SVGImageElement, i: number) => {
         //         if (i === shownThumbnail) {
@@ -463,10 +464,8 @@ export default class Renderer {
         // KfGroup.allAniGroups.forEach((aniKfGroup: KfGroup) => {
         sortedAniGroupAniIds.forEach((aniKfGroupAniId: string) => {
             const aniKfGroup: KfGroup = KfGroup.allAniGroups.get(aniKfGroupAniId);
-            console.log('zooming anigroup: ', aniKfGroup.alignType, aniKfGroup);
             aniKfGroup.zoomGroup(kfZoomLevel, shownThumbnail);
             if (aniKfGroup.alignType === Animation.alignTarget.withEle) {//check kf positions
-                console.log('updating align ani group: ', aniKfGroup.container);
                 aniKfGroup.updateAlignGroupKfPosis();
             }
 

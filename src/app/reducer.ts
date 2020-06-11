@@ -178,7 +178,6 @@ Reducer.listen(action.UPDATE_KEYFRAME_TRACKS, (animations: Map<string, any>) => 
 })
 Reducer.listen(action.ACTIVATE_PLUS_BTN, (plusBtnInfo: IActivatePlusBtn) => {
     state.activatePlusBtn = plusBtnInfo;
-    Renderer.renderActivatedPlusBtn();
 })
 Reducer.listen(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, (kfGroupSize: IKfGroupSize) => {
     state.kfGroupSize = kfGroupSize;

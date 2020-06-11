@@ -45,10 +45,8 @@ export default class IntelliRefLine {
      * @param kfId : either alignwith kf or alignto kf
      */
     public static updateLine(kfId: number) {
-        console.log('updateing line: ', IntelliRefLine.kfLineMapping.get(kfId));
         if (typeof IntelliRefLine.kfLineMapping.get(kfId) !== 'undefined') {
             const lineItem: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kfId).lineId);
-            console.log('line item: ', lineItem.line);
             const containerBBox: DOMRect = lineItem.container.getBoundingClientRect();//fixed
             const alignKf1: IKeyframe = KfItem.allKfInfo.get(kfId);
             const alignKf2: IKeyframe = KfItem.allKfInfo.get(IntelliRefLine.kfLineMapping.get(kfId).theOtherEnd);
@@ -69,7 +67,6 @@ export default class IntelliRefLine {
                 alignWithKfBBox = alignWithKf.container.getBoundingClientRect();//fixed
                 alignToKfBBox = alignToKf.container.getBoundingClientRect();//fixed
                 const [minX, maxX]: [number, number] = alignToKf.calAlignRange();
-                console.log('update line with align wiht and align to: ', alignWithKf, alignToKf, alignWithKfBBox.right, maxX);
                 if (alignToKfInfo.timingRef === TimingSpec.timingRef.previousEnd) {
                     lineItem.line.setAttributeNS(null, 'x1', `${(maxX - containerBBox.left) / state.zoomLevel}`);
                     lineItem.line.setAttributeNS(null, 'x2', `${(maxX - containerBBox.left) / state.zoomLevel}`);

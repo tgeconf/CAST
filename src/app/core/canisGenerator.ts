@@ -68,7 +68,6 @@ export default class CanisGenerator {
         let chartSpecs: IChartSpec[] = [];
         for (let i = 0; i < charts.length; i++) {
             //judge the content of charts[i], url or chart content
-            console.log('chart i: ', charts[i]);
             const chartType: string = charts[i].indexOf('<svg') >= 0 ? ChartSpec.CHART_CONTENT : ChartSpec.CHART_URL;
             const chartSpec: IChartSpec = {
                 source: charts[i],
@@ -103,15 +102,22 @@ export default class CanisGenerator {
                 const tmpAni: IAnimationSpec = spec.animations[j];
                 if (typeof tmpAni.id !== 'undefined') {
                     let removedAni: IAnimationSpec[] = [];
+                    let emptyAlignTo: boolean = true;
+                    let noAlign: boolean = true;
                     for (let z = 0, len2 = len; z < len2; z++) {
                         const tmpAni2: IAnimationSpec = spec.animations[z];
                         if (typeof tmpAni2.align !== 'undefined') {
+                            noAlign = false;
                             if (tmpAni2.align.target === tmpAni.id) {
+                                emptyAlignTo = false;
                                 removedAni.push(spec.animations.splice(z, 1)[0]);
                                 z--;
                                 len2--;
                             }
                         }
+                    }
+                    if (emptyAlignTo && !noAlign) {
+                        return false;
                     }
                     //put the start with ahead of start after
                     removedAni.sort((a: IAnimationSpec, b: IAnimationSpec) => {
