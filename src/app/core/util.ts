@@ -627,8 +627,11 @@ export default class Util {
         if (typeof aniLeaf.alignTo !== 'undefined') {
             drawDuration = KfItem.allKfInfo.get(aniLeaf.alignTo).durationIcon;
         }
-        if (Animation.animations.get(aniId).actions[0].oriActionType === 'appear') {
-            drawDuration = false;
+        console.log('animations:', Animation.animations, aniId);
+        if (Animation.animations.get(aniId).actions.length > 0) {
+            if (Animation.animations.get(aniId).actions[0].oriActionType === 'appear') {
+                drawDuration = false;
+            }
         }
         let drawHiddenDuration: boolean = (aniLeaf.timingRef === TimingSpec.timingRef.previousStart && parentMarks.length > aniLeaf.marks.length);
         let tmpKf: IKeyframe = {

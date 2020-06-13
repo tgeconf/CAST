@@ -196,10 +196,10 @@ export default class KfOmit {
      */
     public createSubThumbnail(hasOffset: boolean, trackNum: number, index: number, afterPre: boolean, merge: boolean): SVGGElement {
         const tmpContainer: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        tmpContainer.setAttributeNS(null, 'transform', `translate(${(afterPre && index > 0) ? this.oWidth : 0}, ${trackNum * KfOmit.OMIT_SUB_HEIGHT})`);
+        tmpContainer.setAttributeNS(null, 'transform', `translate(${(afterPre && index > 0) ? this.oWidth : 0}, ${trackNum * (KfOmit.OMIT_SUB_HEIGHT + 2)})`);
         //update the omit size 
         this.oWidth = (afterPre && index > 0) ? this.oWidth + KfOmit.OMIT_SUB_WIDTH : this.oWidth;
-        this.oHeight = (trackNum + 1) * KfOmit.OMIT_SUB_HEIGHT > this.oHeight ? (trackNum + 1) * KfOmit.OMIT_SUB_HEIGHT : this.oHeight;
+        this.oHeight = (trackNum + 1) * KfOmit.OMIT_SUB_HEIGHT > this.oHeight ? (trackNum + 1) * (KfOmit.OMIT_SUB_HEIGHT + 2) : this.oHeight;
         if (hasOffset) {
             const offsetBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             offsetBg.setAttributeNS(null, 'fill', KfItem.OFFSET_COLOR);

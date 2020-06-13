@@ -9,7 +9,7 @@
     margin: 0 auto;
     span {
         float: left;
-        color: var(--gray-l8);
+        color: var(--gray13);
     }
 }
 .lds-ellipsis {
@@ -28,7 +28,7 @@
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: var(--gray-l8);
+        background: var(--gray13);
         animation-timing-function: cubic-bezier(0, 1, 1, 0);
     }
     div:nth-child(1) {

@@ -201,6 +201,14 @@ export default class KfItem extends KfTimingIllus {
         this.container.onmouseenter = () => {
             this.container.classList.add('drop-shadow-ele');
             this.hoverBtnContainer.setAttributeNS(null, 'opacity', '1');
+            if (!state.mousemoving) {
+                if (typeof this.kfInfo.alignTo !== 'undefined') {//this kf is align to others
+                    const aniGroup: KfGroup = this.parentObj.fetchAniGroup();
+                    aniGroup.transShowTitle();
+                } else {
+                    this.parentObj.transShowTitle();
+                }
+            }
         }
         this.container.onmouseleave = () => {
             this.container.classList.remove('drop-shadow-ele');
@@ -219,18 +227,6 @@ export default class KfItem extends KfTimingIllus {
         this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.translateContainer(startX + KfItem.PADDING, KfItem.PADDING);
         this.bindHoverBtn();
-
-        if (typeof this.kfInfo.alignTo !== 'undefined') {//this kf is align to others
-            const aniGroup: KfGroup = this.parentObj.fetchAniGroup();
-            this.container.onmouseover = () => {
-                if (!state.mousemoving) {
-                    aniGroup.transShowTitle();
-                }
-            }
-            this.container.onmouseout = () => {
-                aniGroup.transHideTitle();
-            }
-        }
 
         if (this.hasOffset) {
             this.drawOffset(this.kfInfo.delay, this.kfHeight, 0);

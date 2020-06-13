@@ -30,12 +30,12 @@ export default class Nav {
         this.navContainer.appendChild(this.createSeparator());
 
         // create buttons
-        this.navContainer.appendChild(new NavBtn().createNavFileBtn({
-            inputId: 'createNew',
-            classNameStr: 'new',
-            title: 'load chart',
-            evtType: NavBtn.CREATE_NEW
-        }));
+        // this.navContainer.appendChild(new NavBtn().createNavFileBtn({
+        //     inputId: 'createNew',
+        //     classNameStr: 'new',
+        //     title: 'load chart',
+        //     evtType: NavBtn.CREATE_NEW
+        // }));
         this.navContainer.appendChild(new NavBtn().createNavBtn({
             classNameStr: 'open',
             title: 'open project',
@@ -96,7 +96,7 @@ interface INavBtnProps {
 
 class NavBtn {
     // static vars
-    static CREATE_NEW: string = 'createNew';
+    // static CREATE_NEW: string = 'createNew';
     static OPEN_PROJECT: string = 'openProject';
     static SAVE_PROJECT: string = 'saveProject';
     static LOAD_EXAMPLES: string = 'loadExamples';
@@ -158,36 +158,36 @@ class NavBtn {
         input.multiple = true;
         input.id = props.inputId;
         input.style.display = 'none';
-        switch (props.evtType) {
-            case NavBtn.CREATE_NEW:
-                // input.onchange = () => this.createNew();
-                input.onchange = () => {
-                    let chartFile = input.files[0];
-                    var fr = new FileReader();
-                    fr.readAsText(chartFile);
-                    fr.onload = function () {
-                        const chart: string = <string>fr.result;
-                        // console.log('chart is: ', chart);
-                        Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID), content: Loading.LOADING });
-                        setTimeout(() => {
-                            //reset state history
-                            State.stateHistoryIdx = -1;
-                            State.stateHistory = [];
-                            State.tmpStateBusket = [];
-                            State.tmpStateBusket.push({
-                                historyAction: { actionType: action.LOAD_CHARTS, actionVal: state.charts },
-                                currentAction: { actionType: action.LOAD_CHARTS, actionVal: [chart] }
-                            })
-                            State.saveHistory();
-                            Reducer.triger(action.LOAD_CHARTS, [chart]);
-                        }, 1);
-                    }
-                }
-                break;
-            // case NavBtn.OPEN_PROJECT:
-            //     input.onchange = () => this.openProject();
-            //     break;
-        }
+        // switch (props.evtType) {
+        //     case NavBtn.CREATE_NEW:
+        //         // input.onchange = () => this.createNew();
+        //         input.onchange = () => {
+        //             let chartFile = input.files[0];
+        //             var fr = new FileReader();
+        //             fr.readAsText(chartFile);
+        //             fr.onload = function () {
+        //                 const chart: string = <string>fr.result;
+        //                 // console.log('chart is: ', chart);
+        //                 Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID), content: Loading.LOADING });
+        //                 setTimeout(() => {
+        //                     //reset state history
+        //                     State.stateHistoryIdx = -1;
+        //                     State.stateHistory = [];
+        //                     State.tmpStateBusket = [];
+        //                     State.tmpStateBusket.push({
+        //                         historyAction: { actionType: action.LOAD_CHARTS, actionVal: state.charts },
+        //                         currentAction: { actionType: action.LOAD_CHARTS, actionVal: [chart] }
+        //                     })
+        //                     State.saveHistory();
+        //                     Reducer.triger(action.LOAD_CHARTS, [chart]);
+        //                 }, 1);
+        //             }
+        //         }
+        //         break;
+        //     // case NavBtn.OPEN_PROJECT:
+        //     //     input.onchange = () => this.openProject();
+        //     //     break;
+        // }
         btn.appendChild(input);
 
         const icon: HTMLSpanElement = document.createElement('span');

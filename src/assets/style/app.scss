@@ -17,23 +17,24 @@
     --title-height: 26px;
     --geforce-font: "geforce";
     --mono-font: "mono";
-    --gray-l1: #f2f2f2;
-    --gray-l2: #e2e2e2;
-    --gray-l3: #dadada;
-    --gray-l4: #a5a5a5;
-    --gray-l5: #a3a3a3;
-    --gray-l6: #383838;
-    --gray-l7: #484848;
-    --gray-l8: #676767;
-    --gray-l9: #e6e6e6;
-    --gray-l10: #ffffff;
-    --gray-l11: #ededed;
-    --gray-l12: #c2c2c2;
-    --gray-l13: #939393;
-    --gray-l14: #000000;
-    --gray-l15: #f7f7f7;
-    --gray-l16: #d2d2d2;
+    --gray1: #ffffff;
+    --gray2: #f7f7f7;
+    --gray3: #f2f2f2;
+    --gray4: #ededed;
+    --gray5: #e6e6e6;
+    --gray6: #e2e2e2;
+    --gray7: #dadada;
+    --gray8: #d2d2d2;
+    --gray9: #c2c2c2;
+    --gray10: #a5a5a5;
+    --gray11: #a3a3a3;
+    --gray12: #939393;
+    --gray13: #676767;
+    --gray14: #484848;
+    --gray15: #383838;
+    --gray16: #000000;
     --highlight-blue: #2196f3;
+    --highlight-orange: #ff9246;
     --selected-bg: #cbeaff;
 }
 
@@ -58,7 +59,7 @@ html,
 body {
     @extend .zero-margin-padding;
     @extend .cover-size;
-    background: var(--gray-l1);
+    background: var(--gray3);
     font-family: "Lato", "Lucida Grande", "Segoe UI", sans-serif;
 }
 
@@ -77,7 +78,7 @@ body {
 .footer {
     width: 100%;
     height: 22px;
-    color: var(--gray-l10);
+    color: var(--gray1);
     background: var(--highlight-blue);
 }
 

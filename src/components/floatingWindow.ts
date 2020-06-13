@@ -37,6 +37,8 @@ import { Loading } from './widgets/loading'
 export default class FloatingWindow {
     static TYPE_EXAMPLE: string = 'exampleContainer';//type of the floating window is example
     static TYPE_SPEC: string = 'SpecContainer';//type of the floating window is spec test
+    static CLICKABLE_AREA_CHART: string = 'inputChart';
+    static CLICKABLE_AREA_PROJECT: string = 'inputProject';
 
     static MUSHROOM_CHART: string = 'mushroom';
     // static GANTT_CHART: string = 'gantt';
@@ -55,7 +57,11 @@ export default class FloatingWindow {
         //create the background container
         this.floatingWindow = document.createElement('div');
         this.floatingWindow.id = id;
-        this.floatingWindow.className = 'floating-bg';
+        this.floatingWindow.className = 'floating-container';
+        const windowBg: HTMLDivElement = document.createElement('div');
+        windowBg.className = 'floating-bg';
+        this.floatingWindow.appendChild(windowBg);
+
         //create window
         const fWindow: HTMLDivElement = document.createElement('div');
         fWindow.className = 'f-window';
@@ -98,57 +104,33 @@ export default class FloatingWindow {
     public createExampleList(): HTMLDivElement {
         const exampleList: HTMLDivElement = document.createElement('div');
         exampleList.className = 'example-list';
+
+        const clickableAreaContainer: HTMLDivElement = document.createElement('div');
+        clickableAreaContainer.className = 'click-to-open-area-container';
+
+        const clickableAreaSubContainerChart: HTMLDivElement = document.createElement('div');
+        clickableAreaSubContainerChart.className = 'click-to-open-area-subcontainer';
+        const openchartTitle: HTMLHeadingElement = document.createElement('h3');
+        openchartTitle.innerText = 'Load Charts';
+        clickableAreaSubContainerChart.appendChild(openchartTitle);
+        clickableAreaSubContainerChart.appendChild(this.createClickableArea(FloatingWindow.CLICKABLE_AREA_CHART));
+        clickableAreaContainer.appendChild(clickableAreaSubContainerChart);
+
+        const clickableAreaSubContainerProj: HTMLDivElement = document.createElement('div');
+        clickableAreaSubContainerProj.className = 'click-to-open-area-subcontainer';
         const projectTitle: HTMLHeadingElement = document.createElement('h3');
-        projectTitle.innerText = 'Open Local Project';
-        exampleList.appendChild(projectTitle);
-        const clickableArea: HTMLDivElement = document.createElement('div');
-        clickableArea.className = 'click-to-open-area';
-        clickableArea.innerHTML = 'Drop Your Project File Here (or Click)';
-        const uploadIcon: HTMLDivElement = document.createElement('div');
-        uploadIcon.className = 'upload-icon';
-        clickableArea.appendChild(uploadIcon);
-        exampleList.appendChild(clickableArea);
-        clickableArea.ondragover = (overEvt) => {
-            overEvt.preventDefault();
-        }
-        clickableArea.ondragenter = () => {
-            clickableArea.classList.add('drag-over-area');
-        }
-        clickableArea.ondragleave = () => {
-            clickableArea.classList.remove('drag-over-area');
-        }
-        clickableArea.ondrop = (dropEvt) => {
-            const that = this;
-            dropEvt.preventDefault();
-            let projectFile = dropEvt.dataTransfer.files[0];
-            var fr = new FileReader();
-            fr.readAsText(projectFile);
-            fr.onload = function () {
-                const spec: string = <string>fr.result;
-                Reducer.triger(action.LOAD_CANIS_SPEC, JSON.parse(spec).spec);
-                that.floatingWindow.remove();
-            }
-        }
-        clickableArea.onclick = (clickEvt) => {
-            const that = this;
-            const input: HTMLInputElement = document.createElement("input");
-            input.setAttribute('type', 'file');
-            input.onchange = (changeEvt) => {
-                let projectFile = input.files[0];
-                var fr = new FileReader();
-                fr.readAsText(projectFile);
-                fr.onload = function () {
-                    const spec: string = <string>fr.result;
-                    Reducer.triger(action.LOAD_CANIS_SPEC, JSON.parse(spec).spec);
-                    that.floatingWindow.remove();
-                }
-            }
-            input.click();
-            return false;
-        }
+        projectTitle.innerText = 'Open Project';
+        clickableAreaSubContainerProj.appendChild(projectTitle);
+        clickableAreaSubContainerProj.appendChild(this.createClickableArea(FloatingWindow.CLICKABLE_AREA_PROJECT));
+        clickableAreaContainer.appendChild(clickableAreaSubContainerProj);
+        exampleList.appendChild(clickableAreaContainer);
+
+        const sep: HTMLHRElement = document.createElement('hr');
+        sep.className = 'floating-window-sep';
+        exampleList.appendChild(sep);
 
         const chartTitle: HTMLHeadingElement = document.createElement('h3');
-        chartTitle.innerText = 'Load Example Projects';
+        chartTitle.innerText = 'Load Example Project';
         exampleList.appendChild(chartTitle);
         //add chart examples
         const exampleItemContainer1: HTMLDivElement = document.createElement('div');
@@ -167,6 +149,125 @@ export default class FloatingWindow {
         exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.WORLDPOPULATION_CHART, 'World Population Pyramid'));
         exampleList.appendChild(exampleItemContainer2);
         return exampleList;
+    }
+
+    public createClickableArea(type: string): HTMLDivElement {
+        const clickableArea: HTMLDivElement = document.createElement('div');
+        clickableArea.className = 'click-to-open-area';
+        clickableArea.ondragover = (overEvt) => {
+            overEvt.preventDefault();
+        }
+        clickableArea.ondragenter = () => {
+            clickableArea.classList.add('drag-over-area');
+        }
+        clickableArea.ondragleave = () => {
+            clickableArea.classList.remove('drag-over-area');
+        }
+
+        switch (type) {
+            case FloatingWindow.CLICKABLE_AREA_CHART:
+                clickableArea.innerHTML = 'Drop or Open File (.dsvg)';
+                clickableArea.ondrop = (dropEvt) => {
+                    const that = this;
+                    dropEvt.preventDefault();
+                    let projectFile = dropEvt.dataTransfer.files[0];
+                    const fr = new FileReader();
+                    fr.readAsText(projectFile);
+                    fr.onload = function () {
+                        const chart: string = <string>fr.result;
+                        Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID), content: Loading.LOADING });
+                        setTimeout(() => {
+                            //reset state history
+                            State.stateHistoryIdx = -1;
+                            State.stateHistory = [];
+                            State.tmpStateBusket = [];
+                            State.tmpStateBusket.push({
+                                historyAction: { actionType: action.LOAD_CHARTS, actionVal: state.charts },
+                                currentAction: { actionType: action.LOAD_CHARTS, actionVal: [chart] }
+                            })
+                            State.saveHistory();
+                            Reducer.triger(action.LOAD_CHARTS, [chart]);
+                        }, 1);
+                        that.floatingWindow.remove();
+                    }
+                }
+                clickableArea.onclick = (clickEvt) => {
+                    const that = this;
+                    const input: HTMLInputElement = document.createElement("input");
+                    input.setAttribute('type', 'file');
+                    input.setAttribute('multiple', 'multiple');
+                    input.onchange = (changeEvt) => {
+                        let charts: string[] = [];
+                        for (let i = 0, len = input.files.length; i < len; i++) {
+                            const chartFile: File = input.files[i];
+                            const fr = new FileReader();
+                            fr.readAsText(chartFile);
+                            fr.onload = function () {
+                                const chart: string = <string>fr.result;
+                                charts.push(chart);
+                                if (i === input.files.length - 1) {//reach the last input file
+                                    Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID), content: Loading.LOADING });
+                                    setTimeout(() => {
+                                        //reset state history
+                                        State.stateHistoryIdx = -1;
+                                        State.stateHistory = [];
+                                        State.tmpStateBusket = [];
+                                        State.tmpStateBusket.push({
+                                            historyAction: { actionType: action.LOAD_CHARTS, actionVal: state.charts },
+                                            currentAction: { actionType: action.LOAD_CHARTS, actionVal: charts }
+                                        })
+                                        State.saveHistory();
+                                        Reducer.triger(action.LOAD_CHARTS, charts);
+                                    }, 1);
+                                    that.floatingWindow.remove();
+                                } 
+                            }
+                        }
+
+
+                    }
+                    input.click();
+                    return false;
+                }
+                break;
+            case FloatingWindow.CLICKABLE_AREA_PROJECT:
+                clickableArea.innerHTML = 'Drop or Open File (.cpro)';
+                clickableArea.ondrop = (dropEvt) => {
+                    const that = this;
+                    dropEvt.preventDefault();
+                    let projectFile = dropEvt.dataTransfer.files[0];
+                    const fr = new FileReader();
+                    fr.readAsText(projectFile);
+                    fr.onload = function () {
+                        const spec: string = <string>fr.result;
+                        Reducer.triger(action.LOAD_CANIS_SPEC, JSON.parse(spec).spec);
+                        that.floatingWindow.remove();
+                    }
+                }
+                clickableArea.onclick = (clickEvt) => {
+                    const that = this;
+                    const input: HTMLInputElement = document.createElement("input");
+                    input.setAttribute('type', 'file');
+                    input.onchange = (changeEvt) => {
+                        let projectFile = input.files[0];
+                        const fr = new FileReader();
+                        fr.readAsText(projectFile);
+                        fr.onload = function () {
+                            const spec: string = <string>fr.result;
+                            Reducer.triger(action.LOAD_CANIS_SPEC, JSON.parse(spec).spec);
+                            that.floatingWindow.remove();
+                        }
+                    }
+                    input.click();
+                    return false;
+                }
+                break;
+        }
+        const uploadIcon: HTMLDivElement = document.createElement('div');
+        uploadIcon.className = 'upload-icon';
+        clickableArea.appendChild(uploadIcon);
+
+        return clickableArea;
     }
 
     public createExampleItem(name: string, caption: string): HTMLDivElement {

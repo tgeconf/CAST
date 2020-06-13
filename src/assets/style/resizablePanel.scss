@@ -18,7 +18,7 @@
 }
 
 .panel {
-	background: var(--gray-l2);
+	background: var(--gray6);
 	@extend .cover-size;
 	@extend .zero-margin-padding;
 	position: relative;
@@ -60,7 +60,7 @@
 }
 
 .resize-bar {
-	background: var(--gray-l5);
+	background: var(--gray11);
 	transition: all 0.03s linear;
 }
 
@@ -111,7 +111,7 @@
 	width: 100%;
 	box-sizing: border-box;
 	.resize-bar {
-		background: var(--gray-l3);
+		background: var(--gray7);
 		height: 5px;
 		width: 100%;
 	}
@@ -124,7 +124,7 @@
 	height: 100%;
 	box-sizing: border-box;
 	.resize-bar {
-		background: var(--gray-l3);
+		background: var(--gray7);
 		width: 5px;
 		height: 100%;
 	}

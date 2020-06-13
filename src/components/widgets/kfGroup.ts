@@ -238,10 +238,10 @@ export default class KfGroup extends KfTimingIllus {
         //update group title width
         this.updateTitleWidth();
 
-        this.container.onmouseout = (outEvt: any) => {
+        this.container.onmouseleave = (leaveEvt: any) => {
             if (!this.isDragging) {
                 //this is the original element the event handler was assigned to
-                var e = outEvt.relatedTarget;
+                var e = leaveEvt.relatedTarget;
 
                 while (e != null) {
                     if (e == this.container) {
@@ -254,7 +254,7 @@ export default class KfGroup extends KfTimingIllus {
                     if (typeof this.groupMenu.menuListContainer === 'undefined') {
                         this.groupMenu.hideMenu();
                     } else {
-                        if (!this.groupMenu.menuListContainer.contains(outEvt.toElement))
+                        if (!this.groupMenu.menuListContainer.contains(leaveEvt.toElement))
                             this.groupMenu.hideMenu();
                     }
                 }
@@ -1461,13 +1461,15 @@ export class GroupMenu {
         // menuBg.setAttributeNS(null, 'd', `M0,0 H${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING},${GroupMenu.MENU_RX} V${3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING - GroupMenu.MENU_RX} A${GroupMenu.MENU_RX} ${GroupMenu.MENU_RX} ${Math.PI / 2} 0 1 ${GroupMenu.BTN_SIZE + GroupMenu.PADDING_LEFT + GroupMenu.PADDING - GroupMenu.MENU_RX},${3 * GroupMenu.BTN_SIZE + 6 * GroupMenu.PADDING} H0 Z`)
         this.container.appendChild(menuBg);
 
-        const effectTypeBtn: SVGGElement = this.createBtn(this.action.oriActionType);
-        effectTypeBtn.setAttributeNS(null, 'transform', `translate(${GroupMenu.PADDING_LEFT}, ${GroupMenu.PADDING})`);
-        this.container.appendChild(effectTypeBtn);
-        this.container.appendChild(this.createSplit(1));
-        const easingBtn: SVGGElement = this.createBtn(this.action.easing);
-        easingBtn.setAttributeNS(null, 'transform', `translate(${GroupMenu.PADDING_LEFT}, ${3 * GroupMenu.PADDING + GroupMenu.BTN_SIZE})`);
-        this.container.appendChild(easingBtn);
+        if (typeof this.action !== 'undefined') {
+            const effectTypeBtn: SVGGElement = this.createBtn(this.action.oriActionType);
+            effectTypeBtn.setAttributeNS(null, 'transform', `translate(${GroupMenu.PADDING_LEFT}, ${GroupMenu.PADDING})`);
+            this.container.appendChild(effectTypeBtn);
+            this.container.appendChild(this.createSplit(1));
+            const easingBtn: SVGGElement = this.createBtn(this.action.easing);
+            easingBtn.setAttributeNS(null, 'transform', `translate(${GroupMenu.PADDING_LEFT}, ${3 * GroupMenu.PADDING + GroupMenu.BTN_SIZE})`);
+            this.container.appendChild(easingBtn);
+        }
         // this.container.appendChild(this.createSplit(2));
         // const durationBtn: SVGGElement = this.createBtn(GroupMenu.DURATION, this.action.duration);
         // durationBtn.setAttributeNS(null, 'transform', `translate(${GroupMenu.PADDING_LEFT}, ${5 * GroupMenu.PADDING + 2 * GroupMenu.BTN_SIZE})`);
