@@ -137,7 +137,7 @@ export default class CanisGenerator {
             const animationSpec: IAnimationSpec = {
                 selector: '.mark',
                 // effects: [{ type: ActionSpec.actionTypes.fade, duration: 300 }]
-                effects: [{ type: ActionSpec.actionTypes.transition, duration: 300 }]
+                effects: [{ type: spec.charts.length === 1 ? ActionSpec.actionTypes.fade : ActionSpec.actionTypes.transition, duration: 300 }]
             }
             spec.animations.push(animationSpec);
         }

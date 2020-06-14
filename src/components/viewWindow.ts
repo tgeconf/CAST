@@ -48,19 +48,13 @@ export default class ViewWindow {
         viewContent.createViewContent(this.viewTitle);
         this.view.appendChild(viewContent.container);
 
-        //append view widgets
-        switch (this.viewTitle) {
-            case ViewWindow.VIDEO_VIEW_TITLE:
-                this.view.appendChild(this.createPlayerWidget());
-                break;
-        }
-
         //create tools on the title
         switch (this.viewTitle) {
             case ViewWindow.CHART_VIEW_TITLE:
                 viewTitleContainer.appendChild(this.createSelectionTools());
                 break;
             case ViewWindow.VIDEO_VIEW_TITLE:
+                this.view.appendChild(this.createPlayerWidget());
                 break;
             case ViewWindow.KF_VIEW_TITLE:
                 viewTitleContainer.classList.add('keyframe-title-container');
@@ -282,6 +276,14 @@ export class ViewContent {
 
     container: HTMLDivElement;
 
+    public static createMultiChartContainer(): HTMLDivElement {
+        const chartPanel: HTMLElement = document.getElementById(this.CHART_VIEW_CONTENT_ID);
+        const multiChartContainer: HTMLDivElement = document.createElement('div');
+        multiChartContainer.className = 'multi-charts-cover';
+        chartPanel.appendChild(multiChartContainer);
+        return multiChartContainer;
+    }
+
     public createViewContent(contentType: string) {
         switch (contentType) {
             case ViewWindow.DATA_VIEW_TITLE:
@@ -305,6 +307,11 @@ export class ViewContent {
         this.container = document.createElement('div');
         this.container.id = id;
         this.container.className = ViewContent.VIEW_CONTENT_CLS + ' ' + className;
+        // if (id === ViewContent.CHART_VIEW_CONTENT_ID) {
+        //     const multiChartCover: HTMLDivElement = document.createElement('div');
+        //     multiChartCover.className = 'multi-charts-cover';
+        //     this.container.appendChild(multiChartCover);
+        // }
     }
 
     public createKeyframeListContainer(): HTMLDivElement {

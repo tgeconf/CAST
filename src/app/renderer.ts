@@ -1,6 +1,6 @@
 import { state, IState, State } from './state'
 import { IDataItem, ISortDataAttr, IKeyframeGroup, IKeyframe, IKfGroupSize, IPath, IOmitPattern } from './core/ds'
-import { ChartSpec, Animation } from 'canis_toolkit'
+import { ChartSpec, Animation, TimingSpec } from 'canis_toolkit'
 import CanisGenerator, { canis, ICanisSpec } from './core/canisGenerator'
 import ViewWindow, { ViewToolBtn, ViewContent } from '../components/viewWindow'
 import AttrBtn from '../components/widgets/attrBtn'
@@ -65,15 +65,12 @@ export default class Renderer {
             //create the highlight box
             const highlightBox: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             highlightBox.setAttributeNS(null, 'id', 'highlightSelectionFrame');
-            // highlightBox.setAttributeNS(null, 'class', 'highlight-selection-frame');
             highlightBox.setAttributeNS(null, 'fill', 'none');
-            // highlightBox.setAttributeNS(null, 'fill', 'rgba(255, 255, 255, 0.01)');
             highlightBox.setAttributeNS(null, 'stroke', '#2196f3');
             highlightBox.setAttributeNS(null, 'stroke-width', '2');
             svg.appendChild(highlightBox);
         }
         //render video view
-        // this.removeLoading();
         Reducer.triger(action.UPDATE_LOTTIE_SPEC, lottieSpec);
         player.resetPlayer({
             frameRate: canis.frameRate,
@@ -81,7 +78,37 @@ export default class Renderer {
             totalTime: canis.duration()
         })
 
+        if (state.charts.length > 1) {//remove the visChart and add multi-charts
+            if (document.getElementById('visChart')) {
+                document.getElementById('visChart').remove();
+            }
+            this.renderMultiCharts();
+        }
+
         callback();
+    }
+
+    public static renderMultiCharts() {
+        //create container
+        const multiChartContainer: HTMLDivElement = ViewContent.createMultiChartContainer();
+        //render charts, remove the visChart id in each chart since it might confuse the compiler
+        let currentRow: HTMLDivElement;
+        for (let i = 0, len = state.charts.length; i < len && i < 9; i++) {
+            const chartItemContainer: HTMLDivElement = document.createElement('div');
+            chartItemContainer.className = 'chart-item-container';
+            if (i < 8) {
+                const chart: string = state.charts[i].replace('id="visChart"', '');
+                chartItemContainer.innerHTML = chart;
+            } else {
+                chartItemContainer.innerHTML = `<p>+${state.charts.length - 8} charts<br>...</p>`;
+            }
+            if (i % 3 === 0) {
+                currentRow = document.createElement('div');
+                currentRow.className = 'row-chart-container';
+                multiChartContainer.appendChild(currentRow);
+            }
+            currentRow.appendChild(chartItemContainer);
+        }
     }
 
     public static renderLoading(wrapper: HTMLElement, content: string) {
@@ -137,22 +164,27 @@ export default class Renderer {
     }
 
     public static renderKeyframeTracks(kfgs: IKeyframeGroup[]): void {
-        console.log('rendering kf tracks: ', kfgs);
-        //save kf group info
-        kfgs.forEach((kfg: IKeyframeGroup) => {
-            KfGroup.allAniGroupInfo.set(kfg.aniId, kfg);
-        })
+        if (state.charts.length === 1) {
+            //save kf group info
+            kfgs.forEach((kfg: IKeyframeGroup) => {
+                KfGroup.allAniGroupInfo.set(kfg.aniId, kfg);
+            })
 
-        kfgs.forEach((kfg: IKeyframeGroup, i: number) => {
-            // console.log('redner each kfg', kfg);
-            KfGroup.leafLevel = 0;
-            let treeLevel = 0;//use this to decide the background color of each group
-            //top-down to init group and kf
-            const rootGroup: KfGroup = this.renderKeyframeGroup(0, kfgs[i - 1], 1, kfg, treeLevel);
-            //bottom-up to update size and position
+            kfgs.forEach((kfg: IKeyframeGroup, i: number) => {
+                KfGroup.leafLevel = 0;
+                let treeLevel = 0;//use this to decide the background color of each group
+                //top-down to init group and kf
+                const rootGroup: KfGroup = this.renderKeyframeGroup(0, kfgs[i - 1], 1, kfg, treeLevel);
+                //bottom-up to update size and position
+                rootGroup.updateGroupPosiAndSize([...KfTrack.aniTrackMapping.get(rootGroup.aniId)][0].availableInsert, 0, false, true);
+                KfGroup.allAniGroups.set(rootGroup.aniId, rootGroup);
+            })
+        } else {
+            const rootGroup: KfGroup = this.renderKeyframeGroup(0, undefined, 1, kfgs[0], 0);
             rootGroup.updateGroupPosiAndSize([...KfTrack.aniTrackMapping.get(rootGroup.aniId)][0].availableInsert, 0, false, true);
             KfGroup.allAniGroups.set(rootGroup.aniId, rootGroup);
-        })
+        }
+
         const rootGroupBBox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();
         Reducer.triger(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, { width: rootGroupBBox.width, height: rootGroupBBox.height });
         Reducer.triger(action.KEYFRAME_ZOOM_LEVEL, state.zoomLevel);
@@ -160,7 +192,6 @@ export default class Renderer {
     }
 
     public static renderKeyframeGroup(kfgIdx: number, previousKfg: IKeyframeGroup, totalKfgNum: number, kfg: IKeyframeGroup, treeLevel: number, parentObj?: KfGroup): KfGroup {
-        console.log('render kf group: ', kfg);
         //draw group container
         let kfGroup: KfGroup = new KfGroup();
         if (kfgIdx === 0 || kfgIdx === 1 || kfgIdx === totalKfgNum - 1) {
@@ -331,9 +362,9 @@ export default class Renderer {
             kfg.keyframes.forEach((k: IKeyframe, i: number) => {
                 //whether to draw this kf or not
                 let kfOmit: KfOmit;
-                if (kfIdxToDraw.includes(i)) {
+                if (kfIdxToDraw.includes(i) || state.charts.length > 1) {
                     //whether to draw '...'
-                    if (i > 0 && kfIdxToDraw[kfIdxToDraw.indexOf(i) - 1] !== i - 1) {
+                    if (i > 0 && kfIdxToDraw[kfIdxToDraw.indexOf(i) - 1] !== i - 1 && state.charts.length === 1) {
                         const omitNum: number = i - kfIdxToDraw[kfIdxToDraw.indexOf(i) - 1] - 1;
                         if (omitNum > 0) {
                             kfOmit = new KfOmit();

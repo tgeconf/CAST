@@ -166,11 +166,17 @@ Reducer.listen(action.UPDATE_KEYFRAME_TRACKS, (animations: Map<string, any>) => 
     KfGroup.allAniGroups.clear();
     KfGroup.allAniGroupInfo.clear();
     const rootGroup: IKeyframeGroup[] = [];
-    [...animations].forEach((a: any) => {
-        let aniId: string = a[0];
-        KfGroup.allActions.set(aniId, a[1].actions[0]);
-        rootGroup.push(Util.aniRootToKFGroup(a[1].root, aniId, {}, -1));
-    });
+    if (state.charts.length === 1) {
+        [...animations].forEach((a: any) => {
+            let aniId: string = a[0];
+            KfGroup.allActions.set(aniId, a[1].actions[0]);
+            rootGroup.push(Util.aniRootToKFGroup(a[1].root, aniId, -1));
+        });
+    } else {
+        let aniId: string = [...animations][0][0];
+        KfGroup.allActions.set(aniId, [...animations][0][1].actions[0]);
+        rootGroup.push(Util.aniRootToFakeKFGroup([...animations][0][1].root, aniId, -1));
+    }
     if (rootGroup.length > 0) {
         rootGroup[0].newTrack = false;
     }
@@ -508,7 +514,7 @@ Reducer.listen(action.SPLIT_CREATE_MULTI_ANI, (actionInfo: { aniId: string, path
                     newAni.id = actionInfo.aniId;
                 } else {
                     newAni.reference = TimingSpec.timingRef.previousEnd;
-                    if(shapeAttrIdx !== 0){
+                    if (shapeAttrIdx !== 0) {
                         newAni.align = { target: actionInfo.aniId, type: 'element', merge: true };
                     }
                     // newAni.align = { target: alignTarget, type: 'element', merge: true };

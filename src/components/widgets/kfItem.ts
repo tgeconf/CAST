@@ -235,6 +235,7 @@ export default class KfItem extends KfTimingIllus {
         }
         this.drawKfBg(this.treeLevel, size);
         this.container.appendChild(this.kfBg);
+        console.log('drawing kf duration: ', this.container, this.hasDuration);
         if (this.hasDuration) {
             this.drawDuration(this.kfInfo.duration, this.kfWidth, this.kfHeight, false);
             this.container.appendChild(this.durationIllus);
@@ -243,7 +244,7 @@ export default class KfItem extends KfTimingIllus {
             this.drawDuration(this.kfInfo.duration, this.kfWidth, this.kfHeight, true);
             this.container.appendChild(this.durationIllus);
         }
-        this.drawChart(this.kfInfo.allCurrentMarks, this.kfInfo.allGroupMarks, this.kfInfo.marksThisKf);
+        this.drawChart(this.kfInfo.allCurrentMarks, this.kfInfo.allGroupMarks, this.kfInfo.marksThisKf, KfItem.allKfInfo.get(this.id).thumbnail);
         // this.container.appendChild(this.chartThumbnail);
         // this.container.appendChild(this.chartSmallThumbnail);
         if (this.treeLevel === 1) {
@@ -619,9 +620,16 @@ export default class KfItem extends KfTimingIllus {
         // this.bindHoverBgHover();
         this.hoverBtnBg.onclick = () => {
             //play animation from this keyframe
-            const startTimeThisKf: number = Animation.allMarkAni.get(this.kfInfo.marksThisKf[0]).startTime;
-            player.currentTime = startTimeThisKf;
-            player.playAnimation();
+            if (state.charts.length === 1) {
+                const startTimeThisKf: number = Animation.allMarkAni.get(this.kfInfo.marksThisKf[0]).startTime;
+                player.currentTime = startTimeThisKf;
+                player.playAnimation();
+            } else {
+                const tmpIdx: number = this.idxInGroup;
+                console.log('tmpidx: ', tmpIdx);
+                player.currentTime = this.durationNum * tmpIdx;
+                player.playAnimation();
+            }
         }
         this.hoverBtnContainer.appendChild(this.hoverBtnBg);
 
@@ -1003,34 +1011,46 @@ export default class KfItem extends KfTimingIllus {
         this.totalWidth += this.kfWidth;
     }
 
-    public drawChart(allMarks: string[], allGroupMarks: string[], marksThisKf: string[]): void {
-        const svg: HTMLElement = document.getElementById('visChart');
-        Array.from(svg.getElementsByClassName('mark')).forEach((m: HTMLElement) => {
-            if (!allMarks.includes(m.id) && !marksThisKf.includes(m.id)) {
-                m.setAttributeNS(null, '_opacity', m.getAttributeNS(null, 'opacity') ? m.getAttributeNS(null, 'opacity') : '1');
-                m.setAttributeNS(null, 'opacity', '0');
-                m.classList.add('translucent-mark');
-            } else if (allMarks.includes(m.id) && !marksThisKf.includes(m.id) && !allGroupMarks.includes(m.id)) {
-                m.setAttributeNS(null, '_opacity', m.getAttributeNS(null, 'opacity') ? m.getAttributeNS(null, 'opacity') : '1');
-                m.setAttributeNS(null, 'opacity', '0.4');
-                m.classList.add('translucent-mark');
-            }
-        })
-        this.renderChartToCanvas(svg);
-        Array.from(svg.getElementsByClassName('translucent-mark')).forEach((m: HTMLElement) => {
-            m.classList.remove('translucent-mark');
-            m.setAttributeNS(null, 'opacity', m.getAttributeNS(null, '_opacity'));
-        })
+    public drawChart(allMarks: string[], allGroupMarks: string[], marksThisKf: string[], chartThumbnail?: string): void {
+        if (typeof chartThumbnail === 'undefined') {
+            const svg: HTMLElement = document.getElementById('visChart');
+            Array.from(svg.getElementsByClassName('mark')).forEach((m: HTMLElement) => {
+                if (!allMarks.includes(m.id) && !marksThisKf.includes(m.id)) {
+                    m.setAttributeNS(null, '_opacity', m.getAttributeNS(null, 'opacity') ? m.getAttributeNS(null, 'opacity') : '1');
+                    m.setAttributeNS(null, 'opacity', '0');
+                    m.classList.add('translucent-mark');
+                } else if (allMarks.includes(m.id) && !marksThisKf.includes(m.id) && !allGroupMarks.includes(m.id)) {
+                    m.setAttributeNS(null, '_opacity', m.getAttributeNS(null, 'opacity') ? m.getAttributeNS(null, 'opacity') : '1');
+                    m.setAttributeNS(null, 'opacity', '0.4');
+                    m.classList.add('translucent-mark');
+                }
+            })
+            this.renderChartToCanvas(svg, true);
+            Array.from(svg.getElementsByClassName('translucent-mark')).forEach((m: HTMLElement) => {
+                m.classList.remove('translucent-mark');
+                m.setAttributeNS(null, 'opacity', m.getAttributeNS(null, '_opacity'));
+            })
+        } else {
+            const tmpContainer: HTMLDivElement = document.createElement('div');
+            tmpContainer.innerHTML = chartThumbnail;
+            this.renderChartToCanvas(<HTMLElement>tmpContainer.children[0], false);
+        }
     }
 
-    public renderChartToCanvas(svg: HTMLElement): void {
+    public renderChartToCanvas(svg: HTMLElement, doEnlarge: boolean): void {
         const shownThumbnail: number = Math.floor((state.zoomLevel - ViewWindow.MIN_ZOOM_LEVEL) / ((ViewWindow.MAX_ZOOM_LEVEL - ViewWindow.MIN_ZOOM_LEVEL) / (state.chartThumbNailZoomLevels / 2)));
         for (let i = 0; i < state.chartThumbNailZoomLevels / 2; i++) {
-            Tool.enlargeMarks(svg, 'translucent-mark', state.chartThumbNailZoomLevels / 2 - i, false);
+            if (doEnlarge) {
+                Tool.enlargeMarks(svg, 'translucent-mark', state.chartThumbNailZoomLevels / 2 - i, false);
+            }
             this.chartThumbnails.push(this.createImage(svg, shownThumbnail - 1 === i));
-            Tool.resetTxtCover(svg);
+            if (doEnlarge) {
+                Tool.resetTxtCover(svg);
+            }
         }
-        Tool.resetMarkSize(svg, 'translucent-mark', false);
+        if (doEnlarge) {
+            Tool.resetMarkSize(svg, 'translucent-mark', false);
+        }
     }
 
     public createImage(svg: HTMLElement, shown: boolean): SVGImageElement {
@@ -1181,7 +1201,7 @@ export default class KfItem extends KfTimingIllus {
     }
 
     public showItemWhenZooming(): void {
-        if (this.rendered) {
+        if (this.rendered && state.charts.length === 1) {
             const currentKfWidth: number = this.container.getBoundingClientRect().width / state.zoomLevel;//current width with no white space (when align to others, the white space is included in the totalWidth attrbute)
             let kfWidthWithWhiteSpace: number = currentKfWidth;
             const currentKfTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));

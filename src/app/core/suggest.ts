@@ -479,7 +479,7 @@ export default class Suggest {
             possibleKfs.push([attrComb, sections, orderedSectionIds]);
         })
 
-        console.log('possible kfs: ', possibleKfs);
+        // console.log('possible kfs: ', possibleKfs);
         return possibleKfs;
     }
 
@@ -709,7 +709,7 @@ export default class Suggest {
                     this.allPaths.splice(filterAllPaths[i], 1);
                 }
 
-                console.log('all paths: ', this.allPaths);
+                // console.log('all paths: ', this.allPaths);
             }
         } else if (sepFirstKfMarks.dataMarks.length === 0 && sepFirstKfMarks.nonDataMarks.length > 0) {
             //suggest based on non data attrs
@@ -801,7 +801,6 @@ export default class Suggest {
                     }
                     const attrComb: string[] = typeCount.size === 1 ? ['id'] : ['clsIdx'];
                     this.allPaths = [{ attrComb: attrComb, sortedAttrValueComb: sortedAttrValueComb, kfMarks: tmpKfMarks, firstKfMarks: firstKfNonDataMarks, lastKfMarks: allLastKfMarks }];
-                    console.log('suggestion based on non data mark: ', this.allPaths);
                 }
             }
         }

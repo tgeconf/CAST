@@ -27,6 +27,7 @@ export interface IKeyframe {
     alignWith?: string[] //array of aniIds which are aligned to this kf
     alignWithKfs?: number[] // array of keyframeIds which are aligned to this kf
     alignTo?: number //align to keyframeid
+    thumbnail?: any
 }
 
 export interface IKeyframeGroup {

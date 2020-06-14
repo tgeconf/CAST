@@ -1427,6 +1427,7 @@ export class GroupMenu {
     static EFFECT_WHEEL: string = 'wheel';
     static EFFECT_CIRCLE: string = 'circle';
     static EFFECT_GROW: string = 'grow';
+    static EFFECT_TRANSITION: string = 'custom';
     static EASING_LINEAR: string = 'easeLinear';
     static EASING_IN_QUAD: string = 'easeInQuad';
     static EASING_OUT_QUAD: string = 'easeOutQuad';
@@ -1527,6 +1528,7 @@ export class GroupMenu {
     public createBtnIcon(btnType: string): SVGPathElement {
         const icon: SVGPathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
+        console.log('btn tyep: ', btnType);
         switch (btnType) {
             case GroupMenu.EFFECT_FADE:
                 icon.setAttributeNS(null, 'd', 'M7.37,0.29C7.09,0.31,6.82,0.35,6.55,0.41v15.19c0.27,0.05,0.54,0.09,0.82,0.12V0.29z M3.45,14.18c0.26,0.2,0.53,0.38,0.82,0.54V1.27C3.98,1.44,3.71,1.62,3.45,1.82V14.18z M5.82,0.59C5.54,0.68,5.26,0.79,5,0.9v14.2c0.27,0.12,0.54,0.22,0.82,0.31V0.59z M1.17,4.56C0.65,5.6,0.35,6.76,0.35,8s0.3,2.4,0.82,3.44V4.56z M8.1,0.25C8.1,0.25,8.1,0.25,8.1,0.25l0,15.5c0,0,0,0,0,0c4.27,0,7.75-3.48,7.75-7.75S12.37,0.25,8.1,0.25z M2.72,2.44c-0.3,0.29-0.57,0.6-0.82,0.93v9.26c0.25,0.33,0.52,0.65,0.82,0.93V2.44z');
@@ -1551,6 +1553,9 @@ export class GroupMenu {
                 break;
             case GroupMenu.EFFECT_WHEEL:
                 icon.setAttributeNS(null, 'd', 'M8,0.25C3.73,0.25,0.25,3.73,0.25,8c0,4.27,3.48,7.75,7.75,7.75c4.27,0,7.75-3.48,7.75-7.75C15.75,3.73,12.27,0.25,8,0.25z M8,1c0,2.33,0,4.67,0,7c-1.91,1.33-3.83,2.66-5.74,4C1.47,10.86,1,9.49,1,8C1,4.14,4.14,1,8,1z M4.04,10.45c0.04,0,0.08-0.01,0.12-0.03c0.12-0.07,0.16-0.22,0.1-0.34C3.9,9.44,3.71,8.72,3.71,8c0-1.87,1.25-3.52,3.01-4.08L5.98,5.21L6.29,5.4L7.4,3.5L7.16,3.39C7.14,3.37,7.12,3.36,7.09,3.35L5.43,2.54L5.27,2.87L6.5,3.47C4.58,4.11,3.21,5.94,3.21,8c0,0.81,0.21,1.61,0.6,2.32C3.87,10.4,3.95,10.45,4.04,10.45z');
+                break;
+            case GroupMenu.EFFECT_TRANSITION:
+                icon.setAttributeNS(null, 'd', 'M11.71,7.98L8.9,5.17L8.9,7.21L5,7.21L5,8.69L8.9,8.69L8.9,10.79z M8.88,0.27v4.22l3.49,3.49l-3.49,3.49v4.22c3.92-0.39,6.98-3.69,6.98-7.71C15.85,3.96,12.79,0.66,8.88,0.27z M7.71,9.38H4.22V6.59h3.49V0.25c-4.1,0.2-7.36,3.58-7.36,7.73c0,4.15,3.26,7.53,7.36,7.73V9.38z');
                 break;
             case GroupMenu.EASING_LINEAR:
                 icon.setAttributeNS(null, 'd', 'M4.02,12.92c-0.09,0-0.19-0.04-0.26-0.11c-0.15-0.14-0.15-0.38-0.01-0.53l8.18-8.38c0.15-0.15,0.38-0.15,0.53-0.01c0.15,0.14,0.15,0.38,0.01,0.53l-8.18,8.38C4.22,12.89,4.12,12.92,4.02,12.92z M11.93,14.87H4.29c-1.74,0-3.15-1.42-3.15-3.15V4.07c0-1.74,1.41-3.15,3.15-3.15h7.64c1.74,0,3.15,1.41,3.15,3.15v7.64C15.09,13.46,13.67,14.87,11.93,14.87z M4.29,1.67c-1.33,0-2.4,1.08-2.4,2.4v7.64c0,1.33,1.08,2.4,2.4,2.4h7.64c1.33,0,2.4-1.08,2.4-2.4V4.07c0-1.33-1.08-2.4-2.4-2.4H4.29z');

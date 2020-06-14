@@ -501,8 +501,41 @@ export default class Util {
         }
     }
 
-    public static aniRootToKFGroup(aniunitNode: any, aniId: string, parentObj: {} | IKeyframeGroup, parentChildIdx: number): IKeyframeGroup {
-        console.log('aniunit node: ', aniId, aniunitNode.align, aniunitNode, KfGroup.allAniGroups);
+    public static aniRootToFakeKFGroup(aniunitNode: any, aniId: string, parentChildIdx: number): IKeyframeGroup {
+        const keyframes: IKeyframe[] = [];
+        state.charts.forEach((chart: string, idx: number) => {
+            const tmpKf: IKeyframe = {
+                id: idx,
+                timingRef: TimingSpec.timingRef.previousEnd,
+                durationIcon: true,
+                hiddenDurationIcon: false,
+                duration: aniunitNode.children[0].end - aniunitNode.children[0].start,
+                delayIcon: false,
+                delay: 0,
+                allCurrentMarks: [],
+                allGroupMarks: aniunitNode.marks,
+                marksThisKf: aniunitNode.marks,
+                thumbnail: chart
+            }
+            keyframes.push(tmpKf);
+            KfItem.allKfInfo.set(idx, tmpKf);
+        })
+        return {
+            groupRef: 'root',
+            id: 0,
+            aniId: aniId,
+            marks: aniunitNode.marks,
+            children: [],
+            keyframes: keyframes,
+            timingRef: TimingSpec.timingRef.previousStart,
+            delayIcon: false,
+            delay: 0,
+            newTrack: false
+        }
+    }
+
+    public static aniRootToKFGroup(aniunitNode: any, aniId: string, parentChildIdx: number): IKeyframeGroup {
+        // console.log('aniunit node: ', aniId, aniunitNode.align, aniunitNode, KfGroup.allAniGroups);
         let kfGroupRoot: IKeyframeGroup = {
             groupRef: aniunitNode.groupRef,
             id: aniunitNode.id,
@@ -543,7 +576,7 @@ export default class Util {
                 }
                 if (childrenIsGroup) {
                     aniunitNode.children.forEach((c: any, i: number) => {
-                        const kfGroupChild: IKeyframeGroup = this.aniRootToKFGroup(c, aniId, kfGroupRoot, i);
+                        const kfGroupChild: IKeyframeGroup = this.aniRootToKFGroup(c, aniId, i);
                         kfGroupRoot.children.push(kfGroupChild);
                     })
                 } else {
@@ -627,7 +660,7 @@ export default class Util {
         if (typeof aniLeaf.alignTo !== 'undefined') {
             drawDuration = KfItem.allKfInfo.get(aniLeaf.alignTo).durationIcon;
         }
-        console.log('animations:', Animation.animations, aniId);
+        // console.log('animations:', Animation.animations, aniId);
         if (Animation.animations.get(aniId).actions.length > 0) {
             if (Animation.animations.get(aniId).actions[0].oriActionType === 'appear') {
                 drawDuration = false;
