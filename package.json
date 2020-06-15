@@ -7,6 +7,7 @@
         "@types/d3": "^5.7.2",
         "@types/domurl": "0.0.5",
         "@types/robust-point-in-polygon": "^1.0.0",
+        "canis_toolkit": "^1.2.23",
         "d3": "^5.15.0",
         "lodash": "^4.17.15",
         "lottie-web": "^5.6.0",
@@ -14,7 +15,6 @@
     },
     "devDependencies": {
         "@types/lodash": "^4.14.149",
-        "canis_toolkit": "^1.2.21",
         "clean-webpack-plugin": "^3.0.0",
         "css-loader": "^3.3.2",
         "csv-loader": "^3.0.2",

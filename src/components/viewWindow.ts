@@ -280,6 +280,7 @@ export class ViewContent {
         const chartPanel: HTMLElement = document.getElementById(this.CHART_VIEW_CONTENT_ID);
         const multiChartContainer: HTMLDivElement = document.createElement('div');
         multiChartContainer.className = 'multi-charts-cover';
+        chartPanel.innerHTML = '';
         chartPanel.appendChild(multiChartContainer);
         return multiChartContainer;
     }

@@ -24,6 +24,10 @@ interface IOptionInfo {
     kfWidth: number
     kfHeight: number
     suggestOnFirstKf: boolean
+    ordering?: {
+        attr: string
+        order: string
+    }
 }
 
 export class SuggestBox {
@@ -326,7 +330,8 @@ export class SuggestBox {
                     allGroupMarks: allGroupMarks,
                     kfWidth: this.kfWidth,
                     kfHeight: this.kfHeight,
-                    suggestOnFirstKf: suggestOnFirstKf
+                    suggestOnFirstKf: suggestOnFirstKf,
+                    ordering: path.ordering
                 }
 
                 let optionItem: OptionItem = new OptionItem();
@@ -456,7 +461,7 @@ export class OptionItem {
         this.container.classList.add('clickable-component');
         this.optionKf = new KfItem();
         this.optionKf.createOptionKfItem(optionInfo.allCurrentMarks, optionInfo.allGroupMarks, optionInfo.marks, optionInfo.kfWidth, optionInfo.kfHeight);
-        const text: SVGTextElement = this.createText(optionInfo.attrs, optionInfo.values);
+        const text: SVGTextElement = this.createText(optionInfo.attrs, optionInfo.values, optionInfo.ordering);
         const bg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         bg.classList.add('ease-fade', 'hide-ele');
         bg.setAttributeNS(null, 'width', `${this.optionKf.kfWidth + 3 * OptionItem.PADDING + OptionItem.TEXT_PANEL_WIDTH}`);
@@ -551,23 +556,37 @@ export class OptionItem {
         this.container.setAttributeNS(null, 'transform', `translate(0, ${index * (this.optionKf.kfHeight + 2 * OptionItem.PADDING)})`);
     }
 
-    public createText(attrs: string[], values: string[]): SVGTextElement {
+    public createText(attrs: string[], values: string[], ordering?: { attr: string, order: string }): SVGTextElement {
         const text: SVGTextElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text.setAttributeNS(null, 'transform', `translate(${this.optionKf.kfWidth + 2 * OptionItem.PADDING}, ${3 * OptionItem.PADDING})`)
         text.classList.add('monospace-font', 'small-font');
-        attrs.forEach((aName: string, idx: number) => {
+        if (typeof ordering === 'undefined') {
+            attrs.forEach((aName: string, idx: number) => {
+                const aNameTspan: SVGTSpanElement = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                aNameTspan.innerHTML = `${aName}:`;
+                aNameTspan.setAttributeNS(null, 'font-weight', 'bold');
+                aNameTspan.setAttributeNS(null, 'x', '0');
+                aNameTspan.setAttributeNS(null, 'y', `${idx * 38}`);
+                text.appendChild(aNameTspan);
+                const aValueTspan: SVGTSpanElement = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                aValueTspan.innerHTML = values[idx];
+                aValueTspan.setAttributeNS(null, 'x', '0');
+                aValueTspan.setAttributeNS(null, 'y', `${idx * 38 + 16}`);
+                text.appendChild(aValueTspan);
+            })
+        } else {
             const aNameTspan: SVGTSpanElement = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-            aNameTspan.innerHTML = `${aName}:`;
+            aNameTspan.innerHTML = `${ordering.attr}:`;
             aNameTspan.setAttributeNS(null, 'font-weight', 'bold');
             aNameTspan.setAttributeNS(null, 'x', '0');
-            aNameTspan.setAttributeNS(null, 'y', `${idx * 38}`);
+            aNameTspan.setAttributeNS(null, 'y', '0');
             text.appendChild(aNameTspan);
             const aValueTspan: SVGTSpanElement = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-            aValueTspan.innerHTML = values[idx];
+            aValueTspan.innerHTML = `${ordering.order}`;
             aValueTspan.setAttributeNS(null, 'x', '0');
-            aValueTspan.setAttributeNS(null, 'y', `${idx * 38 + 16}`);
+            aValueTspan.setAttributeNS(null, 'y', '16');
             text.appendChild(aValueTspan);
-        })
+        }
         return text;
     }
 }

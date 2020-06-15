@@ -63,6 +63,10 @@ export interface IPath {
     kfMarks: string[][]
     firstKfMarks: string[]
     lastKfMarks: string[]
+    ordering?: {
+        attr: string
+        order: string
+    }
 }
 
 export interface IInteractionRecord {

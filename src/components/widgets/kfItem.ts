@@ -235,7 +235,6 @@ export default class KfItem extends KfTimingIllus {
         }
         this.drawKfBg(this.treeLevel, size);
         this.container.appendChild(this.kfBg);
-        console.log('drawing kf duration: ', this.container, this.hasDuration);
         if (this.hasDuration) {
             this.drawDuration(this.kfInfo.duration, this.kfWidth, this.kfHeight, false);
             this.container.appendChild(this.durationIllus);

@@ -37,7 +37,7 @@ export default class Renderer {
      * @param spec 
      */
     public static async renderSpec(spec: ICanisSpec, callback: any = () => { }) {
-        console.log('going to render spec: ', spec);
+        console.log('going to render spec: ', JSON.stringify(spec.animations));
         const lottieSpec = await canis.renderSpec(spec, () => {
             if (spec.animations[0].selector === '.mark') {//special triger, can not triger action
                 state.spec.animations[0].selector = `#${Animation.allMarks.join(', #')}`;

@@ -582,6 +582,32 @@ export default class Suggest {
         return suggestOnFirstKf;
     }
 
+    /**
+     * check the numeric order with the mark in first kf (only mark in the first kf)
+     * @param firstKfMark 
+     */
+    public static checkNumbericOrder(firstKfMark: string): [boolean, { attr: string, order: number, marks: string[] }[]] {
+        console.log('checking numeric order: ', firstKfMark, Util.filteredDataTable);
+        const firstMarkDatum: IDataItem = Util.filteredDataTable.get(firstKfMark);
+        const numericAttrs: string[] = Util.fetchNumericAttrs(firstMarkDatum);
+        console.log(firstMarkDatum, numericAttrs, Util.numericAttrOrder.get(numericAttrs[0]));
+        let hasOrder: boolean = false;
+        const result: { attr: string, order: number, marks: string[] }[] = [];
+        numericAttrs.forEach((attrName: string) => {
+            const orderOfThisAttr: string[] = Util.numericAttrOrder.get(attrName);
+            const idxOfCurrentMark: number = orderOfThisAttr.indexOf(firstKfMark);
+            if (idxOfCurrentMark === 0 || idxOfCurrentMark === orderOfThisAttr.length - 1) {
+                hasOrder = true;
+                result.push({
+                    attr: attrName,
+                    order: idxOfCurrentMark === 0 ? 0 : 1,
+                    marks: orderOfThisAttr
+                })
+            }
+        })
+        return [hasOrder, result];
+    }
+
     public static suggestPaths(firstKfMarks: string[], lastKfMarks: string[]) {
         this.allPaths = [];
         const sepFirstKfMarks: { dataMarks: string[], nonDataMarks: string[] } = this.separateDataAndNonDataMarks(firstKfMarks);
@@ -593,6 +619,8 @@ export default class Suggest {
             //suggest based on data attrs
             const firstKfDataMarks: string[] = sepFirstKfMarks.dataMarks;
             const lastKfDataMarks: string[] = sepLastKfMarks.dataMarks;
+
+
             if (Tool.identicalArrays(firstKfDataMarks, lastKfDataMarks)) {
                 //refresh current spec
 
@@ -708,6 +736,35 @@ export default class Suggest {
                 for (let i = 0; i < filterAllPaths.length; i++) {
                     this.allPaths.splice(filterAllPaths[i], 1);
                 }
+
+                //check numeric ordering
+                let hasNumericOrder: boolean = false;
+                let numericOrders: { attr: string, order: number, marks: string[] }[];
+                if (firstKfDataMarks.length === 1) {
+                    [hasNumericOrder, numericOrders] = this.checkNumbericOrder(firstKfDataMarks[0]);
+                }
+
+                if (hasNumericOrder) {//generate path according to the order of values of numeric attributes
+                    numericOrders.forEach((ordering: { attr: string, order: number, marks: string[] }) => {
+                        let orderedMarks: string[] = ordering.order === 0 ? ordering.marks : ordering.marks.reverse();
+                        let orderedKfMarks: string[][] = orderedMarks.map((a: string) => [a]);
+                        // orderedMarks = orderedMarks.slice(1, orderedMarks.length);
+                        // orderedKfMarks = orderedKfMarks.slice(1, orderedKfMarks.length);
+                        console.log('ordered marks: ', orderedMarks, orderedKfMarks);
+                        this.allPaths.push({
+                            attrComb: ['id'],
+                            sortedAttrValueComb: orderedMarks,
+                            kfMarks: orderedKfMarks,
+                            firstKfMarks: firstKfDataMarks,
+                            lastKfMarks: lastKfDataMarks,
+                            ordering: {
+                                attr: ordering.attr,
+                                order: ordering.order === 0 ? 'asscending' : 'descending'
+                            }
+                        })
+                    })
+                }
+
 
                 // console.log('all paths: ', this.allPaths);
             }

@@ -20,6 +20,7 @@ export default class Util {
     static TIME_ATTR_VALUE: string[] = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 
     static filteredDataTable: Map<string, IDataItem> = new Map();//markId, dataItem
+    static numericAttrOrder: Map<string, string[]> = new Map();//attr name, mark id array
     static nonDataTable: Map<string, IDataItem> = new Map();//markId, non dataitem (for axis, legend, title)
     static attrType: IDataDatumType = {};
     static dataAttrs: string[];
@@ -293,6 +294,22 @@ export default class Util {
         return [sameAttr, diffAttrs];
     }
 
+    public static fetchNumericAttrs(dataItem: IDataItem): string[] {
+        const numericAttrs: string[] = [];
+        for (const key in dataItem) {
+            if (!isNaN(Number(dataItem[key])) && dataItem[key] !== '' && !this.NUMERIC_CATEGORICAL_ATTR.includes(key)) {
+                numericAttrs.push(key);
+            }
+        }
+        return numericAttrs;
+    }
+
+    public static sortNumeric(markData: Map<string, IDataItem>, attrName: string) {
+        let markIds: string[] = [...markData.keys()];
+        markIds.sort((a: string, b: string) => (Number(markData.get(a)[attrName]) - Number(markData.get(b)[attrName])));
+        this.numericAttrOrder.set(attrName, markIds);
+    }
+
     /**
      * determine the attribute type of the data attributes of marks
      * @param markData 
@@ -308,6 +325,11 @@ export default class Util {
             for (const key in dataDatum) {
                 let tmpAttrType: string = (!isNaN(Number(dataDatum[key])) && dataDatum[key] !== '' && !this.NUMERIC_CATEGORICAL_ATTR.includes(key)) ? this.NUMERIC_ATTR : this.CATEGORICAL_ATTR;
                 this.attrType[key] = tmpAttrType;
+                //sort numeric
+                if (tmpAttrType === this.NUMERIC_ATTR) {
+                    this.sortNumeric(markData, key);
+                }
+
                 if (!this.EXCLUDED_DATA_ATTR.includes(key)) {
                     tmpDataItem[key] = dataDatum[key];
                     this.dataAttrs.push(key);
