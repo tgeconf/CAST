@@ -625,7 +625,6 @@ export default class KfItem extends KfTimingIllus {
                 player.playAnimation();
             } else {
                 const tmpIdx: number = this.idxInGroup;
-                console.log('tmpidx: ', tmpIdx);
                 player.currentTime = this.durationNum * tmpIdx;
                 player.playAnimation();
             }

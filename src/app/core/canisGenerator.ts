@@ -143,14 +143,12 @@ export default class CanisGenerator {
             spec.animations.push(animationSpec);
         }
         if (spec.charts.length > 1) {
-            console.log('doing to deal with chart idx: ', spec.charts, state.charts);
             //reset the chart idx in animations
             for (let i = 0, len = spec.animations.length; i < len; i++) {
                 delete spec.animations[i].chartIdx;
                 for (let j = 0, len2 = spec.animations[i].effects.length; j < len2; j++) {
                     delete spec.animations[i].effects[j].chartIdx;
                 }
-                console.log('after', spec.animations[i]);
             }
         }
         return true;

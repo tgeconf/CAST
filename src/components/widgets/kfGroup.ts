@@ -1528,7 +1528,6 @@ export class GroupMenu {
     public createBtnIcon(btnType: string): SVGPathElement {
         const icon: SVGPathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
-        console.log('btn tyep: ', btnType);
         switch (btnType) {
             case GroupMenu.EFFECT_FADE:
                 icon.setAttributeNS(null, 'd', 'M7.37,0.29C7.09,0.31,6.82,0.35,6.55,0.41v15.19c0.27,0.05,0.54,0.09,0.82,0.12V0.29z M3.45,14.18c0.26,0.2,0.53,0.38,0.82,0.54V1.27C3.98,1.44,3.71,1.62,3.45,1.82V14.18z M5.82,0.59C5.54,0.68,5.26,0.79,5,0.9v14.2c0.27,0.12,0.54,0.22,0.82,0.31V0.59z M1.17,4.56C0.65,5.6,0.35,6.76,0.35,8s0.3,2.4,0.82,3.44V4.56z M8.1,0.25C8.1,0.25,8.1,0.25,8.1,0.25l0,15.5c0,0,0,0,0,0c4.27,0,7.75-3.48,7.75-7.75S12.37,0.25,8.1,0.25z M2.72,2.44c-0.3,0.29-0.57,0.6-0.82,0.93v9.26c0.25,0.33,0.52,0.65,0.82,0.93V2.44z');

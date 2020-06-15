@@ -136,8 +136,10 @@ export default class KfTimingIllus {
         this.offsetBg.setAttributeNS(null, 'height', `${widgetHeight}`);
         this.offsetBg.setAttributeNS(null, 'fill', KfTimingIllus.OFFSET_COLOR);
         this.offsetIllus.appendChild(this.offsetBg);
-        this.drawArrowIcon({ x: this.offsetWidth / 2 - 6, y: widgetHeight / 2 - 6 }, KfTimingIllus.TIMING_TYPE_OFFSET);
-        this.offsetIllus.appendChild(this.offsetIcon);
+        if (this.offsetWidth / 2 - 6 >= 0) {
+            this.drawArrowIcon({ x: this.offsetWidth / 2 - 6, y: widgetHeight / 2 - 6 }, KfTimingIllus.TIMING_TYPE_OFFSET);
+            this.offsetIllus.appendChild(this.offsetIcon);
+        }
 
         //create stretchable bar
         let offsetType: string = 'offset';
@@ -205,8 +207,10 @@ export default class KfTimingIllus {
         this.durationBg.setAttributeNS(null, 'width', `${this.durationWidth}`);
         this.durationBg.setAttributeNS(null, 'height', `${hiddenDuration ? widgetHeight + KfTimingIllus.EXTRA_HEIGHT : widgetHeight}`);
         this.durationIllus.appendChild(this.durationBg);
-        this.drawArrowIcon({ x: this.durationWidth / 2 - 6, y: widgetHeight / 2 - 6 }, KfTimingIllus.TIMING_TYPE_DURATION);
-        this.durationIllus.appendChild(this.durationIcon);
+        if (this.durationWidth / 2 - 6 >= 0) {
+            this.drawArrowIcon({ x: this.durationWidth / 2 - 6, y: widgetHeight / 2 - 6 }, KfTimingIllus.TIMING_TYPE_DURATION);
+            this.durationIllus.appendChild(this.durationIcon);
+        }
 
         // this.createTimeText({ x: this.durationWidth / 2 - 6, y: widgetHeight / 2 - 26 });
         // this.durationIllus.appendChild(this.textWrapper);
@@ -225,10 +229,14 @@ export default class KfTimingIllus {
     public hideArrow() {
         switch (this.timingType) {
             case KfTimingIllus.TIMING_TYPE_OFFSET:
-                this.offsetIcon.setAttributeNS(null, 'opacity', '0');
+                if (typeof this.offsetIcon !== 'undefined') {
+                    this.offsetIcon.setAttributeNS(null, 'opacity', '0');
+                }
                 break;
             case KfTimingIllus.TIMING_TYPE_DURATION:
-                this.durationIcon.setAttributeNS(null, 'opacity', '0');
+                if (typeof this.durationIcon !== 'undefined') {
+                    this.durationIcon.setAttributeNS(null, 'opacity', '0');
+                }
                 break;
         }
     }
@@ -236,10 +244,14 @@ export default class KfTimingIllus {
     public showArrow() {
         switch (this.timingType) {
             case KfTimingIllus.TIMING_TYPE_OFFSET:
-                this.offsetIcon.setAttributeNS(null, 'opacity', '1');
+                if (typeof this.offsetIcon !== 'undefined') {
+                    this.offsetIcon.setAttributeNS(null, 'opacity', '1');
+                }
                 break;
             case KfTimingIllus.TIMING_TYPE_DURATION:
-                this.durationIcon.setAttributeNS(null, 'opacity', '1');
+                if (typeof this.durationIcon !== 'undefined') {
+                    this.durationIcon.setAttributeNS(null, 'opacity', '1');
+                }
                 break;
         }
     }

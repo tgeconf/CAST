@@ -17,6 +17,8 @@ import BostonImg from '../assets/img/examples/bostonWeather.png'
 import BostonChart from '../assets/charts/bostonWeather.svg'
 import WorldPopuImg from '../assets/img/examples/worldPopulation.png'
 import WorldPopuChart from '../assets/charts/worldPopulation.svg'
+import PolioImg from '../assets/img/examples/polio.png'
+import PolioChart from '../assets/charts/polio.svg'
 
 import Reducer from '../app/reducer'
 import * as action from '../app/action'
@@ -50,6 +52,7 @@ export default class FloatingWindow {
     static BOSTON_CHART: string = 'boston';
     static CHINAPM_CHART: string = 'chinapm';
     static WORLDPOPULATION_CHART: string = 'worldPopulation';
+    static POLIO_CHART: string = 'polio';
 
     floatingWindow: HTMLDivElement;
 
@@ -147,6 +150,7 @@ export default class FloatingWindow {
         // exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.DESSERT_CHART, 'Most Requested Diner Desserts'));
         exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.BOSTON_CHART, 'Boston Weather'));
         exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.WORLDPOPULATION_CHART, 'World Population Pyramid'));
+        exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.POLIO_CHART, 'Polio Incidence Rates'));
         exampleList.appendChild(exampleItemContainer2);
         return exampleList;
     }
@@ -220,7 +224,7 @@ export default class FloatingWindow {
                                         Reducer.triger(action.LOAD_CHARTS, charts);
                                     }, 1);
                                     that.floatingWindow.remove();
-                                } 
+                                }
                             }
                         }
 
@@ -311,6 +315,10 @@ export default class FloatingWindow {
             case FloatingWindow.WORLDPOPULATION_CHART:
                 img.src = WorldPopuImg;
                 item.onclick = () => this.loadExampleChart(WorldPopuChart);
+                break;
+            case FloatingWindow.POLIO_CHART:
+                img.src = PolioImg;
+                item.onclick = () => this.loadExampleChart(PolioChart);
                 break;
             // case FloatingWindow.CHINAPM_CHART:
             //     img.src = ChinaPMImg;

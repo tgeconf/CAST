@@ -587,10 +587,8 @@ export default class Suggest {
      * @param firstKfMark 
      */
     public static checkNumbericOrder(firstKfMark: string): [boolean, { attr: string, order: number, marks: string[] }[]] {
-        console.log('checking numeric order: ', firstKfMark, Util.filteredDataTable);
         const firstMarkDatum: IDataItem = Util.filteredDataTable.get(firstKfMark);
         const numericAttrs: string[] = Util.fetchNumericAttrs(firstMarkDatum);
-        console.log(firstMarkDatum, numericAttrs, Util.numericAttrOrder.get(numericAttrs[0]));
         let hasOrder: boolean = false;
         const result: { attr: string, order: number, marks: string[] }[] = [];
         numericAttrs.forEach((attrName: string) => {
@@ -750,7 +748,6 @@ export default class Suggest {
                         let orderedKfMarks: string[][] = orderedMarks.map((a: string) => [a]);
                         // orderedMarks = orderedMarks.slice(1, orderedMarks.length);
                         // orderedKfMarks = orderedKfMarks.slice(1, orderedKfMarks.length);
-                        console.log('ordered marks: ', orderedMarks, orderedKfMarks);
                         this.allPaths.push({
                             attrComb: ['id'],
                             sortedAttrValueComb: orderedMarks,
