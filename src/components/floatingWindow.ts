@@ -9,8 +9,6 @@ import NightingaleImg from '../assets/img/examples/nightingale.png'
 import NightingaleChart from '../assets/charts/nightingale.svg'
 import Co2Img from '../assets/img/examples/co2.png'
 import Co2Chart from '../assets/charts/co2.svg'
-// import ChinaPMImg from '../assets/img/examples/chinapm.png'
-// import ChinaPMChart from '../assets/charts/chinapm.svg'
 import DessertImg from '../assets/img/examples/dessert.png'
 import DessertChart from '../assets/charts/desserts.svg'
 import BostonImg from '../assets/img/examples/bostonWeather.png'
@@ -23,22 +21,12 @@ import PolioChart from '../assets/charts/polio.svg'
 import Reducer from '../app/reducer'
 import * as action from '../app/action'
 import { State, state } from '../app/state'
-
-/**for test!!!!!!!!!!!!!!!!!!!!!!!! */
-import Renderer from '../app/renderer';//for test!!!!!
-import mushroomSpec from '../assets/tmp/mushroomSpec.json'
-// import ganttSpec from '../assets/tmp/ganttSpec.json'
-import osSpec from '../assets/tmp/osSpec.json'
-import purchasesSpec from '../assets/tmp/purchasesSpec.json'
-import nightingaleSpec from '../assets/tmp/nightingaleSpec.json'
-import mushroomTest1 from '../assets/tmp/mushroomTest1.json'
 import { ViewContent } from './viewWindow'
 import { Loading } from './widgets/loading'
-/**end for test!!!!!!!!!!!!!!!!!!!!!!!! */
 
 export default class FloatingWindow {
     static TYPE_EXAMPLE: string = 'exampleContainer';//type of the floating window is example
-    static TYPE_SPEC: string = 'SpecContainer';//type of the floating window is spec test
+    // static TYPE_SPEC: string = 'SpecContainer';//type of the floating window is spec test
     static CLICKABLE_AREA_CHART: string = 'inputChart';
     static CLICKABLE_AREA_PROJECT: string = 'inputProject';
 
@@ -92,10 +80,10 @@ export default class FloatingWindow {
                 titleContent.innerHTML = '';
                 windowContent.appendChild(this.createExampleList());
                 break;
-            case FloatingWindow.TYPE_SPEC:
-                titleContent.innerHTML = 'spec';
-                windowContent.appendChild(this.createSpecPanel());
-                break;
+            // case FloatingWindow.TYPE_SPEC:
+            //     titleContent.innerHTML = 'spec';
+            //     windowContent.appendChild(this.createSpecPanel());
+            //     break;
             default:
                 break;
         }
@@ -355,42 +343,42 @@ export default class FloatingWindow {
     /**
      * to test keyframes since there is no timeline view yet
      */
-    public createSpecPanel(): HTMLDivElement {
-        const wrapper: HTMLDivElement = document.createElement('div');
-        wrapper.style.width = '100%';
-        wrapper.style.height = '100%';
-        const specWrapper: HTMLDivElement = document.createElement('div');
-        specWrapper.style.width = '100%';
-        specWrapper.style.height = '30px';
-        specWrapper.appendChild(this.createTestSpecBtn('mushroomSpec', mushroomSpec));
-        specWrapper.appendChild(this.createTestSpecBtn('mushroomTest1', mushroomTest1));
-        // specWrapper.appendChild(this.createTestSpecBtn('ganttSpec', ganttSpec));
-        specWrapper.appendChild(this.createTestSpecBtn('osSpec', osSpec));
-        specWrapper.appendChild(this.createTestSpecBtn('purchasesSpec', purchasesSpec));
-        specWrapper.appendChild(this.createTestSpecBtn('nightingaleSpec', nightingaleSpec));
-        wrapper.appendChild(specWrapper);
-        const specPanel: HTMLTextAreaElement = document.createElement('textarea');
-        specPanel.style.width = '100%';
-        specPanel.style.height = '400px';
-        specPanel.id = 'specPanel';
-        specPanel.innerHTML = JSON.stringify(state.spec.animations, null, 2);
-        wrapper.appendChild(specPanel);
-        const renderBtn: HTMLButtonElement = document.createElement('button');
-        renderBtn.innerHTML = 'render spec';
-        renderBtn.onclick = () => {
-            let tmpSpec = JSON.parse(specPanel.value);
-            Reducer.triger(action.UPDATE_SPEC_ANIMATIONS, tmpSpec);
-            this.floatingWindow.remove();
-        }
-        wrapper.appendChild(renderBtn);
-        return wrapper;
-    }
-    public createTestSpecBtn(text: string, spec: any) {
-        const mushroomSpecBtn: HTMLButtonElement = document.createElement('button');
-        mushroomSpecBtn.innerHTML = text;
-        mushroomSpecBtn.onclick = () => {
-            document.getElementById('specPanel').innerHTML = JSON.stringify(spec, null, 2);
-        }
-        return mushroomSpecBtn;
-    }
+    // public createSpecPanel(): HTMLDivElement {
+    //     const wrapper: HTMLDivElement = document.createElement('div');
+    //     wrapper.style.width = '100%';
+    //     wrapper.style.height = '100%';
+    //     const specWrapper: HTMLDivElement = document.createElement('div');
+    //     specWrapper.style.width = '100%';
+    //     specWrapper.style.height = '30px';
+    //     specWrapper.appendChild(this.createTestSpecBtn('mushroomSpec', mushroomSpec));
+    //     specWrapper.appendChild(this.createTestSpecBtn('mushroomTest1', mushroomTest1));
+    //     // specWrapper.appendChild(this.createTestSpecBtn('ganttSpec', ganttSpec));
+    //     specWrapper.appendChild(this.createTestSpecBtn('osSpec', osSpec));
+    //     specWrapper.appendChild(this.createTestSpecBtn('purchasesSpec', purchasesSpec));
+    //     specWrapper.appendChild(this.createTestSpecBtn('nightingaleSpec', nightingaleSpec));
+    //     wrapper.appendChild(specWrapper);
+    //     const specPanel: HTMLTextAreaElement = document.createElement('textarea');
+    //     specPanel.style.width = '100%';
+    //     specPanel.style.height = '400px';
+    //     specPanel.id = 'specPanel';
+    //     specPanel.innerHTML = JSON.stringify(state.spec.animations, null, 2);
+    //     wrapper.appendChild(specPanel);
+    //     const renderBtn: HTMLButtonElement = document.createElement('button');
+    //     renderBtn.innerHTML = 'render spec';
+    //     renderBtn.onclick = () => {
+    //         let tmpSpec = JSON.parse(specPanel.value);
+    //         Reducer.triger(action.UPDATE_SPEC_ANIMATIONS, tmpSpec);
+    //         this.floatingWindow.remove();
+    //     }
+    //     wrapper.appendChild(renderBtn);
+    //     return wrapper;
+    // }
+    // public createTestSpecBtn(text: string, spec: any) {
+    //     const mushroomSpecBtn: HTMLButtonElement = document.createElement('button');
+    //     mushroomSpecBtn.innerHTML = text;
+    //     mushroomSpecBtn.onclick = () => {
+    //         document.getElementById('specPanel').innerHTML = JSON.stringify(spec, null, 2);
+    //     }
+    //     return mushroomSpecBtn;
+    // }
 }

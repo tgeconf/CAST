@@ -1,6 +1,6 @@
 import '../../assets/style/suggestBox.scss'
 import KfItem from "./kfItem";
-import { kfContainer, KfContainer } from "../kfContainer";
+import { KfContainer } from "../kfContainer";
 import { state, State } from "../../app/state";
 import { IPath, IKeyframe, IActivatePlusBtn } from "../../app/core/ds";
 import KfGroup from "./kfGroup";

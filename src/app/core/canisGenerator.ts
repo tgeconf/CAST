@@ -1,4 +1,4 @@
-import { IState, state } from '../state'
+import { state } from '../state'
 import Canis, { TimingSpec, ChartSpec } from 'canis_toolkit';
 import { ActionSpec, Animation } from 'canis_toolkit';
 

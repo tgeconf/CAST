@@ -3,17 +3,13 @@ import { IDataItem, ISortDataAttr, IKeyframeGroup, IKeyframe, IKfGroupSize, IPat
 import { ChartSpec, Animation, TimingSpec } from 'canis_toolkit'
 import CanisGenerator, { canis, ICanisSpec } from './core/canisGenerator'
 import ViewWindow, { ViewToolBtn, ViewContent } from '../components/viewWindow'
-import AttrBtn from '../components/widgets/attrBtn'
 import AttrSort from '../components/widgets/attrSort'
 import Util from './core/util'
 import Reducer from './reducer'
 import * as action from './action'
 import SelectableTable from '../components/widgets/selectableTable'
-import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie'
+import Lottie from '../../node_modules/lottie-web/build/player/lottie'
 import { Player, player } from '../components/player'
-
-
-/** for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 import KfItem from '../components/widgets/kfItem'
 import KfTrack from '../components/widgets/kfTrack'
 import KfGroup from '../components/widgets/kfGroup'
@@ -22,8 +18,6 @@ import KfOmit from '../components/widgets/kfOmit'
 import PlusBtn from '../components/widgets/plusBtn'
 import { suggestBox } from '../components/widgets/suggestBox'
 import { Loading } from '../components/widgets/loading'
-// import { loadingBlock } from '../components/widgets/loading'
-/** end for test!!!!!!!!!!!!!!!!!!!!!!!!! */
 
 /**
  * render html according to the state

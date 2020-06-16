@@ -21,7 +21,6 @@ export class KfContainer {
     static KF_MENU: string = 'kfMenuG';
     static SLIDER_W: number = 10;
     static WHEEL_STEP: number = 20;
-    // static CLICK_SCROLL_STEP: number = 40;
 
     public kfWidgetContainer: HTMLDivElement;
     public kfTrackScaleContainer: SVGGElement;

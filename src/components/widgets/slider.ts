@@ -3,8 +3,6 @@ import Reducer from '../../app/reducer';
 import * as action from '../../app/action';
 
 export default class Slider {
-    // static SLIDER_LONG = 'sliderLong';
-    // static SLIDER_SHORT = 'sliderShort';
     static SLIDER_HEIGHT = 26;
     static SLIDER_WIDTH = 100;
     static SLIDER_RADIUS = 5;

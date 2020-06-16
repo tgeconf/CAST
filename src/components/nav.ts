@@ -236,11 +236,11 @@ class NavBtn {
         Reducer.triger(action.RESET_STATE, {});
     }
 
-    public static testSpec(): void {
-        const floatingWindow: FloatingWindow = new FloatingWindow();
-        floatingWindow.createFloatingWindow(FloatingWindow.TYPE_SPEC);
-        document.getElementById('appWrapper').appendChild(floatingWindow.floatingWindow);
-    }
+    // public static testSpec(): void {
+    //     const floatingWindow: FloatingWindow = new FloatingWindow();
+    //     floatingWindow.createFloatingWindow(FloatingWindow.TYPE_SPEC);
+    //     document.getElementById('appWrapper').appendChild(floatingWindow.floatingWindow);
+    // }
 
     public static async testGif() {
         console.log(state.lottieSpec);

@@ -1,12 +1,11 @@
-import { ChartSpec } from 'canis_toolkit'
-import { ViewToolBtn, ViewContent } from '../components/viewWindow'
+import { ViewToolBtn } from '../components/viewWindow'
 import Renderer from './renderer'
 import Tool from '../util/tool'
 import { ISortDataAttr, IDataItem, IKeyframeGroup, IKfGroupSize, IPath, IInteractionRecord, IActivatePlusBtn } from './core/ds'
 import Util from './core/util'
 import Reducer from './reducer'
 import * as action from './action'
-import Lottie, { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie';
+import { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie';
 import CanisGenerator, { ICanisSpec } from './core/canisGenerator'
 
 

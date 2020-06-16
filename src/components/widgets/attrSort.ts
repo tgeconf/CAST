@@ -1,8 +1,4 @@
 import '../../assets/style/attrSort.scss'
-import { ISortDataAttr } from '../../app/core/ds'
-import { state, State } from '../../app/state'
-import Reducer from '../../app/reducer';
-import * as action from '../../app/action';
 
 export default class AttrSort {
     static ASSCENDING_ORDER: string = 'asscending';

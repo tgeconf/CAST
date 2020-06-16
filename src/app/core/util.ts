@@ -3,7 +3,6 @@ import { state } from '../state'
 import Tool from '../../util/tool'
 import { ISortDataAttr, IDataItem, IDataDatumType, IKeyframeGroup, IKeyframe } from './ds';
 import AttrSort from '../../components/widgets/attrSort';
-import KfTimingIllus from '../../components/widgets/kfTimingIllus';
 import KfItem from '../../components/widgets/kfItem';
 import KfGroup from '../../components/widgets/kfGroup';
 import KfTrack from '../../components/widgets/kfTrack';

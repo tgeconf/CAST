@@ -9,7 +9,6 @@ import * as action from '../app/action'
 import PlusBtn from '../components/widgets/plusBtn'
 import KfItem from '../components/widgets/kfItem'
 import { GroupMenu } from '../components/widgets/kfGroup'
-import { group, thresholdFreedmanDiaconis } from 'd3'
 import Util from '../app/core/util'
 import ViewWindow from '../components/viewWindow'
 

@@ -4,13 +4,10 @@ import Tool from "../../util/tool";
 import KfItem from "./kfItem";
 import { state, State } from "../../app/state";
 import { IKeyframe, IKeyframeGroup } from "../../app/core/ds";
-import Reducer from "../../app/reducer";
-import * as action from "../../app/action";
 import Suggest from "../../app/core/suggest";
-import Util from "../../app/core/util";
 import KfTrack from "./kfTrack";
 import { ICoord, ISize } from "../../util/ds";
-import { suggestBox, SuggestMenu } from "./suggestBox";
+import { suggestBox } from "./suggestBox";
 import KfOmit from "./kfOmit";
 
 export default class PlusBtn {
