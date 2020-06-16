@@ -71,6 +71,10 @@ export default class Reducer {
                 break;
             case action.UPDATE_ANI_ALIGN_WITH_ANI:
                 currentAni.reference = TimingSpec.timingRef.previousStart;
+                if (typeof currentAni.align !== 'undefined') {
+                    delete currentAni.align;
+                    currentAni.grouping = targetAni.grouping;
+                }
                 break;
             case action.UPDATE_ANI_ALIGN_AFTER_KF:
                 if (typeof targetAni.id === 'undefined') {

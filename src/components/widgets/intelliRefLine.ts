@@ -96,7 +96,8 @@ export default class IntelliRefLine {
                 tmpHintLine1.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, false);
                 hintLines.push(tmpHintLine1);
                 const tmpHintLine2: IntelliRefLine = new IntelliRefLine();
-                tmpHintLine2.hintAlign({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, false);
+                tmpHintLine2.hintInsert({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, false);
+                // tmpHintLine2.hintAlign({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, false);
                 hintLines.push(tmpHintLine2);
                 const tmpHintLine3: IntelliRefLine = new IntelliRefLine();
                 tmpHintLine3.hintAlign({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, false);
@@ -171,6 +172,7 @@ export default class IntelliRefLine {
         }
         this.line.setAttributeNS(null, 'stroke', highlight ? IntelliRefLine.TRIGER_STROKE_COLOR : IntelliRefLine.HIGHLIGHT_STROKE_COLOR);
         this.line.setAttributeNS(null, 'stroke-width', '4');
+        this.line.setAttributeNS(null, 'stroke-dasharray', '1 0');
         if (vertical) {
             this.line.setAttributeNS(null, 'x1', `${(targetPosi.x - containerBBox.left) / state.zoomLevel - kfContainer.transDistance.w}`);
             this.line.setAttributeNS(null, 'y1', `${(targetPosi.y - containerBBox.top) / state.zoomLevel - kfContainer.transDistance.h}`);

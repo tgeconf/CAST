@@ -480,18 +480,25 @@ export default class KfGroup extends KfTimingIllus {
                 const targetAniId: string = aniGroup.aniId;
 
                 //add orange lines according to drag position
-                if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + (20 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
+                if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + (30 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top) {
+                    // if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + (30 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
+                    console.log('hint insert!!!');
                     targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_ANI };//after group has higher priority
-                    hintDrop.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height, true, true);
+                    hintDrop.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, true);
                     break;
                 } else {
-                    if (currentGPosi.x >= aniGroupBBox.left && currentGPosi.x < aniGroupBBox.left + (6 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
+                    if (currentGPosi.x >= aniGroupBBox.left && currentGPosi.x < aniGroupBBox.left + (6 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top) {
+                        // if (currentGPosi.x >= aniGroupBBox.left && currentGPosi.x < aniGroupBBox.left + (6 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
+                        console.log('hint align gorup left');
                         targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_WITH_ANI };
-                        hintDrop.hintAlign({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true);
-                    } else if (currentGPosi.x >= firstKfBBox.left && currentGPosi.x < firstKfBBox.left + (6 * state.zoomLevel) && alignTargetGroup) {
+                        // hintDrop.hintAlign({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true);
+                        hintDrop.hintInsert({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, true);
+                    } else if (currentGPosi.x >= firstKfBBox.left && currentGPosi.x < firstKfBBox.left + (30 * state.zoomLevel) && alignTargetGroup) {
+                        console.log('hint align kf left');
                         targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_WITH_KF };
                         hintDrop.hintAlign({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, true);
-                    } else if (currentGPosi.x >= firstKfBBox.right && currentGPosi.x < firstKfBBox.right + (6 * state.zoomLevel) && alignTargetGroup) {
+                    } else if (currentGPosi.x >= firstKfBBox.right && currentGPosi.x < firstKfBBox.right + (30 * state.zoomLevel) && alignTargetGroup) {
+                        console.log('hint align kf right');
                         targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_KF };
                         hintDrop.hintAlign({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, true);
                     }
@@ -1414,8 +1421,8 @@ export class GroupMenu {
     static PADDING_LEFT: number = 6;
     static MENU_RX: number = 8;
     static MENU_BG_COLOR: string = '#676767';
-    static MENU_ICON_COLOR: string = '#e5e5e5';
-    static MENU_ICON_HIGHLIGHT_COLOR: string = '#494949';
+    static MENU_ICON_COLOR: string = '#a3a3a3';
+    static MENU_ICON_HIGHLIGHT_COLOR: string = '#ededed';
     static MENU_LIST_WIDTH: number = 120;
     static EASING_MENU_LIST_WIDTH: number = 156;
     static MENU_LIST_ITEM_HEIGHT: number = 20;

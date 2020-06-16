@@ -665,327 +665,329 @@ export default class KfItem extends KfTimingIllus {
             this.dragBtn.appendChild(circle);
         }
 
-        this.dragBtn.onmousedown = (downEvt) => {
-            Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
-            this.parentObj.transHideTitle();
-            let oriMousePosi: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
-            hintTag.removeHint();
-            const targetMoveItem: KfGroup | KfItem = typeof this.kfInfo.alignTo !== 'undefined' ? this.parentObj.fetchAniGroup() : this;
-            //move the entire group
-            targetMoveItem.container.setAttributeNS(null, '_transform', targetMoveItem.container.getAttributeNS(null, 'transform'));
-            const containerBBox: DOMRect = targetMoveItem.container.getBoundingClientRect();//fixed
-            if (targetMoveItem.parentObj.container.contains(targetMoveItem.container)) {
-                targetMoveItem.parentObj.container.removeChild(targetMoveItem.container);
-            }
-            const popKfContainer: HTMLElement = document.getElementById(KfContainer.KF_POPUP);
-            const popKfContainerBbox: DOMRect = popKfContainer.getBoundingClientRect();//fixed
-            popKfContainer.appendChild(targetMoveItem.container);
+        if (state.charts.length === 1) {//cant drag kfitem when the animation is transition
+            this.dragBtn.onmousedown = (downEvt) => {
+                Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
+                this.parentObj.transHideTitle();
+                let oriMousePosi: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
+                hintTag.removeHint();
+                const targetMoveItem: KfGroup | KfItem = typeof this.kfInfo.alignTo !== 'undefined' ? this.parentObj.fetchAniGroup() : this;
+                //move the entire group
+                targetMoveItem.container.setAttributeNS(null, '_transform', targetMoveItem.container.getAttributeNS(null, 'transform'));
+                const containerBBox: DOMRect = targetMoveItem.container.getBoundingClientRect();//fixed
+                if (targetMoveItem.parentObj.container.contains(targetMoveItem.container)) {
+                    targetMoveItem.parentObj.container.removeChild(targetMoveItem.container);
+                }
+                const popKfContainer: HTMLElement = document.getElementById(KfContainer.KF_POPUP);
+                const popKfContainerBbox: DOMRect = popKfContainer.getBoundingClientRect();//fixed
+                popKfContainer.appendChild(targetMoveItem.container);
 
-            //add hint line if moving a single kf
-            let hintPosiLine: IntelliRefLine = new IntelliRefLine();
-            if (targetMoveItem instanceof KfItem) {
-                hintPosiLine.hintAlign({ x: containerBBox.left, y: containerBBox.top }, containerBBox.height, false);
-            }
+                //add hint line if moving a single kf
+                let hintPosiLine: IntelliRefLine = new IntelliRefLine();
+                if (targetMoveItem instanceof KfItem) {
+                    hintPosiLine.hintAlign({ x: containerBBox.left, y: containerBBox.top }, containerBBox.height, false);
+                }
 
-            //set new transform
-            if (targetMoveItem instanceof KfGroup) {
-                targetMoveItem.translateContainer((containerBBox.left - popKfContainerBbox.left) / state.zoomLevel, (containerBBox.top - popKfContainerBbox.top + KfGroup.TITLE_HEIHGT) / state.zoomLevel);
-            } else {
-                targetMoveItem.translateContainer((containerBBox.left - popKfContainerBbox.left) / state.zoomLevel, (containerBBox.top - popKfContainerBbox.top) / state.zoomLevel);
-            }
-
-            let updateSpec: boolean = false;
-            let actionType: string = '';
-            let actionInfo: any = {};
-            const preSibling: KfItem | KfOmit = <KfItem | KfOmit>this.parentObj.children[this.idxInGroup - 1];
-            const firstSibling: KfItem = <KfItem>this.parentObj.children[0];
-            let preKfRight: number = containerBBox.left;
-            // let visualPresiblingDurationW: number = 0;
-            if (typeof preSibling !== 'undefined' && typeof firstSibling !== 'undefined') {
-                // visualPresiblingDurationW = preSibling.container.getBoundingClientRect().right - preSibling.kfBg.getBoundingClientRect().right;
-                if (preSibling instanceof KfItem) {
-                    preKfRight = preSibling.kfBg.getBoundingClientRect().right;
+                //set new transform
+                if (targetMoveItem instanceof KfGroup) {
+                    targetMoveItem.translateContainer((containerBBox.left - popKfContainerBbox.left) / state.zoomLevel, (containerBBox.top - popKfContainerBbox.top + KfGroup.TITLE_HEIHGT) / state.zoomLevel);
                 } else {
-                    preKfRight = containerBBox.left - (firstSibling.container.getBoundingClientRect().right - firstSibling.kfBg.getBoundingClientRect().right);
+                    targetMoveItem.translateContainer((containerBBox.left - popKfContainerBbox.left) / state.zoomLevel, (containerBBox.top - popKfContainerBbox.top) / state.zoomLevel);
                 }
-            }
-            if (targetMoveItem instanceof KfGroup) {//this kf is align to others
-                //find all kfs in this kfgroup
-                const allKfItems: KfItem[] = targetMoveItem.fetchAllKfs();
 
-                //set visible
-                targetMoveItem.showGroupBg();
-                targetMoveItem.hideTitle();
-                targetMoveItem.hideMenu();
-                document.onmousemove = (moveEvt) => {
-                    const alignWithGroupBBox: DOMRect = targetMoveItem.fetchAlignWithGroup().container.getBoundingClientRect();//fixed
-                    const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
-                    const posiDiff: ICoord = { x: (currentMousePosi.x - oriMousePosi.x) / state.zoomLevel, y: (currentMousePosi.y - oriMousePosi.y) / state.zoomLevel };
-                    const oriTrans: ICoord = Tool.extractTransNums(targetMoveItem.container.getAttributeNS(null, 'transform'));
-                    targetMoveItem.translateContainer(oriTrans.x, oriTrans.y + posiDiff.y);
-
-                    const currentBBox: DOMRect = targetMoveItem.container.getBoundingClientRect();//fixed
-                    if ((currentBBox.top - alignWithGroupBBox.top) / state.zoomLevel <= KfTrack.TRACK_HEIGHT * 0.6 && (currentBBox.top - alignWithGroupBBox.top) / state.zoomLevel >= 0) {//set merge to true
-                        //change ref line to align frame
-                        allKfItems.forEach((kf: KfItem) => {
-                            kf.showAlignFrame();
-                            if (typeof IntelliRefLine.kfLineMapping.get(kf.id) !== 'undefined') {
-                                const corresRefLine: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kf.id).lineId);
-                                if (typeof corresRefLine !== 'undefined') {
-                                    corresRefLine.hideLine();
-                                }
-                            }
-                        })
-                        //triger action
-                        if (targetMoveItem.alignMerge) {
-                            updateSpec = false;
-                        } else {
-                            updateSpec = true;
-                            actionType = action.UPDATE_ALIGN_MERGE;
-                            actionInfo = { aniId: this.aniId, merge: true }
-                        }
-                    } else if ((currentBBox.top - alignWithGroupBBox.top) / state.zoomLevel >= KfTrack.TRACK_HEIGHT * 0.6) {//set merge to false
-                        //change align frame to ref line
-                        allKfItems.forEach((kf: KfItem) => {
-                            kf.hideAlignFrame();
-                            if (typeof IntelliRefLine.kfLineMapping.get(kf.id) !== 'undefined') {
-                                const corresRefLine: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kf.id).lineId);
-                                if (typeof corresRefLine !== 'undefined') {
-                                    corresRefLine.showLine();
-                                }
-                            }
-                        })
-                        //triger action
-                        if (targetMoveItem.alignMerge) {
-                            updateSpec = true;
-                            actionType = action.UPDATE_ALIGN_MERGE;
-                            actionInfo = { aniId: this.aniId, merge: false }
-                        } else {
-                            updateSpec = false;
-                        }
-                    }
-
-                    oriMousePosi = currentMousePosi;
-                }
-                document.onmouseup = () => {
-                    document.onmousemove = null;
-                    document.onmouseup = null;
-                    Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
-                    if (!updateSpec) {
-                        targetMoveItem.container.setAttributeNS(null, 'transform', targetMoveItem.container.getAttributeNS(null, '_transform'));
-                        targetMoveItem.parentObj.container.appendChild(targetMoveItem.container);
-                        if (targetMoveItem.alignMerge) {
-                            targetMoveItem.hideGroupBg();
-                            targetMoveItem.showTitle();
-                        } else {
-                            targetMoveItem.rerenderGroupBg();
-                            targetMoveItem.showTitle();
-                            targetMoveItem.showMenu();
-                        }
+                let updateSpec: boolean = false;
+                let actionType: string = '';
+                let actionInfo: any = {};
+                const preSibling: KfItem | KfOmit = <KfItem | KfOmit>this.parentObj.children[this.idxInGroup - 1];
+                const firstSibling: KfItem = <KfItem>this.parentObj.children[0];
+                let preKfRight: number = containerBBox.left;
+                // let visualPresiblingDurationW: number = 0;
+                if (typeof preSibling !== 'undefined' && typeof firstSibling !== 'undefined') {
+                    // visualPresiblingDurationW = preSibling.container.getBoundingClientRect().right - preSibling.kfBg.getBoundingClientRect().right;
+                    if (preSibling instanceof KfItem) {
+                        preKfRight = preSibling.kfBg.getBoundingClientRect().right;
                     } else {
-                        Reducer.triger(actionType, actionInfo);
-                        popKfContainer.removeChild(targetMoveItem.container);
+                        preKfRight = containerBBox.left - (firstSibling.container.getBoundingClientRect().right - firstSibling.kfBg.getBoundingClientRect().right);
                     }
                 }
-            } else {//this kf is not aligned to others
-                document.onmousemove = (moveEvt) => {
-                    const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
-                    const posiDiff: ICoord = { x: (currentMousePosi.x - oriMousePosi.x) / state.zoomLevel, y: (currentMousePosi.y - oriMousePosi.y) / state.zoomLevel };
-                    const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
-                    this.translateContainer(oriTrans.x + posiDiff.x, oriTrans.y + posiDiff.y);
+                if (targetMoveItem instanceof KfGroup) {//this kf is align to others
+                    //find all kfs in this kfgroup
+                    const allKfItems: KfItem[] = targetMoveItem.fetchAllKfs();
 
-                    if (this.idxInGroup > 0) {//this is not the first kf in group, need to check the position relation with previous kf
-                        // if (this.idxInGroup > 0 && preSibling instanceof KfItem) {//this is not the first kf in group, need to check the position relation with previous kf
-                        const currentKfLeft: number = this.kfBg.getBoundingClientRect().left;//fixed
-                        // const preKfRight: number = preSibling.kfBg.getBoundingClientRect().right;//fixed
-                        const preKfDurationW: number = KfItem.BASIC_OFFSET_DURATION_W > this.durationWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.durationWidth;
-                        const posiXDiff: number = (currentKfLeft - preKfRight) / state.zoomLevel;
-                        const currentKfOffsetW: number = KfItem.BASIC_OFFSET_DURATION_W > this.offsetWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.offsetWidth;
-                        if (posiXDiff >= currentKfOffsetW + preKfDurationW) {//show both pre duration and current offset
-                            if (this.hasOffset) {
-                                this.showOffset();
-                            } else {
-                                if (typeof this.offsetIllus === 'undefined') {
-                                    this.drawOffset(KfItem.minOffset, this.kfHeight, 0, true);
-                                }
-                                this.container.appendChild(this.offsetIllus);
-                            }
-                            //show pre duration
-                            if (preSibling instanceof KfItem) {
-                                preSibling.cancelKfDragoverKf();
-                                this.cancelKfDragoverKf();
-                                if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
-                                    preSibling.showDuration();
-                                } else {
-                                    if (typeof preSibling.durationIllus === 'undefined') {
-                                        preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight, false);
+                    //set visible
+                    targetMoveItem.showGroupBg();
+                    targetMoveItem.hideTitle();
+                    targetMoveItem.hideMenu();
+                    document.onmousemove = (moveEvt) => {
+                        const alignWithGroupBBox: DOMRect = targetMoveItem.fetchAlignWithGroup().container.getBoundingClientRect();//fixed
+                        const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
+                        const posiDiff: ICoord = { x: (currentMousePosi.x - oriMousePosi.x) / state.zoomLevel, y: (currentMousePosi.y - oriMousePosi.y) / state.zoomLevel };
+                        const oriTrans: ICoord = Tool.extractTransNums(targetMoveItem.container.getAttributeNS(null, 'transform'));
+                        targetMoveItem.translateContainer(oriTrans.x, oriTrans.y + posiDiff.y);
+
+                        const currentBBox: DOMRect = targetMoveItem.container.getBoundingClientRect();//fixed
+                        if ((currentBBox.top - alignWithGroupBBox.top) / state.zoomLevel <= KfTrack.TRACK_HEIGHT * 0.6 && (currentBBox.top - alignWithGroupBBox.top) / state.zoomLevel >= 0) {//set merge to true
+                            //change ref line to align frame
+                            allKfItems.forEach((kf: KfItem) => {
+                                kf.showAlignFrame();
+                                if (typeof IntelliRefLine.kfLineMapping.get(kf.id) !== 'undefined') {
+                                    const corresRefLine: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kf.id).lineId);
+                                    if (typeof corresRefLine !== 'undefined') {
+                                        corresRefLine.hideLine();
                                     }
-                                    preSibling.container.appendChild(preSibling.durationIllus);
                                 }
-                            } else if (preSibling instanceof KfOmit) {
-                                //show fake duration
-                                hintPosiLine.showFakeDuration({ x: containerBBox.left, y: containerBBox.top }, containerBBox.height);
+                            })
+                            //triger action
+                            if (targetMoveItem.alignMerge) {
+                                updateSpec = false;
+                            } else {
+                                updateSpec = true;
+                                actionType = action.UPDATE_ALIGN_MERGE;
+                                actionInfo = { aniId: this.aniId, merge: true }
                             }
-
-                            //target actions
-                            if (!this.hasOffset && preSibling.hasDuration) {
-                                updateSpec = true;//add default offset between kfs
-                                actionType = action.UPDATE_DELAY_BETWEEN_KF;
-                                actionInfo.aniId = this.parentObj.aniId;
-                                actionInfo.delay = 300;
-                            } else if (!preSibling.hasDuration && this.hasOffset) {
-                                updateSpec = true;//change timing ref from with to after
-                                actionType = action.UPDATE_KF_TIMING_REF;
-                                actionInfo.aniId = this.parentObj.aniId;
-                                actionInfo.ref = TimingSpec.timingRef.previousEnd;
+                        } else if ((currentBBox.top - alignWithGroupBBox.top) / state.zoomLevel >= KfTrack.TRACK_HEIGHT * 0.6) {//set merge to false
+                            //change align frame to ref line
+                            allKfItems.forEach((kf: KfItem) => {
+                                kf.hideAlignFrame();
+                                if (typeof IntelliRefLine.kfLineMapping.get(kf.id) !== 'undefined') {
+                                    const corresRefLine: IntelliRefLine = IntelliRefLine.allLines.get(IntelliRefLine.kfLineMapping.get(kf.id).lineId);
+                                    if (typeof corresRefLine !== 'undefined') {
+                                        corresRefLine.showLine();
+                                    }
+                                }
+                            })
+                            //triger action
+                            if (targetMoveItem.alignMerge) {
+                                updateSpec = true;
+                                actionType = action.UPDATE_ALIGN_MERGE;
+                                actionInfo = { aniId: this.aniId, merge: false }
                             } else {
                                 updateSpec = false;
-                                actionInfo = {};
                             }
-                        } else if (posiXDiff >= preKfDurationW && posiXDiff < currentKfOffsetW + preKfDurationW) {//show pre duration
-                            if (this.hasOffset) {
-                                this.hideOffset();
-                            } else {
-                                if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
-                                    this.container.removeChild(this.offsetIllus);
-                                }
-                            }
-                            //show pre duration 
-                            if (preSibling instanceof KfItem) {
-                                preSibling.cancelKfDragoverKf();
-                                this.cancelKfDragoverKf();
-                                if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
-                                    preSibling.showDuration();
-                                } else {
-                                    if (typeof preSibling.durationIllus === 'undefined') {
-                                        preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight, false);
-                                    }
-                                    preSibling.container.appendChild(preSibling.durationIllus);
-                                }
-                            } else if (preSibling instanceof KfOmit) {
-                                //show fake duration
-                                hintPosiLine.showFakeDuration({ x: containerBBox.left, y: containerBBox.top }, containerBBox.height);
-                            }
-
-                            //target actions
-                            if (this.hasOffset && preSibling.hasDuration) {
-                                updateSpec = true;//remove offset between kfs
-                                actionType = action.REMOVE_DELAY_BETWEEN_KF;
-                                actionInfo.aniId = this.parentObj.aniId;
-                            } else if (this.hasOffset && !preSibling.hasDuration) {
-                                updateSpec = true;//change timing ref from with to after and remove offset
-                                actionType = action.UPDATE_TIMING_REF_DELAY_KF;
-                                actionInfo.aniId = this.parentObj.aniId;
-                                actionInfo.ref = TimingSpec.timingRef.previousEnd;
-                                actionInfo.delay = 300;
-                            } else {
-                                updateSpec = false;
-                                actionInfo = {};
-                            }
-                        } else if (posiXDiff < preKfDurationW && posiXDiff >= 0) {//show current offset and hide pre duration
-                            if (this.hasOffset) {
-                                this.showOffset();
-                            } else {
-                                if (typeof this.offsetIllus === 'undefined') {
-                                    this.drawOffset(KfItem.minOffset, this.kfHeight, 0, true);
-                                }
-                                this.container.appendChild(this.offsetIllus);
-                            }
-                            //hide pre duration
-                            if (preSibling instanceof KfItem) {
-                                preSibling.cancelKfDragoverKf();
-                                this.cancelKfDragoverKf();
-                                if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
-                                    preSibling.hideDuration();
-                                } else {
-                                    if (typeof preSibling.durationIllus !== 'undefined' && preSibling.container.contains(preSibling.durationIllus)) {
-                                        preSibling.container.removeChild(preSibling.durationIllus);
-                                    }
-                                }
-                            } else if (preSibling instanceof KfOmit) {
-                                //hide fake duration
-                                hintPosiLine.removeFakeDuration();
-                            }
-
-                            //target actions
-                            if (!this.hasOffset && preSibling.hasDuration) {
-                                updateSpec = true;//change timing ref from after to with, and add default offset
-                                actionType = action.UPDATE_TIMING_REF_DELAY_KF;
-                                actionInfo.aniId = this.parentObj.aniId;
-                                actionInfo.ref = TimingSpec.timingRef.previousStart;
-                                actionInfo.delay = 300;
-                            } else if (this.hasOffset && preSibling.hasDuration) {
-                                updateSpec = true; //change timing ref from after to with
-                                actionType = action.UPDATE_KF_TIMING_REF;
-                                actionInfo.aniId = this.parentObj.aniId;
-                                actionInfo.ref = TimingSpec.timingRef.previousStart;
-                            } else {
-                                updateSpec = false;
-                                actionInfo = {};
-                            }
-                        } else {//hide pre duration, this offset and highlight them
-                            if (this.hasOffset) {
-                                this.hideOffset();
-                            } else {
-                                if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
-                                    this.container.removeChild(this.offsetIllus);
-                                }
-                            }
-
-                            //hide pre duration
-                            if (preSibling instanceof KfItem) {
-                                preSibling.kfDragoverKf();
-                                this.kfDragoverKf();
-                                if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
-                                    preSibling.hideDuration();
-                                } else {
-                                    if (typeof preSibling.durationIllus !== 'undefined' && preSibling.container.contains(preSibling.durationIllus)) {
-                                        preSibling.container.removeChild(preSibling.durationIllus);
-                                    }
-                                }
-                            } else if (preSibling instanceof KfOmit) {
-                                //hide fake duration
-                                this.kfDragoverKf();
-                                hintPosiLine.removeFakeDuration();
-                            }
-
-                            //target actions
-                            updateSpec = true;//remove lowest level grouping
-                            actionType = action.REMOVE_LOWESTGROUP;
-                            actionInfo.aniId = this.parentObj.aniId;
                         }
+
+                        oriMousePosi = currentMousePosi;
                     }
-
-                    oriMousePosi = currentMousePosi;
-                }
-                document.onmouseup = () => {
-                    document.onmousemove = null;
-                    document.onmouseup = null;
-                    hintPosiLine.removeHintLine();
-                    hintPosiLine.removeFakeDuration();
-                    Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
-                    if (!updateSpec) {
-                        if (typeof preSibling !== 'undefined' && preSibling instanceof KfItem) {
-                            preSibling.showDuration();
-                        }
-                        this.container.setAttributeNS(null, 'transform', this.container.getAttributeNS(null, '_transform'));
-                        if (this.treeLevel === 1) {
-                            this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
+                    document.onmouseup = () => {
+                        document.onmousemove = null;
+                        document.onmouseup = null;
+                        Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
+                        if (!updateSpec) {
+                            targetMoveItem.container.setAttributeNS(null, 'transform', targetMoveItem.container.getAttributeNS(null, '_transform'));
+                            targetMoveItem.parentObj.container.appendChild(targetMoveItem.container);
+                            if (targetMoveItem.alignMerge) {
+                                targetMoveItem.hideGroupBg();
+                                targetMoveItem.showTitle();
+                            } else {
+                                targetMoveItem.rerenderGroupBg();
+                                targetMoveItem.showTitle();
+                                targetMoveItem.showMenu();
+                            }
                         } else {
-                            this.parentObj.container.appendChild(this.container);
+                            Reducer.triger(actionType, actionInfo);
+                            popKfContainer.removeChild(targetMoveItem.container);
                         }
-                    } else {
-                        State.tmpStateBusket.push({
-                            historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: JSON.stringify(state.spec.animations) },
-                            currentAction: { actionType: actionType, actionVal: actionInfo }
-                        })
-                        State.saveHistory();
-                        Reducer.triger(actionType, actionInfo);
-                        popKfContainer.removeChild(this.container);
+                    }
+                } else {//this kf is not aligned to others
+                    document.onmousemove = (moveEvt) => {
+                        const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
+                        const posiDiff: ICoord = { x: (currentMousePosi.x - oriMousePosi.x) / state.zoomLevel, y: (currentMousePosi.y - oriMousePosi.y) / state.zoomLevel };
+                        const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
+                        this.translateContainer(oriTrans.x + posiDiff.x, oriTrans.y + posiDiff.y);
+
+                        if (this.idxInGroup > 0) {//this is not the first kf in group, need to check the position relation with previous kf
+                            // if (this.idxInGroup > 0 && preSibling instanceof KfItem) {//this is not the first kf in group, need to check the position relation with previous kf
+                            const currentKfLeft: number = this.kfBg.getBoundingClientRect().left;//fixed
+                            // const preKfRight: number = preSibling.kfBg.getBoundingClientRect().right;//fixed
+                            const preKfDurationW: number = KfItem.BASIC_OFFSET_DURATION_W > this.durationWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.durationWidth;
+                            const posiXDiff: number = (currentKfLeft - preKfRight) / state.zoomLevel;
+                            const currentKfOffsetW: number = KfItem.BASIC_OFFSET_DURATION_W > this.offsetWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.offsetWidth;
+                            if (posiXDiff >= currentKfOffsetW + preKfDurationW) {//show both pre duration and current offset
+                                if (this.hasOffset) {
+                                    this.showOffset();
+                                } else {
+                                    if (typeof this.offsetIllus === 'undefined') {
+                                        this.drawOffset(KfItem.minOffset, this.kfHeight, 0, true);
+                                    }
+                                    this.container.appendChild(this.offsetIllus);
+                                }
+                                //show pre duration
+                                if (preSibling instanceof KfItem) {
+                                    preSibling.cancelKfDragoverKf();
+                                    this.cancelKfDragoverKf();
+                                    if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
+                                        preSibling.showDuration();
+                                    } else {
+                                        if (typeof preSibling.durationIllus === 'undefined') {
+                                            preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight, false);
+                                        }
+                                        preSibling.container.appendChild(preSibling.durationIllus);
+                                    }
+                                } else if (preSibling instanceof KfOmit) {
+                                    //show fake duration
+                                    hintPosiLine.showFakeDuration({ x: containerBBox.left, y: containerBBox.top }, containerBBox.height);
+                                }
+
+                                //target actions
+                                if (!this.hasOffset && preSibling.hasDuration) {
+                                    updateSpec = true;//add default offset between kfs
+                                    actionType = action.UPDATE_DELAY_BETWEEN_KF;
+                                    actionInfo.aniId = this.parentObj.aniId;
+                                    actionInfo.delay = 300;
+                                } else if (!preSibling.hasDuration && this.hasOffset) {
+                                    updateSpec = true;//change timing ref from with to after
+                                    actionType = action.UPDATE_KF_TIMING_REF;
+                                    actionInfo.aniId = this.parentObj.aniId;
+                                    actionInfo.ref = TimingSpec.timingRef.previousEnd;
+                                } else {
+                                    updateSpec = false;
+                                    actionInfo = {};
+                                }
+                            } else if (posiXDiff >= preKfDurationW && posiXDiff < currentKfOffsetW + preKfDurationW) {//show pre duration
+                                if (this.hasOffset) {
+                                    this.hideOffset();
+                                } else {
+                                    if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
+                                        this.container.removeChild(this.offsetIllus);
+                                    }
+                                }
+                                //show pre duration 
+                                if (preSibling instanceof KfItem) {
+                                    preSibling.cancelKfDragoverKf();
+                                    this.cancelKfDragoverKf();
+                                    if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
+                                        preSibling.showDuration();
+                                    } else {
+                                        if (typeof preSibling.durationIllus === 'undefined') {
+                                            preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight, false);
+                                        }
+                                        preSibling.container.appendChild(preSibling.durationIllus);
+                                    }
+                                } else if (preSibling instanceof KfOmit) {
+                                    //show fake duration
+                                    hintPosiLine.showFakeDuration({ x: containerBBox.left, y: containerBBox.top }, containerBBox.height);
+                                }
+
+                                //target actions
+                                if (this.hasOffset && preSibling.hasDuration) {
+                                    updateSpec = true;//remove offset between kfs
+                                    actionType = action.REMOVE_DELAY_BETWEEN_KF;
+                                    actionInfo.aniId = this.parentObj.aniId;
+                                } else if (this.hasOffset && !preSibling.hasDuration) {
+                                    updateSpec = true;//change timing ref from with to after and remove offset
+                                    actionType = action.UPDATE_TIMING_REF_DELAY_KF;
+                                    actionInfo.aniId = this.parentObj.aniId;
+                                    actionInfo.ref = TimingSpec.timingRef.previousEnd;
+                                    actionInfo.delay = 300;
+                                } else {
+                                    updateSpec = false;
+                                    actionInfo = {};
+                                }
+                            } else if (posiXDiff < preKfDurationW && posiXDiff >= 0) {//show current offset and hide pre duration
+                                if (this.hasOffset) {
+                                    this.showOffset();
+                                } else {
+                                    if (typeof this.offsetIllus === 'undefined') {
+                                        this.drawOffset(KfItem.minOffset, this.kfHeight, 0, true);
+                                    }
+                                    this.container.appendChild(this.offsetIllus);
+                                }
+                                //hide pre duration
+                                if (preSibling instanceof KfItem) {
+                                    preSibling.cancelKfDragoverKf();
+                                    this.cancelKfDragoverKf();
+                                    if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
+                                        preSibling.hideDuration();
+                                    } else {
+                                        if (typeof preSibling.durationIllus !== 'undefined' && preSibling.container.contains(preSibling.durationIllus)) {
+                                            preSibling.container.removeChild(preSibling.durationIllus);
+                                        }
+                                    }
+                                } else if (preSibling instanceof KfOmit) {
+                                    //hide fake duration
+                                    hintPosiLine.removeFakeDuration();
+                                }
+
+                                //target actions
+                                if (!this.hasOffset && preSibling.hasDuration) {
+                                    updateSpec = true;//change timing ref from after to with, and add default offset
+                                    actionType = action.UPDATE_TIMING_REF_DELAY_KF;
+                                    actionInfo.aniId = this.parentObj.aniId;
+                                    actionInfo.ref = TimingSpec.timingRef.previousStart;
+                                    actionInfo.delay = 300;
+                                } else if (this.hasOffset && preSibling.hasDuration) {
+                                    updateSpec = true; //change timing ref from after to with
+                                    actionType = action.UPDATE_KF_TIMING_REF;
+                                    actionInfo.aniId = this.parentObj.aniId;
+                                    actionInfo.ref = TimingSpec.timingRef.previousStart;
+                                } else {
+                                    updateSpec = false;
+                                    actionInfo = {};
+                                }
+                            } else {//hide pre duration, this offset and highlight them
+                                if (this.hasOffset) {
+                                    this.hideOffset();
+                                } else {
+                                    if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
+                                        this.container.removeChild(this.offsetIllus);
+                                    }
+                                }
+
+                                //hide pre duration
+                                if (preSibling instanceof KfItem) {
+                                    preSibling.kfDragoverKf();
+                                    this.kfDragoverKf();
+                                    if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
+                                        preSibling.hideDuration();
+                                    } else {
+                                        if (typeof preSibling.durationIllus !== 'undefined' && preSibling.container.contains(preSibling.durationIllus)) {
+                                            preSibling.container.removeChild(preSibling.durationIllus);
+                                        }
+                                    }
+                                } else if (preSibling instanceof KfOmit) {
+                                    //hide fake duration
+                                    this.kfDragoverKf();
+                                    hintPosiLine.removeFakeDuration();
+                                }
+
+                                //target actions
+                                updateSpec = true;//remove lowest level grouping
+                                actionType = action.REMOVE_LOWESTGROUP;
+                                actionInfo.aniId = this.parentObj.aniId;
+                            }
+                        }
+
+                        oriMousePosi = currentMousePosi;
+                    }
+                    document.onmouseup = () => {
+                        document.onmousemove = null;
+                        document.onmouseup = null;
+                        hintPosiLine.removeHintLine();
+                        hintPosiLine.removeFakeDuration();
+                        Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
+                        if (!updateSpec) {
+                            if (typeof preSibling !== 'undefined' && preSibling instanceof KfItem) {
+                                preSibling.showDuration();
+                            }
+                            this.container.setAttributeNS(null, 'transform', this.container.getAttributeNS(null, '_transform'));
+                            if (this.treeLevel === 1) {
+                                this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
+                            } else {
+                                this.parentObj.container.appendChild(this.container);
+                            }
+                        } else {
+                            State.tmpStateBusket.push({
+                                historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: JSON.stringify(state.spec.animations) },
+                                currentAction: { actionType: actionType, actionVal: actionInfo }
+                            })
+                            State.saveHistory();
+                            Reducer.triger(actionType, actionInfo);
+                            popKfContainer.removeChild(this.container);
+                        }
                     }
                 }
-            }
 
+            }
         }
 
 
