@@ -168,11 +168,6 @@ class NavBtn {
     }
 
     // btn listeners
-    public createNew() {
-        console.log('load new charts to create new porject');
-
-    }
-
     public openProject() {
         const floatingWindow: FloatingWindow = new FloatingWindow();
         floatingWindow.createFloatingWindow(FloatingWindow.TYPE_EXAMPLE);
@@ -180,8 +175,6 @@ class NavBtn {
     }
 
     public saveProject() {
-        console.log('save project');
-
         const outputObj = {
             spec: state.spec
         }
@@ -205,7 +198,6 @@ class NavBtn {
     }
 
     public exportLottie() {
-        console.log('export lottie');
         const file = new Blob([JSON.stringify(state.lottieSpec, null, 2)], { type: 'application/json' });
         const fileName = 'animatedChart.json';
         if (window.navigator.msSaveOrOpenBlob) // IE10+
@@ -225,7 +217,6 @@ class NavBtn {
     }
 
     public revert(): void {
-        console.log('step backward');
         Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID), content: Loading.LOADING })
         setTimeout(() => {
             State.revertHistory();
@@ -234,7 +225,6 @@ class NavBtn {
     }
 
     public redo(): void {
-        console.log('step forward');
         Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID), content: Loading.LOADING })
         setTimeout(() => {
             State.redoHistory();

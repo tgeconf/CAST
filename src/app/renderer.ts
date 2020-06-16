@@ -14,16 +14,13 @@ import { Player, player } from '../components/player'
 
 
 /** for test!!!!!!!!!!!!!!!!!!!!!!!!! */
-import testSpec from '../assets/tmp/testSpec.json'
 import KfItem from '../components/widgets/kfItem'
 import KfTrack from '../components/widgets/kfTrack'
 import KfGroup from '../components/widgets/kfGroup'
 import { KfContainer, kfContainer } from '../components/kfContainer'
 import KfOmit from '../components/widgets/kfOmit'
 import PlusBtn from '../components/widgets/plusBtn'
-import Suggest from './core/suggest'
-import Tool from '../util/tool'
-import { suggestBox, SuggestBox } from '../components/widgets/suggestBox'
+import { suggestBox } from '../components/widgets/suggestBox'
 import { Loading } from '../components/widgets/loading'
 // import { loadingBlock } from '../components/widgets/loading'
 /** end for test!!!!!!!!!!!!!!!!!!!!!!!!! */
@@ -121,7 +118,6 @@ export default class Renderer {
     }
 
     public static renderVideo(lottieSpec: any): void {
-        console.log('rendering video!');
         document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID).innerHTML = '';
 
         Reducer.triger(action.UPDATE_LOTTIE, Lottie.loadAnimation({

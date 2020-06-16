@@ -3,19 +3,14 @@ import { IDataItem, ISortDataAttr, IKeyframeGroup, IKfGroupSize, IPath, IKeyfram
 import * as action from './action'
 import Util from './core/util'
 import { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie'
-import KfTimingIllus from '../components/widgets/kfTimingIllus'
 import KfItem from '../components/widgets/kfItem'
-import Canis, { Animation, TimingSpec } from 'canis_toolkit'
+import { Animation, TimingSpec } from 'canis_toolkit'
 import KfGroup from '../components/widgets/kfGroup'
-import CanisGenerator, { IChartSpec, ICanisSpec, IAnimationSpec, canis, IGrouping } from './core/canisGenerator'
+import CanisGenerator, { IChartSpec, ICanisSpec, IAnimationSpec } from './core/canisGenerator'
 import PlusBtn from '../components/widgets/plusBtn'
-import Suggest from './core/suggest'
-import Tool from '../util/tool'
-import KfOmit from '../components/widgets/kfOmit'
 import Renderer from './renderer'
-import { kfContainer, KfContainer } from '../components/kfContainer'
+import { KfContainer } from '../components/kfContainer'
 import { suggestBox } from '../components/widgets/suggestBox'
-import { ViewContent } from '../components/viewWindow'
 
 export default class Reducer {
     static list: any = {};

@@ -254,13 +254,8 @@ export class ViewToolBtn {
         }
     }
 
-    public zoomIn(): void {
-        console.log('zoom in!');
-    }
-
-    public zoomOut(): void {
-        console.log('zoom in!');
-    }
+    public zoomIn(): void { }
+    public zoomOut(): void { }
 }
 
 export class ViewContent {
