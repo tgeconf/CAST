@@ -621,6 +621,7 @@ export default class Suggest {
 
             } else {
                 let attrWithDiffValues: string[] = this.findAttrWithDiffValue(firstKfDataMarks, lastKfDataMarks, true);
+                console.log('attrWithDiffValues', attrWithDiffValues);
                 const [sameAttrs, diffAttrs] = this.findSameDiffAttrs(firstKfDataMarks, true);
                 let flag: boolean = false;
                 if (attrWithDiffValues.length === 0) {
@@ -646,7 +647,7 @@ export default class Suggest {
 
                 //sortedAttrs: key: channel, value: attr array
                 const sortedAttrs: Map<string, string[]> = flag ? this.assignChannelName(attrWithDiffValues) : this.sortAttrs(attrWithDiffValues);
-
+                console.log('sorted attrs: ', sortedAttrs);
                 const oneMarkInFirstKf: boolean = firstKfDataMarks.length === 1;
                 let allPossibleKfs = this.generateRepeatKfs(sortedAttrs, valueIdx, firstKfDataMarks, lastKfDataMarks, oneMarkInFirstKf);
                 let repeatKfRecord: any[] = [];
@@ -760,7 +761,7 @@ export default class Suggest {
                 }
 
 
-                // console.log('all paths: ', this.allPaths);
+                console.log('all paths: ', this.allPaths);
             }
         } else if (sepFirstKfMarks.dataMarks.length === 0 && sepFirstKfMarks.nonDataMarks.length > 0) {
             //suggest based on non data attrs
