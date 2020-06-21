@@ -52,33 +52,35 @@ export default class IntelliRefLine {
             const alignKf2: IKeyframe = KfItem.allKfInfo.get(IntelliRefLine.kfLineMapping.get(kfId).theOtherEnd);
             let alignWithKfBBox: DOMRect, alignWithKfInfo: IKeyframe, alignToKfBBox: DOMRect, alignToKfInfo: IKeyframe;
             let alignWithKf: KfItem, alignToKf: KfItem;
-            if (typeof alignKf1.alignTo === 'undefined') {
-                alignWithKf = KfItem.allKfItems.get(alignKf1.id);
-                alignToKf = KfItem.allKfItems.get(alignKf2.id);
-                alignWithKfInfo = alignKf1;
-                alignToKfInfo = alignKf2;
-            } else {
-                alignWithKf = KfItem.allKfItems.get(alignKf2.id);
-                alignToKf = KfItem.allKfItems.get(alignKf1.id);
-                alignWithKfInfo = alignKf2;
-                alignToKfInfo = alignKf1;
-            }
-            if (alignWithKf.rendered && alignToKf.rendered) {
-                alignWithKfBBox = alignWithKf.container.getBoundingClientRect();//fixed
-                alignToKfBBox = alignToKf.container.getBoundingClientRect();//fixed
-                const [minX, maxX]: [number, number] = alignToKf.calAlignRange();
-                if (alignToKfInfo.timingRef === TimingSpec.timingRef.previousEnd) {
-                    lineItem.line.setAttributeNS(null, 'x1', `${(maxX - containerBBox.left) / state.zoomLevel}`);
-                    lineItem.line.setAttributeNS(null, 'x2', `${(maxX - containerBBox.left) / state.zoomLevel}`);
+            if (typeof alignKf1 !== 'undefined' && typeof alignKf2 !== 'undefined') {
+                if (typeof alignKf1.alignTo === 'undefined') {
+                    alignWithKf = KfItem.allKfItems.get(alignKf1.id);
+                    alignToKf = KfItem.allKfItems.get(alignKf2.id);
+                    alignWithKfInfo = alignKf1;
+                    alignToKfInfo = alignKf2;
                 } else {
-                    lineItem.line.setAttributeNS(null, 'x1', `${(minX - containerBBox.left) / state.zoomLevel}`);
-                    lineItem.line.setAttributeNS(null, 'x2', `${(minX - containerBBox.left) / state.zoomLevel}`);
+                    alignWithKf = KfItem.allKfItems.get(alignKf2.id);
+                    alignToKf = KfItem.allKfItems.get(alignKf1.id);
+                    alignWithKfInfo = alignKf2;
+                    alignToKfInfo = alignKf1;
                 }
+                if (alignWithKf.rendered && alignToKf.rendered) {
+                    alignWithKfBBox = alignWithKf.container.getBoundingClientRect();//fixed
+                    alignToKfBBox = alignToKf.container.getBoundingClientRect();//fixed
+                    const [minX, maxX]: [number, number] = alignToKf.calAlignRange();
+                    if (alignToKfInfo.timingRef === TimingSpec.timingRef.previousEnd) {
+                        lineItem.line.setAttributeNS(null, 'x1', `${(maxX - containerBBox.left) / state.zoomLevel}`);
+                        lineItem.line.setAttributeNS(null, 'x2', `${(maxX - containerBBox.left) / state.zoomLevel}`);
+                    } else {
+                        lineItem.line.setAttributeNS(null, 'x1', `${(minX - containerBBox.left) / state.zoomLevel}`);
+                        lineItem.line.setAttributeNS(null, 'x2', `${(minX - containerBBox.left) / state.zoomLevel}`);
+                    }
 
-                // lineItem.line.setAttributeNS(null, 'y1', `${24}`);
-                lineItem.line.setAttributeNS(null, 'y1', `${(alignWithKfBBox.top - containerBBox.top) / state.zoomLevel}`);
-                lineItem.line.setAttributeNS(null, 'y2', `${(alignToKfBBox.bottom - containerBBox.top) / state.zoomLevel}`);
-                lineItem.line.setAttributeNS(null, 'transform', '');
+                    // lineItem.line.setAttributeNS(null, 'y1', `${24}`);
+                    lineItem.line.setAttributeNS(null, 'y1', `${(alignWithKfBBox.top - containerBBox.top) / state.zoomLevel}`);
+                    lineItem.line.setAttributeNS(null, 'y2', `${(alignToKfBBox.bottom - containerBBox.top) / state.zoomLevel}`);
+                    lineItem.line.setAttributeNS(null, 'transform', '');
+                }
             }
         }
     }

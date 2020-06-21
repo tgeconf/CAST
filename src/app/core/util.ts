@@ -16,7 +16,7 @@ export default class Util {
     static NUMERIC_CATEGORICAL_ATTR: string[] = ['Year', 'year', 'YEAR', 'Month', 'month', 'MONTH', 'Day', 'day', 'DAY', 'date', 'Date', 'DATE'];
     static EFFECTIVENESS_RANKING: string[] = ['position', 'color', 'shape'];
     static EXCLUDED_DATA_ATTR: string[] = ['_TYPE', 'text', '_x', '_y', '_id', '_MARKID'];
-    static TIME_ATTR_VALUE: string[] = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+    static TIME_ATTR_VALUE: string[] = ['mon', 'monday', 'tue', 'tuesday', 'wed', 'wednesday', 'thr', 'thursday', 'fri', 'friday', 'sat', 'saturday', 'sun', 'sunday', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 
     static filteredDataTable: Map<string, IDataItem> = new Map();//markId, dataItem
     static numericAttrOrder: Map<string, string[]> = new Map();//attr name, mark id array
@@ -410,11 +410,15 @@ export default class Util {
     public static sortAttrValues(values: Map<string, Array<string | number>>) {
         values.forEach((v: Array<string | number>, aName: string) => {
             v = [...new Set(v)];
+            console.log('goig to judge: ', v);
             if (this.judgeTimeAttr(v)) {
                 this.timeAttrs.push(aName);
             }
             v.sort((a, b) => {
-                if (b > a) {
+                let aComp: string | number = isNaN(parseFloat(`${a}`)) ? a : parseFloat(`${a}`);
+                let bComp: string | number = isNaN(parseFloat(`${b}`)) ? b : parseFloat(`${b}`);
+
+                if (bComp > aComp) {
                     return -1;
                 } else {
                     return 1;
@@ -679,7 +683,10 @@ export default class Util {
         let drawDelay: boolean = (aniLeaf.delay > 0 && leafIdx > 0);
         let drawDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousEnd || parentObj.marks.length === aniLeaf.marks.length;
         if (typeof aniLeaf.alignTo !== 'undefined') {
-            drawDuration = KfItem.allKfInfo.get(aniLeaf.alignTo).durationIcon;
+            if (typeof KfItem.allKfInfo.get(aniLeaf.alignTo) !== 'undefined') {
+                console.log('testing: ', KfItem.allKfInfo, aniLeaf.alignTo);
+                drawDuration = KfItem.allKfInfo.get(aniLeaf.alignTo).durationIcon;
+            }
         }
         // console.log('animations:', Animation.animations, aniId);
         if (Animation.animations.get(aniId).actions.length > 0) {
@@ -849,6 +856,27 @@ export default class Util {
             case 'dec':
             case 'december':
                 return 12;
+            case 'mon':
+            case 'monday':
+                return 1;
+            case 'tue':
+            case 'tuesday':
+                return 2;
+            case 'wed':
+            case 'wednesday':
+                return 3;
+            case 'thr':
+            case 'thursday':
+                return 4;
+            case 'fri':
+            case 'friday':
+                return 5;
+            case 'sat':
+            case 'saturday':
+                return 6;
+            case 'sun':
+            case 'sunday':
+                return 7;
         }
     }
 

@@ -235,6 +235,7 @@ export default class Suggest {
             let sectionIdRecord: (string | number)[][] = [];
             let timeSecIdx: number[] = [];
             let tmpValueIdx: Map<number, number> = new Map();
+            console.log('value index: ', valueIdx);
             attrComb.forEach((aName: string, idx: number) => {
                 tmpValueIdx.set(idx, valueIdx.get(aName));
                 if (Util.timeAttrs.includes(aName)) {
@@ -383,6 +384,7 @@ export default class Suggest {
                         return 0;
                     }
                 }
+                console.log('comparing ', aComp, bComp);
 
                 if (bComp > aComp) {
                     switch (tmpValueIdx.get(diffValueIdx)) {
@@ -631,7 +633,7 @@ export default class Suggest {
                 }
                 //remove empty cell problem
                 attrWithDiffValues = this.removeEmptyCell(firstKfMarks, attrWithDiffValues, sameAttrs, diffAttrs, true);
-
+                console.log('after remove empty: ', attrWithDiffValues);
                 let valueIdx: Map<string, number> = new Map();//key: attr name, value: index of the value in all values
                 attrWithDiffValues.forEach((aName: string) => {
                     const targetValue: string | number = Util.filteredDataTable.get(firstKfDataMarks[0])[aName];

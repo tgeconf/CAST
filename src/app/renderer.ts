@@ -373,10 +373,12 @@ export default class Renderer {
                     let targetSize: { w: number, h: number } = { w: 0, h: 0 }
                     if (isAlignWith === 2) {
                         const tmpAlignToKf: KfItem = KfItem.allKfItems.get(k.alignTo);
-                        if (tmpAlignToKf.rendered) {
-                            const alignedKf: DOMRect = tmpAlignToKf.kfBg.getBoundingClientRect();//fixed
-                            targetSize.w = alignedKf.width / state.zoomLevel;
-                            targetSize.h = alignedKf.height / state.zoomLevel;
+                        if (typeof tmpAlignToKf !== 'undefined') {
+                            if (tmpAlignToKf.rendered) {
+                                const alignedKf: DOMRect = tmpAlignToKf.kfBg.getBoundingClientRect();//fixed
+                                targetSize.w = alignedKf.width / state.zoomLevel;
+                                targetSize.h = alignedKf.height / state.zoomLevel;
+                            }
                         }
                         kfItem.createItem(k, treeLevel, kfGroup, kfPosiX, targetSize);
                     } else {

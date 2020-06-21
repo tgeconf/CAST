@@ -342,106 +342,110 @@ export default class KfItem extends KfTimingIllus {
         const currentKfInfo: IKeyframe = KfItem.allKfInfo.get(this.id);
         const alignedKfInfo: IKeyframe = KfItem.allKfInfo.get(alignTo);
         const alignedKfItem: KfItem = KfItem.allKfItems.get(alignTo);
-        if (alignedKfItem.rendered) {
-            let alignedKfBgX: number = 0;
-            if (currentKfInfo.timingRef === TimingSpec.timingRef.previousStart) {
-                alignedKfBgX = alignedKfItem.kfBg.getBoundingClientRect().left;//fixed
-            } else {
-                alignedKfBgX = alignedKfItem.container.getBoundingClientRect().right;//fixed
-                KfItem.allKfInfo.get(alignedKfItem.id).alignWithKfs.forEach((kfId: number) => {
-                    if (kfId !== this.id) {
-                        const tmpKf: KfItem = KfItem.allKfItems.get(kfId);
-                        if (typeof tmpKf !== 'undefined' && tmpKf.rendered) {
-                            const tmpKfBBox: DOMRect = tmpKf.container.getBoundingClientRect();//fixed
-                            if (tmpKfBBox.right > alignedKfBgX) {
-                                alignedKfBgX = tmpKfBBox.right;
+        if (typeof alignedKfItem !== 'undefined') {
+
+            if (alignedKfItem.rendered) {
+                let alignedKfBgX: number = 0;
+                if (currentKfInfo.timingRef === TimingSpec.timingRef.previousStart) {
+                    alignedKfBgX = alignedKfItem.kfBg.getBoundingClientRect().left;//fixed
+                } else {
+                    alignedKfBgX = alignedKfItem.container.getBoundingClientRect().right;//fixed
+                    KfItem.allKfInfo.get(alignedKfItem.id).alignWithKfs.forEach((kfId: number) => {
+                        if (kfId !== this.id) {
+                            const tmpKf: KfItem = KfItem.allKfItems.get(kfId);
+                            if (typeof tmpKf !== 'undefined' && tmpKf.rendered) {
+                                const tmpKfBBox: DOMRect = tmpKf.container.getBoundingClientRect();//fixed
+                                if (tmpKfBBox.right > alignedKfBgX) {
+                                    alignedKfBgX = tmpKfBBox.right;
+                                }
                             }
                         }
+                    })
+                }
+                const bgDiffX: number = Math.abs((currentPosiX - alignedKfBgX) / state.zoomLevel);
+                if (currentPosiX > alignedKfBgX) { //translate aligned kf and its group
+                    // if (currentPosiX > alignedKfBgX && (currentPosiX - alignedKfBgX >= 1)) { //translate aligned kf and its group
+                    let posiXForNextKf: number = this.container.getBoundingClientRect().right;//fixed
+
+                    //update aligned kfs, together with those kfs after it, and those in its parent group
+                    const currentAlignedKfTransX: number = Tool.extractTransNums(alignedKfItem.container.getAttributeNS(null, 'transform')).x;
+                    alignedKfItem.translateContainer(currentAlignedKfTransX + bgDiffX, KfItem.PADDING);
+                    const alignedKfItemBBox: DOMRect = alignedKfItem.container.getBoundingClientRect();//fixed
+                    if (alignedKfItemBBox.right > posiXForNextKf) {
+                        posiXForNextKf = alignedKfItemBBox.right;
                     }
-                })
+
+                    //find the next kf in aligned group
+                    let flag: boolean = false;
+                    let transXForNextKf: number = 0;
+                    let nextKf: KfItem;
+                    for (let i: number = 0, len: number = alignedKfItem.parentObj.children.length; i < len; i++) {
+                        const c: KfItem | KfOmit = <KfItem | KfOmit>alignedKfItem.parentObj.children[i];
+                        if (flag) {
+                            if (c instanceof KfOmit) {
+                                transXForNextKf = bgDiffX;
+                                const tmpTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
+                                c.translateContainer(tmpTrans.x + transXForNextKf, tmpTrans.y);
+                            } else {
+                                const tmpBBox: DOMRect = c.container.getBoundingClientRect();//fixed
+                                if (tmpBBox.left + transXForNextKf * state.zoomLevel < posiXForNextKf) {
+                                    transXForNextKf = (posiXForNextKf - tmpBBox.left) / state.zoomLevel;
+                                }
+                                nextKf = c;
+                                break;
+                            }
+                        }
+                        if (c instanceof KfItem) {
+                            flag = c.id === alignedKfItem.id
+                        }
+                    }
+
+                    //update position of next kf in aligned group
+                    if (transXForNextKf > 0) {
+                        nextKf.parentObj.translateGroup(nextKf, transXForNextKf, true, true, true);
+                    }
+                } else if (currentPosiX <= alignedKfBgX) {//translate current kf
+                    const currentTransX: number = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform')).x;
+                    this.translateContainer(currentTransX + bgDiffX, KfItem.PADDING);
+                    this.transOmitsWithItem();
+                    this.totalWidth += bgDiffX;
+
+                    //find the next kf in aligned group
+                    let reachTarget: boolean = false;
+                    let transXForNextKf: number = 0;
+                    let nextKf: KfItem;
+                    let passedOmit: KfOmit;
+                    for (let i: number = 0, len: number = alignedKfItem.parentObj.children.length; i < len; i++) {
+                        const c: KfItem | KfOmit = <KfItem | KfOmit>alignedKfItem.parentObj.children[i];
+                        if (reachTarget) {
+                            if (c instanceof KfOmit) {
+                                // transXForNextKf += KfOmit.OMIT_W + KfGroup.PADDING;
+                                passedOmit = c;
+                            } else {
+                                const currentBBox: DOMRect = this.container.getBoundingClientRect();//fixed
+                                const tmpBBox: DOMRect = c.container.getBoundingClientRect();//fixed
+                                if (tmpBBox.left < currentBBox.right) {
+                                    transXForNextKf = (currentBBox.right - tmpBBox.left) / state.zoomLevel;
+                                }
+                                nextKf = c;
+                                break;
+                            }
+                        }
+                        if (c instanceof KfItem) {
+                            reachTarget = c.id === alignedKfItem.id
+                        }
+                    }
+
+                    //update position of next kf in aligned group
+                    if (transXForNextKf > 0) {
+                        alignedKfItem.parentObj.translateGroup(nextKf, transXForNextKf, true, true, true);
+                    }
+                }
+                //update the refline
+                IntelliRefLine.updateLine(alignTo);
             }
-            const bgDiffX: number = Math.abs((currentPosiX - alignedKfBgX) / state.zoomLevel);
-            if (currentPosiX > alignedKfBgX) { //translate aligned kf and its group
-                // if (currentPosiX > alignedKfBgX && (currentPosiX - alignedKfBgX >= 1)) { //translate aligned kf and its group
-                let posiXForNextKf: number = this.container.getBoundingClientRect().right;//fixed
-
-                //update aligned kfs, together with those kfs after it, and those in its parent group
-                const currentAlignedKfTransX: number = Tool.extractTransNums(alignedKfItem.container.getAttributeNS(null, 'transform')).x;
-                alignedKfItem.translateContainer(currentAlignedKfTransX + bgDiffX, KfItem.PADDING);
-                const alignedKfItemBBox: DOMRect = alignedKfItem.container.getBoundingClientRect();//fixed
-                if (alignedKfItemBBox.right > posiXForNextKf) {
-                    posiXForNextKf = alignedKfItemBBox.right;
-                }
-
-                //find the next kf in aligned group
-                let flag: boolean = false;
-                let transXForNextKf: number = 0;
-                let nextKf: KfItem;
-                for (let i: number = 0, len: number = alignedKfItem.parentObj.children.length; i < len; i++) {
-                    const c: KfItem | KfOmit = <KfItem | KfOmit>alignedKfItem.parentObj.children[i];
-                    if (flag) {
-                        if (c instanceof KfOmit) {
-                            transXForNextKf = bgDiffX;
-                            const tmpTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
-                            c.translateContainer(tmpTrans.x + transXForNextKf, tmpTrans.y);
-                        } else {
-                            const tmpBBox: DOMRect = c.container.getBoundingClientRect();//fixed
-                            if (tmpBBox.left + transXForNextKf * state.zoomLevel < posiXForNextKf) {
-                                transXForNextKf = (posiXForNextKf - tmpBBox.left) / state.zoomLevel;
-                            }
-                            nextKf = c;
-                            break;
-                        }
-                    }
-                    if (c instanceof KfItem) {
-                        flag = c.id === alignedKfItem.id
-                    }
-                }
-
-                //update position of next kf in aligned group
-                if (transXForNextKf > 0) {
-                    nextKf.parentObj.translateGroup(nextKf, transXForNextKf, true, true, true);
-                }
-            } else if (currentPosiX <= alignedKfBgX) {//translate current kf
-                const currentTransX: number = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform')).x;
-                this.translateContainer(currentTransX + bgDiffX, KfItem.PADDING);
-                this.transOmitsWithItem();
-                this.totalWidth += bgDiffX;
-
-                //find the next kf in aligned group
-                let reachTarget: boolean = false;
-                let transXForNextKf: number = 0;
-                let nextKf: KfItem;
-                let passedOmit: KfOmit;
-                for (let i: number = 0, len: number = alignedKfItem.parentObj.children.length; i < len; i++) {
-                    const c: KfItem | KfOmit = <KfItem | KfOmit>alignedKfItem.parentObj.children[i];
-                    if (reachTarget) {
-                        if (c instanceof KfOmit) {
-                            // transXForNextKf += KfOmit.OMIT_W + KfGroup.PADDING;
-                            passedOmit = c;
-                        } else {
-                            const currentBBox: DOMRect = this.container.getBoundingClientRect();//fixed
-                            const tmpBBox: DOMRect = c.container.getBoundingClientRect();//fixed
-                            if (tmpBBox.left < currentBBox.right) {
-                                transXForNextKf = (currentBBox.right - tmpBBox.left) / state.zoomLevel;
-                            }
-                            nextKf = c;
-                            break;
-                        }
-                    }
-                    if (c instanceof KfItem) {
-                        reachTarget = c.id === alignedKfItem.id
-                    }
-                }
-
-                //update position of next kf in aligned group
-                if (transXForNextKf > 0) {
-                    alignedKfItem.parentObj.translateGroup(nextKf, transXForNextKf, true, true, true);
-                }
-            }
-            //update the refline
-            IntelliRefLine.updateLine(alignTo);
         }
+
     }
 
     /**

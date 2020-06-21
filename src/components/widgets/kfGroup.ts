@@ -409,6 +409,7 @@ export default class KfGroup extends KfTimingIllus {
             }
 
             document.onmouseup = () => {
+                console.log('mouse up: ', updateSpec, actionType, actionInfo);
                 document.onmousemove = null;
                 document.onmouseup = null;
                 Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
@@ -973,15 +974,17 @@ export default class KfGroup extends KfTimingIllus {
                 let kfsAlignToCurrentKf: KfItem[] = [];
                 if (c instanceof KfItem) {
                     countingBBox = c.renderWhenZooming;
-                    if (typeof KfItem.allKfInfo.get(c.id).alignWithKfs !== 'undefined' && idx === this.children.length - 1) {
-                        KfItem.allKfInfo.get(c.id).alignWithKfs.forEach((kfId: number) => {
-                            const kfAligned: KfItem = KfItem.allKfItems.get(kfId);
-                            if (typeof kfId !== 'undefined' && typeof kfAligned !== 'undefined') {
-                                if (kfAligned.parentObj.alignMerge) {
-                                    kfsAlignToCurrentKf.push(kfAligned);
+                    if (typeof KfItem.allKfInfo.get(c.id) !== 'undefined') {
+                        if (typeof KfItem.allKfInfo.get(c.id).alignWithKfs !== 'undefined' && idx === this.children.length - 1) {
+                            KfItem.allKfInfo.get(c.id).alignWithKfs.forEach((kfId: number) => {
+                                const kfAligned: KfItem = KfItem.allKfItems.get(kfId);
+                                if (typeof kfId !== 'undefined' && typeof kfAligned !== 'undefined') {
+                                    if (kfAligned.parentObj.alignMerge) {
+                                        kfsAlignToCurrentKf.push(kfAligned);
+                                    }
                                 }
-                            }
-                        })
+                            })
+                        }
                     }
                 }
                 if (countingBBox) {

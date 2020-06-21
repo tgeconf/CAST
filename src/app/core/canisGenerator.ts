@@ -103,23 +103,25 @@ export default class CanisGenerator {
                 const tmpAni: IAnimationSpec = spec.animations[j];
                 if (typeof tmpAni.id !== 'undefined') {
                     let removedAni: IAnimationSpec[] = [];
-                    let emptyAlignTo: boolean = true;
-                    let noAlign: boolean = true;
+                    // let emptyAlignTo: boolean = true;
+                    // let noAlign: boolean = true;
                     for (let z = 0, len2 = len; z < len2; z++) {
                         const tmpAni2: IAnimationSpec = spec.animations[z];
+
                         if (typeof tmpAni2.align !== 'undefined') {
-                            noAlign = false;
+                            // noAlign = false;
                             if (tmpAni2.align.target === tmpAni.id) {
-                                emptyAlignTo = false;
+                                // emptyAlignTo = false;
                                 removedAni.push(spec.animations.splice(z, 1)[0]);
                                 z--;
                                 len2--;
                             }
                         }
                     }
-                    if (emptyAlignTo && !noAlign) {
-                        return false;
-                    }
+                    // if (emptyAlignTo && !noAlign) {
+                    //     console.warn('no aligned aniunit');
+                    //     return false;
+                    // }
                     //put the start with ahead of start after
                     removedAni.sort((a: IAnimationSpec, b: IAnimationSpec) => {
                         if (a.reference === TimingSpec.timingRef.previousEnd && b.reference === TimingSpec.timingRef.previousStart) {
@@ -131,6 +133,23 @@ export default class CanisGenerator {
                     })
                     const insertIdx: number = spec.animations.indexOf(tmpAni);
                     spec.animations.splice(insertIdx + 1, 0, ...removedAni);
+                }
+            }
+
+            for (let j = 0, len = spec.animations.length; j < len; j++) {
+                const tmpAni: IAnimationSpec = spec.animations[j];
+                if (typeof tmpAni.align !== 'undefined') {
+                    let emptyAlignTo: boolean = true;
+                    for (let z = 0, len2 = len; z < len2; z++) {
+                        const tmpAni2: IAnimationSpec = spec.animations[z];
+                        if (tmpAni.align.target === tmpAni2.id) {
+                            emptyAlignTo = false;
+                        }
+                    }
+                    if (emptyAlignTo) {
+                        console.warn('no aligned aniunit');
+                        return false;
+                    }
                 }
             }
         }
