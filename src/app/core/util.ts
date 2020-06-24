@@ -410,7 +410,6 @@ export default class Util {
     public static sortAttrValues(values: Map<string, Array<string | number>>) {
         values.forEach((v: Array<string | number>, aName: string) => {
             v = [...new Set(v)];
-            console.log('goig to judge: ', v);
             if (this.judgeTimeAttr(v)) {
                 this.timeAttrs.push(aName);
             }
@@ -584,6 +583,13 @@ export default class Util {
             }
             kfGroupRoot.alignType = aniunitNode.align.type;
             kfGroupRoot.alignTarget = aniunitNode.align.target;
+            // console.log('testing !!!', KfGroup.allAniGroups);
+            // KfGroup.allAniGroups.forEach((tmpAniGroup: KfGroup) => {
+            //     if (tmpAniGroup.alignId === kfGroupRoot.alignTarget) {
+            //         console.log('testing !', tmpAniGroup, kfGroupRoot);
+            //     }
+            // })
+
             kfGroupRoot.merge = aniunitNode.align.merge;
         }
         if (typeof aniunitNode.refValue !== 'undefined') {
@@ -684,7 +690,6 @@ export default class Util {
         let drawDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousEnd || parentObj.marks.length === aniLeaf.marks.length;
         if (typeof aniLeaf.alignTo !== 'undefined') {
             if (typeof KfItem.allKfInfo.get(aniLeaf.alignTo) !== 'undefined') {
-                console.log('testing: ', KfItem.allKfInfo, aniLeaf.alignTo);
                 drawDuration = KfItem.allKfInfo.get(aniLeaf.alignTo).durationIcon;
             }
         }

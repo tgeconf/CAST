@@ -235,7 +235,6 @@ export default class Suggest {
             let sectionIdRecord: (string | number)[][] = [];
             let timeSecIdx: number[] = [];
             let tmpValueIdx: Map<number, number> = new Map();
-            console.log('value index: ', valueIdx);
             attrComb.forEach((aName: string, idx: number) => {
                 tmpValueIdx.set(idx, valueIdx.get(aName));
                 if (Util.timeAttrs.includes(aName)) {
@@ -384,7 +383,6 @@ export default class Suggest {
                         return 0;
                     }
                 }
-                console.log('comparing ', aComp, bComp);
 
                 if (bComp > aComp) {
                     switch (tmpValueIdx.get(diffValueIdx)) {
@@ -466,6 +464,14 @@ export default class Suggest {
                         }
                     }
                 })
+                if (valExceptShape.length !== 0) {//add new section
+                    valExceptShape.splice(mShapeIdx, 0, mergeSecId);
+                    const tmpSecId: string = [...new Set(valExceptShape)].join(',');
+                    if (typeof sections.get(tmpSecId) !== 'undefined') {
+                        sectionMarksToMerge = [...new Set([...sectionMarksToMerge, ...sections.get(tmpSecId)])];
+                    }
+                    sections.set(tmpSecId, sectionMarksToMerge);
+                }
 
                 mergeIdxs.reverse().forEach((secIdxAndId: [number, (string | number)[]]) => {
                     sectionIdRecord.splice(secIdxAndId[0], mShapes.size, secIdxAndId[1]);
@@ -623,7 +629,6 @@ export default class Suggest {
 
             } else {
                 let attrWithDiffValues: string[] = this.findAttrWithDiffValue(firstKfDataMarks, lastKfDataMarks, true);
-                console.log('attrWithDiffValues', attrWithDiffValues);
                 const [sameAttrs, diffAttrs] = this.findSameDiffAttrs(firstKfDataMarks, true);
                 let flag: boolean = false;
                 if (attrWithDiffValues.length === 0) {
@@ -633,7 +638,6 @@ export default class Suggest {
                 }
                 //remove empty cell problem
                 attrWithDiffValues = this.removeEmptyCell(firstKfMarks, attrWithDiffValues, sameAttrs, diffAttrs, true);
-                console.log('after remove empty: ', attrWithDiffValues);
                 let valueIdx: Map<string, number> = new Map();//key: attr name, value: index of the value in all values
                 attrWithDiffValues.forEach((aName: string) => {
                     const targetValue: string | number = Util.filteredDataTable.get(firstKfDataMarks[0])[aName];
@@ -649,7 +653,6 @@ export default class Suggest {
 
                 //sortedAttrs: key: channel, value: attr array
                 const sortedAttrs: Map<string, string[]> = flag ? this.assignChannelName(attrWithDiffValues) : this.sortAttrs(attrWithDiffValues);
-                console.log('sorted attrs: ', sortedAttrs);
                 const oneMarkInFirstKf: boolean = firstKfDataMarks.length === 1;
                 let allPossibleKfs = this.generateRepeatKfs(sortedAttrs, valueIdx, firstKfDataMarks, lastKfDataMarks, oneMarkInFirstKf);
                 let repeatKfRecord: any[] = [];
@@ -761,7 +764,6 @@ export default class Suggest {
                         })
                     })
                 }
-
 
                 console.log('all paths: ', this.allPaths);
             }

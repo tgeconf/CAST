@@ -28,7 +28,7 @@ export default class Renderer {
      * @param spec 
      */
     public static async renderSpec(spec: ICanisSpec, callback: any = () => { }) {
-        console.log('going to render spec: ', JSON.stringify(spec.animations));
+        console.log('going to render spec: ', spec.animations);
         const lottieSpec = await canis.renderSpec(spec, () => {
             if (spec.animations[0].selector === '.mark') {//special triger, can not triger action
                 state.spec.animations[0].selector = `#${Animation.allMarks.join(', #')}`;
@@ -174,6 +174,18 @@ export default class Renderer {
             rootGroup.updateGroupPosiAndSize([...KfTrack.aniTrackMapping.get(rootGroup.aniId)][0].availableInsert, 0, false, true);
             KfGroup.allAniGroups.set(rootGroup.aniId, rootGroup);
         }
+
+        //update align id
+        // KfGroup.allAniGroups.forEach((tmpAniGroup: KfGroup, tmpAniId: string) => {
+        //     if (typeof tmpAniGroup.alignTarget !== 'undefined') {
+        //         KfGroup.allAniGroups.forEach((tmpAniGroup2: KfGroup, tmpAniId2: string) => {
+        //             if (tmpAniGroup2.alignId === tmpAniGroup.alignTarget) {
+        //                 KfGroup.allAniGroups.get(tmpAniId2).alignId = tmpAniGroup2.aniId;
+        //                 KfGroup.allAniGroups.get(tmpAniId).alignTarget = tmpAniGroup2.aniId;
+        //             }
+        //         })
+        //     }
+        // })
 
         const rootGroupBBox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();
         Reducer.triger(action.UPDATE_KEYFRAME_CONTAINER_SLIDER, { width: rootGroupBBox.width, height: rootGroupBBox.height });

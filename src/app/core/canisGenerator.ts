@@ -140,7 +140,7 @@ export default class CanisGenerator {
                 const tmpAni: IAnimationSpec = spec.animations[j];
                 if (typeof tmpAni.align !== 'undefined') {
                     let emptyAlignTo: boolean = true;
-                    for (let z = 0, len2 = len; z < len2; z++) {
+                    for (let z = 0; z < len; z++) {
                         const tmpAni2: IAnimationSpec = spec.animations[z];
                         if (tmpAni.align.target === tmpAni2.id) {
                             emptyAlignTo = false;
@@ -150,6 +150,24 @@ export default class CanisGenerator {
                         console.warn('no aligned aniunit');
                         return false;
                     }
+                }
+            }
+
+            //check aniId
+            for (let j = 0, len = spec.animations.length; j < len; j++) {
+                const tmpAni: IAnimationSpec = spec.animations[j];
+                const checkAniId: string = `${tmpAni.chartIdx}_${tmpAni.selector}`;
+                const flag: boolean = tmpAni.id === checkAniId;
+                if (!flag) {
+                    for (let z = 0; z < len; z++) {
+                        const tmpAni2: IAnimationSpec = spec.animations[z];
+                        if (typeof tmpAni2.align !== 'undefined') {
+                            if (tmpAni2.align.target === tmpAni.id) {
+                                spec.animations[z].align.target = checkAniId;
+                            }
+                        }
+                    }
+                    spec.animations[j].id = checkAniId;
                 }
             }
         }

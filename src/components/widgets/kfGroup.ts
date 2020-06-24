@@ -341,6 +341,48 @@ export default class KfGroup extends KfTimingIllus {
         this.groupTitle.onmouseout = null;
     }
 
+    public addGroupToPopLayerWhenDrag(): KfGroup[] {
+        this.container.setAttributeNS(null, '_transform', this.container.getAttributeNS(null, 'transform'));
+        const containerBBox: DOMRect = this.container.getBoundingClientRect();//fixed
+        this.parentObj.container.removeChild(this.container);
+        const popKfContainer: HTMLElement = document.getElementById(KfContainer.KF_POPUP);
+        const popKfContainerBbox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();//fixed
+        popKfContainer.appendChild(this.container);
+        //set new transform
+        this.translateContainer((containerBBox.left - popKfContainerBbox.left) / state.zoomLevel, KfGroup.TITLE_HEIHGT + (containerBBox.top - popKfContainerBbox.top) / state.zoomLevel);
+        //check whether there are aligned kf groups
+        const groupsAligned: KfGroup[] = [];
+        if (typeof this.alignId !== 'undefined') {
+            KfGroup.allAniGroups.forEach((aniGroup: KfGroup, tmpAniId: string) => {
+                if (tmpAniId !== this.aniId && aniGroup.alignTarget === this.alignId) {
+                    groupsAligned.push(aniGroup);
+                    aniGroup.container.setAttributeNS(null, '_transform', aniGroup.container.getAttributeNS(null, 'transform'));
+                    const tmpContainerBBox: DOMRect = aniGroup.container.getBoundingClientRect();//fixed
+                    aniGroup.parentObj.container.removeChild(aniGroup.container);
+                    popKfContainer.appendChild(aniGroup.container);
+                    aniGroup.translateContainer((tmpContainerBBox.left - popKfContainerBbox.left) / state.zoomLevel, (tmpContainerBBox.top - popKfContainerBbox.top) / state.zoomLevel);
+                }
+            })
+        }
+        return groupsAligned;
+    }
+
+    public reinsertGroupToItsParent(alignedGroups: KfGroup[]): void {
+        [this, ...alignedGroups].forEach((tmpKfGroup: KfGroup) => {
+            tmpKfGroup.container.setAttributeNS(null, 'transform', tmpKfGroup.container.getAttributeNS(null, '_transform'));
+            if (tmpKfGroup.treeLevel === 1 && tmpKfGroup.parentObj instanceof KfGroup) {
+                tmpKfGroup.parentObj.container.insertBefore(tmpKfGroup.container, tmpKfGroup.parentObj.groupMenu.container);
+            } else {
+                tmpKfGroup.parentObj.container.appendChild(tmpKfGroup.container);
+            }
+        })
+        this.kfOmits.forEach((omit: KfOmit) => {
+            if (typeof omit.useTag !== 'undefined') {
+                omit.updateUseTagPosi();
+            }
+        })
+    }
+
     /**
      * draw group bg as well as title
      */
@@ -375,14 +417,8 @@ export default class KfGroup extends KfTimingIllus {
             hintTag.removeHint();
             this.unbindTitleHover();
             let oriMousePosi: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
-            this.container.setAttributeNS(null, '_transform', this.container.getAttributeNS(null, 'transform'));
-            const containerBBox: DOMRect = this.container.getBoundingClientRect();//fixed
-            this.parentObj.container.removeChild(this.container);
-            const popKfContainer: HTMLElement = document.getElementById(KfContainer.KF_POPUP);
-            const popKfContainerBbox: DOMRect = popKfContainer.getBoundingClientRect();//fixed
-            popKfContainer.appendChild(this.container);
-            //set new transform
-            this.translateContainer((containerBBox.left - popKfContainerBbox.left) / state.zoomLevel, KfGroup.TITLE_HEIHGT + (containerBBox.top - popKfContainerBbox.top) / state.zoomLevel);
+            //add the dragged group together with groups aligned to it to the popup layer
+            const groupsAligned: KfGroup[] = this.addGroupToPopLayerWhenDrag();
 
             let updateSpec: boolean = false;
             let actionType: string = '';
@@ -400,6 +436,10 @@ export default class KfGroup extends KfTimingIllus {
                 const posiDiff: ICoord = { x: (currentMousePosi.x - oriMousePosi.x) / state.zoomLevel, y: (currentMousePosi.y - oriMousePosi.y) / state.zoomLevel };
                 const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
                 this.translateContainer(oriTrans.x + posiDiff.x, oriTrans.y + posiDiff.y);
+                groupsAligned.forEach((alignedGroup: KfGroup) => {
+                    const tmpOriTrans: ICoord = Tool.extractTransNums(alignedGroup.container.getAttributeNS(null, 'transform'));
+                    alignedGroup.translateContainer(tmpOriTrans.x + posiDiff.x, tmpOriTrans.y + posiDiff.y);
+                })
                 if (this.idxInGroup > 0 && preSibling.rendered && this.groupRef !== 'root') {//group within animation
                     [updateSpec, actionType, actionInfo] = this.dragInnerGroup(preSibling);
                 } else {
@@ -409,7 +449,7 @@ export default class KfGroup extends KfTimingIllus {
             }
 
             document.onmouseup = () => {
-                console.log('mouse up: ', updateSpec, actionType, actionInfo);
+                // console.log('mouse up: ', updateSpec, actionType, actionInfo);
                 document.onmousemove = null;
                 document.onmouseup = null;
                 Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
@@ -419,12 +459,7 @@ export default class KfGroup extends KfTimingIllus {
                     hintLines.forEach((hl: IntelliRefLine) => {
                         hl.removeHintLine();
                     })
-                    this.container.setAttributeNS(null, 'transform', this.container.getAttributeNS(null, '_transform'));
-                    if (this.treeLevel === 1 && this.parentObj instanceof KfGroup) {
-                        this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
-                    } else {
-                        this.parentObj.container.appendChild(this.container);
-                    }
+                    this.reinsertGroupToItsParent(groupsAligned);
                 } else {
                     //triger action
                     State.tmpStateBusket.push({
@@ -433,8 +468,8 @@ export default class KfGroup extends KfTimingIllus {
                     })
                     State.saveHistory();
                     Reducer.triger(actionType, actionInfo);
-                    popKfContainer.removeChild(this.container);
                 }
+                document.getElementById(KfContainer.KF_POPUP).innerHTML = '';
             }
         }
         groupTitleWrapper.appendChild(this.groupTitle);
@@ -1421,6 +1456,7 @@ export class GroupMenu {
     static MENU_RX: number = 8;
     static MENU_BG_COLOR: string = '#676767';
     static MENU_ICON_COLOR: string = '#a3a3a3';
+    static MENU_ITEM_ICON_COLOR: string = '#a3a3a3';
     static MENU_ICON_HIGHLIGHT_COLOR: string = '#ededed';
     static MENU_LIST_WIDTH: number = 120;
     static EASING_MENU_LIST_WIDTH: number = 156;
@@ -1482,6 +1518,7 @@ export class GroupMenu {
         // durationBtn.setAttributeNS(null, 'transform', `translate(${GroupMenu.PADDING_LEFT}, ${5 * GroupMenu.PADDING + 2 * GroupMenu.BTN_SIZE})`);
         // this.container.appendChild(durationBtn);
 
+        this.showMenu();
         return this.container;
     }
 
@@ -1492,9 +1529,9 @@ export class GroupMenu {
     }
 
     public hideMenu() {
-        if (typeof this.container !== 'undefined') {
-            this.container.setAttributeNS(null, 'opacity', '0');
-        }
+        // if (typeof this.container !== 'undefined') {
+        //     this.container.setAttributeNS(null, 'opacity', '0');
+        // }
     }
 
     public updatePosition(parentOffset: number, parentHeight: number) {
@@ -1593,7 +1630,7 @@ export class GroupMenu {
 
     public createSplit(idx: number): SVGLineElement {
         const splitLine: SVGLineElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        splitLine.setAttributeNS(null, 'stroke', GroupMenu.MENU_ICON_COLOR);
+        splitLine.setAttributeNS(null, 'stroke', GroupMenu.MENU_ITEM_ICON_COLOR);
         splitLine.setAttributeNS(null, 'stroke-width', '.6');
         splitLine.setAttributeNS(null, 'x1', `${GroupMenu.PADDING_LEFT}`);
         splitLine.setAttributeNS(null, 'x2', `${GroupMenu.PADDING_LEFT + GroupMenu.BTN_SIZE}`);
@@ -1654,12 +1691,7 @@ export class GroupMenu {
             itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
             listItem.appendChild(itemBg);
 
-            listItem.onmouseenter = () => {
-                itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_HIGHLIGHT_COLOR);
-            }
-            listItem.onmouseleave = () => {
-                itemBg.setAttributeNS(null, 'fill', GroupMenu.MENU_BG_COLOR);
-            }
+
             listItem.onclick = () => {
                 menuLayer.innerHTML = '';
                 const actionInfo: any = { aniId: this.aniId, effectPropValue: content };
@@ -1681,19 +1713,28 @@ export class GroupMenu {
             }
 
             const icon: SVGPathElement = this.createBtnIcon(content);
-            icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
+            icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ITEM_ICON_COLOR);
             icon.setAttributeNS(null, 'transform', `translate(2, 2)`);
             listItem.appendChild(icon);
 
             const text: SVGTextContentElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttributeNS(null, 'x', '26');
             text.setAttributeNS(null, 'y', `${GroupMenu.MENU_LIST_ITEM_HEIGHT - 4}`);
-            text.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_COLOR);
+            text.setAttributeNS(null, 'fill', GroupMenu.MENU_ITEM_ICON_COLOR);
             text.classList.add('monospace-font');
             text.setAttributeNS(null, 'font-size', '10pt');
             text.innerHTML = GroupMenu.EASINGS.includes(btnType) ? Tool.translateEasing(content) : content;
             listItem.appendChild(text);
             this.menuListContainer.appendChild(listItem);
+
+            listItem.onmouseenter = () => {
+                text.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_HIGHLIGHT_COLOR);
+                icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ICON_HIGHLIGHT_COLOR);
+            }
+            listItem.onmouseleave = () => {
+                text.setAttributeNS(null, 'fill', GroupMenu.MENU_ITEM_ICON_COLOR);
+                icon.setAttributeNS(null, 'fill', GroupMenu.MENU_ITEM_ICON_COLOR);
+            }
         })
     }
 }

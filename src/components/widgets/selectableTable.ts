@@ -1,10 +1,14 @@
 import '../../assets/style/selectableTable.scss'
 import { state, State } from '../../app/state'
 import { IDataItem, ISortDataAttr } from '../../app/core/ds';
+import { Animation } from 'canis_toolkit';
 import Reducer from '../../app/reducer';
 import * as action from '../../app/action'
 import AttrSort from './attrSort';
 import Util from '../../app/core/util';
+import PlusBtn from './plusBtn';
+import KfItem from './kfItem';
+import Tool from '../../util/tool';
 
 export default class SelectableTable {
     startRowIdx: string;
@@ -115,11 +119,17 @@ export default class SelectableTable {
             tr.setAttribute('dataItem', markId);
             [markId, ...Object.values(dataItem)].forEach(value => {
                 const td: HTMLTableCellElement = document.createElement('td');
+                td.setAttribute('draggable', 'true');
                 td.innerText = value.toString();
                 td.onmousedown = (downEvt) => {
-                    Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
                     this.mouseDownCell(downEvt);
                 }
+                // td.onclick = (clickEvt) => {
+                //     this.clickCell(clickEvt);
+                // }
+                // td.ondragstart = (dragStartEvt) => {
+                //     this.dragCell(dragStartEvt);
+                // }
                 tr.appendChild(td);
             })
             dataTable.appendChild(tr);
@@ -132,45 +142,147 @@ export default class SelectableTable {
         this.selectedRows = [];
     }
 
+    // public dragCell(evt: any) {
+    //     console.log('dragging');
+    //     evt.currentTarget.classList.add("ghost-div");
+    //     var elem = document.createElement('div');
+    //     elem.id = 'drag-ghost';
+    //     elem.className = 'ghost-div'
+    //     elem.innerHTML = "Dragging";
+    //     elem.style.position = "absolute";
+    //     elem.style.top = "-1000px";
+    //     document.body.appendChild(elem);
+    //     evt.dataTransfer.setDragImage(elem, 0, 0);
+    // }
+
+    // public clickCell(evt: MouseEvent) {
+    //     evt.preventDefault();
+    //     const targetTd: HTMLElement = <HTMLElement>evt.target;
+    //     if (evt.shiftKey) {
+    //         if (this.selectedRows.length >= 0) {
+    //             this.selectRange(targetTd);
+    //         }
+    //     } else if (evt.ctrlKey) {
+    //         if (this.selectedRows.length >= 0) {
+    //             this.addSelection(targetTd);
+    //         }
+    //     } else {
+    //         this.startRowIdx = targetTd.parentElement.getAttribute('dataItem');
+    //         this.resetSelection();
+    //         this.selectedRows.push(this.startRowIdx);
+    //         SelectableTable.renderSelection(this.selectedRows);
+    //         //save histroy before update state
+    //         State.tmpStateBusket.push({
+    //             historyAction: { actionType: action.UPDATE_SELECTION, actionVal: state.selection },
+    //             currentAction: { actionType: action.UPDATE_SELECTION, actionVal: this.selectedRows }
+    //         })
+    //         State.saveHistory();
+    //         Reducer.triger(action.UPDATE_SELECTION, state.suggestion ? Util.suggestSelection(this.selectedRows) : this.selectedRows);
+    //     }
+    // }
+
     public mouseDownCell(evt: MouseEvent) {
         evt.preventDefault();
+        Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
         const targetTd: HTMLElement = <HTMLElement>evt.target;
         if (evt.shiftKey) {
             if (this.selectedRows.length >= 0) {
                 this.selectRange(targetTd);
             }
+        } else if (evt.ctrlKey) {
+            if (this.selectedRows.length >= 0) {
+                this.addSelection(targetTd);
+            }
         } else {
             this.startRowIdx = targetTd.parentElement.getAttribute('dataItem');
-            this.resetSelection();
-            this.selectedRows.push(this.startRowIdx);
-            SelectableTable.renderSelection(this.selectedRows);
-            //save histroy before update state
-            State.tmpStateBusket.push({
-                historyAction: { actionType: action.UPDATE_SELECTION, actionVal: state.selection },
-                currentAction: { actionType: action.UPDATE_SELECTION, actionVal: this.selectedRows }
-            })
-            State.saveHistory();
-            Reducer.triger(action.UPDATE_SELECTION, state.suggestion ? Util.suggestSelection(this.selectedRows) : this.selectedRows);
+            if (state.selection.includes(this.startRowIdx)) {//do grabbing
+                console.log('drag start');
+                const elem = document.createElement('div');
+                elem.id = 'dragGhost';
+                elem.className = 'ghost-div'
+                elem.innerHTML = `${state.selection.length} Marks`;
+                elem.style.left = `${(evt.pageX || (evt.clientX + document.body.scrollLeft)) - 35}px`;
+                elem.style.top = `${(evt.pageY || (evt.clientY + document.body.scrollTop)) - 15}px`;
+                document.body.appendChild(elem);
+
+                const selectedCls: string[] = state.selection.map((mId: string) => Animation.markClass.get(mId));//find the classes of selected marks
+                PlusBtn.highlightPlusBtns([...new Set(selectedCls)]);//highlight kfs which can be dropped on
+                document.onmousemove = (moveEvt) => {
+                    this.mouseMoveCell(moveEvt);
+                }
+            } else {
+                this.resetSelection();
+                this.selectedRows.push(this.startRowIdx);
+                SelectableTable.renderSelection(this.selectedRows);
+                //save histroy before update state
+                State.tmpStateBusket.push({
+                    historyAction: { actionType: action.UPDATE_SELECTION, actionVal: state.selection },
+                    currentAction: { actionType: action.UPDATE_SELECTION, actionVal: this.selectedRows }
+                })
+                State.saveHistory();
+                Reducer.triger(action.UPDATE_SELECTION, state.suggestion ? Util.suggestSelection(this.selectedRows) : this.selectedRows);
+            }
         }
-        document.onmousemove = (moveEvt) => {
-            this.mouseMoveCell(moveEvt);
-        }
+
         document.onmouseup = (upEvt) => {
             Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
             this.mouseUpCell(upEvt);
         }
     }
-
     public mouseMoveCell(evt: MouseEvent) {
-        evt.preventDefault();
-        const targetTd: HTMLElement = <HTMLElement>evt.target;
-        this.selectRange(targetTd);
-    }
+        // evt.preventDefault();
+        // const targetTd: HTMLElement = <HTMLElement>evt.target;
+        // this.selectRange(targetTd);
+        (<HTMLElement>evt.target).classList.add('dragging-ghost-div');
+        (<HTMLElement>evt.target).style.left = `${(evt.pageX || (evt.clientX + document.body.scrollLeft)) - 35}px`;
+        (<HTMLElement>evt.target).style.top = `${(evt.pageY || (evt.clientY + document.body.scrollTop)) - 15}px`;
 
+        const dragOverItem: PlusBtn | KfItem = Tool.judgeDragOver({ x: evt.pageX, y: evt.pageY });
+        if (typeof dragOverItem !== 'undefined') {
+            dragOverItem.dragSelOver();
+        } else {
+            if (typeof PlusBtn.dragoverBtn !== 'undefined') {
+                PlusBtn.dragoverBtn.dragSelOut();
+            } else if (typeof KfItem.dragoverKf !== 'undefined') {
+                KfItem.dragoverKf.dragSelOut();
+            }
+        }
+    }
     public mouseUpCell(evt: MouseEvent) {
         evt.preventDefault();
+        if (document.getElementById('dragGhost')){
+            document.getElementById('dragGhost').remove();
+        }
+        if (typeof PlusBtn.dragoverBtn !== 'undefined') {
+            const selectedMarks: string[] = state.selection;
+            Reducer.triger(action.UPDATE_SELECTION, []);//reset state selection
+
+            State.tmpStateBusket.push({
+                historyAction: { actionType: action.ACTIVATE_PLUS_BTN, actionVal: { aniId: '', selection: [], renderedUniqueIdx: -10 } },
+                currentAction: { actionType: action.ACTIVATE_PLUS_BTN, actionVal: { aniId: PlusBtn.dragoverBtn.aniId, selection: selectedMarks, renderedUniqueIdx: -1 } }
+            })
+            State.saveHistory();
+            Reducer.triger(action.ACTIVATE_PLUS_BTN, { aniId: PlusBtn.dragoverBtn.aniId, selection: selectedMarks, renderedUniqueIdx: -1 });
+        }
+        PlusBtn.dragoverBtn = undefined;
+        KfItem.dragoverKf = undefined;
+        PlusBtn.cancelHighlightPlusBtns();
         document.onmousemove = null;
         document.onmouseup = null;
+    }
+
+    public addSelection(targetTd: HTMLElement) {
+        const tmpRowIdx: string = targetTd.parentElement.getAttribute('dataItem');
+        const tmpIdx: number = state.dataOrder.indexOf(tmpRowIdx);
+        this.selectedRows = [...this.selectedRows, state.dataOrder[tmpIdx]];
+        SelectableTable.renderSelection(this.selectedRows);
+        //save histroy before update state
+        State.tmpStateBusket.push({
+            historyAction: { actionType: action.UPDATE_SELECTION, actionVal: state.selection },
+            currentAction: { actionType: action.UPDATE_SELECTION, actionVal: this.selectedRows }
+        })
+        State.saveHistory();
+        Reducer.triger(action.UPDATE_SELECTION, state.suggestion ? Util.suggestSelection(this.selectedRows) : this.selectedRows);
     }
 
     public selectRange(targetTd: HTMLElement) {

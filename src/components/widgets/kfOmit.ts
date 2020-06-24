@@ -116,7 +116,7 @@ export default class KfOmit {
 
     public updateUseTagPosi() {
         const kfFgBbox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();
-        const parentBbox: DOMRect = this.parentObj.container.getBoundingClientRect();
+        const parentBbox: DOMRect = this.parentObj.groupBg.getBoundingClientRect();
         this.useTag.setAttributeNS(null, 'x', `${(parentBbox.x - kfFgBbox.x) / state.zoomLevel}`);
         this.useTag.setAttributeNS(null, 'y', `${(parentBbox.y - kfFgBbox.y) / state.zoomLevel}`);
     }

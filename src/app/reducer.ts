@@ -51,15 +51,17 @@ export default class Reducer {
         let targetAniId: string;
         switch (actionType) {
             case action.UPDATE_ANI_ALIGN_AFTER_ANI:
-                const alignedOnData: boolean = typeof Animation.animations.get(actionInfo.currentAniId).alignOnData === 'undefined' ? false : Animation.animations.get(actionInfo.currentAniId).alignOnData;
-                //remove align and set grouping for this ani
-                delete currentAni.align;
-                if (alignedOnData) {
-                    currentAni.grouping = targetAni.grouping;
-                } else {
-                    currentAni.grouping = {
-                        groupBy: 'id',
-                        reference: TimingSpec.timingRef.previousEnd
+                if (typeof currentAni.align !== 'undefined') {
+                    const alignedOnData: boolean = typeof Animation.animations.get(actionInfo.currentAniId).alignOnData === 'undefined' ? false : Animation.animations.get(actionInfo.currentAniId).alignOnData;
+                    //remove align and set grouping for this ani
+                    delete currentAni.align;
+                    if (alignedOnData) {
+                        currentAni.grouping = targetAni.grouping;
+                    } else {
+                        currentAni.grouping = {
+                            groupBy: 'id',
+                            reference: TimingSpec.timingRef.previousEnd
+                        }
                     }
                 }
                 currentAni.reference = TimingSpec.timingRef.previousEnd;
