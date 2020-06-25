@@ -1,5 +1,13 @@
 # CanisGEditor
 
-run `npm install` to install dependencies
+###Build###
+------
 
-then run `npm start` to start the server
+Install node modules:
+```
+npm install
+```
+Run a local web server for testing:
+```
+npm start
+```
