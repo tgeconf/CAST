@@ -1,7 +1,7 @@
-# CanisGEditor
+# CAST
 
-### Build 
-------
+Build 
+----
 
 Install node modules:
 ```
