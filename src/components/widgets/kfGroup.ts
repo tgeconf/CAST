@@ -514,18 +514,14 @@ export default class KfGroup extends KfTimingIllus {
                 const aniGroupBBox: DOMRect = aniGroup.groupBg.getBoundingClientRect();//fixed
                 const firstKfBBox: DOMRect = firstKf.container.getBoundingClientRect();//fixed
                 const targetAniId: string = aniGroup.aniId;
-
                 //add orange lines according to drag position
                 if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + (30 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top) {
-                    // if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + (30 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
                     targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_ANI };//after group has higher priority
                     hintDrop.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, true);
                     break;
                 } else {
                     if (currentGPosi.x >= aniGroupBBox.left && currentGPosi.x < aniGroupBBox.left + (6 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top) {
-                        // if (currentGPosi.x >= aniGroupBBox.left && currentGPosi.x < aniGroupBBox.left + (6 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top && currentGPosi.y <= aniGroupBBox.bottom) {
                         targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_WITH_ANI };
-                        // hintDrop.hintAlign({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true);
                         hintDrop.hintInsert({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, true);
                     } else if (currentGPosi.x >= firstKfBBox.left && currentGPosi.x < firstKfBBox.left + (30 * state.zoomLevel) && alignTargetGroup) {
                         targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_WITH_KF };

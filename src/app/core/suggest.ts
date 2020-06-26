@@ -765,7 +765,7 @@ export default class Suggest {
                     })
                 }
 
-                console.log('all paths: ', this.allPaths);
+                // console.log('all paths: ', this.allPaths);
             }
         } else if (sepFirstKfMarks.dataMarks.length === 0 && sepFirstKfMarks.nonDataMarks.length > 0) {
             //suggest based on non data attrs

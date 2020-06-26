@@ -89,27 +89,35 @@ export default class IntelliRefLine {
         let hintLines: IntelliRefLine[] = [];
         for (let i = 0, len = [...KfGroup.allAniGroups].length; i < len; i++) {
             const aniGroup: KfGroup = [...KfGroup.allAniGroups][i][1];
+            let showHintLine: boolean = kfGroup.id !== aniGroup.id;
             if (typeof kfGroup.alignId !== 'undefined' && typeof aniGroup.alignTarget !== 'undefined') {
-                if (kfGroup.alignId !== aniGroup.alignTarget && kfGroup.id !== aniGroup.id) {
-                    const firstKf: KfItem = aniGroup.fetchFirstKf();
-                    const aniGroupBBox: DOMRect = aniGroup.groupBg.getBoundingClientRect();//fixed
-                    const firstKfBBox: DOMRect = firstKf.container.getBoundingClientRect();//fixed
-
-                    const tmpHintLine1: IntelliRefLine = new IntelliRefLine();
-                    tmpHintLine1.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, false);
-                    hintLines.push(tmpHintLine1);
-                    const tmpHintLine2: IntelliRefLine = new IntelliRefLine();
-                    tmpHintLine2.hintInsert({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, false);
-                    // tmpHintLine2.hintAlign({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, false);
-                    hintLines.push(tmpHintLine2);
-                    const tmpHintLine3: IntelliRefLine = new IntelliRefLine();
-                    tmpHintLine3.hintAlign({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, false);
-                    hintLines.push(tmpHintLine3);
-                    const tmpHintLine4: IntelliRefLine = new IntelliRefLine();
-                    tmpHintLine4.hintAlign({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, false);
-                    hintLines.push(tmpHintLine4);
+                if (kfGroup.alignId === aniGroup.alignTarget) {
+                    showHintLine = false;
                 }
             }
+            // if (typeof kfGroup.alignId !== 'undefined' && typeof aniGroup.alignTarget !== 'undefined') {
+            //     if (kfGroup.alignId !== aniGroup.alignTarget && kfGroup.id !== aniGroup.id) {
+            if (showHintLine) {
+                const firstKf: KfItem = aniGroup.fetchFirstKf();
+                const aniGroupBBox: DOMRect = aniGroup.groupBg.getBoundingClientRect();//fixed
+                const firstKfBBox: DOMRect = firstKf.container.getBoundingClientRect();//fixed
+
+                const tmpHintLine1: IntelliRefLine = new IntelliRefLine();
+                tmpHintLine1.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, false);
+                hintLines.push(tmpHintLine1);
+                const tmpHintLine2: IntelliRefLine = new IntelliRefLine();
+                tmpHintLine2.hintInsert({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, false);
+                // tmpHintLine2.hintAlign({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, false);
+                hintLines.push(tmpHintLine2);
+                const tmpHintLine3: IntelliRefLine = new IntelliRefLine();
+                tmpHintLine3.hintAlign({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, false);
+                hintLines.push(tmpHintLine3);
+                const tmpHintLine4: IntelliRefLine = new IntelliRefLine();
+                tmpHintLine4.hintAlign({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, false);
+                hintLines.push(tmpHintLine4);
+            }
+            //     }
+            // }
         }
         return hintLines;
     }
@@ -136,7 +144,7 @@ export default class IntelliRefLine {
 
     public hintAlign(targetPosi: ICoord, targetHeight: number, highlight: boolean) {
         this.container = document.getElementById(KfContainer.KF_FG);
-        const containerBBox: DOMRect = document.getElementById(KfContainer.KF_CONTAINER).getBoundingClientRect();//fixed
+        const containerBBox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();//fixed
         if (typeof this.line === 'undefined') {
             this.line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         }
