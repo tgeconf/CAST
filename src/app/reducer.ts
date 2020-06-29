@@ -454,7 +454,9 @@ Reducer.listen(action.REMOVE_CREATE_MULTI_ANI, (actionInfo: { aniId: string, pat
                     newAni.id = actionInfo.aniId;
                 } else {
                     newAni.reference = TimingSpec.timingRef.previousEnd;
-                    newAni.align = { target: actionInfo.aniId, type: 'element', merge: true };
+                    if (shapeAttrIdx > 0) {
+                        newAni.align = { target: actionInfo.aniId, type: 'element', merge: true };
+                    }
                 }
                 if (actionInfo.path.attrComb.length > 0) {
                     CanisGenerator.createGrouping(newAni, actionInfo.path.attrComb, actionInfo.attrValueSort);

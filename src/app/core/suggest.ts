@@ -638,6 +638,7 @@ export default class Suggest {
                 }
                 //remove empty cell problem
                 attrWithDiffValues = this.removeEmptyCell(firstKfMarks, attrWithDiffValues, sameAttrs, diffAttrs, true);
+                // console.log('attr with diff values: ', attrWithDiffValues);
                 let valueIdx: Map<string, number> = new Map();//key: attr name, value: index of the value in all values
                 attrWithDiffValues.forEach((aName: string) => {
                     const targetValue: string | number = Util.filteredDataTable.get(firstKfDataMarks[0])[aName];
@@ -653,6 +654,7 @@ export default class Suggest {
 
                 //sortedAttrs: key: channel, value: attr array
                 const sortedAttrs: Map<string, string[]> = flag ? this.assignChannelName(attrWithDiffValues) : this.sortAttrs(attrWithDiffValues);
+                // console.log('sorted attrs: ', sortedAttrs);
                 const oneMarkInFirstKf: boolean = firstKfDataMarks.length === 1;
                 let allPossibleKfs = this.generateRepeatKfs(sortedAttrs, valueIdx, firstKfDataMarks, lastKfDataMarks, oneMarkInFirstKf);
                 let repeatKfRecord: any[] = [];

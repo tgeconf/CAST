@@ -42,7 +42,9 @@ export default class PlusBtn {
             if (Tool.arrayContained(pb.acceptableCls, selectedCls) && pb.onShow) {
                 pb.highlightBtn();
                 let transX: number = pb.kfSize.w - this.BTN_SIZE;
-                pb.targetKfg.translateWholeGroup(transX, true);
+                // pb.targetKfg.translateWholeGroup(transX, true);
+                const firstKf: KfItem = pb.targetKfg.fetchFirstKf();
+                pb.targetKfg.translateGroup(firstKf, transX, true, true, true);
             }
         })
     }
@@ -52,7 +54,9 @@ export default class PlusBtn {
             if (pb.isHighlighted && pb.onShow) {
                 pb.cancelHighlightBtn();
                 let transX: number = pb.kfSize.w - this.BTN_SIZE;
-                pb.targetKfg.translateWholeGroup(-transX, true);
+                // pb.targetKfg.translateWholeGroup(-transX, true);
+                const firstKf: KfItem = pb.targetKfg.fetchFirstKf();
+                pb.targetKfg.translateGroup(firstKf, -transX, true, true, true);
             }
         })
     }
