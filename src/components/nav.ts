@@ -180,7 +180,7 @@ class NavBtn {
         }
 
         const file = new Blob([JSON.stringify(outputObj, null, 2)], { type: 'application/json' });
-        const fileName = 'canis_project.cpro';
+        const fileName = 'cast_project.cpro';
         if (window.navigator.msSaveOrOpenBlob) // IE10+
             window.navigator.msSaveOrOpenBlob(file, fileName);
         else { // Others
