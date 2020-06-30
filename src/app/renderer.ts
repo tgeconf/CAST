@@ -126,7 +126,6 @@ export default class Renderer {
 
         const staticMarks: string[] = [];
         Reducer.triger(action.UPDATE_STATIC_KEYFRAME, staticMarks);
-        console.log('test animations: ', Animation.animations);
         Reducer.triger(action.UPDATE_KEYFRAME_TRACKS, Animation.animations);
     }
 

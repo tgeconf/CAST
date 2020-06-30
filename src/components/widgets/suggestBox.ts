@@ -138,7 +138,7 @@ export class SuggestBox {
             if (!suggestOnFirstKf) {//the suggestion is based on all marks in this animation as the last kf
                 if (Tool.identicalArrays(clsOfMarksInPath, clsOfMarksThisAni)) {//marks in current path have the same classes as those in current animation 
                     if (clsOfMarksInPath.length > 1 && !containsNonDataMarkInPath) {//create multiple animations
-                        console.log('same create multi ani');
+                        // console.log('same create multi ani');
                         actionType = action.REMOVE_CREATE_MULTI_ANI;
                         actionInfo = { aniId: startKf.aniId, path: targetPath, attrValueSort: attrValueSort }
                     } else {//create grouping
@@ -147,11 +147,11 @@ export class SuggestBox {
                     }
                 } else {//marks in current path don't have the same classes as those in current animation 
                     if (clsOfMarksInPath.length > 1 && !containsNonDataMarkInPath) {//create multiple animations
-                        console.log('not same create multi ani');
+                        // console.log('not same create multi ani');
                         actionType = action.SPLIT_CREATE_MULTI_ANI;
                         actionInfo = { aniId: startKf.aniId, path: targetPath, attrValueSort: attrValueSort };
                     } else {//create one animation
-                        console.log('not same create one ani');
+                        // console.log('not same create one ani');
                         actionType = action.SPLIT_CREATE_ONE_ANI;
                         actionInfo = { aniId: startKf.aniId, newAniSelector: `#${targetPath.lastKfMarks.join(', #')}`, attrComb: targetPath.attrComb, attrValueSort: attrValueSort };
                     }
@@ -159,6 +159,8 @@ export class SuggestBox {
             } else {//the suggestion is based on all marks in current first  kf as the last kf
                 if (clsOfMarksInPath.length > 1) {//change timing of marks of different classes
                     // console.log('diff cls first kf as last: ', targetPath, targetPath.attrComb, attrValueSort);
+                    actionType = action.APPEND_SPEC_GROUPING;
+                    actionInfo = { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort }
                 } else {//append grouping to current animation
                     actionType = action.APPEND_SPEC_GROUPING;
                     actionInfo = { aniId: startKf.aniId, attrComb: targetPath.attrComb, attrValueSort: attrValueSort };

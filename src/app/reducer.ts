@@ -348,6 +348,7 @@ Reducer.listen(action.MERGE_GROUP, (actionInfo: { aniId: string, groupRef: strin
 })
 
 Reducer.listen(action.UPDATE_DURATION, (actionInfo: { aniId: string, duration: number }) => {
+    console.log('update duration: ', actionInfo);
     const animations: IAnimationSpec[] = state.spec.animations;
     const animationsNeedToUpdate: string[] = [];
     animations.forEach((a: IAnimationSpec) => {
@@ -356,8 +357,10 @@ Reducer.listen(action.UPDATE_DURATION, (actionInfo: { aniId: string, duration: n
             //find merged aligned animations
             if (typeof a.id !== 'undefined') {
                 const [alignWithAni, alignToAnis] = CanisGenerator.findMergedAlignAnis(a.id);
+                console.log('alignto anis: ', alignToAnis);
                 animationsNeedToUpdate.push(...alignToAnis);
             } else if (typeof a.align !== 'undefined') {
+                console.log('a align not undefined: ', a);
                 if (a.align.type === Animation.alignTarget.withEle && a.align.merge) {
                     const [alignWithAni, alignToAnis] = CanisGenerator.findMergedAlignAnis(a.align.target);
                     animationsNeedToUpdate.push(...[alignWithAni, ...alignToAnis]);

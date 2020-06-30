@@ -412,7 +412,7 @@ export default class CanisGenerator {
                 alignWithAni = a.selector;
             }
             if (typeof a.align !== 'undefined') {
-                if (a.align.type === Animation.alignTarget.withEle && a.align.merge) {
+                if (a.align.type === Animation.alignTarget.withEle && a.align.merge && a.align.target === id) {
                     alignToAnis.push(a.selector);
                 }
             }

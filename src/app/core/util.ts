@@ -518,7 +518,6 @@ export default class Util {
      * find the first group of keyframes in a keyframe group, for plus button functions
      */
     public static findFirstKfs(kfg: IKeyframeGroup): IKeyframe[] {
-        console.log('kfg: ', kfg);
         if (kfg.keyframes.length > 0) {
             return kfg.keyframes;
         } else {
@@ -598,7 +597,6 @@ export default class Util {
         }
         kfGroupRoot.children = [];
         kfGroupRoot.keyframes = [];
-        console.log('before testing: ', aniunitNode);
         if (aniunitNode.children.length > 0) {
             if (aniunitNode.children[0].children.length > 0) {
                 let childrenIsGroup: boolean = true;
@@ -629,7 +627,7 @@ export default class Util {
                 }
             }
         } else {
-            console.log('testing: ', aniunitNode);
+            // console.log('testing: ', aniunitNode);
         }
         return kfGroupRoot;
     }
@@ -916,7 +914,7 @@ export default class Util {
     public static extractClsFromMarks(markArr: string[]): [string[], boolean] {
         const clsOfMarks: Set<string> = new Set();
         let nonDataCls: boolean = false;
-        console.log('Animation.markClass', Animation.markClass);
+        // console.log('Animation.markClass', Animation.markClass);
         markArr.forEach((mId: string) => {
             const clsToAdd: string = Animation.markClass.get(mId);
             if (clsToAdd.includes('axis') || clsToAdd.includes('legend') || clsToAdd.includes('title')) {
