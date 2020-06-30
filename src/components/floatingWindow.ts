@@ -17,6 +17,12 @@ import WorldPopuImg from '../assets/img/examples/worldPopulation.png'
 import WorldPopuChart from '../assets/charts/worldPopulation.svg'
 import PolioImg from '../assets/img/examples/polio.png'
 import PolioChart from '../assets/charts/polio.svg'
+import DrivingImg from '../assets/img/examples/driving.png'
+import DrivingChart from '../assets/charts/driving.svg'
+import FlareImg from '../assets/img/examples/flare.png'
+import FlareChart from '../assets/charts/flare.svg'
+import UsPopulationImg from '../assets/img/examples/usPopulation.png'
+import UsPopulationChart from '../assets/charts/usPopulation.svg'
 
 import Reducer from '../app/reducer'
 import * as action from '../app/action'
@@ -41,6 +47,9 @@ export default class FloatingWindow {
     static CHINAPM_CHART: string = 'chinapm';
     static WORLDPOPULATION_CHART: string = 'worldPopulation';
     static POLIO_CHART: string = 'polio';
+    static DRIVING_CHART: string = 'driving';
+    static FLARE_CHART: string = 'flare';
+    static USPOPULATION_CHART: string = 'uspopulation';
 
     floatingWindow: HTMLDivElement;
 
@@ -128,18 +137,22 @@ export default class FloatingWindow {
         exampleItemContainer1.className = 'list-item-container';
         exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.MUSHROOM_CHART, 'Mushroom'));
         exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.NIGHTINGALE_CHART, 'Nightingale'));
-        // exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.GANTT_CHART, 'Gantt'));
         exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.OS_CHART, 'Mobile OS'));
         exampleItemContainer1.appendChild(this.createExampleItem(FloatingWindow.PURCHASE_CHART, 'Doughnut Purchases'));
         exampleList.appendChild(exampleItemContainer1);
         const exampleItemContainer2: HTMLDivElement = document.createElement('div');
         exampleItemContainer2.className = 'list-item-container';
         exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.CO2_CHART, 'CO2 Emissions'));
-        // exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.DESSERT_CHART, 'Most Requested Diner Desserts'));
         exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.BOSTON_CHART, 'Boston Weather'));
         exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.WORLDPOPULATION_CHART, 'World Population Pyramid'));
         exampleItemContainer2.appendChild(this.createExampleItem(FloatingWindow.POLIO_CHART, 'Polio Incidence Rates'));
         exampleList.appendChild(exampleItemContainer2);
+        const exampleItemContainer3: HTMLDivElement = document.createElement('div');
+        exampleItemContainer3.className = 'list-item-container';
+        exampleItemContainer3.appendChild(this.createExampleItem(FloatingWindow.DRIVING_CHART, 'Driving'));
+        exampleItemContainer3.appendChild(this.createExampleItem(FloatingWindow.FLARE_CHART, 'Flare'));
+        exampleItemContainer3.appendChild(this.createExampleItem(FloatingWindow.USPOPULATION_CHART, 'usPopulation'));
+        exampleList.appendChild(exampleItemContainer3);
         return exampleList;
     }
 
@@ -272,10 +285,10 @@ export default class FloatingWindow {
                 img.src = MushroomImg;
                 item.onclick = () => this.loadExampleChart(MushroomChart);
                 break;
-            // case FloatingWindow.GANTT_CHART:
-            //     img.src = GanttImg;
-            //     item.onclick = () => this.loadExampleChart(GanttChart);
-            //     break;
+            case FloatingWindow.DRIVING_CHART:
+                img.src = DrivingImg;
+                item.onclick = () => this.loadExampleChart(DrivingChart);
+                break;
             case FloatingWindow.OS_CHART:
                 img.src = OsImg;
                 item.onclick = () => this.loadExampleChart(OsChart);
@@ -308,11 +321,14 @@ export default class FloatingWindow {
                 img.src = PolioImg;
                 item.onclick = () => this.loadExampleChart(PolioChart);
                 break;
-            // case FloatingWindow.CHINAPM_CHART:
-            //     img.src = ChinaPMImg;
-            //     item.onclick = () => this.loadExampleChart(ChinaPMChart);
-            //     break;
-
+            case FloatingWindow.FLARE_CHART:
+                img.src = FlareImg;
+                item.onclick = () => this.loadExampleChart(FlareChart);
+                break;
+            case FloatingWindow.USPOPULATION_CHART:
+                img.src = UsPopulationImg;
+                item.onclick = () => this.loadExampleChart(UsPopulationChart);
+                break;
         }
         imgWrapper.appendChild(img);
         item.appendChild(imgWrapper);
