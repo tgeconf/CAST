@@ -207,6 +207,7 @@ export default class Util {
      * @param hasOneMark 
      */
     public static partitionChart(sameAttrs: string[], filteredDiffAttrs: string[], markIds: string[], dataTable: Map<string, IDataItem>, hasOneMark: boolean = false): [Map<string, string[]>, string[]] {
+        console.log('same and diff attrs: ', sameAttrs, filteredDiffAttrs);
         let sections = new Map();
         let sectionIdRecord: string[][] = [];
 
@@ -244,6 +245,7 @@ export default class Util {
             }
         })
         const orderedSectionIds = sectionIdRecord.map(a => a.join(',') + ',');
+        console.log('sections: ', sections, orderedSectionIds);
         return [sections, orderedSectionIds];
     }
 
@@ -257,7 +259,9 @@ export default class Util {
         for (let i = 0, len = this.EFFECTIVENESS_RANKING.length; i < len; i++) {
             for (let j = 0, len2 = attrs.length; j < len2; j++) {
                 let tmpAttrType: string[] = ChartSpec.chartUnderstanding[attrs[j]];
+                console.log('test filter attrs: ', attrs[j], tmpAttrType, this.EFFECTIVENESS_RANKING[i]);
                 if (typeof tmpAttrType !== 'undefined') {
+                    console.log(tmpAttrType.includes(this.EFFECTIVENESS_RANKING[i]), Tool.arrayContained(tmpAttrType, typeRecorder), Tool.arrayContained(typeRecorder, tmpAttrType), typeRecorder.length === 0)
                     if (tmpAttrType.includes(this.EFFECTIVENESS_RANKING[i]) && (Tool.arrayContained(tmpAttrType, typeRecorder) || Tool.arrayContained(typeRecorder, tmpAttrType) || typeRecorder.length === 0)) {
                         filteredAttrs.push(attrs[j]);
                         typeRecorder = tmpAttrType;
