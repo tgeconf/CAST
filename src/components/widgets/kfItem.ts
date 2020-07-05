@@ -520,87 +520,24 @@ export default class KfItem extends KfTimingIllus {
         return [minX, maxX];
     }
 
-    /**
-     * check whether there is a malposition between this kf and the kf it aligned to 
-     */
-    // public checkMalposition() {
-    //     console.log('in checking malposi: ', this.id, KfItem.allKfInfo);
-    //     if (typeof KfItem.allKfInfo.get(this.id) !== 'undefined') {
-    //         if (typeof KfItem.allKfInfo.get(this.id).alignTo !== 'undefined') {
-    //             const alignWithKf: KfItem = KfItem.allKfItems.get(KfItem.allKfInfo.get(this.id).alignTo);
-    //             console.log('the aligned item: ', alignWithKf.container, alignWithKf.rendered, alignWithKf.renderWhenZooming, alignWithKf.checkParentRenderedWhenZooming());
-    //             if (typeof alignWithKf !== 'undefined') {
-    //                 if (alignWithKf.rendered && alignWithKf.renderWhenZooming && alignWithKf.checkParentRenderedWhenZooming()) {
-    //                     const currentKfBBox: DOMRect = this.container.getBoundingClientRect();
-    //                     const alignWithKfBBox: DOMRect = alignWithKf.container.getBoundingClientRect();
-    //                     let targetPosi: number = 0;
-    //                     if (this.timingType === TimingSpec.timingRef.previousStart) {
-    //                         targetPosi = alignWithKfBBox.x;
-    //                     } else {
-    //                         //find all the kfs aligned to this alignWith and cal the bbox
-    //                         let maxX: number = alignWithKfBBox.right;
-    //                         KfItem.allKfInfo.get(KfItem.allKfInfo.get(this.id).alignTo).alignWithKfs.forEach((kfId: number) => {
-    //                             const tmpKf: KfItem = KfItem.allKfItems.get(kfId);
-    //                             if (typeof tmpKf !== 'undefined') {
-    //                                 if (tmpKf.rendered && tmpKf.renderWhenZooming && tmpKf.id !== this.id) {
-    //                                     const tmpBBox: DOMRect = tmpKf.container.getBoundingClientRect();
-    //                                     if (tmpBBox.y <= currentKfBBox.y) {//kfs above this one
-    //                                         if (tmpBBox.right > maxX) {
-    //                                             maxX = tmpBBox.right;
-    //                                         }
-    //                                     }
-    //                                 }
-    //                             }
-    //                         })
-    //                         targetPosi = maxX;
-    //                     }
-
-    //                     console.log('check posi: ', currentKfBBox.x, targetPosi);
-
-    //                     if (currentKfBBox.x !== targetPosi) {
-    //                         const diff: number = (targetPosi - currentKfBBox.x) / state.zoomLevel;
-    //                         const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
-    //                         console.log('checking position: ', this.container, alignWithKf.container, alignWithKfBBox, targetPosi, currentKfBBox.x, oriTrans, diff);
-    //                         this.translateContainer(oriTrans.x + diff, oriTrans.y);
-    //                         // this.container.setAttributeNS(null, 'transform', `translate(${oriTrans.x + diff}, ${oriTrans.y})`);
-    //                         // //translate the refline if there is one
-    //                         // IntelliRefLine.updateLine(this.id);
-    //                     }
-    //                 }
-    //             }
-    //         } else if (typeof KfItem.allKfInfo.get(this.id).alignWithKfs !== 'undefined') {
-    //             // if (this.rendered &&   this.renderWhenZooming) {
-    //             //     const currentKfBBox: DOMRect = this.container.getBoundingClientRect();
-    //             //     let alignLeft: number = currentKfBBox.left, alignRight: number = currentKfBBox.right;
-    //             //     KfItem.allKfInfo.get(this.id).alignWithKfs.forEach((kfId: number) => {
-    //             //         const tmpKf: KfItem = KfItem.allKfItems.get(kfId);
-    //             //         if (typeof tmpKf !== 'undefined') {
-    //             //             if (tmpKf.rendered && tmpKf.renderWhenZooming) {
-    //             //                 let targetPosi: number = alignLeft;
-    //             //                 if (tmpKf.timingType = TimingSpec.timingRef.previousEnd) {
-    //             //                     targetPosi = alignRight;
-    //             //                 }
-    //             //                 const tmpBBox: DOMRect = tmpKf.container.getBoundingClientRect();
-    //             //                 if (tmpBBox.left !== targetPosi) {
-    //             //                     console.log('parent checking position: ', this.container, tmpKf.container);
-    //             //                     const diff: number = (targetPosi - tmpBBox.left) / state.zoomLevel;
-    //             //                     const oriTrans: ICoord = Tool.extractTransNums(tmpKf.container.getAttributeNS(null, 'transform'));
-    //             //                     tmpKf.translateContainer(oriTrans.x + diff, oriTrans.y);
-    //             //                 }
-
-    //             //                 if (tmpBBox.right > alignRight) {
-    //             //                     alignRight = tmpBBox.right;
-    //             //                 }
-    //             //             }
-    //             //         }
-    //             //     })
-    //             // }
-    //         }
-    //     }
-    // }
-
     public findNextSibling(): KfItem | KfOmit {
         return <KfItem | KfOmit>this.parentObj.children[this.idxInGroup + 1];
+    }
+
+    public bindDragBarHover() {
+        this.dragBtn.onmouseenter = (enterEvt: MouseEvent) => {
+            if (!state.mousemoving) {
+                hintTag.createHint({ x: enterEvt.pageX, y: enterEvt.pageY }, 'Drag to change the relative starting time', 240);
+            }
+        }
+        this.dragBtn.onmouseleave = () => {
+            hintTag.removeHint();
+        }
+    }
+
+    public unbindDragBarHover() {
+        this.dragBtn.onmouseenter = null;
+        this.dragBtn.onmouseleave = null;
     }
 
     public drawHoverBtns(): void {
@@ -642,23 +579,14 @@ export default class KfItem extends KfTimingIllus {
         this.dragBtn.setAttributeNS(null, 'transform', `translate(0 ${this.kfHeight - 20})`);
         this.dragBtn.classList.add('draggable-component');
         const btnBg: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        btnBg.classList.add('ease-fill');
+        btnBg.classList.add('ease-fill', 'drag-bar');
         btnBg.setAttributeNS(null, 'x', '0');
         btnBg.setAttributeNS(null, 'y', '0');
         btnBg.setAttributeNS(null, 'width', `${this.totalWidth}`);
         btnBg.setAttributeNS(null, 'height', '20');
         btnBg.setAttributeNS(null, 'fill', 'rgb(180, 180, 180)');
         btnBg.setAttributeNS(null, 'opacity', '0.9');
-        this.dragBtn.onmouseenter = (enterEvt: MouseEvent) => {
-            btnBg.setAttributeNS(null, 'fill', 'rgb(210, 210, 210)');
-            if (!state.mousemoving) {
-                hintTag.createHint({ x: enterEvt.pageX, y: enterEvt.pageY }, 'Drag to change the relative starting time', 240);
-            }
-        }
-        this.dragBtn.onmouseleave = () => {
-            btnBg.setAttributeNS(null, 'fill', 'rgb(180, 180, 180)');
-            hintTag.removeHint();
-        }
+        this.bindDragBarHover();
         this.dragBtn.appendChild(btnBg);
         let dotR: number = 1.5;
         let dotMargin: number = 1.5 * 2 * dotR;
@@ -675,6 +603,7 @@ export default class KfItem extends KfTimingIllus {
             this.dragBtn.onmousedown = (downEvt) => {
                 Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
                 this.parentObj.transHideTitle();
+                this.unbindDragBarHover();
                 let oriMousePosi: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
                 hintTag.removeHint();
                 const targetMoveItem: KfGroup | KfItem = typeof this.kfInfo.alignTo !== 'undefined' ? this.parentObj.fetchAniGroup() : this;
@@ -733,6 +662,7 @@ export default class KfItem extends KfTimingIllus {
                     targetMoveItem.showGroupBg();
                     targetMoveItem.hideTitle();
                     targetMoveItem.hideMenu();
+                    targetMoveItem.unbindBgHover();
                     document.onmousemove = (moveEvt) => {
                         const alignWithGroupBBox: DOMRect = targetMoveItem.fetchAlignWithGroup().container.getBoundingClientRect();//fixed
                         const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
@@ -786,6 +716,7 @@ export default class KfItem extends KfTimingIllus {
                     document.onmouseup = () => {
                         document.onmousemove = null;
                         document.onmouseup = null;
+                        this.bindDragBarHover();
                         Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
                         if (!updateSpec) {
                             targetMoveItem.container.setAttributeNS(null, 'transform', targetMoveItem.container.getAttributeNS(null, '_transform'));
@@ -798,6 +729,7 @@ export default class KfItem extends KfTimingIllus {
                                 targetMoveItem.showTitle();
                                 targetMoveItem.showMenu();
                             }
+                            targetMoveItem.bindBgHover();
                         } else {
                             Reducer.triger(actionType, actionInfo);
                             popKfContainer.removeChild(targetMoveItem.container);
@@ -977,6 +909,7 @@ export default class KfItem extends KfTimingIllus {
                     document.onmouseup = () => {
                         document.onmousemove = null;
                         document.onmouseup = null;
+                        this.bindDragBarHover();
                         hintPosiLine.removeHintLine();
                         hintPosiLine.removeFakeDuration();
                         Reducer.triger(action.UPDATE_MOUSE_MOVING, false);

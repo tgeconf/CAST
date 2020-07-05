@@ -491,12 +491,21 @@ export default class KfGroup extends KfTimingIllus {
         this.groupBg.setAttributeNS(null, 'stroke-width', '1');
         this.groupBg.setAttributeNS(null, 'rx', `${KfGroup.GROUP_RX}`);
         this.groupBg.setAttributeNS(null, 'x', `${this.offsetWidth}`);
+        this.bindBgHover();
+        this.container.appendChild(this.groupBg);
+    }
+
+    public bindBgHover() {
         this.groupBg.onmouseover = () => {
+            console.log('mouse over group bg');
             if (!state.mousemoving) {
                 this.transShowTitle();
             }
         }
-        this.container.appendChild(this.groupBg);
+    }
+
+    public unbindBgHover() {
+        this.groupBg.onmouseover = null;
     }
 
     /**
