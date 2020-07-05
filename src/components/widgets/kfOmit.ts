@@ -81,6 +81,12 @@ export default class KfOmit {
             this.preItem = lastRenderedItem;
         }
 
+        if (this.preItem instanceof KfItem) {
+            if (this.preItem.hasHiddenDuration) {
+                this.startX -= this.preItem.durationWidth;
+            }
+        }
+
         if (typeof this.parentObj.container !== 'undefined') {
             this.renderOmit();
         }

@@ -102,6 +102,8 @@ export default class IntelliRefLine {
                 const aniGroupBBox: DOMRect = aniGroup.groupBg.getBoundingClientRect();//fixed
                 const firstKfBBox: DOMRect = firstKf.container.getBoundingClientRect();//fixed
 
+                console.log('hint position: ', aniGroupBBox, firstKfBBox);
+
                 const tmpHintLine1: IntelliRefLine = new IntelliRefLine();
                 tmpHintLine1.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, false);
                 hintLines.push(tmpHintLine1);
@@ -144,7 +146,7 @@ export default class IntelliRefLine {
 
     public hintAlign(targetPosi: ICoord, targetHeight: number, highlight: boolean) {
         this.container = document.getElementById(KfContainer.KF_FG);
-        const containerBBox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();//fixed
+        const containerBBox: DOMRect = document.getElementById(KfContainer.KF_CONTAINER).getBoundingClientRect();//fixed
         if (typeof this.line === 'undefined') {
             this.line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         }

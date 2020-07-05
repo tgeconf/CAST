@@ -15,6 +15,7 @@ import KfTrack from './kfTrack';
 import { hintTag } from './hint';
 import { player } from '../player';
 import ViewWindow from '../viewWindow';
+import { ValueKeyIteratee } from 'lodash';
 
 export default class KfItem extends KfTimingIllus {
     static KF_HEIGHT: number = 178;
@@ -243,6 +244,7 @@ export default class KfItem extends KfTimingIllus {
             this.drawDuration(this.kfInfo.duration, this.kfWidth, this.kfHeight, true);
             this.container.appendChild(this.durationIllus);
         }
+
         this.drawChart(this.kfInfo.allCurrentMarks, this.kfInfo.allGroupMarks, this.kfInfo.marksThisKf, KfItem.allKfInfo.get(this.id).thumbnail);
         // this.container.appendChild(this.chartThumbnail);
         // this.container.appendChild(this.chartSmallThumbnail);
@@ -678,7 +680,16 @@ export default class KfItem extends KfTimingIllus {
                 const targetMoveItem: KfGroup | KfItem = typeof this.kfInfo.alignTo !== 'undefined' ? this.parentObj.fetchAniGroup() : this;
                 //move the entire group
                 targetMoveItem.container.setAttributeNS(null, '_transform', targetMoveItem.container.getAttributeNS(null, 'transform'));
-                const containerBBox: DOMRect = targetMoveItem.container.getBoundingClientRect();//fixed
+                const tmpContainerBBox: DOMRect = targetMoveItem.container.getBoundingClientRect();//fixed
+                const containerBBox: any = {
+                    top: targetMoveItem instanceof KfItem ? targetMoveItem.kfBg.getBoundingClientRect().top : tmpContainerBBox.top,
+                    left: tmpContainerBBox.left,
+                    right: tmpContainerBBox.right,
+                    width: tmpContainerBBox.width,
+                    height: tmpContainerBBox.height,
+                    x: tmpContainerBBox.x,
+                    y: tmpContainerBBox.y
+                }
                 if (targetMoveItem.parentObj.container.contains(targetMoveItem.container)) {
                     targetMoveItem.parentObj.container.removeChild(targetMoveItem.container);
                 }
@@ -882,7 +893,7 @@ export default class KfItem extends KfTimingIllus {
                                     actionType = action.UPDATE_TIMING_REF_DELAY_KF;
                                     actionInfo.aniId = this.parentObj.aniId;
                                     actionInfo.ref = TimingSpec.timingRef.previousEnd;
-                                    actionInfo.delay = 300;
+                                    // actionInfo.delay = 300;
                                 } else {
                                     updateSpec = false;
                                     actionInfo = {};

@@ -347,6 +347,7 @@ export default class KfGroup extends KfTimingIllus {
         this.parentObj.container.removeChild(this.container);
         const popKfContainer: HTMLElement = document.getElementById(KfContainer.KF_POPUP);
         const popKfContainerBbox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();//fixed
+        console.log('pop adding: ', this.container);
         popKfContainer.appendChild(this.container);
         //set new transform
         this.translateContainer((containerBBox.left - popKfContainerBbox.left) / state.zoomLevel, KfGroup.TITLE_HEIHGT + (containerBBox.top - popKfContainerBbox.top) / state.zoomLevel);
@@ -354,12 +355,13 @@ export default class KfGroup extends KfTimingIllus {
         const groupsAligned: KfGroup[] = [];
         if (typeof this.alignId !== 'undefined') {
             KfGroup.allAniGroups.forEach((aniGroup: KfGroup, tmpAniId: string) => {
-                if (tmpAniId !== this.aniId && aniGroup.alignTarget === this.alignId) {
+                if (tmpAniId !== this.aniId && aniGroup.alignTarget === this.alignId && aniGroup.alignType === Animation.alignTarget.withEle) {
                     groupsAligned.push(aniGroup);
                     aniGroup.container.setAttributeNS(null, '_transform', aniGroup.container.getAttributeNS(null, 'transform'));
                     const tmpContainerBBox: DOMRect = aniGroup.container.getBoundingClientRect();//fixed
                     aniGroup.parentObj.container.removeChild(aniGroup.container);
                     popKfContainer.appendChild(aniGroup.container);
+                    console.log('pop adding: ', aniGroup.container);
                     aniGroup.translateContainer((tmpContainerBBox.left - popKfContainerBbox.left) / state.zoomLevel, (tmpContainerBBox.top - popKfContainerBbox.top) / state.zoomLevel);
                 }
             })
@@ -837,44 +839,46 @@ export default class KfGroup extends KfTimingIllus {
         let cameThroughOmit: KfOmit;
         this.children.forEach((k: KfItem | KfOmit) => {
             // console.log('testing translate : ', k.container, k);
-            const tmpTrans: ICoord = Tool.extractTransNums(k.container.getAttributeNS(null, 'transform'));
-            const tmpIdxInGroup: number = k.idxInGroup;
-            if (updateStartItem) {//need to update startitem and its aligned elements too
-                if ((tmpTrans.x >= currentTransX || tmpIdxInGroup >= currentIdxInGroup) && !(count === 0 && k instanceof KfOmit)) {
-                    k.translateContainer(tmpTrans.x + transX, tmpTrans.y);
-                    if (k instanceof KfItem) {
-                        k.transOmitsWithItem();
-                    }
-                    if (k instanceof KfItem && updateAlignedKfs) {
-                        k.translateAlignedGroups(transX, updateAlignedKfs);
-                    }
-                    count++;
-                }
-            } else {//dont update startitem
-                if (updateStartItemAligned) {//update its aligned elements
+            if (k.rendered) {
+                const tmpTrans: ICoord = Tool.extractTransNums(k.container.getAttributeNS(null, 'transform'));
+                const tmpIdxInGroup: number = k.idxInGroup;
+                if (updateStartItem) {//need to update startitem and its aligned elements too
                     if ((tmpTrans.x >= currentTransX || tmpIdxInGroup >= currentIdxInGroup) && !(count === 0 && k instanceof KfOmit)) {
-                        if (k.id !== startTransItem.id) {
-                            k.translateContainer(tmpTrans.x + transX, tmpTrans.y);
-                            if (k instanceof KfItem) {
-                                k.transOmitsWithItem();
-                            }
+                        k.translateContainer(tmpTrans.x + transX, tmpTrans.y);
+                        if (k instanceof KfItem) {
+                            k.transOmitsWithItem();
                         }
                         if (k instanceof KfItem && updateAlignedKfs) {
                             k.translateAlignedGroups(transX, updateAlignedKfs);
                         }
                         count++;
                     }
-                } else {
-                    if (k.id !== startTransItem.id && (tmpTrans.x >= currentTransX || tmpIdxInGroup >= currentIdxInGroup)) {
-                        // console.log('translating kf: ', k.container, tmpTrans.x + transX, transX, tmpTrans.x);
-                        k.translateContainer(tmpTrans.x + transX, tmpTrans.y);
-                        if (k instanceof KfItem) {
-                            k.transOmitsWithItem();
-                            if (updateAlignedKfs) {
+                } else {//dont update startitem
+                    if (updateStartItemAligned) {//update its aligned elements
+                        if ((tmpTrans.x >= currentTransX || tmpIdxInGroup >= currentIdxInGroup) && !(count === 0 && k instanceof KfOmit)) {
+                            if (k.id !== startTransItem.id) {
+                                k.translateContainer(tmpTrans.x + transX, tmpTrans.y);
+                                if (k instanceof KfItem) {
+                                    k.transOmitsWithItem();
+                                }
+                            }
+                            if (k instanceof KfItem && updateAlignedKfs) {
                                 k.translateAlignedGroups(transX, updateAlignedKfs);
                             }
+                            count++;
                         }
-                        count++;
+                    } else {
+                        if (k.id !== startTransItem.id && (tmpTrans.x >= currentTransX || tmpIdxInGroup >= currentIdxInGroup)) {
+                            // console.log('translating kf: ', k.container, tmpTrans.x + transX, transX, tmpTrans.x);
+                            k.translateContainer(tmpTrans.x + transX, tmpTrans.y);
+                            if (k instanceof KfItem) {
+                                k.transOmitsWithItem();
+                                if (updateAlignedKfs) {
+                                    k.translateAlignedGroups(transX, updateAlignedKfs);
+                                }
+                            }
+                            count++;
+                        }
                     }
                 }
             }

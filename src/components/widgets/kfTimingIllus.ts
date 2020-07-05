@@ -136,7 +136,7 @@ export default class KfTimingIllus {
         this.offsetBg.setAttributeNS(null, 'height', `${widgetHeight}`);
         this.offsetBg.setAttributeNS(null, 'fill', KfTimingIllus.OFFSET_COLOR);
         this.offsetIllus.appendChild(this.offsetBg);
-        if (this.offsetWidth / 2 - 6 >= 0) {
+        if (this.offsetWidth / 2 - 6 >= 0 && !fake) {
             this.drawArrowIcon({ x: this.offsetWidth / 2 - 6, y: widgetHeight / 2 - 6 }, KfTimingIllus.TIMING_TYPE_OFFSET);
             this.offsetIllus.appendChild(this.offsetIcon);
         }
@@ -162,7 +162,9 @@ export default class KfTimingIllus {
     public updateOffset(widgetHeight: number): void {
         this.offsetBg.setAttributeNS(null, 'height', `${widgetHeight}`);
         this.stretchBar.setAttributeNS(null, 'height', `${widgetHeight}`);
-        this.offsetIcon.setAttributeNS(null, 'transform', `translate(${this.offsetWidth / 2 - 6}, ${widgetHeight / 2 - 6})`)
+        if (typeof this.offsetIcon !== 'undefined') {
+            this.offsetIcon.setAttributeNS(null, 'transform', `translate(${this.offsetWidth / 2 - 6}, ${widgetHeight / 2 - 6})`)
+        }
     }
 
     public bindDurationHover() {
