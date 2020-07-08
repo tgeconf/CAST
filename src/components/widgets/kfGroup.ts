@@ -15,6 +15,7 @@ import { TimingSpec, Animation } from 'canis_toolkit';
 import PlusBtn from "./plusBtn";
 import { hintTag } from "./hint";
 import { state, State } from "../../app/state";
+import Util from "../../app/core/util";
 
 export default class KfGroup extends KfTimingIllus {
     static groupIdx: number = 0;
@@ -513,6 +514,7 @@ export default class KfGroup extends KfTimingIllus {
      */
     public dragAniGroup(): [boolean, string, any] {
         const currentAniId: string = this.aniId;
+        const sepCurrentAniMarks: { dataMarks: string[], nonDataMarks: string[] } = Util.separateDataAndNonDataMarks(KfGroup.allAniGroupInfo.get(currentAniId).marks);
         const currentGBBox: DOMRect = this.groupBg.getBoundingClientRect();//fixed
         const currentGPosi: ICoord = { x: currentGBBox.left, y: currentGBBox.top };
         let targetAni: { targetAniId: string, currentAniId: string, actionType: string };
@@ -525,6 +527,7 @@ export default class KfGroup extends KfTimingIllus {
                 const aniGroupBBox: DOMRect = aniGroup.groupBg.getBoundingClientRect();//fixed
                 const firstKfBBox: DOMRect = firstKf.container.getBoundingClientRect();//fixed
                 const targetAniId: string = aniGroup.aniId;
+                const sepTargetAniMarks: { dataMarks: string[], nonDataMarks: string[] } = Util.separateDataAndNonDataMarks(KfGroup.allAniGroupInfo.get(targetAniId).marks);
                 //add orange lines according to drag position
                 if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + (6 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top) {
                     targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_ANI };//after group has higher priority
@@ -535,10 +538,10 @@ export default class KfGroup extends KfTimingIllus {
                         targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_WITH_ANI };
                         hintDrop.hintInsert({ x: aniGroupBBox.left, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, true);
                     } else if (currentGPosi.x >= firstKfBBox.left && currentGPosi.x < firstKfBBox.left + (30 * state.zoomLevel) && alignTargetGroup) {
-                        targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_WITH_KF };
+                        targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: (sepCurrentAniMarks.nonDataMarks.length > 0 || sepTargetAniMarks.nonDataMarks.length > 0) ? action.UPDATE_ANI_ALIGN_WITH_ANI : action.UPDATE_ANI_ALIGN_WITH_KF };
                         hintDrop.hintAlign({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, true);
                     } else if (currentGPosi.x >= firstKfBBox.right && currentGPosi.x < firstKfBBox.right + (30 * state.zoomLevel) && alignTargetGroup) {
-                        targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_KF };
+                        targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: (sepCurrentAniMarks.nonDataMarks.length > 0 || sepTargetAniMarks.nonDataMarks.length > 0) ? action.UPDATE_ANI_ALIGN_AFTER_ANI : action.UPDATE_ANI_ALIGN_AFTER_KF };
                         hintDrop.hintAlign({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, true);
                     }
                 }

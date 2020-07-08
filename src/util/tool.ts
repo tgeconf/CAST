@@ -437,4 +437,5 @@ export default class Tool {
         }
         return Math.floor((currentZoomNum - ViewWindow.MIN_ZOOM_LEVEL) / ((ViewWindow.MAX_ZOOM_LEVEL - ViewWindow.MIN_ZOOM_LEVEL) / state.chartThumbNailZoomLevels));
     }
+
 }

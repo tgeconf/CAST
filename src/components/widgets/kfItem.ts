@@ -736,175 +736,180 @@ export default class KfItem extends KfTimingIllus {
                         }
                     }
                 } else {//this kf is not aligned to others
+                    let looseFocus: boolean = false;
                     document.onmousemove = (moveEvt) => {
                         const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
                         const posiDiff: ICoord = { x: (currentMousePosi.x - oriMousePosi.x) / state.zoomLevel, y: (currentMousePosi.y - oriMousePosi.y) / state.zoomLevel };
-                        const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
-                        this.translateContainer(oriTrans.x + posiDiff.x, oriTrans.y + posiDiff.y);
 
-                        if (this.idxInGroup > 0) {//this is not the first kf in group, need to check the position relation with previous kf
-                            // if (this.idxInGroup > 0 && preSibling instanceof KfItem) {//this is not the first kf in group, need to check the position relation with previous kf
-                            const currentKfLeft: number = this.kfBg.getBoundingClientRect().left;//fixed
-                            // const preKfRight: number = preSibling.kfBg.getBoundingClientRect().right;//fixed
-                            const preKfDurationW: number = KfItem.BASIC_OFFSET_DURATION_W > this.durationWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.durationWidth;
-                            const posiXDiff: number = (currentKfLeft - preKfRight) / state.zoomLevel;
-                            const currentKfOffsetW: number = KfItem.BASIC_OFFSET_DURATION_W > this.offsetWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.offsetWidth;
-                            if (posiXDiff >= currentKfOffsetW + preKfDurationW) {//show both pre duration and current offset
-                                if (this.hasOffset) {
-                                    this.showOffset();
-                                } else {
-                                    if (typeof this.offsetIllus === 'undefined') {
-                                        this.drawOffset(KfItem.minOffset, this.kfHeight, 0, true);
-                                    }
-                                    this.container.appendChild(this.offsetIllus);
-                                }
-                                //show pre duration
-                                if (preSibling instanceof KfItem) {
-                                    preSibling.cancelKfDragoverKf();
-                                    this.cancelKfDragoverKf();
-                                    if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
-                                        preSibling.showDuration();
+                        //check whether the kf is still inside its group
+                        looseFocus = this.checkDragOutOfGroup(posiDiff);
+
+                        if (!looseFocus) {
+                            const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
+                            this.translateContainer(oriTrans.x + posiDiff.x, oriTrans.y);
+                            if (this.idxInGroup > 0) {//this is not the first kf in group, need to check the position relation with previous kf
+                                // if (this.idxInGroup > 0 && preSibling instanceof KfItem) {//this is not the first kf in group, need to check the position relation with previous kf
+                                const currentKfLeft: number = this.kfBg.getBoundingClientRect().left;//fixed
+                                // const preKfRight: number = preSibling.kfBg.getBoundingClientRect().right;//fixed
+                                const preKfDurationW: number = KfItem.BASIC_OFFSET_DURATION_W > this.durationWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.durationWidth;
+                                const posiXDiff: number = (currentKfLeft - preKfRight) / state.zoomLevel;
+                                const currentKfOffsetW: number = KfItem.BASIC_OFFSET_DURATION_W > this.offsetWidth ? KfItem.BASIC_OFFSET_DURATION_W : this.offsetWidth;
+                                if (posiXDiff >= currentKfOffsetW + preKfDurationW) {//show both pre duration and current offset
+                                    if (this.hasOffset) {
+                                        this.showOffset();
                                     } else {
-                                        if (typeof preSibling.durationIllus === 'undefined') {
-                                            preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight, false);
+                                        if (typeof this.offsetIllus === 'undefined') {
+                                            this.drawOffset(KfItem.minOffset, this.kfHeight, 0, true);
                                         }
-                                        preSibling.container.appendChild(preSibling.durationIllus);
+                                        this.container.appendChild(this.offsetIllus);
                                     }
-                                } else if (preSibling instanceof KfOmit) {
-                                    //show fake duration
-                                    hintPosiLine.showFakeDuration({ x: containerBBox.left, y: containerBBox.top }, containerBBox.height);
-                                }
-
-                                //target actions
-                                if (!this.hasOffset && preSibling.hasDuration) {
-                                    updateSpec = true;//add default offset between kfs
-                                    actionType = action.UPDATE_DELAY_BETWEEN_KF;
-                                    actionInfo.aniId = this.parentObj.aniId;
-                                    actionInfo.delay = 300;
-                                } else if (!preSibling.hasDuration && this.hasOffset) {
-                                    updateSpec = true;//change timing ref from with to after
-                                    actionType = action.UPDATE_KF_TIMING_REF;
-                                    actionInfo.aniId = this.parentObj.aniId;
-                                    actionInfo.ref = TimingSpec.timingRef.previousEnd;
-                                } else {
-                                    updateSpec = false;
-                                    actionInfo = {};
-                                }
-                            } else if (posiXDiff >= preKfDurationW && posiXDiff < currentKfOffsetW + preKfDurationW) {//show pre duration
-                                if (this.hasOffset) {
-                                    this.hideOffset();
-                                } else {
-                                    if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
-                                        this.container.removeChild(this.offsetIllus);
-                                    }
-                                }
-                                //show pre duration 
-                                if (preSibling instanceof KfItem) {
-                                    preSibling.cancelKfDragoverKf();
-                                    this.cancelKfDragoverKf();
-                                    if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
-                                        preSibling.showDuration();
-                                    } else {
-                                        if (typeof preSibling.durationIllus === 'undefined') {
-                                            preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight, false);
+                                    //show pre duration
+                                    if (preSibling instanceof KfItem) {
+                                        preSibling.cancelKfDragoverKf();
+                                        this.cancelKfDragoverKf();
+                                        if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
+                                            preSibling.showDuration();
+                                        } else {
+                                            if (typeof preSibling.durationIllus === 'undefined') {
+                                                preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight, false);
+                                            }
+                                            preSibling.container.appendChild(preSibling.durationIllus);
                                         }
-                                        preSibling.container.appendChild(preSibling.durationIllus);
+                                    } else if (preSibling instanceof KfOmit) {
+                                        //show fake duration
+                                        hintPosiLine.showFakeDuration({ x: containerBBox.left, y: containerBBox.top }, containerBBox.height);
                                     }
-                                } else if (preSibling instanceof KfOmit) {
-                                    //show fake duration
-                                    hintPosiLine.showFakeDuration({ x: containerBBox.left, y: containerBBox.top }, containerBBox.height);
-                                }
 
-                                //target actions
-                                if (this.hasOffset && preSibling.hasDuration) {
-                                    updateSpec = true;//remove offset between kfs
-                                    actionType = action.REMOVE_DELAY_BETWEEN_KF;
-                                    actionInfo.aniId = this.parentObj.aniId;
-                                } else if (this.hasOffset && !preSibling.hasDuration) {
-                                    updateSpec = true;//change timing ref from with to after and remove offset
-                                    actionType = action.UPDATE_TIMING_REF_DELAY_KF;
-                                    actionInfo.aniId = this.parentObj.aniId;
-                                    actionInfo.ref = TimingSpec.timingRef.previousEnd;
-                                    // actionInfo.delay = 300;
-                                } else {
-                                    updateSpec = false;
-                                    actionInfo = {};
-                                }
-                            } else if (posiXDiff < preKfDurationW && posiXDiff >= 0) {//show current offset and hide pre duration
-                                if (this.hasOffset) {
-                                    this.showOffset();
-                                } else {
-                                    if (typeof this.offsetIllus === 'undefined') {
-                                        this.drawOffset(KfItem.minOffset, this.kfHeight, 0, true);
-                                    }
-                                    this.container.appendChild(this.offsetIllus);
-                                }
-                                //hide pre duration
-                                if (preSibling instanceof KfItem) {
-                                    preSibling.cancelKfDragoverKf();
-                                    this.cancelKfDragoverKf();
-                                    if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
-                                        preSibling.hideDuration();
+                                    //target actions
+                                    if (!this.hasOffset && preSibling.hasDuration) {
+                                        updateSpec = true;//add default offset between kfs
+                                        actionType = action.UPDATE_DELAY_BETWEEN_KF;
+                                        actionInfo.aniId = this.parentObj.aniId;
+                                        actionInfo.delay = 300;
+                                    } else if (!preSibling.hasDuration && this.hasOffset) {
+                                        updateSpec = true;//change timing ref from with to after
+                                        actionType = action.UPDATE_KF_TIMING_REF;
+                                        actionInfo.aniId = this.parentObj.aniId;
+                                        actionInfo.ref = TimingSpec.timingRef.previousEnd;
                                     } else {
-                                        if (typeof preSibling.durationIllus !== 'undefined' && preSibling.container.contains(preSibling.durationIllus)) {
-                                            preSibling.container.removeChild(preSibling.durationIllus);
+                                        updateSpec = false;
+                                        actionInfo = {};
+                                    }
+                                } else if (posiXDiff >= preKfDurationW && posiXDiff < currentKfOffsetW + preKfDurationW) {//show pre duration
+                                    if (this.hasOffset) {
+                                        this.hideOffset();
+                                    } else {
+                                        if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
+                                            this.container.removeChild(this.offsetIllus);
                                         }
                                     }
-                                } else if (preSibling instanceof KfOmit) {
-                                    //hide fake duration
-                                    hintPosiLine.removeFakeDuration();
-                                }
-
-                                //target actions
-                                if (!this.hasOffset && preSibling.hasDuration) {
-                                    updateSpec = true;//change timing ref from after to with, and add default offset
-                                    actionType = action.UPDATE_TIMING_REF_DELAY_KF;
-                                    actionInfo.aniId = this.parentObj.aniId;
-                                    actionInfo.ref = TimingSpec.timingRef.previousStart;
-                                    actionInfo.delay = 300;
-                                } else if (this.hasOffset && preSibling.hasDuration) {
-                                    updateSpec = true; //change timing ref from after to with
-                                    actionType = action.UPDATE_KF_TIMING_REF;
-                                    actionInfo.aniId = this.parentObj.aniId;
-                                    actionInfo.ref = TimingSpec.timingRef.previousStart;
-                                } else {
-                                    updateSpec = false;
-                                    actionInfo = {};
-                                }
-                            } else {//hide pre duration, this offset and highlight them
-                                if (this.hasOffset) {
-                                    this.hideOffset();
-                                } else {
-                                    if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
-                                        this.container.removeChild(this.offsetIllus);
+                                    //show pre duration 
+                                    if (preSibling instanceof KfItem) {
+                                        preSibling.cancelKfDragoverKf();
+                                        this.cancelKfDragoverKf();
+                                        if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
+                                            preSibling.showDuration();
+                                        } else {
+                                            if (typeof preSibling.durationIllus === 'undefined') {
+                                                preSibling.drawDuration(KfItem.minDuration, this.kfWidth, this.kfHeight, false);
+                                            }
+                                            preSibling.container.appendChild(preSibling.durationIllus);
+                                        }
+                                    } else if (preSibling instanceof KfOmit) {
+                                        //show fake duration
+                                        hintPosiLine.showFakeDuration({ x: containerBBox.left, y: containerBBox.top }, containerBBox.height);
                                     }
-                                }
 
-                                //hide pre duration
-                                if (preSibling instanceof KfItem) {
-                                    preSibling.kfDragoverKf();
-                                    this.kfDragoverKf();
-                                    if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
-                                        preSibling.hideDuration();
+                                    //target actions
+                                    if (this.hasOffset && preSibling.hasDuration) {
+                                        updateSpec = true;//remove offset between kfs
+                                        actionType = action.REMOVE_DELAY_BETWEEN_KF;
+                                        actionInfo.aniId = this.parentObj.aniId;
+                                    } else if (this.hasOffset && !preSibling.hasDuration) {
+                                        updateSpec = true;//change timing ref from with to after and remove offset
+                                        actionType = action.UPDATE_TIMING_REF_DELAY_KF;
+                                        actionInfo.aniId = this.parentObj.aniId;
+                                        actionInfo.ref = TimingSpec.timingRef.previousEnd;
+                                        // actionInfo.delay = 300;
                                     } else {
-                                        if (typeof preSibling.durationIllus !== 'undefined' && preSibling.container.contains(preSibling.durationIllus)) {
-                                            preSibling.container.removeChild(preSibling.durationIllus);
+                                        updateSpec = false;
+                                        actionInfo = {};
+                                    }
+                                } else if (posiXDiff < preKfDurationW && posiXDiff >= 0) {//show current offset and hide pre duration
+                                    if (this.hasOffset) {
+                                        this.showOffset();
+                                    } else {
+                                        if (typeof this.offsetIllus === 'undefined') {
+                                            this.drawOffset(KfItem.minOffset, this.kfHeight, 0, true);
+                                        }
+                                        this.container.appendChild(this.offsetIllus);
+                                    }
+                                    //hide pre duration
+                                    if (preSibling instanceof KfItem) {
+                                        preSibling.cancelKfDragoverKf();
+                                        this.cancelKfDragoverKf();
+                                        if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
+                                            preSibling.hideDuration();
+                                        } else {
+                                            if (typeof preSibling.durationIllus !== 'undefined' && preSibling.container.contains(preSibling.durationIllus)) {
+                                                preSibling.container.removeChild(preSibling.durationIllus);
+                                            }
+                                        }
+                                    } else if (preSibling instanceof KfOmit) {
+                                        //hide fake duration
+                                        hintPosiLine.removeFakeDuration();
+                                    }
+
+                                    //target actions
+                                    if (!this.hasOffset && preSibling.hasDuration) {
+                                        updateSpec = true;//change timing ref from after to with, and add default offset
+                                        actionType = action.UPDATE_TIMING_REF_DELAY_KF;
+                                        actionInfo.aniId = this.parentObj.aniId;
+                                        actionInfo.ref = TimingSpec.timingRef.previousStart;
+                                        actionInfo.delay = 300;
+                                    } else if (this.hasOffset && preSibling.hasDuration) {
+                                        updateSpec = true; //change timing ref from after to with
+                                        actionType = action.UPDATE_KF_TIMING_REF;
+                                        actionInfo.aniId = this.parentObj.aniId;
+                                        actionInfo.ref = TimingSpec.timingRef.previousStart;
+                                    } else {
+                                        updateSpec = false;
+                                        actionInfo = {};
+                                    }
+                                } else {//hide pre duration, this offset and highlight them
+                                    if (this.hasOffset) {
+                                        this.hideOffset();
+                                    } else {
+                                        if (typeof this.offsetIllus !== 'undefined' && this.container.contains(this.offsetIllus)) {
+                                            this.container.removeChild(this.offsetIllus);
                                         }
                                     }
-                                } else if (preSibling instanceof KfOmit) {
-                                    //hide fake duration
-                                    this.kfDragoverKf();
-                                    hintPosiLine.removeFakeDuration();
-                                }
 
-                                //target actions
-                                updateSpec = true;//remove lowest level grouping
-                                actionType = action.REMOVE_LOWESTGROUP;
-                                actionInfo.aniId = this.parentObj.aniId;
+                                    //hide pre duration
+                                    if (preSibling instanceof KfItem) {
+                                        preSibling.kfDragoverKf();
+                                        this.kfDragoverKf();
+                                        if (preSibling.hasDuration || preSibling.hasHiddenDuration) {
+                                            preSibling.hideDuration();
+                                        } else {
+                                            if (typeof preSibling.durationIllus !== 'undefined' && preSibling.container.contains(preSibling.durationIllus)) {
+                                                preSibling.container.removeChild(preSibling.durationIllus);
+                                            }
+                                        }
+                                    } else if (preSibling instanceof KfOmit) {
+                                        //hide fake duration
+                                        this.kfDragoverKf();
+                                        hintPosiLine.removeFakeDuration();
+                                    }
+
+                                    //target actions
+                                    updateSpec = true;//remove lowest level grouping
+                                    actionType = action.REMOVE_LOWESTGROUP;
+                                    actionInfo.aniId = this.parentObj.aniId;
+                                }
                             }
+                            oriMousePosi = currentMousePosi;
                         }
-
-                        oriMousePosi = currentMousePosi;
                     }
                     document.onmouseup = () => {
                         document.onmousemove = null;
@@ -913,8 +918,10 @@ export default class KfItem extends KfTimingIllus {
                         hintPosiLine.removeHintLine();
                         hintPosiLine.removeFakeDuration();
                         Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
-                        if (!updateSpec) {
+                        if (!updateSpec || looseFocus) {
                             if (typeof preSibling !== 'undefined' && preSibling instanceof KfItem) {
+                                preSibling.cancelKfDragoverKf();
+                                this.cancelKfDragoverKf();
                                 preSibling.showDuration();
                             }
                             this.container.setAttributeNS(null, 'transform', this.container.getAttributeNS(null, '_transform'));
@@ -942,6 +949,22 @@ export default class KfItem extends KfTimingIllus {
         this.hoverBtnContainer.appendChild(this.dragBtn);
 
         this.container.appendChild(this.hoverBtnContainer);
+    }
+
+    /**
+     * when dragging a group, check whether it is outside its parent group
+     */
+    public checkDragOutOfGroup(posiDiff: ICoord): boolean {
+        const parentBBox: DOMRect = this.parentObj.container.getBoundingClientRect();
+        const tmpCurrentBBox: DOMRect = this.container.getBoundingClientRect();
+
+        if (tmpCurrentBBox.top + posiDiff.y < parentBBox.top ||
+            tmpCurrentBBox.bottom + posiDiff.y > parentBBox.bottom ||
+            tmpCurrentBBox.left + posiDiff.x < parentBBox.left ||
+            tmpCurrentBBox.right + posiDiff.x > parentBBox.right) {
+            return true;
+        }
+        return false;
     }
 
     public drawKfBg(treeLevel: number, size?: ISize): void {

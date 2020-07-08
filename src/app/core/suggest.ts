@@ -8,23 +8,7 @@ export default class Suggest {
     static NUMERIC_CAT_ATTRS: string[] = ['Year', 'year', 'Month', 'month', 'Day', 'day'];
     static allPaths: IPath[] = [];
 
-    /**
-     * separate input marks to data encoded and non data encoded 
-     * @param markIdArr 
-     */
-    public static separateDataAndNonDataMarks(markIdArr: string[]): { dataMarks: string[], nonDataMarks: string[] } {
-        let dataMarks: string[] = [];
-        let nonDataMarks: string[] = [];
-        markIdArr.forEach((mId: string) => {
-            if (typeof ChartSpec.dataMarkDatum.get(mId) !== 'undefined') {
-                dataMarks.push(mId);
-            } else {
-                nonDataMarks.push(mId);
-            }
-        })
-        return { dataMarks: dataMarks, nonDataMarks: nonDataMarks }
-    }
-
+    
     /**
      * find attributes with different values in the given mark arrays
      * @param markIdArr1 
@@ -613,8 +597,8 @@ export default class Suggest {
 
     public static suggestPaths(firstKfMarks: string[], lastKfMarks: string[]) {
         this.allPaths = [];
-        const sepFirstKfMarks: { dataMarks: string[], nonDataMarks: string[] } = this.separateDataAndNonDataMarks(firstKfMarks);
-        const sepLastKfMarks: { dataMarks: string[], nonDataMarks: string[] } = this.separateDataAndNonDataMarks(lastKfMarks);
+        const sepFirstKfMarks: { dataMarks: string[], nonDataMarks: string[] } = Util.separateDataAndNonDataMarks(firstKfMarks);
+        const sepLastKfMarks: { dataMarks: string[], nonDataMarks: string[] } = Util.separateDataAndNonDataMarks(lastKfMarks);
         if (sepFirstKfMarks.dataMarks.length > 0 && sepFirstKfMarks.nonDataMarks.length > 0) {//there are both data encoded and non data encoded marks in the first kf
             //no suggestion
 

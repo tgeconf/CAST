@@ -29,6 +29,24 @@ export default class Util {
     static nonDataValues: Map<string, Array<string | number>> = new Map();//key: attr name, value: all values
 
     /**
+         * separate input marks to data encoded and non data encoded 
+         * @param markIdArr 
+         */
+    public static separateDataAndNonDataMarks(markIdArr: string[]): { dataMarks: string[], nonDataMarks: string[] } {
+        let dataMarks: string[] = [];
+        let nonDataMarks: string[] = [];
+        markIdArr.forEach((mId: string) => {
+            if (typeof ChartSpec.dataMarkDatum.get(mId) !== 'undefined') {
+                dataMarks.push(mId);
+            } else {
+                nonDataMarks.push(mId);
+            }
+        })
+        return { dataMarks: dataMarks, nonDataMarks: nonDataMarks }
+    }
+
+
+    /**
      * based on selected marks, judge perfrom which kind of suggestion
      * @param markIds 
      */
