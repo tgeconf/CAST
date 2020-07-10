@@ -15,6 +15,8 @@ export interface IKfGroupSize {
 export interface IKeyframe {
     id: number
     timingRef: string;
+    groupRef: string;
+    refValue?: string;
     // parentObj: IKeyframeGroup //keyframe group id
     durationIcon: boolean
     hiddenDurationIcon: boolean,

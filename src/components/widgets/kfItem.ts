@@ -39,6 +39,8 @@ export default class KfItem extends KfTimingIllus {
     public isHighlighted: boolean = false;
     public kfInfo: {
         delay: number
+        groupRef: string
+        refValue: string
         duration: number
         allCurrentMarks: string[]
         allGroupMarks: string[]
@@ -114,6 +116,7 @@ export default class KfItem extends KfTimingIllus {
         KfItem.fakeKfIdx++;
         return {
             id: KfItem.fakeKfIdx,
+            groupRef: 'id',
             timingRef: TimingSpec.timingRef.previousEnd,
             duration: basicInfo.duration,
             allCurrentMarks: [...basicInfo.allCurrentMarks, ...selectedMarks],
@@ -176,6 +179,8 @@ export default class KfItem extends KfTimingIllus {
         }
         this.kfInfo = {
             delay: kf.delay,
+            groupRef: typeof kf.groupRef === 'undefined' ? 'id' : kf.groupRef,
+            refValue: typeof kf.refValue === 'undefined' ? '' : kf.refValue,
             duration: kf.duration,
             allCurrentMarks: kf.allCurrentMarks,
             allGroupMarks: kf.allGroupMarks,

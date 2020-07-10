@@ -40,12 +40,11 @@ export class KfContainer {
     public transDistance: ISize = { w: 0, h: 0 };
 
     public static showPopCover() {
-        console.log('show cover: ', document.getElementById(this.KF_POPCOVER));
         document.getElementById(this.KF_POPCOVER).setAttribute('display', '');
     }
 
     public static hidePopCover() {
-        // document.getElementById(this.KF_POPCOVER).setAttribute('display', 'none');
+        document.getElementById(this.KF_POPCOVER).setAttribute('display', 'none');
     }
 
     public createKfContainer() {

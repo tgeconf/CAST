@@ -16,6 +16,8 @@ import PlusBtn from "./plusBtn";
 import { hintTag } from "./hint";
 import { state, State } from "../../app/state";
 import Util from "../../app/core/util";
+import { DllReferencePlugin } from "webpack";
+import SortableSvgTable, { sortableSvgTable } from "./sortableSvgTable";
 
 export default class KfGroup extends KfTimingIllus {
     static groupIdx: number = 0;
@@ -44,6 +46,8 @@ export default class KfGroup extends KfTimingIllus {
     public targetTrackId: string;
     public idxInGroup: number = 0;
     public groupRef: string = '';
+    public refValue: string = '';
+    public childrenRefValues: string[] = [];
     public timingRef: string = TimingSpec.timingRef.previousStart;
     public kfHasOffset: boolean = false;//for updating omits
     public kfHasDuration: boolean = false;//for updating omits
@@ -63,6 +67,7 @@ export default class KfGroup extends KfTimingIllus {
     public groupTitle: SVGGElement;
     public groupTitleBg: SVGRectElement;
     public groupTitleContent: SVGTextContentElement;
+    public groupSortBtn: SVGGElement
     public groupTitleCover: SVGRectElement;//same color as the group bg
     public children: (KfGroup | KfItem | KfOmit)[] = [];
     public kfNum: number = 0;
@@ -110,6 +115,7 @@ export default class KfGroup extends KfTimingIllus {
      * @param p : init position of the root group
      */
     public createGroup(kfg: IKeyframeGroup, previousAniId: string, parentObj: KfGroup | KfTrack, posiY: number, treeLevel: number, targetTrackId: string): void {
+        console.log('test kfg: ', kfg);
         this.id = kfg.id;
         this.aniId = kfg.aniId;
         this.preAniId = previousAniId;
@@ -141,8 +147,17 @@ export default class KfGroup extends KfTimingIllus {
             }
             this.title = tmpTitle;
         } else {
+            this.refValue = kfg.refValue;
             this.fullTitle = kfg.refValue;
             this.title = kfg.refValue;
+        }
+
+        if (kfg.keyframes.length > 0) {
+            this.childrenRefValues = kfg.keyframes.map((k: IKeyframe) => k.refValue);
+        } else {
+            if (kfg.children.length > 0) {
+                this.childrenRefValues = kfg.children.map((c: IKeyframeGroup) => c.refValue);
+            }
         }
 
         if (typeof parentObj.container !== 'undefined') {
@@ -240,7 +255,11 @@ export default class KfGroup extends KfTimingIllus {
         this.updateTitleWidth();
 
         this.container.onmouseleave = (leaveEvt: any) => {
-            if (!this.isDragging) {
+            let flag: boolean = !this.isDragging
+            if (typeof sortableSvgTable.container !== 'undefined') {
+                flag = flag && !sortableSvgTable.container.contains(leaveEvt.toElement)
+            }
+            if (flag) {
                 //this is the original element the event handler was assigned to
                 var e = leaveEvt.relatedTarget;
 
@@ -281,7 +300,8 @@ export default class KfGroup extends KfTimingIllus {
     public updateTitleWidth() {
         if (typeof this.groupTitleContent !== 'undefined') {
             const textBBox: DOMRect = this.groupTitleContent.getBoundingClientRect();
-            this.groupTitleBg.setAttributeNS(null, 'width', `${textBBox.width + 2 * KfGroup.GROUP_RX}`);
+            this.groupTitleBg.setAttributeNS(null, 'width', `${textBBox.width + 2 * KfGroup.GROUP_RX + KfGroup.TITLE_HEIHGT + KfGroup.PADDING}`);
+            this.groupSortBtn.setAttributeNS(null, 'transform', `translate(${textBBox.width + 2 * KfGroup.GROUP_RX + KfGroup.TITLE_HEIHGT + KfGroup.PADDING - KfGroup.TITLE_HEIHGT + 2},2)`)
         }
     }
 
@@ -300,6 +320,7 @@ export default class KfGroup extends KfTimingIllus {
             const oriTransX: number = Tool.extractTransNums(this.groupTitle.getAttributeNS(null, 'transform')).x;
             this.groupTitle.setAttributeNS(null, 'transform', `translate(${oriTransX}, 2)`);
         }
+        sortableSvgTable.removeTable();
     }
 
     public showTitle(): void {
@@ -348,7 +369,6 @@ export default class KfGroup extends KfTimingIllus {
         this.parentObj.container.removeChild(this.container);
         const popKfContainer: HTMLElement = document.getElementById(KfContainer.KF_POPUP);
         const popKfContainerBbox: DOMRect = document.getElementById(KfContainer.KF_FG).getBoundingClientRect();//fixed
-        console.log('pop adding: ', this.container);
         popKfContainer.appendChild(this.container);
         //set new transform
         this.translateContainer((containerBBox.left - popKfContainerBbox.left) / state.zoomLevel, KfGroup.TITLE_HEIHGT + (containerBBox.top - popKfContainerBbox.top) / state.zoomLevel);
@@ -362,7 +382,6 @@ export default class KfGroup extends KfTimingIllus {
                     const tmpContainerBBox: DOMRect = aniGroup.container.getBoundingClientRect();//fixed
                     aniGroup.parentObj.container.removeChild(aniGroup.container);
                     popKfContainer.appendChild(aniGroup.container);
-                    console.log('pop adding: ', aniGroup.container);
                     aniGroup.translateContainer((tmpContainerBBox.left - popKfContainerBbox.left) / state.zoomLevel, (tmpContainerBBox.top - popKfContainerBbox.top) / state.zoomLevel);
                 }
             })
@@ -386,30 +405,7 @@ export default class KfGroup extends KfTimingIllus {
         })
     }
 
-    public createGroupTitle(): void {
-        const groupTitleWrapper: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        groupTitleWrapper.setAttributeNS(null, 'transform', `translate(${this.alignMerge ? this.offsetWidth + KfGroup.PADDING : this.offsetWidth}, 0)`);
-        this.groupTitle = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        this.groupTitle.classList.add('ease-transform');
-        this.groupTitle.classList.add('draggable-component');
-        this.groupTitle.setAttributeNS(null, 'transform', 'translate(0, 2)');
-        this.groupTitleBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        this.groupTitleBg.setAttributeNS(null, 'width', `${KfGroup.TITLE_CHAR_WIDTH * this.title.length + 2 * KfGroup.TITLE_PADDING}`);
-        this.groupTitleBg.setAttributeNS(null, 'height', '30');
-        this.groupTitleBg.setAttributeNS(null, 'fill', '#676767');
-        this.groupTitleBg.setAttributeNS(null, 'rx', `${KfGroup.GROUP_RX}`);
-        this.groupTitle.appendChild(this.groupTitleBg);
-        this.groupTitleContent = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        this.groupTitleContent.innerHTML = this.title;
-        this.groupTitleContent.setAttributeNS(null, 'x', '6');
-        this.groupTitleContent.setAttributeNS(null, 'y', `${KfGroup.TITLE_HEIHGT - 4}`);
-        this.groupTitleContent.setAttributeNS(null, 'fill', '#fff');
-        this.groupTitleContent.classList.add('monospace-font');
-        this.groupTitleContent.setAttributeNS(null, 'font-size', '10pt');
-        this.groupTitle.appendChild(this.groupTitleContent);
-
-        this.bindTitleHover();
-
+    public bindGroupTitleDrag() {
         this.groupTitle.onmousedown = (downEvt) => {
             Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
             this.isDragging = true;
@@ -473,7 +469,80 @@ export default class KfGroup extends KfTimingIllus {
                 document.getElementById(KfContainer.KF_POPUP).innerHTML = '';
             }
         }
+    }
+
+    public unbindGroupTitleDrag() {
+        this.groupTitle.onmousedown = null;
+    }
+
+    public createGroupTitle(): void {
+        const groupTitleWrapper: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        groupTitleWrapper.setAttributeNS(null, 'transform', `translate(${this.alignMerge ? this.offsetWidth + KfGroup.PADDING : this.offsetWidth}, 0)`);
+        this.groupTitle = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.groupTitle.classList.add('ease-transform');
+        this.groupTitle.classList.add('draggable-component');
+        this.groupTitle.setAttributeNS(null, 'transform', 'translate(0, 2)');
+        this.groupTitleBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        this.groupTitleBg.setAttributeNS(null, 'width', `${KfGroup.TITLE_CHAR_WIDTH * this.title.length + 2 * KfGroup.TITLE_PADDING + KfGroup.TITLE_HEIHGT + KfGroup.PADDING}`);
+        this.groupTitleBg.setAttributeNS(null, 'height', `${KfGroup.TITLE_HEIHGT + 2 * KfGroup.PADDING}`);
+        this.groupTitleBg.setAttributeNS(null, 'fill', '#676767');
+        this.groupTitleBg.setAttributeNS(null, 'rx', `${KfGroup.GROUP_RX}`);
+        this.groupTitle.appendChild(this.groupTitleBg);
+        this.groupTitleContent = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        this.groupTitleContent.innerHTML = this.title;
+        this.groupTitleContent.setAttributeNS(null, 'x', '6');
+        this.groupTitleContent.setAttributeNS(null, 'y', `${KfGroup.TITLE_HEIHGT - 4}`);
+        this.groupTitleContent.setAttributeNS(null, 'fill', '#fff');
+        this.groupTitleContent.classList.add('monospace-font');
+        this.groupTitleContent.setAttributeNS(null, 'font-size', '10pt');
+        this.groupTitle.appendChild(this.groupTitleContent);
+        this.bindTitleHover();
+        this.bindGroupTitleDrag();
         groupTitleWrapper.appendChild(this.groupTitle);
+
+        this.groupSortBtn = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.groupSortBtn.classList.add('clickable-component', 'title-btn');
+        this.groupSortBtn.setAttributeNS(null, 'transform', `translate(${KfGroup.TITLE_CHAR_WIDTH * this.title.length + KfGroup.TITLE_PADDING + KfGroup.TITLE_HEIHGT + 2},2)`)
+        const titleBtnBg: SVGCircleElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        const btnR: number = (KfGroup.TITLE_HEIHGT - 4) / 2;
+        titleBtnBg.setAttributeNS(null, 'cx', `${btnR}`);
+        titleBtnBg.setAttributeNS(null, 'cy', `${btnR}`);
+        titleBtnBg.setAttributeNS(null, 'r', `${btnR}`);
+        this.groupSortBtn.appendChild(titleBtnBg);
+        for (let i = 0; i < 3; i++) {
+            const tmpLine: SVGLineElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            tmpLine.setAttributeNS(null, 'stroke-linecap', 'round');
+            tmpLine.setAttributeNS(null, 'stroke', '#fff');
+            tmpLine.setAttributeNS(null, 'stroke-width', '1.4');
+            tmpLine.setAttributeNS(null, 'x1', `${(i + 2) * btnR / 5}`)
+            tmpLine.setAttributeNS(null, 'x2', `${(8 - i) * btnR / 5}`)
+            tmpLine.setAttributeNS(null, 'y1', `${(2 + i) * btnR / 3}`)
+            tmpLine.setAttributeNS(null, 'y2', `${(2 + i) * btnR / 3}`)
+            this.groupSortBtn.appendChild(tmpLine);
+        }
+        this.groupSortBtn.onmouseenter = (enterEvt) => {
+            this.unbindTitleHover();
+            this.unbindGroupTitleDrag();
+            if (!state.mousemoving) {
+                hintTag.createHint({ x: enterEvt.pageX, y: enterEvt.pageY }, 'sort data attributes');
+            }
+        }
+        this.groupSortBtn.onmouseleave = (leaveEvt) => {
+            hintTag.removeHint();
+            this.bindTitleHover();
+            this.bindGroupTitleDrag();
+        }
+        this.groupSortBtn.onclick = () => {
+            const btnBBox: DOMRect = this.groupSortBtn.getBoundingClientRect();
+            sortableSvgTable.createTable(
+                this.childrenRefValues, {
+                x: btnBBox.right - SortableSvgTable.TABLE_PADDING,
+                y: btnBBox.top
+            }, this)
+        }
+        this.groupTitle.appendChild(this.groupSortBtn);
+
+
         //add a title cover
         if (this.alignMerge) {
             this.groupTitleCover = document.createElementNS('http://www.w3.org/2000/svg', 'rect');

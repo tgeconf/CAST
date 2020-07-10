@@ -552,6 +552,7 @@ export default class Util {
         state.charts.forEach((chart: string, idx: number) => {
             const tmpKf: IKeyframe = {
                 id: idx,
+                groupRef: 'id',
                 timingRef: TimingSpec.timingRef.previousEnd,
                 durationIcon: true,
                 hiddenDurationIcon: false,
@@ -726,6 +727,8 @@ export default class Util {
         let drawHiddenDuration: boolean = (aniLeaf.timingRef === TimingSpec.timingRef.previousStart && parentMarks.length > aniLeaf.marks.length);
         let tmpKf: IKeyframe = {
             id: aniLeaf.id,
+            groupRef: aniLeaf.groupRef,
+            refValue: aniLeaf.refValue,
             timingRef: aniLeaf.timingRef,
             delay: aniLeaf.delay,
             delayIcon: drawDelay,
