@@ -85,6 +85,7 @@ export class Hint {
         this.container.appendChild(fakeBg);
 
         this.hintBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        this.hintBg.classList.add('drop-shadow-ele');
         this.hintBg.setAttributeNS(null, 'width', `${hintWidth}`);
         this.hintBg.setAttributeNS(null, 'height', `${Hint.HINT_HEIGHT + 2 * Hint.PADDING}`);
         this.hintBg.setAttributeNS(null, 'fill', `${Hint.TIMING_FILL_COLOR}`);
@@ -132,6 +133,7 @@ export class Hint {
         this.textWrapper.appendChild(this.contentInput);
         this.container.appendChild(this.textWrapper);
         this.pointer = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        this.pointer.classList.add('drop-shadow-ele');
         this.pointer.setAttributeNS(null, 'd', `M0,0 H6 L3,${Hint.TIMING_HINT_HEIGHT - Hint.HINT_HEIGHT - 2 * Hint.PADDING} Z`);
         this.pointer.setAttributeNS(null, 'transform', `translate(${hintWidth / 2 - 6}, ${Hint.HINT_HEIGHT + 2 * Hint.PADDING})`);
         this.pointer.setAttributeNS(null, 'fill', `${Hint.TIMING_FILL_COLOR}`);

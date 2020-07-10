@@ -710,7 +710,7 @@ export default class Util {
             })
         })
 
-        let drawDelay: boolean = (aniLeaf.delay > 0 && leafIdx > 0);
+        let drawDelay: boolean = (aniLeaf.delay > 0 && leafIdx > 0 && !(aniLeaf.timingRef === TimingSpec.timingRef.previousEnd && typeof aniLeaf.alignTo !== 'undefined'));
         let drawDuration: boolean = aniLeaf.timingRef === TimingSpec.timingRef.previousEnd || parentObj.marks.length === aniLeaf.marks.length;
         if (typeof aniLeaf.alignTo !== 'undefined') {
             if (typeof KfItem.allKfInfo.get(aniLeaf.alignTo) !== 'undefined') {
@@ -747,6 +747,7 @@ export default class Util {
             tmpKf.timingRef = parentObj.timingRef;
         }
         KfItem.allKfInfo.set(tmpKf.id, tmpKf);
+        console.log(aniLeaf, tmpKf.delayIcon);
         return tmpKf;
     }
     public static judgeFirstKf(kfg: KfGroup | KfTrack): boolean {

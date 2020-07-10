@@ -4,6 +4,7 @@ import KfItem from "./kfItem";
 
 export default class KfTrack {
     static TRACK_PADDING_TOP: number = 16;
+    static TRACK_WIDTH: number = 20000;
     static TRACK_HEIGHT: number = 180;
     static trackIdx: number = 0;
     static allTracks: Map<string, KfTrack> = new Map();//key:id, value: kftrack
@@ -49,7 +50,7 @@ export default class KfTrack {
         this.trackBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         this.trackBg.setAttributeNS(null, 'x', '0');
         this.trackBg.setAttributeNS(null, 'y', '0');
-        this.trackBg.setAttributeNS(null, 'width', '20000');
+        this.trackBg.setAttributeNS(null, 'width', `${KfTrack.TRACK_WIDTH}`);
         this.trackBg.setAttributeNS(null, 'height', fake ? '0' : `${KfTrack.TRACK_HEIGHT}`);
         this.trackBg.setAttributeNS(null, 'fill', '#efefef');
         this.trackBgContainer.appendChild(this.trackBg);

@@ -386,11 +386,7 @@ export default class KfGroup extends KfTimingIllus {
         })
     }
 
-    /**
-     * draw group bg as well as title
-     */
-    public drawGroupBg(): void {
-        // if (!this.alignMerge) {
+    public createGroupTitle(): void {
         const groupTitleWrapper: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         groupTitleWrapper.setAttributeNS(null, 'transform', `translate(${this.alignMerge ? this.offsetWidth + KfGroup.PADDING : this.offsetWidth}, 0)`);
         this.groupTitle = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -417,6 +413,7 @@ export default class KfGroup extends KfTimingIllus {
         this.groupTitle.onmousedown = (downEvt) => {
             Reducer.triger(action.UPDATE_MOUSE_MOVING, true);
             this.isDragging = true;
+            KfContainer.showPopCover();
             hintTag.removeHint();
             this.unbindTitleHover();
             let oriMousePosi: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
@@ -456,6 +453,7 @@ export default class KfGroup extends KfTimingIllus {
                 document.onmousemove = null;
                 document.onmouseup = null;
                 Reducer.triger(action.UPDATE_MOUSE_MOVING, false);
+                KfContainer.hidePopCover();
                 this.bindTitleHover();
                 this.isDragging = false;
                 if (!updateSpec) {
@@ -486,7 +484,13 @@ export default class KfGroup extends KfTimingIllus {
             groupTitleWrapper.appendChild(this.groupTitleCover);
         }
         this.container.appendChild(groupTitleWrapper);
+    }
 
+    /**
+     * draw group bg as well as title
+     */
+    public drawGroupBg(): void {
+        this.createGroupTitle();
         this.groupBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         this.groupBg.setAttributeNS(null, 'stroke', this.alignMerge ? '#00000000' : '#898989');
         this.groupBg.setAttributeNS(null, 'stroke-width', '1');
@@ -498,7 +502,6 @@ export default class KfGroup extends KfTimingIllus {
 
     public bindBgHover() {
         this.groupBg.onmouseover = () => {
-            console.log('mouse over group bg');
             if (!state.mousemoving) {
                 this.transShowTitle();
             }

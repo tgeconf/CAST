@@ -199,7 +199,7 @@ export default class SelectableTable {
                 console.log('drag start');
                 const elem = document.createElement('div');
                 elem.id = 'dragGhost';
-                elem.className = 'ghost-div'
+                elem.className = 'ghost-div dragging-ghost-div'
                 elem.innerHTML = `${state.selection.length} Marks`;
                 elem.style.left = `${(evt.pageX || (evt.clientX + document.body.scrollLeft)) - 35}px`;
                 elem.style.top = `${(evt.pageY || (evt.clientY + document.body.scrollTop)) - 15}px`;
@@ -233,9 +233,15 @@ export default class SelectableTable {
         // evt.preventDefault();
         // const targetTd: HTMLElement = <HTMLElement>evt.target;
         // this.selectRange(targetTd);
-        (<HTMLElement>evt.target).classList.add('dragging-ghost-div');
-        (<HTMLElement>evt.target).style.left = `${(evt.pageX || (evt.clientX + document.body.scrollLeft)) - 35}px`;
-        (<HTMLElement>evt.target).style.top = `${(evt.pageY || (evt.clientY + document.body.scrollTop)) - 15}px`;
+        if (document.getElementById('dragGhost')) {
+            const ghostDiv: HTMLElement = document.getElementById('dragGhost');
+            // ghostDiv.classList.add('dragging-ghost-div');
+            ghostDiv.style.left = `${(evt.pageX || (evt.clientX + document.body.scrollLeft)) - 35}px`;
+            ghostDiv.style.top = `${(evt.pageY || (evt.clientY + document.body.scrollTop)) - 15}px`;
+        }
+        // (<HTMLElement>evt.target).classList.add('dragging-ghost-div');
+        // (<HTMLElement>evt.target).style.left = `${(evt.pageX || (evt.clientX + document.body.scrollLeft)) - 35}px`;
+        // (<HTMLElement>evt.target).style.top = `${(evt.pageY || (evt.clientY + document.body.scrollTop)) - 15}px`;
 
         const dragOverItem: PlusBtn | KfItem = Tool.judgeDragOver({ x: evt.pageX, y: evt.pageY });
         if (typeof dragOverItem !== 'undefined') {
@@ -250,7 +256,7 @@ export default class SelectableTable {
     }
     public mouseUpCell(evt: MouseEvent) {
         evt.preventDefault();
-        if (document.getElementById('dragGhost')){
+        if (document.getElementById('dragGhost')) {
             document.getElementById('dragGhost').remove();
         }
         if (typeof PlusBtn.dragoverBtn !== 'undefined') {

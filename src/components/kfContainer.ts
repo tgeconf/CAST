@@ -5,6 +5,7 @@ import { ICoord, ISize } from '../util/ds';
 import Reducer from '../app/reducer';
 import * as action from '../app/action';
 import { state } from '../app/state';
+import KfTrack from './widgets/kfTrack';
 
 export class KfContainer {
     static KF_CONTAINER: string = 'kfTracksContainer';
@@ -16,7 +17,8 @@ export class KfContainer {
     static KF_BG: string = 'kfBgG';
     static KF_FG: string = 'kfFgG';
     static KF_POPUP: string = 'kfPopupG';
-    static KF_OMIT:string = 'kfOmits';
+    static KF_POPCOVER: string = 'kfPopCover';
+    static KF_OMIT: string = 'kfOmits';
     static KF_HINT: string = 'kfHintG';
     static KF_MENU: string = 'kfMenuG';
     static SLIDER_W: number = 10;
@@ -36,6 +38,15 @@ export class KfContainer {
     public ySliderContainerH: number = 200;
     public ySliderPercent: number = 1.0;
     public transDistance: ISize = { w: 0, h: 0 };
+
+    public static showPopCover() {
+        console.log('show cover: ', document.getElementById(this.KF_POPCOVER));
+        document.getElementById(this.KF_POPCOVER).setAttribute('display', '');
+    }
+
+    public static hidePopCover() {
+        // document.getElementById(this.KF_POPCOVER).setAttribute('display', 'none');
+    }
 
     public createKfContainer() {
         this.kfWidgetContainer = document.createElement('div');
@@ -110,6 +121,18 @@ export class KfContainer {
         const kfOmitG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         kfOmitG.setAttributeNS(null, 'id', KfContainer.KF_OMIT);
         this.kfTrackContainer.appendChild(kfOmitG);
+
+        const kfPopCoverG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        kfPopCoverG.setAttributeNS(null, 'id', KfContainer.KF_POPCOVER);
+        const coverRect: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        coverRect.setAttributeNS(null, 'x', '0');
+        coverRect.setAttributeNS(null, 'y', '0');
+        coverRect.setAttributeNS(null, 'fill', 'rgba(0,0,0,0)');
+        coverRect.setAttributeNS(null, 'width', `${KfTrack.TRACK_WIDTH}`);
+        coverRect.setAttributeNS(null, 'height', `${KfTrack.TRACK_HEIGHT * 20}`);
+        kfPopCoverG.appendChild(coverRect);
+        kfPopCoverG.setAttributeNS(null, 'display', 'none');
+        this.kfTrackContainer.appendChild(kfPopCoverG);
 
         const kfPopupG: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         kfPopupG.setAttributeNS(null, 'id', KfContainer.KF_POPUP);
