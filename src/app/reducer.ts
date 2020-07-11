@@ -6,7 +6,7 @@ import { AnimationItem } from '../../node_modules/lottie-web/build/player/lottie
 import KfItem from '../components/widgets/kfItem'
 import { Animation, TimingSpec } from 'canis_toolkit'
 import KfGroup from '../components/widgets/kfGroup'
-import CanisGenerator, { IChartSpec, ICanisSpec, IAnimationSpec } from './core/canisGenerator'
+import CanisGenerator, { IChartSpec, ICanisSpec, IAnimationSpec, IGrouping } from './core/canisGenerator'
 import PlusBtn from '../components/widgets/plusBtn'
 import Renderer from './renderer'
 import { KfContainer } from '../components/kfContainer'
@@ -213,6 +213,40 @@ Reducer.listen(action.UPDATE_MOUSE_MOVING, (mm: boolean) => {
 })
 
 
+
+Reducer.listen(action.UDPATE_GROUPING_SORT, (actionInfo: { aniId: string, groupRef: string, order: string[] }) => {
+    console.log('actioninfl: ', actionInfo);
+    const animations: IAnimationSpec[] = state.spec.animations;
+    for (let i = 0, len = animations.length; i < len; i++) {
+        const a: IAnimationSpec = Util.cloneObj(animations[i]);
+        if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
+            // let flag: boolean = true;
+            // let tmpGrouping: IGrouping = a.grouping;
+            // while (flag) {
+            //     if (typeof tmpGrouping !== 'undefined') {
+            //         if (tmpGrouping.groupBy === actionInfo.groupRef) {
+            //             tmpGrouping.sort = {
+            //                 order: actionInfo.order
+            //             }
+            //             console.log('tmp Group: ', tmpGrouping);
+            //             flag = false;
+            //         } else if (typeof tmpGrouping.grouping !== 'undefined') {
+            //             tmpGrouping = tmpGrouping.grouping;
+            //         } else {
+            //             flag = false;
+            //         }
+            //     }
+            // }
+            let updated: boolean = CanisGenerator.updateGroupingSort(a, actionInfo.groupRef, actionInfo.order);
+            if (updated) {
+                animations[i] = a;
+                break;
+            }
+        }
+    }
+    // console.log('ordered: ', tmp);
+    state.spec = { ...state.spec, animations: animations };
+})
 
 Reducer.listen(action.UPDATE_DELAY_BETWEEN_KF, (actionInfo: { aniId: string, delay: number }) => {
     const animations: IAnimationSpec[] = state.spec.animations;

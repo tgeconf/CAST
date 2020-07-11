@@ -750,7 +750,7 @@ export default class Util {
             tmpKf.timingRef = parentObj.timingRef;
         }
         KfItem.allKfInfo.set(tmpKf.id, tmpKf);
-        console.log(aniLeaf, tmpKf.delayIcon);
+        // console.log(aniLeaf, tmpKf.delayIcon);
         return tmpKf;
     }
     public static judgeFirstKf(kfg: KfGroup | KfTrack): boolean {

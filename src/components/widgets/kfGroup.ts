@@ -16,8 +16,7 @@ import PlusBtn from "./plusBtn";
 import { hintTag } from "./hint";
 import { state, State } from "../../app/state";
 import Util from "../../app/core/util";
-import { DllReferencePlugin } from "webpack";
-import SortableSvgTable, { sortableSvgTable } from "./sortableSvgTable";
+import { sortableSvgTable } from "./sortableSvgTable";
 
 export default class KfGroup extends KfTimingIllus {
     static groupIdx: number = 0;
@@ -47,6 +46,7 @@ export default class KfGroup extends KfTimingIllus {
     public idxInGroup: number = 0;
     public groupRef: string = '';
     public refValue: string = '';
+    public childrenRef: string;
     public childrenRefValues: string[] = [];
     public timingRef: string = TimingSpec.timingRef.previousStart;
     public kfHasOffset: boolean = false;//for updating omits
@@ -115,7 +115,7 @@ export default class KfGroup extends KfTimingIllus {
      * @param p : init position of the root group
      */
     public createGroup(kfg: IKeyframeGroup, previousAniId: string, parentObj: KfGroup | KfTrack, posiY: number, treeLevel: number, targetTrackId: string): void {
-        console.log('test kfg: ', kfg);
+        // console.log('test kfg: ', kfg);
         this.id = kfg.id;
         this.aniId = kfg.aniId;
         this.preAniId = previousAniId;
@@ -153,9 +153,11 @@ export default class KfGroup extends KfTimingIllus {
         }
 
         if (kfg.keyframes.length > 0) {
+            this.childrenRef = kfg.keyframes[0].groupRef;
             this.childrenRefValues = kfg.keyframes.map((k: IKeyframe) => k.refValue);
         } else {
             if (kfg.children.length > 0) {
+                this.childrenRef = kfg.children[0].groupRef;
                 this.childrenRefValues = kfg.children.map((c: IKeyframeGroup) => c.refValue);
             }
         }
@@ -536,7 +538,7 @@ export default class KfGroup extends KfTimingIllus {
             const btnBBox: DOMRect = this.groupSortBtn.getBoundingClientRect();
             sortableSvgTable.createTable(
                 this.childrenRefValues, {
-                x: btnBBox.right - SortableSvgTable.TABLE_PADDING,
+                x: btnBBox.left,
                 y: btnBBox.top
             }, this)
         }

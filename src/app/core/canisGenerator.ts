@@ -419,4 +419,49 @@ export default class CanisGenerator {
         })
         return [alignWithAni, alignToAnis];
     }
+
+    public static updateGroupingSort(a: IAnimationSpec, groupRef: string, order: string[]): boolean {
+        let flag: boolean = true;
+        let updated: boolean = false;
+        let tmpGrouping: IGrouping = a.grouping;
+        while (flag) {
+            if (typeof tmpGrouping !== 'undefined') {
+                if (tmpGrouping.groupBy === groupRef) {
+                    tmpGrouping.sort = {
+                        order: order
+                    }
+                    updated = true;
+                    flag = false;
+                } else if (typeof tmpGrouping.grouping !== 'undefined') {
+                    tmpGrouping = tmpGrouping.grouping;
+                } else {
+                    flag = false;
+                }
+            }
+        }
+        return updated;
+    }
+
+    public static fetchGroupingSort(aniId: string, groupRef: string): string[] {
+        const animations: IAnimationSpec[] = state.spec.animations;
+        for (let i = 0, len = animations.length; i < len; i++) {
+            const a: IAnimationSpec = animations[i];
+            if (`${a.chartIdx}_${a.selector}` === aniId) {
+                let flag: boolean = true;
+                let tmpGrouping: IGrouping = a.grouping;
+                while (flag) {
+                    if (typeof tmpGrouping !== 'undefined') {
+                        if (tmpGrouping.groupBy === groupRef) {
+                            return <string[]>tmpGrouping.sort.order;
+                        } else if (typeof tmpGrouping.grouping !== 'undefined') {
+                            tmpGrouping = tmpGrouping.grouping;
+                        } else {
+                            flag = false;
+                        }
+                    }
+                }
+            }
+        }
+        return [];
+    }
 }
