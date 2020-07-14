@@ -548,7 +548,7 @@ export default class KfGroup extends KfTimingIllus {
         //add a title cover
         if (this.alignMerge) {
             this.groupTitleCover = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            this.groupTitleCover.setAttributeNS(null, 'width', `${KfGroup.TITLE_CHAR_WIDTH * this.title.length + 2 * KfGroup.TITLE_PADDING + 4}`);
+            this.groupTitleCover.setAttributeNS(null, 'width', `${KfGroup.TITLE_CHAR_WIDTH * this.title.length + 2 * KfGroup.TITLE_PADDING + KfGroup.TITLE_HEIHGT + KfGroup.PADDING}`);
             this.groupTitleCover.setAttributeNS(null, 'height', '34');
             this.groupTitleCover.setAttributeNS(null, 'y', '1');
             this.groupTitleCover.setAttributeNS(null, 'rx', `${KfGroup.GROUP_RX}`);
