@@ -332,7 +332,7 @@
                         <g transform="translate(0,0)">
                             <path id="mark109" class=" mark Symbol1 symbol" d="M -166.90781618,179.5 A 4.37019372,4.37019372,0,1,0,-158.16742874,179.5 A 4.37019372,4.37019372,0,1,0,-166.90781618,179.5 Z" data-datum="{&quot;IsEdible&quot;:&quot;Poisonous&quot;,&quot;Odor&quot;:&quot;Creosote&quot;,&quot;Surface&quot;:&quot;Smooth&quot;}" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(239,59,44)" text-anchor="start" cursor="pointer" pointer-events="all"></path>
                         </g>
-                        <g transform="translate(20,20)">
+                        <g transform="translate(-5,7)">
                             <path id="mark201" class=" mark Symbol1 symbol" d="M -166.90781618,179.5 A 4.37019372,4.37019372,0,1,0,-158.16742874,179.5 A 4.37019372,4.37019372,0,1,0,-166.90781618,179.5 Z" data-datum="{&quot;IsEdible&quot;:&quot;Poisonous&quot;,&quot;Odor&quot;:&quot;Creosote&quot;,&quot;Surface&quot;:&quot;Smooth&quot;}" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(239,59,44)" text-anchor="start" cursor="pointer" pointer-events="all"></path>
                         </g>
                         <g transform="translate(0,0)">
@@ -479,7 +479,7 @@
                         <g transform="translate(0,0)">
                             <path id="mark157" class=" mark Symbol1 symbol" d="M 303.85765852,15 A 4.37019372,4.37019372,0,1,0,312.59804597,15 A 4.37019372,4.37019372,0,1,0,303.85765852,15 Z" data-datum="{&quot;IsEdible&quot;:&quot;Poisonous&quot;,&quot;Odor&quot;:&quot;Spicy&quot;,&quot;Surface&quot;:&quot;Scaly&quot;}" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(239,59,44)" text-anchor="start" cursor="pointer" pointer-events="all"></path>
                         </g>
-                        <g transform="translate(20,20)">
+                        <g transform="translate(-5,7)">
                             <path id="mark202" class=" mark Symbol1 symbol" d="M 303.85765852,15 A 4.37019372,4.37019372,0,1,0,312.59804597,15 A 4.37019372,4.37019372,0,1,0,303.85765852,15 Z" data-datum="{&quot;IsEdible&quot;:&quot;Poisonous&quot;,&quot;Odor&quot;:&quot;Spicy&quot;,&quot;Surface&quot;:&quot;Scaly&quot;}" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="rgb(239,59,44)" text-anchor="start" cursor="pointer" pointer-events="all"></path>
                         </g>
                         <g transform="translate(0,0)">
