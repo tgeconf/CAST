@@ -102,8 +102,9 @@ export default class Util {
     public static suggestSelBasedOnData(markIds: string[]): string[] {
         //find the same and diff attributes of the selected marks
         const [sameAttrs, diffAttrs] = this.compareAttrs(markIds, this.filteredDataTable, Object.keys(this.attrType), true);
+        console.log('found diff attrs: ', diffAttrs);
         //filter attributes according to the effectiveness ranking
-        const filteredDiffAttrs = this.filterAttrs(diffAttrs);
+        const filteredDiffAttrs = this.filterAttrs(diffAttrs, markIds);
         //list all data-encoded marks
         let allMarkIds: string[] = Array.from(this.filteredDataTable.keys());
         const [sections, orderedSectionIds] = this.partitionChart(sameAttrs, filteredDiffAttrs, allMarkIds, this.filteredDataTable);
@@ -271,7 +272,7 @@ export default class Util {
      * filter attributes according to the effectiveness ranking
      * @param attrs 
      */
-    public static filterAttrs(attrs: string[]) {
+    public static filterAttrs(attrs: string[], selectedMarks?: string[]) {
         let filteredAttrs: string[] = [];
         let typeRecorder: string[] = [];
         for (let i = 0, len = this.EFFECTIVENESS_RANKING.length; i < len; i++) {
@@ -286,6 +287,41 @@ export default class Util {
                     }
                 }
             }
+        }
+
+        if (typeof selectedMarks !== 'undefined') {
+            //check whether do we need to filter out some attrs like color or shape
+            const tmpSections: Map<string, string[]> = new Map();
+            selectedMarks.forEach((mId: string) => {
+                const tmpDataItem: IDataItem = this.filteredDataTable.get(mId);
+                let keyArr: string[] = [];
+                if (typeof tmpDataItem !== 'undefined') {
+                    filteredAttrs.forEach((fa: string) => {
+                        keyArr.push(`${tmpDataItem[fa]}`);
+                    })
+                }
+                const key: string = keyArr.length > 0 ? keyArr.join(',') : '';
+                if (typeof tmpSections.get(key) === 'undefined') {
+                    tmpSections.set(key, []);
+                }
+                tmpSections.get(key).push(mId);
+            })
+            console.log('tmp sections: ', tmpSections);
+            const extraAttrs: Set<string> = new Set();
+            tmpSections.forEach((mIds: string[], key: string) => {
+                attrs.forEach((a: string) => {
+                    if (!filteredAttrs.includes(a)) {
+                        for (let i = 0, len = mIds.length; i < len; i++) {
+                            if (this.filteredDataTable.get(mIds[i])[a] !== this.filteredDataTable.get(mIds[0])[a]) {
+                                extraAttrs.add(a);
+                                break;
+                            }
+                        }
+                    }
+                })
+            })
+            console.log('extra attrs: ', extraAttrs);
+            return [...filteredAttrs, ...extraAttrs];
         }
         return filteredAttrs;
     }

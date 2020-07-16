@@ -1,12 +1,13 @@
 import '../assets/style/nav.scss'
 import LogoImg from '../assets/img/logo.png'
-import Tool from '../util/tool'
 import FloatingWindow from './floatingWindow'
 import Reducer from '../app/reducer';
 import * as action from '../app/action';
 import { State, state } from '../app/state';
 import { ViewContent } from './viewWindow';
 import { Loading } from './widgets/loading';
+import Tool from '../util/tool';
+import { player } from './player';
 
 export default class Nav {
     navContainer: HTMLDivElement;
@@ -48,8 +49,8 @@ export default class Nav {
         }));
         this.navContainer.appendChild(new NavBtn().createNavBtn({
             classNameStr: 'export',
-            title: 'export Lottie',
-            evtType: NavBtn.EXPORT_LOTTIE
+            title: 'export',
+            evtType: NavBtn.EXPORT
         }));
         this.navContainer.appendChild(this.createSeparator());
         this.navContainer.appendChild(new NavBtn().createNavBtn({
@@ -100,7 +101,7 @@ class NavBtn {
     static OPEN_PROJECT: string = 'openProject';
     static SAVE_PROJECT: string = 'saveProject';
     static LOAD_EXAMPLES: string = 'loadExamples';
-    static EXPORT_LOTTIE: string = 'exportLottie';
+    static EXPORT: string = 'export';
     static REVERT: string = 'revert';
     static REDO: string = 'redo';
     static RESET: string = 'reset';
@@ -120,8 +121,11 @@ class NavBtn {
             case NavBtn.SAVE_PROJECT:
                 btn.onclick = () => this.saveProject();
                 break;
-            case NavBtn.EXPORT_LOTTIE:
-                btn.onclick = () => this.exportLottie();
+            case NavBtn.EXPORT:
+                // btn.onclick = () => this.exportLottie();
+                btn.onclick = () => {
+                    this.createSubMenu(NavBtn.EXPORT, btn);
+                }
                 break;
             case NavBtn.REVERT:
                 btn.onclick = () => this.revert();
@@ -139,6 +143,38 @@ class NavBtn {
         btn.appendChild(icon);
 
         return btn;
+    }
+
+    createSubMenu(evtType: string, parentBtn: HTMLSpanElement) {
+        switch (evtType) {
+            case NavBtn.EXPORT:
+                parentBtn.classList.add('active-btn');
+                const menuContainer: HTMLDivElement = document.createElement('div');
+                const parentBBox: DOMRect = parentBtn.getBoundingClientRect();
+                menuContainer.className = 'sub-menu-container';
+                menuContainer.style.top = `${parentBBox.bottom}px`;
+                menuContainer.style.left = `${parentBBox.left}px`;
+                const ul: HTMLUListElement = document.createElement('ul');
+                ul.appendChild(this.createSubMenuItem('Export as Lottie', this.exportLottie));
+                ul.appendChild(this.createSubMenuItem('Export as mp4', this.exportVideo));
+                menuContainer.appendChild(ul);
+                document.body.appendChild(menuContainer);
+
+                menuContainer.onmouseleave = (leaveEvt) => {
+                    menuContainer.remove();
+                    parentBtn.classList.remove('active-btn');
+                }
+                break;
+        }
+    }
+
+    createSubMenuItem(content: string, func: any): HTMLLIElement {
+        const item: HTMLLIElement = document.createElement('li');
+        item.innerHTML = content;
+        item.onclick = () => {
+            func();
+        }
+        return item;
     }
 
     /**
@@ -213,6 +249,64 @@ class NavBtn {
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
             }, 0);
+        }
+    }
+
+    public exportVideo() {
+        const targetSVG: any = document.getElementById(ViewContent.VIDEO_VIEW_CONTENT_ID).querySelector('svg');
+        if (typeof targetSVG !== 'undefined' && targetSVG) {
+            Reducer.triger(action.UPDATE_LOADING_STATUS, { il: true, srcDom: document.body, content: Loading.EXPORTING });
+            setTimeout(() => {
+                const canvas: any = document.createElement('canvas');
+                const cWidth: number = canvas.width = parseFloat(targetSVG.getAttribute('width'));
+                const cHeight: number = canvas.height = parseFloat(targetSVG.getAttribute('height'));
+                const context = canvas.getContext('2d');
+                context.fillStyle = '#fff';
+                context.fillRect(0, 0, cWidth, cHeight);
+
+                const stream = canvas.captureStream();
+                const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+                const data: any[] = [];
+                recorder.ondataavailable = function (event) {
+                    if (event.data && event.data.size) {
+                        data.push(event.data);
+                    }
+                };
+
+                recorder.onstop = () => {
+                    var url = URL.createObjectURL(new Blob(data, { type: "video/webm" }));
+                    var a = document.createElement("a");
+                    a.href = url;
+                    a.download = 'animatedChart.mp4';
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(function () {
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+                        Reducer.triger(action.UPDATE_LOADING_STATUS, { il: false });
+                    }, 0);
+                };
+
+                recorder.start();
+                for (let i = 0, p = Promise.resolve(), len = state.lottieAni.getDuration() * 1000; i < len; i += 60) {
+                    p = p.then(() => new Promise(resolve =>
+                        setTimeout(function () {
+                            state.lottieAni.goToAndStop(Math.ceil(i / (1000 / player.frameRate)), true)
+                            const img = new Image(),
+                                serialized = new XMLSerializer().serializeToString(targetSVG),
+                                url = URL.createObjectURL(new Blob([serialized], { type: "image/svg+xml" }));
+                            img.onload = function () {
+                                context.drawImage(img, 0, 0);
+                            };
+                            img.src = url;
+                            resolve();
+                            if (i + 60 > len) {
+                                recorder.stop();
+                            }
+                        }, 60)
+                    ))
+                }
+            }, 1);
         }
     }
 

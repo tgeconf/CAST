@@ -2,6 +2,7 @@ import '../../assets/style/loading.scss'
 
 export class Loading {
     static LOADING: string = 'Preparing Animation';
+    static EXPORTING: string = 'Exporting Animation';
     static SUGGESTING: string = 'Targeting Animation';
     static allLoadings: Loading[] = [];
 
