@@ -648,6 +648,7 @@ export default class KfItem extends KfTimingIllus {
                 let actionType: string = '';
                 let actionInfo: any = {};
                 const preSibling: KfItem | KfOmit = <KfItem | KfOmit>this.parentObj.children[this.idxInGroup - 1];
+                const nextSibling: KfItem | KfOmit = <KfItem | KfOmit>this.parentObj.children[this.idxInGroup + 1];
                 const firstSibling: KfItem = <KfItem>this.parentObj.children[0];
                 let preKfRight: number = containerBBox.left;
                 // let visualPresiblingDurationW: number = 0;
@@ -931,9 +932,18 @@ export default class KfItem extends KfTimingIllus {
                             }
                             this.container.setAttributeNS(null, 'transform', this.container.getAttributeNS(null, '_transform'));
                             if (this.treeLevel === 1) {
-                                this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
+                                // this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
+                                if (typeof nextSibling !== 'undefined') {
+                                    this.parentObj.container.insertBefore(this.container, nextSibling.container);
+                                } else {
+                                    this.parentObj.container.insertBefore(this.container, this.parentObj.groupMenu.container);
+                                }
                             } else {
-                                this.parentObj.container.appendChild(this.container);
+                                if (typeof nextSibling !== 'undefined') {
+                                    this.parentObj.container.insertBefore(this.container, nextSibling.container);
+                                } else {
+                                    this.parentObj.container.appendChild(this.container);
+                                }
                             }
                         } else {
                             State.tmpStateBusket.push({
