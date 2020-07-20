@@ -373,6 +373,9 @@ export default class Renderer {
                             if (kfOmitType === KfOmit.KF_ALIGN) {
                                 kfOmit.omitPattern = omitPattern;
                             }
+                            if (kfg.keyframes[1].hiddenDurationIcon) {
+                                kfPosiX += (<KfItem>kfGroup.children[kfGroup.children.length - 1]).durationWidth;
+                            }
                             kfOmit.createOmit(kfOmitType, kfPosiX, omitNum, kfGroup, kfg.keyframes[1].delayIcon, kfg.keyframes[1].durationIcon, (<KfItem>kfGroup.children[1]).kfHeight / 2);
                             kfGroup.children.push(kfOmit);
                             kfOmit.idxInGroup = kfGroup.children.length - 1;

@@ -160,9 +160,15 @@ export default class KfOmit {
         this.offsetIcon.setAttributeNS(null, 'fill', KfItem.OFFSET_COLOR);
         this.offsetIcon.setAttributeNS(null, 'height', `${this.oHeight}`);
         this.durationIcon = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        this.durationIcon.setAttributeNS(null, 'y', '0');
+        console.log('omit pattern: ', this.preItem)
+        if (typeof this.preItem !== 'undefined') {
+            this.durationIcon.setAttributeNS(null, 'y', this.preItem.hasHiddenDuration ? `${-this.oHeight / 4}` : '0');
+            this.durationIcon.setAttributeNS(null, 'height', this.preItem.hasHiddenDuration ? `${5 * this.oHeight / 4}` : `${this.oHeight}`);
+        } else {
+            this.durationIcon.setAttributeNS(null, 'y', '0');
+            this.durationIcon.setAttributeNS(null, 'height', `${this.oHeight}`);
+        }
         this.durationIcon.setAttributeNS(null, 'fill', KfItem.DURATION_COLOR);
-        this.durationIcon.setAttributeNS(null, 'height', `${this.oHeight}`);
         this.iconContainer.appendChild(this.offsetIcon);
         this.iconContainer.appendChild(this.durationIcon);
         this.updateThumbnail(this.hasOffset, this.hasDuration);
@@ -257,25 +263,25 @@ export default class KfOmit {
                 if (this.hasOffset) {
                     this.offsetIcon.setAttributeNS(null, 'width', `${KfOmit.OMIT_W_UNIT}`);
                     this.kfIcon.setAttributeNS(null, 'x', `${KfOmit.OMIT_W_UNIT}`);
-                    if (this.hasDuration) {
+                    // if (this.hasDuration) {
                         this.kfIcon.setAttributeNS(null, 'width', `${KfOmit.OMIT_W_UNIT * 3}`);
                         this.durationIcon.setAttributeNS(null, 'x', `${KfOmit.OMIT_W_UNIT * 4}`);
                         this.durationIcon.setAttributeNS(null, 'width', `${KfOmit.OMIT_W_UNIT}`);
-                    } else {
-                        this.kfIcon.setAttributeNS(null, 'width', `${KfOmit.OMIT_W_UNIT * 4}`);
-                        this.durationIcon.setAttributeNS(null, 'width', '0');
-                    }
+                    // } else {
+                    //     this.kfIcon.setAttributeNS(null, 'width', `${KfOmit.OMIT_W_UNIT * 4}`);
+                    //     this.durationIcon.setAttributeNS(null, 'width', '0');
+                    // }
                 } else {
                     this.offsetIcon.setAttributeNS(null, 'width', '0');
                     this.kfIcon.setAttributeNS(null, 'x', '0');
-                    if (this.hasDuration) {
+                    // if (this.hasDuration) {
                         this.kfIcon.setAttributeNS(null, 'width', `${KfOmit.OMIT_W_UNIT * 4}`);
                         this.durationIcon.setAttributeNS(null, 'x', `${KfOmit.OMIT_W_UNIT * 4}`);
                         this.durationIcon.setAttributeNS(null, 'width', `${KfOmit.OMIT_W_UNIT}`);
-                    } else {
-                        this.kfIcon.setAttributeNS(null, 'width', `${KfOmit.OMIT_W_UNIT * 5}`);
-                        this.durationIcon.setAttributeNS(null, 'width', '0');
-                    }
+                    // } else {
+                    //     this.kfIcon.setAttributeNS(null, 'width', `${KfOmit.OMIT_W_UNIT * 5}`);
+                    //     this.durationIcon.setAttributeNS(null, 'width', '0');
+                    // }
                 }
                 break;
         }
