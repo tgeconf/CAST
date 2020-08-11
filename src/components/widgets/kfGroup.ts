@@ -1783,8 +1783,7 @@ export class GroupMenu {
                 menuLayer.innerHTML = '';
                 const aniIds: string[] = [this.aniId];
                 KfGroup.allAniGroups.forEach((tmpAniGroup: KfGroup, tmpAniId: string) => {
-                    console.log('comparing ', tmpAniGroup.alignTarget, KfGroup.allAniGroups.get(this.aniId).alignId, tmpAniGroup.alignTarget === KfGroup.allAniGroups.get(this.aniId).alignId, tmpAniGroup.alignTarget === KfGroup.allAniGroups.get(this.aniId).aniId)
-                    if (tmpAniGroup.alignTarget === KfGroup.allAniGroups.get(this.aniId).alignId && typeof tmpAniGroup.alignTarget !== 'undefined') {
+                    if (tmpAniGroup.alignTarget === KfGroup.allAniGroups.get(this.aniId).alignId && typeof tmpAniGroup.alignTarget !== 'undefined' && tmpAniGroup.alignMerge) {
                         aniIds.push(tmpAniId);
                     }
                 })
