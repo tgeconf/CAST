@@ -638,10 +638,11 @@ Reducer.listen(action.UPDATE_ALIGN_MERGE, (actionInfo: { aniId: string, merge: b
     state.spec = { ...state.spec, animations: animations };
 })
 
-Reducer.listen(action.UPDATE_EFFECT_TYPE, (actionInfo: { aniId: string, effectPropValue: string }) => {
+Reducer.listen(action.UPDATE_EFFECT_TYPE, (actionInfo: { aniIds: string[], effectPropValue: string }) => {
     const animations: IAnimationSpec[] = state.spec.animations;
     animations.forEach((a: IAnimationSpec) => {
-        if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
+        if (actionInfo.aniIds.includes(`${a.chartIdx}_${a.selector}`)) {
+            // if (`${a.chartIdx}_${a.selector}` === actionInfo.aniId) {
             let tmpEffect = Util.cloneObj(a.effects[0]);
             CanisGenerator.updateEffectType(tmpEffect, actionInfo.effectPropValue);
             a.effects = [tmpEffect];

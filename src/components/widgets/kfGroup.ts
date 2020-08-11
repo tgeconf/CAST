@@ -271,6 +271,7 @@ export default class KfGroup extends KfTimingIllus {
                     }
                     e = (<HTMLElement>e).parentNode;
                 }
+
                 this.transHideTitle();
                 if (this.treeLevel === 0 && typeof this.groupMenu !== 'undefined') {
                     if (typeof this.groupMenu.menuListContainer === 'undefined') {
@@ -481,8 +482,8 @@ export default class KfGroup extends KfTimingIllus {
         const groupTitleWrapper: SVGGElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         groupTitleWrapper.setAttributeNS(null, 'transform', `translate(${this.alignMerge ? this.offsetWidth + KfGroup.PADDING : this.offsetWidth}, 0)`);
         this.groupTitle = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        this.groupTitle.classList.add('ease-transform');
-        this.groupTitle.classList.add('draggable-component');
+        this.groupTitle.classList.add('kf-group-title', 'ease-transform', 'draggable-component');
+        // this.groupTitle.classList.add();
         this.groupTitle.setAttributeNS(null, 'transform', 'translate(0, 2)');
         this.groupTitleBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         this.groupTitleBg.setAttributeNS(null, 'width', `${KfGroup.TITLE_CHAR_WIDTH * this.title.length + 2 * KfGroup.TITLE_PADDING + KfGroup.TITLE_HEIHGT + KfGroup.PADDING}`);
@@ -1780,7 +1781,14 @@ export class GroupMenu {
 
             listItem.onclick = () => {
                 menuLayer.innerHTML = '';
-                const actionInfo: any = { aniId: this.aniId, effectPropValue: content };
+                const aniIds: string[] = [this.aniId];
+                KfGroup.allAniGroups.forEach((tmpAniGroup: KfGroup, tmpAniId: string) => {
+                    console.log('comparing ', tmpAniGroup.alignTarget, KfGroup.allAniGroups.get(this.aniId).alignId, tmpAniGroup.alignTarget === KfGroup.allAniGroups.get(this.aniId).alignId, tmpAniGroup.alignTarget === KfGroup.allAniGroups.get(this.aniId).aniId)
+                    if (tmpAniGroup.alignTarget === KfGroup.allAniGroups.get(this.aniId).alignId && typeof tmpAniGroup.alignTarget !== 'undefined') {
+                        aniIds.push(tmpAniId);
+                    }
+                })
+                const actionInfo: any = { aniIds: aniIds, effectPropValue: content };
                 State.tmpStateBusket.push({
                     historyAction: { actionType: action.UPDATE_SPEC_ANIMATIONS, actionVal: JSON.stringify(state.spec.animations) },
                     currentAction: { actionType: actionType, actionVal: actionInfo }

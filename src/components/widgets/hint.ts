@@ -12,7 +12,8 @@ export class Hint {
     static PADDING: number = 2;
     static FILL_COLOR: string = '#fff';
     static STROKE_COLOR: string = '#000';
-    static TIMING_FILL_COLOR: string = '#383838';
+    static TIMING_FILL_COLOR: string = '#efefef';
+    static TIMING_BORDER_COLOR: string = '#383838';
     static TIMING_HINT_HEIGHT: number = 21;
     static TIMING_HINT_ID: string = 'timingHint';
 
@@ -89,13 +90,14 @@ export class Hint {
         this.hintBg.setAttributeNS(null, 'width', `${hintWidth}`);
         this.hintBg.setAttributeNS(null, 'height', `${Hint.HINT_HEIGHT + 2 * Hint.PADDING}`);
         this.hintBg.setAttributeNS(null, 'fill', `${Hint.TIMING_FILL_COLOR}`);
+        this.hintBg.setAttributeNS(null, 'stroke', `${Hint.TIMING_BORDER_COLOR}`);
         this.container.appendChild(this.hintBg);
 
         //append text
         this.contentText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         this.contentText.setAttributeNS(null, 'x', `${Hint.PADDING}`);
         this.contentText.setAttributeNS(null, 'y', `${Hint.HINT_HEIGHT}`);
-        this.contentText.setAttributeNS(null, 'fill', '#676767');
+        this.contentText.setAttributeNS(null, 'fill', `${Hint.TIMING_BORDER_COLOR}`);
         this.contentText.innerHTML = `${textBlocks[0]}:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ms`;
         this.container.appendChild(this.contentText);
         this.textWrapper = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
@@ -136,7 +138,7 @@ export class Hint {
         this.pointer.classList.add('drop-shadow-ele');
         this.pointer.setAttributeNS(null, 'd', `M0,0 H6 L3,${Hint.TIMING_HINT_HEIGHT - Hint.HINT_HEIGHT - 2 * Hint.PADDING} Z`);
         this.pointer.setAttributeNS(null, 'transform', `translate(${hintWidth / 2 - 6}, ${Hint.HINT_HEIGHT + 2 * Hint.PADDING})`);
-        this.pointer.setAttributeNS(null, 'fill', `${Hint.TIMING_FILL_COLOR}`);
+        this.pointer.setAttributeNS(null, 'fill', `${Hint.TIMING_BORDER_COLOR}`);
         this.container.appendChild(this.pointer);
         svgHintLayer.appendChild(this.container);
     }
