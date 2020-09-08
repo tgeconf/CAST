@@ -48,6 +48,15 @@ export default class Reducer {
                 targetAniIdx = i;
             }
         }
+        // if (actionType === action.UPDATE_ANI_ALIGN_AFTER_KF || actionType === action.UPDATE_ANI_ALIGN_WITH_KF) {
+        //     if (currentAni.selector.split(',').length > targetAni.selector.split(',').length) {
+        //         [currentAni, targetAni] = [targetAni, currentAni];
+        //         targetAni.grouping = currentAni.grouping;
+        //         delete currentAni.grouping;
+        //         [currentAniIdx, targetAniIdx] = [targetAniIdx, currentAniIdx];
+        //         [actionInfo.currentAniId, actionInfo.targetAniId] = [actionInfo.targetAniId, actionInfo.currentAniId];
+        //     }
+        // }
         let targetAniId: string;
         switch (actionType) {
             case action.UPDATE_ANI_ALIGN_AFTER_ANI:
@@ -90,6 +99,7 @@ export default class Reducer {
                 targetAniId = targetAni.id;
                 currentAni.align = { type: 'element', target: targetAniId, merge: false };
                 currentAni.reference = TimingSpec.timingRef.previousStart;
+                console.log('align target & current: ', targetAni, currentAni);
                 break;
         }
         animations.splice(currentAniIdx, 1);

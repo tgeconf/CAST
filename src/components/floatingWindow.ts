@@ -1,6 +1,6 @@
 import '../assets/style/floating-window.scss'
 import MushroomImg from '../assets/img/examples/mushroom.png'
-import MushroomChart from '../assets/charts/mushrooms.svg'
+import MushroomChart from '../assets/charts/mushrooms_s.svg'
 import OsImg from '../assets/img/examples/os.png'
 import OsChart from '../assets/charts/os.svg'
 import PurchasesImg from '../assets/img/examples/purchases.png'
