@@ -5,6 +5,7 @@ import ViewWindow from './components/viewWindow'
 import { state } from './app/state'
 import Tool from './util/tool'
 import { Hint, hintTag } from './components/widgets/hint'
+import { player } from './components/player'
 
 function app(): HTMLDivElement {
     const outerWrapper: HTMLDivElement = document.createElement('div');
@@ -59,6 +60,14 @@ document.onkeyup = (e) => {
     if (key == 13) {
         if (typeof document.getElementById(Hint.TIMING_HINT_ID) !== 'undefined') {
             hintTag.contentInput.blur();
+        }
+    } else if (key == 32) {
+        if (player.playing) {
+            player.playing = false;
+            player.pauseAnimation();
+        } else {
+            player.playing = true;
+            player.playAnimation();
         }
     }
 };

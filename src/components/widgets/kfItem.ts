@@ -487,7 +487,8 @@ export default class KfItem extends KfTimingIllus {
             if (typeof alignTargetKf !== 'undefined') {
                 if (alignTargetKf.rendered && alignTargetKf.renderWhenZooming) {//this kf is visible
                     const alignTargetKfBBox: DOMRect = alignTargetKf.container.getBoundingClientRect();
-                    minX = alignTargetKfBBox.left;
+                    const alignTargetKfThumbnailBBox: DOMRect = alignTargetKf.kfBg.getBoundingClientRect();
+                    minX = alignTargetKfThumbnailBBox.left;
                     maxX = alignTargetKfBBox.right;
                     for (let i = 0, len = alignTargetKfInfo.alignWithKfs.length; i < len; i++) {
                         const kfId: number = alignTargetKfInfo.alignWithKfs[i];

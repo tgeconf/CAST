@@ -59,7 +59,7 @@ export default class Reducer {
         // }
         let targetAniId: string;
         switch (actionType) {
-            case action.UPDATE_ANI_ALIGN_AFTER_ANI:
+            case action.UPDATE_ANI_ALIGN_AFTER_ANI_WITH_DELAY:
                 if (typeof currentAni.align !== 'undefined') {
                     const alignedOnData: boolean = typeof Animation.animations.get(actionInfo.currentAniId).alignOnData === 'undefined' ? false : Animation.animations.get(actionInfo.currentAniId).alignOnData;
                     //remove align and set grouping for this ani
@@ -74,6 +74,25 @@ export default class Reducer {
                     }
                 }
                 currentAni.reference = TimingSpec.timingRef.previousEnd;
+                currentAni.offset = 300;
+                break;
+            case action.UPDATE_ANI_ALIGN_AFTER_ANI:
+                console.log('in htre');
+                if (typeof currentAni.align !== 'undefined') {
+                    const alignedOnData: boolean = typeof Animation.animations.get(actionInfo.currentAniId).alignOnData === 'undefined' ? false : Animation.animations.get(actionInfo.currentAniId).alignOnData;
+                    //remove align and set grouping for this ani
+                    delete currentAni.align;
+                    if (alignedOnData) {
+                        currentAni.grouping = targetAni.grouping;
+                    } else {
+                        currentAni.grouping = {
+                            groupBy: 'id',
+                            reference: TimingSpec.timingRef.previousEnd
+                        }
+                    }
+                }
+                currentAni.reference = TimingSpec.timingRef.previousEnd;
+                currentAni.offset = 0;
                 break;
             case action.UPDATE_ANI_ALIGN_WITH_ANI:
                 currentAni.reference = TimingSpec.timingRef.previousStart;
@@ -99,7 +118,6 @@ export default class Reducer {
                 targetAniId = targetAni.id;
                 currentAni.align = { type: 'element', target: targetAniId, merge: false };
                 currentAni.reference = TimingSpec.timingRef.previousStart;
-                console.log('align target & current: ', targetAni, currentAni);
                 break;
         }
         animations.splice(currentAniIdx, 1);
@@ -671,6 +689,10 @@ Reducer.listen(action.UPDATE_EFFECT_EASING, (actionInfo: { aniId: string, effect
         }
     })
     state.spec = { ...state.spec, animations: animations };
+})
+
+Reducer.listen(action.UPDATE_ANI_ALIGN_AFTER_ANI_WITH_DELAY, (actionInfo: { targetAniId: string, currentAniId: string }) => {
+    Reducer.updateAniAlign(action.UPDATE_ANI_ALIGN_AFTER_ANI_WITH_DELAY, actionInfo);
 })
 
 Reducer.listen(action.UPDATE_ANI_ALIGN_AFTER_ANI, (actionInfo: { targetAniId: string, currentAniId: string }) => {

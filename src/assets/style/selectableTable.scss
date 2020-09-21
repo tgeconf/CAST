@@ -9,6 +9,10 @@
             box-sizing: border-box;
             padding: 2px;
             border-bottom: 1px solid var(--gray5);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 70px;
         }
         th {
             font-weight: normal;

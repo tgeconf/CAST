@@ -376,6 +376,7 @@ export default class Renderer {
                             if (kfg.keyframes[1].hiddenDurationIcon) {
                                 kfPosiX += (<KfItem>kfGroup.children[kfGroup.children.length - 1]).durationWidth;
                             }
+                            console.log('creating omit: ', kfPosiX);
                             kfOmit.createOmit(kfOmitType, kfPosiX, omitNum, kfGroup, kfg.keyframes[1].delayIcon, kfg.keyframes[1].durationIcon, (<KfItem>kfGroup.children[1]).kfHeight / 2);
                             kfGroup.children.push(kfOmit);
                             kfOmit.idxInGroup = kfGroup.children.length - 1;
@@ -407,6 +408,7 @@ export default class Renderer {
                     kfGroup.children.push(kfItem);
                     kfItem.idxInGroup = kfGroup.children.length - 1;
                     kfPosiX += kfItem.totalWidth;
+                    console.log('updateing kfposix: ', kfPosiX, kfItem.totalWidth);
                 }
             })
         } else if (kfg.children.length > 0) {

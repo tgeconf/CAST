@@ -106,6 +106,7 @@ export default class KfOmit {
         if (typeof this.parentObj.alignTarget !== 'undefined' && this.parentObj.alignType === Animation.alignTarget.withEle) {
             this.hideOmit();
         }
+        console.log('init omit position: ', this.startX+KfGroup.PADDING);
         this.translateContainer(this.startX + KfGroup.PADDING, this.startY - this.oHeight / 2);
         if (this.omitType === KfOmit.KF_ALIGN) {
             this.createUseTag();
@@ -294,14 +295,17 @@ export default class KfOmit {
         const targetKfTrans: ICoord = Tool.extractTransNums(targetKf.container.getAttributeNS(null, 'transform'));
         const targetKfBBox: DOMRect = targetKf.container.getBoundingClientRect();
         const currentOmitBbox: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
+        console.log('updateing omit x1: ', targetKfTrans.x + targetKfBBox.width / state.zoomLevel + KfGroup.PADDING);
         this.translateContainer(targetKfTrans.x + targetKfBBox.width / state.zoomLevel + KfGroup.PADDING, currentOmitBbox.y);
     }
 
     public updateTrans(startX: number, startY: number): void {
+        console.log('updateing omit x2: ', startX);
         this.translateContainer(startX, startY - this.oHeight / 2);
     }
 
     public translateContainer(x: number, y: number) {
+        console.log('fuck: ', x);
         this.container.setAttributeNS(null, 'transform', `translate(${x}, ${y})`);
     }
 

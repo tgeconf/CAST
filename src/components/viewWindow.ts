@@ -38,7 +38,18 @@ export default class ViewWindow {
         if (this.viewTitle !== '') {
             const viewTitleText: HTMLSpanElement = document.createElement('span');
             viewTitleText.className = 'view-title-text';
-            viewTitleText.innerHTML = Tool.firstLetterUppercase(this.viewTitle);
+            let titleText:string = this.viewTitle;
+            switch (titleText) {
+                case ViewWindow.KF_VIEW_TITLE:
+                    titleText = "Animation Specification";
+                    break;
+                case ViewWindow.VIDEO_VIEW_TITLE:
+                    titleText = "Animation Preview";
+                    break;
+                default:
+                    break;
+            }
+            viewTitleText.innerHTML = Tool.firstLetterUppercase(titleText);
             viewTitleContainer.appendChild(viewTitleText);
         }
 

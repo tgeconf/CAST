@@ -216,7 +216,8 @@ export default class KfGroup extends KfTimingIllus {
                         if (lowestGroupInAlignWith.rendered) {
                             lowestGroupInAlignWith.kfOmits.forEach((omit: KfOmit) => {
                                 const oriTrans: ICoord = Tool.extractTransNums(omit.container.getAttributeNS(null, 'transform'));
-                                omit.updateTrans(oriTrans.x, heightDiff / 2);
+                                console.log('test0: ', oriTrans.x);
+                                omit.updateTrans(oriTrans.x + KfGroup.PADDING, heightDiff / 2);
                                 // omit.createUseTag();
                             })
                         }
@@ -415,6 +416,7 @@ export default class KfGroup extends KfTimingIllus {
             KfContainer.showPopCover();
             hintTag.removeHint();
             this.unbindTitleHover();
+            let oriMousePosiRecord: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
             let oriMousePosi: ICoord = { x: downEvt.pageX, y: downEvt.pageY };
             //add the dragged group together with groups aligned to it to the popup layer
             const groupsAligned: KfGroup[] = this.addGroupToPopLayerWhenDrag();
@@ -433,6 +435,7 @@ export default class KfGroup extends KfTimingIllus {
             document.onmousemove = (moveEvt) => {
                 const currentMousePosi: ICoord = { x: moveEvt.pageX, y: moveEvt.pageY };
                 const posiDiff: ICoord = { x: (currentMousePosi.x - oriMousePosi.x) / state.zoomLevel, y: (currentMousePosi.y - oriMousePosi.y) / state.zoomLevel };
+                const posiDiffToOri: ICoord = { x: (currentMousePosi.x - oriMousePosiRecord.x) / state.zoomLevel, y: (currentMousePosi.y - oriMousePosiRecord.y) / state.zoomLevel };
                 const oriTrans: ICoord = Tool.extractTransNums(this.container.getAttributeNS(null, 'transform'));
                 this.translateContainer(oriTrans.x + posiDiff.x, oriTrans.y + posiDiff.y);
                 groupsAligned.forEach((alignedGroup: KfGroup) => {
@@ -442,7 +445,8 @@ export default class KfGroup extends KfTimingIllus {
                 if (this.idxInGroup > 0 && preSibling.rendered && this.groupRef !== 'root') {//group within animation
                     [updateSpec, actionType, actionInfo] = this.dragInnerGroup(preSibling);
                 } else {
-                    [updateSpec, actionType, actionInfo] = this.dragAniGroup();
+                    [updateSpec, actionType, actionInfo] = this.dragAniGroup(posiDiffToOri);
+                    console.log('testing: ', updateSpec, actionType, actionInfo);
                 }
                 oriMousePosi = currentMousePosi;
             }
@@ -587,7 +591,7 @@ export default class KfGroup extends KfTimingIllus {
     /**
      * returns: updateSpec:boolean, actionType: string, actionInfo: any
      */
-    public dragAniGroup(): [boolean, string, any] {
+    public dragAniGroup(posiDiffToOri: ICoord): [boolean, string, any] {
         const currentAniId: string = this.aniId;
         const sepCurrentAniMarks: { dataMarks: string[], nonDataMarks: string[] } = Util.separateDataAndNonDataMarks(KfGroup.allAniGroupInfo.get(currentAniId).marks);
         const currentGBBox: DOMRect = this.groupBg.getBoundingClientRect();//fixed
@@ -604,8 +608,15 @@ export default class KfGroup extends KfTimingIllus {
                 const targetAniId: string = aniGroup.aniId;
                 const sepTargetAniMarks: { dataMarks: string[], nonDataMarks: string[] } = Util.separateDataAndNonDataMarks(KfGroup.allAniGroupInfo.get(targetAniId).marks);
                 //add orange lines according to drag position
-                if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + (6 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top) {
+                // const currentKfOffsetW: number = KfGroup.BASIC_OFFSET_DURATION_W > this.offsetWidth ? KfGroup.BASIC_OFFSET_DURATION_W : this.offsetWidth;
+                if (typeof this.delay !== 'undefined' && this.delay > 0 && posiDiffToOri.x < 0) {
+                    this.hideOffset();
                     targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_ANI };//after group has higher priority
+                } else if (typeof this.delay !== 'undefined' && this.delay > 0 && posiDiffToOri.x >= 0) {
+                    this.showOffset();
+                }
+                if (currentGPosi.x >= aniGroupBBox.right && currentGPosi.x <= aniGroupBBox.right + (6 * state.zoomLevel) && currentGPosi.y >= aniGroupBBox.top) {
+                    targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: action.UPDATE_ANI_ALIGN_AFTER_ANI_WITH_DELAY };//after group has higher priority
                     hintDrop.hintInsert({ x: aniGroupBBox.right, y: aniGroupBBox.top }, aniGroupBBox.height / state.zoomLevel, true, true);
                     break;
                 } else {
@@ -616,10 +627,11 @@ export default class KfGroup extends KfTimingIllus {
                         targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: (sepCurrentAniMarks.nonDataMarks.length > 0 || sepTargetAniMarks.nonDataMarks.length > 0) ? action.UPDATE_ANI_ALIGN_WITH_ANI : action.UPDATE_ANI_ALIGN_WITH_KF };
                         hintDrop.hintAlign({ x: firstKfBBox.left, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, true);
                     } else if (currentGPosi.x >= firstKfBBox.right && currentGPosi.x < firstKfBBox.right + (30 * state.zoomLevel) && alignTargetGroup) {
-                        targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: (sepCurrentAniMarks.nonDataMarks.length > 0 || sepTargetAniMarks.nonDataMarks.length > 0) ? action.UPDATE_ANI_ALIGN_AFTER_ANI : action.UPDATE_ANI_ALIGN_AFTER_KF };
+                        targetAni = { targetAniId: targetAniId, currentAniId: currentAniId, actionType: (sepCurrentAniMarks.nonDataMarks.length > 0 || sepTargetAniMarks.nonDataMarks.length > 0) ? action.UPDATE_ANI_ALIGN_AFTER_ANI_WITH_DELAY : action.UPDATE_ANI_ALIGN_AFTER_KF };
                         hintDrop.hintAlign({ x: firstKfBBox.right, y: firstKfBBox.top }, firstKfBBox.height / state.zoomLevel, true);
                     }
                 }
+                // }
             }
         }
         if (typeof targetAni === 'undefined') {
@@ -1087,6 +1099,10 @@ export default class KfGroup extends KfTimingIllus {
                     }
                     const currentTrans: ICoord = Tool.extractTransNums(c.container.getAttributeNS(null, 'transform'));
                     // console.log('trasnlateing in update size: ', c.container, currentTrans.x, diffX, currentTrans.x - diffX);
+                    console.log('t5');
+                    // if(c instanceof KfOmit){
+                    //     diffX -= KfGroup.PADDING;
+                    // }
                     c.translateContainer(currentTrans.x - diffX, currentTrans.y);
                     if (c instanceof KfItem) {
                         c.transOmitsWithItem();
