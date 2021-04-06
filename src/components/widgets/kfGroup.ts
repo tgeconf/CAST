@@ -69,12 +69,23 @@ export default class KfGroup extends KfTimingIllus {
     public groupTitleContent: SVGTextContentElement;
     public groupSortBtn: SVGGElement
     public groupTitleCover: SVGRectElement;//same color as the group bg
-    public children: (KfGroup | KfItem | KfOmit)[] = [];
+    // public children: (KfGroup | KfItem | KfOmit)[] = [];
     public kfNum: number = 0;
     public kfOmits: KfOmit[] = [];
     public parentObj: KfGroup | KfTrack;
     public alignLines: number[] = [];
     public _renderWhenZooming: boolean = true;
+
+    public children = new Proxy([], {
+        get: (target: (KfGroup | KfItem | KfOmit)[], prop: any) => {
+            return prop in target ? target[prop] : undefined
+        },
+        set: (target: (KfGroup | KfItem | KfOmit)[], prop: any, value) => {
+            console.log('setting kfgroup children: ', prop, value);
+            target[prop] = value
+            return true
+        }
+    })
 
     set offsetDiff(od: number) {//for dragging the offset stretch bar
         this._offsetDiff = od;
